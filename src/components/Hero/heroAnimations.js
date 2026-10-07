@@ -18,6 +18,12 @@ const AT = {
   sectors: 1.1,
 };
 
+// Scroll vertical gasto por pixel de deslocamento horizontal: abaixo de 1,
+// a troca de seção pede menos rolagem.
+const SCROLL_RATIO = 0.5;
+// Atraso (s) com que o track alcança o scroll.
+const SCROLL_SMOOTHING = 0.6;
+
 // Parallax durante o scroll horizontal, em fração da largura da viewport.
 // O anel anda o bastante para revelar, no painel seguinte, a metade escondida.
 const PARALLAX = {
@@ -146,9 +152,9 @@ export function setupHorizontalScroll({ viewport, track, panel }) {
     scrollTrigger: {
       trigger: viewport,
       pin: true,
-      scrub: 1,
+      scrub: SCROLL_SMOOTHING,
       start: 'top top',
-      end: () => `+=${distance()}`,
+      end: () => `+=${distance() * SCROLL_RATIO}`,
       invalidateOnRefresh: true,
     },
   });
