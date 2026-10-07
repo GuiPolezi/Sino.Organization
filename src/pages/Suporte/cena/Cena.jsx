@@ -6,6 +6,7 @@ import Boneco from '../boneco/Boneco.jsx';
 import { AREA, MOVIMENTO, useEquipe } from '../store.js';
 import CameraRig from './CameraRig.jsx';
 import Cenario from './Cenario.jsx';
+import EstacoesTrabalho from './EstacoesTrabalho.jsx';
 import styles from './Cena.module.css';
 
 const AREA_PAISAGEM = { rx: 6.2, rz: 3.4 };
@@ -60,6 +61,7 @@ export default function Cena() {
       <directionalLight position={[-6, 4, -4]} intensity={0.35} color="#C9D6FF" />
 
       <Cenario area={area} />
+      <EstacoesTrabalho />
 
       {tecnicos.map((tecnico) => (
         <Boneco key={tecnico.id} tecnico={tecnico} />
