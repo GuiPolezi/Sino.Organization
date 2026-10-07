@@ -7,11 +7,10 @@ export const SYSTEMS = [
     label: 'SAPL',
     title: 'Sistema de Apoio ao Processo Legislativo',
     summary:
-      'Organiza toda a tramitação da Câmara, da entrada da matéria até a publicação da norma, em um só lugar.',
+      'sua principal função é manter o controle sobre os documentos na Câmara, permitindo a padronização dos textos, busca rápida de documentos, controle de sua tramitação pela casa e outras facilidades de edição, além de auxiliar também na gestão dos documentos administrativos',
     highlights: [
-      'Protocolo e tramitação de matérias legislativas',
-      'Pautas, sessões e atas integradas',
-      'Consulta pública de normas e proposições',
+      'Siscam 9 - Versão mais nova formato website',
+      'Siscam 8 - Versão Desktop',
     ],
     position: { x: 667, y: 282 },
     line: { x1: 717, y1: 492, x2: 742, y2: 345 },
@@ -23,9 +22,11 @@ export const SYSTEMS = [
     summary:
       'Portais rápidos, acessíveis e fáceis de atualizar, feitos para aproximar a instituição do cidadão.',
     highlights: [
-      'Layout responsivo e acessível',
-      'Painel simples para publicar notícias',
-      'Portal da transparência integrado',
+      'Website de Câmaras',
+      'Website de Prefeituras',
+      'Gabinete Web',
+      'Sino Recepção',
+      'Controle de Viagens',
     ],
     position: { x: 854, y: 331 },
     line: { x1: 765, y1: 522, x2: 855, y2: 418 },
@@ -37,9 +38,13 @@ export const SYSTEMS = [
     summary:
       'Controle de atos, selos e atendimento, com segurança e agilidade no dia a dia do cartório.',
     highlights: [
-      'Emissão e controle de atos e selos',
-      'Fila de atendimento e protocolo',
-      'Relatórios financeiros e de produtividade',
+      'Sistema de Firmas',
+      'Sistema de Escrituras',
+      'Sistema de NFE',
+      'Selo Digital',
+      'COAF',
+      'Sino Digitalizador',
+      'Sino Biometria',
     ],
     position: { x: 941, y: 413 },
     line: { x1: 815, y1: 558, x2: 935, y2: 470 },
@@ -51,9 +56,7 @@ export const SYSTEMS = [
     summary:
       'Registra presença e votos em tempo real, deixando as sessões plenárias mais transparentes.',
     highlights: [
-      'Votação nominal e simbólica',
-      'Presença e tempo de fala no telão',
-      'Resultado integrado ao SAPL',
+      'Sino Plenarium',
     ],
     position: { x: 983, y: 508 },
     line: { x1: 835, y1: 610, x2: 958, y2: 560 },
@@ -65,9 +68,10 @@ export const SYSTEMS = [
     summary:
       'Ferramentas sob medida para consultas, integrações e rotinas específicas de cada cliente.',
     highlights: [
-      'Consultas públicas online',
-      'Integração com sistemas já existentes',
-      'Desenvolvimento sob demanda',
+      'Site de Consulta pública de normas e proposições',
+      'Site Legislativo - Legislação Digital',
+      'Site de Protocolo - Siave',
+      'Site de Tramitações - Workflow',
     ],
     position: { x: 997, y: 603 },
     line: { x1: 830, y1: 662, x2: 970, y2: 638 },
