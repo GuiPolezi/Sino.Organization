@@ -33,12 +33,22 @@ const parseCsv = (text) => {
   });
 };
 
-const ringToPath = (ring) =>
-  `M${ring.map(([lon, lat]) => project(lon, lat).join(' ')).join('L')}Z`;
-
-const geometryToPath = ({ type, coordinates }) => {
+// Anéis do estado já projetados: [[[x, y], ...], ...].
+const projectRings = ({ type, coordinates }) => {
   const polygons = type === 'MultiPolygon' ? coordinates : [coordinates];
-  return polygons.flatMap((polygon) => polygon.map(ringToPath)).join('');
+  return polygons.flatMap((polygon) =>
+    polygon.map((ring) => ring.map(([lon, lat]) => project(lon, lat))),
+  );
+};
+
+const ringsToPath = (rings) =>
+  rings.map((ring) => `M${ring.map((point) => point.join(' ')).join('L')}Z`).join('');
+
+// Caixa [minX, minY, maxX, maxY] do estado, usada para ampliá-lo no mapa.
+const ringsToBbox = (rings) => {
+  const xs = rings.flatMap((ring) => ring.map(([x]) => x));
+  const ys = rings.flatMap((ring) => ring.map(([, y]) => y));
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 };
 
 const [statesText, citiesText, ufsText] = await Promise.all(
@@ -50,7 +60,8 @@ const ufByCode = new Map(parseCsv(ufsText).map((row) => [row.codigo_uf, row]));
 const states = JSON.parse(statesText)
   .features.map(({ properties, geometry }) => {
     const { uf, nome } = ufByCode.get(properties.codarea);
-    return { uf, name: nome, d: geometryToPath(geometry) };
+    const rings = projectRings(geometry);
+    return { uf, name: nome, bbox: ringsToBbox(rings), d: ringsToPath(rings) };
   })
   .sort((a, b) => a.uf.localeCompare(b.uf));
 

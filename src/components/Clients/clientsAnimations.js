@@ -7,9 +7,12 @@ const BOARD_LIFT = 0.018;
 const BOARD_FLOAT_DURATION = 3.6;
 // Inclinação máxima (graus) seguindo o mouse.
 const TILT = { x: 5, y: 7 };
-// Onda dos pontos: até onde o anel cresce e de quanto em quanto tempo (s).
+// Onda dos pontos: até onde o anel cresce, de quanto em quanto tempo e em
+// quanto tempo (s) todos os pontos entram no ritmo.
 const RING_SCALE = 3.4;
 const RING_DURATION = 2.4;
+const RING_SPREAD = 2.4;
+const VIEW_EXIT_DURATION = 0.35;
 const COUNT_DURATION = 1.8;
 
 const LOOP = { ease: 'sine.inOut', repeat: -1, yoyo: true };
@@ -94,7 +97,7 @@ export function playEntrance(scope) {
   return addCounters(tl, q('[data-cli="count"]'), 0.5);
 }
 
-// Movimento contínuo e leve: o tabuleiro flutua e os pontos emitem ondas.
+// Movimento contínuo e leve: o tabuleiro flutua sobre a própria sombra.
 export function playAmbient(scope) {
   const q = gsap.utils.selector(scope);
   const board = q('[data-cli="board"]')[0];
@@ -110,8 +113,12 @@ export function playAmbient(scope) {
     duration: BOARD_FLOAT_DURATION,
     ...LOOP,
   });
+}
+
+// Ondas dos pinos. Fica à parte porque os pinos mudam a cada troca de recorte.
+export function playPins(scope) {
   gsap.fromTo(
-    q('[data-cli="ring"]'),
+    scope.querySelectorAll('[data-cli="ring"]'),
     { scale: 1, opacity: 0.7 },
     {
       scale: RING_SCALE,
@@ -119,9 +126,48 @@ export function playAmbient(scope) {
       duration: RING_DURATION,
       ease: 'power1.out',
       repeat: -1,
-      stagger: { each: 0.35, from: 'random' },
+      stagger: { amount: RING_SPREAD, from: 'random' },
     },
   );
+}
+
+// Troca de recorte (país ↔ estado): o mapa encolhe até sumir e o novo recorte
+// cresce no lugar. Só escala, sem opacidade, para a cena 3D não ser achatada.
+const viewTargets = (scope) =>
+  scope.querySelectorAll('[data-cli="view"], [data-cli="shadow-view"]');
+
+export function playViewExit(scope, onComplete) {
+  gsap.to(viewTargets(scope), {
+    scale: 0,
+    duration: VIEW_EXIT_DURATION,
+    ease: 'power2.in',
+    onComplete,
+  });
+}
+
+export function playViewEnter(scope) {
+  const q = gsap.utils.selector(scope);
+  const pins = { amount: 0.5, from: 'random' };
+
+  gsap.fromTo(
+    viewTargets(scope),
+    { scale: 0 },
+    { scale: 1, duration: 0.8, ease: 'back.out(1.3)' },
+  );
+  gsap.from(q('[data-cli="beam"]'), {
+    scaleY: 0,
+    duration: 0.5,
+    ease: 'power3.out',
+    stagger: pins,
+    delay: 0.3,
+  });
+  gsap.from(q('[data-cli="dot"]'), {
+    scale: 0,
+    duration: 0.5,
+    ease: 'back.out(2.4)',
+    stagger: pins,
+    delay: 0.45,
+  });
 }
 
 // O mapa inclina em 3D acompanhando o mouse sobre a seção.

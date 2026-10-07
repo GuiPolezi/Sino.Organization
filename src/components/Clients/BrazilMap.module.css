@@ -17,6 +17,8 @@
 .tilt,
 .ground,
 .board,
+.view,
+.shadowView,
 .pins,
 .pin {
   transform-style: preserve-3d;
@@ -25,6 +27,8 @@
 .tilt,
 .ground,
 .board,
+.view,
+.shadowView,
 .shadow,
 .depth,
 .surface,
@@ -54,6 +58,11 @@
 }
 
 .surface {
+  /* Só a superfície define estas cores: as cópias em <use> (espessura e
+     sombra) não as enxergam e mantêm o preenchimento da própria camada. */
+  --state-client: color-mix(in srgb, var(--color-cream) 34%, var(--color-olive));
+  --state-hover: color-mix(in srgb, var(--color-mint) 55%, var(--color-olive));
+
   fill: color-mix(in srgb, var(--color-cream) 24%, var(--color-olive));
   stroke: color-mix(in srgb, var(--color-cream) 60%, transparent);
   stroke-width: 1;
@@ -64,6 +73,18 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* Estados com clientes: clicáveis para ampliar. */
+.surface path[data-clickable] {
+  fill: var(--state-client);
+  cursor: zoom-in;
+  pointer-events: auto;
+  transition: fill 0.3s ease;
+}
+
+.surface path[data-clickable]:hover {
+  fill: var(--state-hover);
+}
+
 .pins {
   pointer-events: none;
 }
@@ -71,8 +92,8 @@
 /* Ponto de origem do pino: a posição da cidade sobre o tabuleiro. */
 .pin {
   position: absolute;
-  top: calc(var(--y) / 1031 * 100%);
-  left: calc(var(--x) / 1000 * 100%);
+  top: calc(var(--top) * 1%);
+  left: calc(var(--left) * 1%);
   width: 0;
   height: 0;
 }

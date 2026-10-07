@@ -84,11 +84,55 @@
   color: var(--color-cream-muted);
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.75rem;
+}
+
+.filter {
+  padding: 0.45em 0.95em;
+  border: 1px solid color-mix(in srgb, var(--color-cream) 35%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--place-size);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.filter:hover {
+  border-color: var(--color-cream);
+}
+
+.filter[aria-pressed='true'] {
+  border-color: var(--color-mint);
+  background: var(--color-mint);
+  color: var(--color-ink);
+}
+
+.filter:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 3px;
+}
+
+.filterCount {
+  margin-left: 0.3em;
+  font-weight: var(--weight-regular);
+  opacity: 0.75;
+}
+
 .places {
   display: grid;
   gap: 0.25rem;
   max-height: 22rem;
-  margin-top: 2rem;
+  margin-top: 1.25rem;
   padding-right: 0.5rem;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -193,8 +237,12 @@
     gap: calc(var(--u) * 2.2);
   }
 
+  .filters {
+    margin-top: calc(var(--u) * 2.6);
+  }
+
   .places {
-    max-height: calc(var(--u) * 27);
-    margin-top: calc(var(--u) * 3.5);
+    max-height: calc(var(--u) * 24);
+    margin-top: calc(var(--u) * 1.8);
   }
 }

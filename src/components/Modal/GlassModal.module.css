@@ -1,0 +1,95 @@
+.overlay {
+  --modal-padding: clamp(1.5rem, 4vw, 2.75rem);
+
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: var(--gutter-mobile);
+  border: 0;
+  background: color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: var(--color-olive-dark);
+  overflow: hidden;
+}
+
+/* O fundo é o próprio dialog; o ::backdrop nativo fica sem uso. */
+.overlay::backdrop {
+  background: transparent;
+}
+
+.overlay[open] {
+  display: grid;
+  place-items: center;
+}
+
+.card {
+  position: relative;
+  width: min(100%, 34rem);
+  padding: var(--modal-padding);
+  border: 1px solid color-mix(in srgb, var(--color-white) 65%, transparent);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-cream) 68%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow:
+    0 30px 70px color-mix(in srgb, var(--color-olive-dark) 38%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-white) 70%, transparent);
+}
+
+.close {
+  position: absolute;
+  top: calc(var(--modal-padding) * 0.6);
+  right: calc(var(--modal-padding) * 0.6);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-olive) 12%, transparent);
+  color: var(--color-olive);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.close:hover {
+  background: color-mix(in srgb, var(--color-olive) 22%, transparent);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-olive);
+  outline-offset: 3px;
+}
+
+.close svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-mint) 80%, transparent);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+}
+
+.title {
+  margin: 1.25rem 0 0;
+  padding-right: 2rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--color-olive);
+}

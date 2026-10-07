@@ -1,18 +1,23 @@
-.summary {
-  margin-top: 1rem;
+.count {
+  margin-top: 0.75rem;
   font-size: 1.0625rem;
-  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-olive-dark) 75%, transparent);
 }
 
-.highlights {
+.clients {
   display: grid;
   gap: 0.75rem;
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
+  max-height: min(50dvh, 22rem);
+  margin-top: 1.5rem;
+  padding: 1.5rem 0.5rem 0 0;
   border-top: 1px solid color-mix(in srgb, var(--color-olive) 22%, transparent);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-olive) 45%, transparent) transparent;
 }
 
-.highlight {
+.client {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
@@ -20,7 +25,7 @@
   line-height: 1.35;
 }
 
-.highlight::before {
+.client::before {
   content: '';
   flex: none;
   width: 0.5rem;
