@@ -17,8 +17,14 @@ const checkRoster = (roster) => {
 
   const ids = new Set();
   const agents = new Set();
-  for (const { id, agent } of roster) {
-    if (!ID_FORMAT.test(clean(id))) {
+  for (const entry of roster) {
+    if (!entry || typeof entry !== 'object') {
+      throw new TeamError('Cada técnico em support-team.json precisa ser { "id": ..., "agent": ... }.');
+    }
+
+    const { id, agent } = entry;
+    // Sem clean(): o id vai como está para o site, então espaços em volta também são inválidos.
+    if (typeof id !== 'string' || !ID_FORMAT.test(id)) {
       throw new TeamError(`Id inválido em support-team.json: "${id}" (use minúsculas, números e hífen).`);
     }
     if (!clean(agent)) throw new TeamError(`O técnico "${id}" está sem "agent" em support-team.json.`);

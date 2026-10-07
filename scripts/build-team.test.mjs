@@ -58,6 +58,10 @@ const failures = [
   ['técnico repetido', records, [{ id: 'a', agent: 'Luiz' }, { id: 'b', agent: 'Luiz' }], /Técnico repetido/],
   ['id fora do formato', records, [{ id: 'Luiz Silva', agent: 'Luiz' }], /Id inválido/],
   ['técnico sem agent', records, [{ id: 'luiz' }], /sem "agent"/],
+  ['entrada nula na lista', records, [null], /precisa ser/],
+  ['entrada que não é objeto', records, ['Luiz'], /precisa ser/],
+  ['id com espaço em volta', records, [{ id: ' luiz ', agent: 'Luiz' }], /Id inválido/],
+  ['id que não é texto', records, [{ id: 7, agent: 'Luiz' }], /Id inválido/],
 ];
 
 for (const [name, list, team, message] of failures) {

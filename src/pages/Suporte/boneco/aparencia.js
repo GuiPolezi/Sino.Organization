@@ -32,6 +32,7 @@ export const aparencias = {
     calca: CALCAS[4],
     cabelo: { estilo: 'topete', cor: PRETO },
     acessorio: 'nenhum',
+    barba: 'bigode',
     olhos: '#3F8FE0',
   },
   'guilherme-p': {
