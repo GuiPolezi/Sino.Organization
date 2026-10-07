@@ -1,36 +1,11 @@
 {
   "source": "milldesk",
   "totals": {
-    "clients": 158,
-    "cities": 122,
-    "states": 5
+    "clients": 163,
+    "cities": 132,
+    "states": 4
   },
   "cities": [
-    {
-      "id": "sao-paulo-sp",
-      "city": "São Paulo",
-      "uf": "SP",
-      "x": 696,
-      "y": 757.3,
-      "clients": [
-        "1 Registro Civil e Tabelionato de Notas de Ermelino Matarazzo",
-        "11º Tabelião de Notas de São Paulo",
-        "15º Cartório de Notas de São Paulo - Tabelião Oliveira Lima",
-        "21º Tabelião de Notas de São Paulo",
-        "Agência PCJ",
-        "Colina CM",
-        "Colombia CM",
-        "Conchal CM",
-        "Guapiaçu CM",
-        "Holambra CM",
-        "Iracemápolis CM",
-        "Novo Horizonte CM",
-        "Piracicaba CM",
-        "Redenção da Serra CM",
-        "Santo Antônio Aracangua CM",
-        "Tupã CM"
-      ]
-    },
     {
       "id": "piracicaba-sp",
       "city": "Piracicaba",
@@ -42,21 +17,45 @@
         "4º Tabelião de Notas de Piracicaba (Rua Prudente)",
         "CCPNET - Piracicaba",
         "Clube  de Campo de Piracicaba - CCP",
+        "Piracicaba CM",
         "Sino",
         "Sino - Compilação"
       ]
     },
     {
-      "id": "aguas-de-sao-pedro-sp",
-      "city": "Águas de São Pedro",
+      "id": "sao-paulo-sp",
+      "city": "São Paulo",
       "uf": "SP",
-      "x": 664.8,
-      "y": 732.9,
+      "x": 696,
+      "y": 757.3,
       "clients": [
-        "Aguas de São Pedro CM",
-        "Altinópolis CM",
-        "Americana PM",
-        "Araraquara CM"
+        "1 Registro Civil e Tabelionato de Notas de Ermelino Matarazzo",
+        "11º Tabelião de Notas de São Paulo",
+        "15º Cartório de Notas de São Paulo - Tabelião Oliveira Lima",
+        "21º Tabelião de Notas de São Paulo",
+        "Agência PCJ"
+      ]
+    },
+    {
+      "id": "americana-sp",
+      "city": "Americana",
+      "uf": "SP",
+      "x": 678.5,
+      "y": 736.5,
+      "clients": [
+        "Americana CM",
+        "Americana PM"
+      ]
+    },
+    {
+      "id": "amparo-sp",
+      "city": "Amparo",
+      "uf": "SP",
+      "x": 692.6,
+      "y": 735.8,
+      "clients": [
+        "1º Tabelião de Notas e Protesto de Letra e Títulos de Amparo",
+        "2º Tabelião de Notas e Protesto de Letra e Títulos de Amparo"
       ]
     },
     {
@@ -104,6 +103,28 @@
       ]
     },
     {
+      "id": "colombia-sp",
+      "city": "Colômbia",
+      "uf": "SP",
+      "x": 644.3,
+      "y": 669.7,
+      "clients": [
+        "Colombia CM",
+        "Colômbia PM"
+      ]
+    },
+    {
+      "id": "guapiacu-sp",
+      "city": "Guapiaçu",
+      "uf": "SP",
+      "x": 630.9,
+      "y": 685.9,
+      "clients": [
+        "Guapiaçu CM",
+        "Guapiaçu PM"
+      ]
+    },
+    {
       "id": "guarulhos-sp",
       "city": "Guarulhos",
       "uf": "SP",
@@ -112,6 +133,17 @@
       "clients": [
         "Guarulhos CM",
         "IPREF - Instituto de Previdência dos Funcionários Públicos Municipais de Guarulhos"
+      ]
+    },
+    {
+      "id": "iracemapolis-sp",
+      "city": "Iracemápolis",
+      "uf": "SP",
+      "x": 673.7,
+      "y": 732.5,
+      "clients": [
+        "Iracemápolis CM",
+        "Iracemápolis PM"
       ]
     },
     {
@@ -192,6 +224,39 @@
       ]
     },
     {
+      "id": "redencao-da-serra-sp",
+      "city": "Redenção da Serra",
+      "uf": "SP",
+      "x": 723.7,
+      "y": 750.3,
+      "clients": [
+        "CM Redenção Da Serra",
+        "Redenção da Serra CM"
+      ]
+    },
+    {
+      "id": "saltinho-sp",
+      "city": "Saltinho",
+      "uf": "SP",
+      "x": 669.8,
+      "y": 739.3,
+      "clients": [
+        "Saltinho CM",
+        "Saltinho PM"
+      ]
+    },
+    {
+      "id": "santo-antonio-do-aracangua-sp",
+      "city": "Santo Antônio do Aracanguá",
+      "uf": "SP",
+      "x": 598.5,
+      "y": 689.5,
+      "clients": [
+        "Aracangua CM",
+        "Santo Antônio Aracangua CM"
+      ]
+    },
+    {
       "id": "sao-jose-do-rio-preto-sp",
       "city": "São José do Rio Preto",
       "uf": "SP",
@@ -200,6 +265,16 @@
       "clients": [
         "São José do Rio Preto CM - Empro",
         "São José do Rio Preto PM - Empro"
+      ]
+    },
+    {
+      "id": "aguas-de-sao-pedro-sp",
+      "city": "Águas de São Pedro",
+      "uf": "SP",
+      "x": 664.8,
+      "y": 732.9,
+      "clients": [
+        "Aguas de São Pedro CM"
       ]
     },
     {
@@ -213,6 +288,16 @@
       ]
     },
     {
+      "id": "altinopolis-sp",
+      "city": "Altinópolis",
+      "uf": "SP",
+      "x": 677.5,
+      "y": 691.8,
+      "clients": [
+        "Altinópolis CM"
+      ]
+    },
+    {
       "id": "aluminio-sp",
       "city": "Alumínio",
       "uf": "SP",
@@ -220,26 +305,6 @@
       "y": 757.2,
       "clients": [
         "Alumínio CM"
-      ]
-    },
-    {
-      "id": "americana-sp",
-      "city": "Americana",
-      "uf": "SP",
-      "x": 678.5,
-      "y": 736.5,
-      "clients": [
-        "Americana CM"
-      ]
-    },
-    {
-      "id": "amparo-sp",
-      "city": "Amparo",
-      "uf": "SP",
-      "x": 692.6,
-      "y": 735.8,
-      "clients": [
-        "2º Tabelião de Notas e Protesto de Letra e Títulos de Amparo"
       ]
     },
     {
@@ -260,6 +325,16 @@
       "y": 754.8,
       "clients": [
         "Araçariguama CM"
+      ]
+    },
+    {
+      "id": "araraquara-sp",
+      "city": "Araraquara",
+      "uf": "SP",
+      "x": 657.1,
+      "y": 711.7,
+      "clients": [
+        "Araraquara CM"
       ]
     },
     {
@@ -343,11 +418,11 @@
       ]
     },
     {
-      "id": "braganca-pa",
-      "city": "Bragança",
-      "uf": "PA",
-      "x": 692.4,
-      "y": 171.1,
+      "id": "braganca-paulista-sp",
+      "city": "Bragança Paulista",
+      "uf": "SP",
+      "x": 698.4,
+      "y": 742.1,
       "clients": [
         "Bragança CM"
       ]
@@ -423,13 +498,23 @@
       ]
     },
     {
-      "id": "colombia-sp",
-      "city": "Colômbia",
+      "id": "colina-sp",
+      "city": "Colina",
       "uf": "SP",
-      "x": 644.3,
-      "y": 669.7,
+      "x": 648,
+      "y": 683.7,
       "clients": [
-        "Colômbia PM"
+        "Colina CM"
+      ]
+    },
+    {
+      "id": "conchal-sp",
+      "city": "Conchal",
+      "uf": "SP",
+      "x": 682.5,
+      "y": 726.1,
+      "clients": [
+        "Conchal CM"
       ]
     },
     {
@@ -523,13 +608,13 @@
       ]
     },
     {
-      "id": "guapiacu-sp",
-      "city": "Guapiaçu",
+      "id": "guaira-sp",
+      "city": "Guaíra",
       "uf": "SP",
-      "x": 630.9,
-      "y": 685.9,
+      "x": 653.7,
+      "y": 673.5,
       "clients": [
-        "Guapiaçu PM"
+        "Guaíra CM"
       ]
     },
     {
@@ -560,6 +645,16 @@
       "y": 769.2,
       "clients": [
         "Guarujá CM"
+      ]
+    },
+    {
+      "id": "holambra-sp",
+      "city": "Holambra",
+      "uf": "SP",
+      "x": 685.6,
+      "y": 734,
+      "clients": [
+        "Holambra CM"
       ]
     },
     {
@@ -620,16 +715,6 @@
       "y": 728.7,
       "clients": [
         "Ipeúna CM"
-      ]
-    },
-    {
-      "id": "iracemapolis-sp",
-      "city": "Iracemápolis",
-      "uf": "SP",
-      "x": 673.7,
-      "y": 732.5,
-      "clients": [
-        "Iracemápolis PM"
       ]
     },
     {
@@ -883,6 +968,16 @@
       ]
     },
     {
+      "id": "novo-horizonte-sp",
+      "city": "Novo Horizonte",
+      "uf": "SP",
+      "x": 630.7,
+      "y": 703.3,
+      "clients": [
+        "Novo Horizonte CM"
+      ]
+    },
+    {
       "id": "olimpia-sp",
       "city": "Olímpia",
       "uf": "SP",
@@ -1013,13 +1108,13 @@
       ]
     },
     {
-      "id": "redencao-da-serra-sp",
-      "city": "Redenção da Serra",
+      "id": "rio-claro-sp",
+      "city": "Rio Claro",
       "uf": "SP",
-      "x": 723.7,
-      "y": 750.3,
+      "x": 672.9,
+      "y": 727.7,
       "clients": [
-        "CM Redenção Da Serra"
+        "Rio Claro CM"
       ]
     },
     {
@@ -1030,16 +1125,6 @@
       "y": 739.2,
       "clients": [
         "Rio das Pedras CM"
-      ]
-    },
-    {
-      "id": "saltinho-sp",
-      "city": "Saltinho",
-      "uf": "SP",
-      "x": 669.8,
-      "y": 739.3,
-      "clients": [
-        "Saltinho PM"
       ]
     },
     {
@@ -1220,6 +1305,16 @@
       "y": 752.5,
       "clients": [
         "Tatui CM"
+      ]
+    },
+    {
+      "id": "tupa-sp",
+      "city": "Tupã",
+      "uf": "SP",
+      "x": 598,
+      "y": 715.6,
+      "clients": [
+        "Tupã CM"
       ]
     },
     {

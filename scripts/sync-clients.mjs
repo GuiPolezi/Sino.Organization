@@ -3,19 +3,30 @@
 // E-mail, telefone e endereço da API nunca saem deste script, e locais
 // desabilitados no Milldesk ficam de fora.
 //
+// A cidade é deduzida do nome do local (scripts/lib/resolve-city.mjs), porque
+// o cadastro de cidade e região do Milldesk tem erros. Exceções manuais ficam
+// em scripts/data/client-overrides.json:
+//   exclude: locais que não são clientes (ex.: ambiente interno de testes)
+//   cities:  { "Nome do local": "Cidade/UF" } para corrigir um caso à mão
+//
 // Uso:
 //   npm run sync:clients                  (lê MILLDESK_API_KEY do .env)
 //   npm run sync:clients -- --from arq.json   (usa um JSON local no formato da API)
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { normalize } from './lib/geo.mjs';
+import { createCityResolver } from './lib/resolve-city.mjs';
 
 const API_URL = 'https://v1.milldesk.com/api';
 const CITIES_FILE = new URL('./data/municipios.json', import.meta.url);
+const OVERRIDES_FILE = new URL('./data/client-overrides.json', import.meta.url);
+// Estado-sede: entre cidades homônimas, e sem CEP, vale a deste estado.
+const HOME_UF = 'SP';
 const OUTPUT = 'src/data/clients.json';
 const API_TIMEOUT_MS = 15000;
 const ERROR_PREVIEW_LENGTH = 80;
 
 // Faixas de CEP (3 primeiros dígitos) de cada UF, para desempatar cidades homônimas.
+// A região do cadastro não é usada: muitas estão incorretas.
 const CEP_RANGES = [
   ['SP', 10, 199], ['RJ', 200, 289], ['ES', 290, 299], ['MG', 300, 399],
   ['BA', 400, 489], ['SE', 490, 499], ['PE', 500, 569], ['AL', 570, 579],
@@ -81,8 +92,7 @@ const toRecords = (payload) => {
 const cities = JSON.parse(await readFile(CITIES_FILE, 'utf8')).map(
   ([name, uf, x, y]) => ({ name, uf, x, y, key: normalize(name) }),
 );
-const UFS = new Set(cities.map(({ uf }) => uf));
-const citiesByKey = Map.groupBy(cities, ({ key }) => key);
+const resolveCity = createCityResolver(cities, HOME_UF);
 
 const ufFromCep = (zipcode) => {
   const digits = String(zipcode ?? '').replace(/\D/g, '');
@@ -91,56 +101,37 @@ const ufFromCep = (zipcode) => {
   return CEP_RANGES.find(([, min, max]) => prefix >= min && prefix <= max)?.[0] ?? null;
 };
 
-// "Campinas - SP", "Campinas/SP" e "Campinas (SP)" viram { name, uf }.
-const splitCityAndUf = (rawCity) => {
-  const text = String(rawCity ?? '').trim();
-  const match = text.match(/^(.+?)\s*[-/,(]\s*([A-Za-z]{2})\)?$/);
-  const uf = match?.[2].toUpperCase();
-  return uf && UFS.has(uf) ? { name: match[1], uf } : { name: text, uf: null };
-};
+// Exceções manuais. Uma cidade inexistente no arquivo interrompe o script.
+const overrides = JSON.parse(await readFile(OVERRIDES_FILE, 'utf8'));
+const excluded = new Set((overrides.exclude ?? []).map(normalize));
+const fixedCities = new Map(
+  Object.entries(overrides.cities ?? {}).map(([client, target]) => {
+    const [name, uf] = String(target).split('/');
+    const city = cities.find((entry) => entry.key === normalize(name) && entry.uf === uf);
+    if (!city) fail(`Cidade inválida em client-overrides.json: "${target}" (use "Cidade/UF").`);
+    return [normalize(client), city];
+  }),
+);
 
-const pick = (candidates, uf) => {
-  const inUf = uf ? candidates.filter((city) => city.uf === uf) : candidates;
-  return inUf.length === 1 ? inUf[0] : null;
-};
+const locate = (record) => {
+  const fixed = fixedCities.get(normalize(record.location));
+  if (fixed) return { city: fixed, how: 'override' };
 
-// Último recurso: procura o nome de um município dentro do nome do local.
-// Só vale com a UF conhecida; sem ela, "Padaria Natal" viraria Natal/RN.
-const findInText = (text, uf) => {
-  if (!uf) return null;
-  const haystack = ` ${normalize(text)} `;
-  const found = cities
-    .filter((city) => city.uf === uf && haystack.includes(` ${city.key} `))
-    .sort((a, b) => b.key.length - a.key.length);
-  const longest = found.filter((city) => city.key.length === found[0].key.length);
-  return longest.length === 1 ? longest[0] : null;
-};
-
-// Devolve { city, guessed }: `guessed` marca a cidade deduzida do nome do local.
-// Pistas de UF que se contradizem (escrita na cidade, CEP, região), ou uma UF
-// que contradiz a cidade, deixam o local sem cidade, em vez de colocá-lo em
-// outro estado.
-const resolveCity = (record) => {
-  const { name, uf: writtenUf } = splitCityAndUf(record.city);
-  const regionUf = String(record.region ?? '').trim().toUpperCase();
-  const hints = new Set(
-    [writtenUf, ufFromCep(record.zipcode), UFS.has(regionUf) ? regionUf : null].filter(Boolean),
-  );
-  if (hints.size > 1) return { city: null, guessed: false };
-
-  const [uf = null] = hints;
-  const candidates = citiesByKey.get(normalize(name)) ?? [];
-
-  if (candidates.length > 0) return { city: pick(candidates, uf), guessed: false };
-  return { city: findInText(record.location, uf), guessed: true };
+  return resolveCity({
+    name: record.location,
+    registeredCity: record.city,
+    cepUf: ufFromCep(record.zipcode),
+  });
 };
 
 const source = readArgument('--from');
 const payload = source !== null ? JSON.parse(await readFile(source, 'utf8')) : await fetchLocals();
 const named = toRecords(payload).filter((record) => String(record?.location ?? '').trim());
 // Só entram os locais com "Habilitado" marcado no Milldesk (`enabled: true`).
-const records = named.filter((record) => record.enabled === true);
-const disabledCount = named.length - records.length;
+const enabled = named.filter((record) => record.enabled === true);
+const records = enabled.filter((record) => !excluded.has(normalize(record.location)));
+const disabledCount = named.length - enabled.length;
+const excludedCount = enabled.length - records.length;
 
 // Uma resposta vazia ou em formato inesperado não pode apagar os dados atuais.
 if (records.length === 0) {
@@ -149,17 +140,28 @@ if (records.length === 0) {
 
 const grouped = new Map();
 const unmatched = [];
-const guessed = [];
+const approximated = [];
+const fromRegistry = [];
+const unconfirmed = [];
+const conflicts = [];
 
 for (const record of records) {
   const client = String(record.location).trim();
-  const { city, guessed: isGuess } = resolveCity(record);
+  const located = locate(record);
 
-  if (!city) {
+  if (!located) {
     unmatched.push(client);
     continue;
   }
-  if (isGuess) guessed.push(`${client} -> ${city.name}/${city.uf}`);
+
+  const { city, how } = located;
+  const line = `${client} -> ${city.name}/${city.uf}`;
+  if (how === 'approximate') approximated.push(line);
+  if (how === 'registered') fromRegistry.push(line);
+  if (how === 'unconfirmed') unconfirmed.push(line);
+  if (how === 'conflict') {
+    conflicts.push(`${line} (o nome sugere ${located.named.name}/${located.named.uf})`);
+  }
 
   const id = `${city.key.replaceAll(' ', '-')}-${city.uf.toLowerCase()}`;
   const entry = grouped.get(id) ?? { id, city: city.name, uf: city.uf, x: city.x, y: city.y, clients: new Set() };
@@ -189,16 +191,17 @@ const output = {
 await mkdir('src/data', { recursive: true });
 await writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`);
 
+const report = (title, lines) => {
+  if (lines.length === 0) return;
+  const items = lines.map((line) => `  - ${line}`).join('\n');
+  process.stdout.write(`${lines.length} ${title}:\n${items}\n`);
+};
+
 process.stdout.write(
-  `${records.length} locais habilitados lidos (${disabledCount} desabilitados ignorados): ${output.totals.clients} clientes em ${output.totals.cities} cidades e ${output.totals.states} estados -> ${OUTPUT}\n`,
+  `${records.length} locais habilitados lidos (${disabledCount} desabilitados e ${excludedCount} excluídos ignorados): ${output.totals.clients} clientes em ${output.totals.cities} cidades e ${output.totals.states} estados -> ${OUTPUT}\n`,
 );
-if (unmatched.length > 0) {
-  process.stdout.write(
-    `${unmatched.length} locais sem cidade reconhecida (ficaram fora do mapa):\n${unmatched.map((name) => `  - ${name}`).join('\n')}\n`,
-  );
-}
-if (guessed.length > 0) {
-  process.stdout.write(
-    `${guessed.length} locais com a cidade deduzida pelo nome (confira):\n${guessed.map((line) => `  - ${line}`).join('\n')}\n`,
-  );
-}
+report('locais sem cidade reconhecida (ficaram fora do mapa)', unmatched);
+report('locais com o nome da cidade abreviado, situados por aproximação (confira)', approximated);
+report('locais situados só pelo nome, sem CEP nem cadastro que confirmem (confira)', unconfirmed);
+report('locais sem cidade no nome, situados pela cidade do cadastro (confira)', fromRegistry);
+report('locais em que nome e cadastro discordam, situados pelo cadastro (confira)', conflicts);
