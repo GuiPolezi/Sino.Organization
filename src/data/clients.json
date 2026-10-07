@@ -1,110 +1,194 @@
 {
-  "source": "sample",
+  "source": "milldesk",
   "totals": {
-    "clients": 13,
-    "cities": 12,
-    "states": 6
+    "clients": 158,
+    "cities": 122,
+    "states": 5
   },
   "cities": [
     {
-      "id": "braganca-paulista-sp",
-      "city": "Bragança Paulista",
+      "id": "sao-paulo-sp",
+      "city": "São Paulo",
       "uf": "SP",
-      "x": 698.4,
-      "y": 742.1,
+      "x": 696,
+      "y": 757.3,
       "clients": [
-        "Cliente exemplo 01",
-        "Cliente exemplo 02"
+        "1 Registro Civil e Tabelionato de Notas de Ermelino Matarazzo",
+        "11º Tabelião de Notas de São Paulo",
+        "15º Cartório de Notas de São Paulo - Tabelião Oliveira Lima",
+        "21º Tabelião de Notas de São Paulo",
+        "Agência PCJ",
+        "Colina CM",
+        "Colombia CM",
+        "Conchal CM",
+        "Guapiaçu CM",
+        "Holambra CM",
+        "Iracemápolis CM",
+        "Novo Horizonte CM",
+        "Piracicaba CM",
+        "Redenção da Serra CM",
+        "Santo Antônio Aracangua CM",
+        "Tupã CM"
       ]
     },
     {
-      "id": "atibaia-sp",
-      "city": "Atibaia",
+      "id": "piracicaba-sp",
+      "city": "Piracicaba",
       "uf": "SP",
-      "x": 698.1,
-      "y": 746.4,
+      "x": 670.5,
+      "y": 736.4,
       "clients": [
-        "Cliente exemplo 03"
+        "2º Tabelião de Notas de Piracicaba Bortoletto",
+        "4º Tabelião de Notas de Piracicaba (Rua Prudente)",
+        "CCPNET - Piracicaba",
+        "Clube  de Campo de Piracicaba - CCP",
+        "Sino",
+        "Sino - Compilação"
       ]
     },
     {
-      "id": "campinas-sp",
-      "city": "Campinas",
+      "id": "aguas-de-sao-pedro-sp",
+      "city": "Águas de São Pedro",
       "uf": "SP",
-      "x": 685.2,
-      "y": 740.9,
+      "x": 664.8,
+      "y": 732.9,
       "clients": [
-        "Cliente exemplo 04"
+        "Aguas de São Pedro CM",
+        "Altinópolis CM",
+        "Americana PM",
+        "Araraquara CM"
       ]
     },
     {
-      "id": "cuiaba-mt",
-      "city": "Cuiabá",
-      "uf": "MT",
-      "x": 457.1,
-      "y": 550.4,
-      "clients": [
-        "Cliente exemplo 10"
-      ]
-    },
-    {
-      "id": "curitiba-pr",
-      "city": "Curitiba",
-      "uf": "PR",
-      "x": 629.7,
-      "y": 806.5,
-      "clients": [
-        "Cliente exemplo 09"
-      ]
-    },
-    {
-      "id": "itatiba-sp",
-      "city": "Itatiba",
+      "id": "barretos-sp",
+      "city": "Barretos",
       "uf": "SP",
-      "x": 690.7,
-      "y": 743.5,
+      "x": 647.2,
+      "y": 679.6,
       "clients": [
-        "Cliente exemplo 13 de Itatiba"
+        "Barretos CM",
+        "Barretos PM"
       ]
     },
     {
-      "id": "juiz-de-fora-mg",
-      "city": "Juiz de Fora",
-      "uf": "MG",
-      "x": 779.3,
-      "y": 711,
-      "clients": [
-        "Cliente exemplo 08"
-      ]
-    },
-    {
-      "id": "palmas-to",
-      "city": "Palmas",
-      "uf": "TO",
-      "x": 652.6,
-      "y": 410.6,
-      "clients": [
-        "Cliente exemplo 11"
-      ]
-    },
-    {
-      "id": "redencao-pa",
-      "city": "Redenção",
-      "uf": "PA",
-      "x": 610.3,
-      "y": 352.8,
-      "clients": [
-        "Cliente exemplo 12"
-      ]
-    },
-    {
-      "id": "ribeirao-preto-sp",
-      "city": "Ribeirão Preto",
+      "id": "boituva-sp",
+      "city": "Boituva",
       "uf": "SP",
-      "x": 666.4,
-      "y": 695.6,
+      "x": 669.7,
+      "y": 750.8,
       "clients": [
-        "Cliente exemplo 06"
+        "Boituva - CM",
+        "Boituva CM"
+      ]
+    },
+    {
+      "id": "cabreuva-sp",
+      "city": "Cabreúva",
+      "uf": "SP",
+      "x": 683.4,
+      "y": 751.3,
+      "clients": [
+        "Cabreuva CM",
+        "Cabreúva PM"
+      ]
+    },
+    {
+      "id": "cedral-sp",
+      "city": "Cedral",
+      "uf": "SP",
+      "x": 629.6,
+      "y": 688.6,
+      "clients": [
+        "Cedral CM",
+        "Cedral PM"
+      ]
+    },
+    {
+      "id": "guarulhos-sp",
+      "city": "Guarulhos",
+      "uf": "SP",
+      "x": 698.7,
+      "y": 755.2,
+      "clients": [
+        "Guarulhos CM",
+        "IPREF - Instituto de Previdência dos Funcionários Públicos Municipais de Guarulhos"
+      ]
+    },
+    {
+      "id": "itatinga-sp",
+      "city": "Itatinga",
+      "uf": "SP",
+      "x": 646.1,
+      "y": 746.1,
+      "clients": [
+        "Itatinga CM",
+        "Itatinga PM"
+      ]
+    },
+    {
+      "id": "jales-sp",
+      "city": "Jales",
+      "uf": "SP",
+      "x": 597.2,
+      "y": 672.1,
+      "clients": [
+        "Jales  PM",
+        "Jales CM"
+      ]
+    },
+    {
+      "id": "lins-sp",
+      "city": "Lins",
+      "uf": "SP",
+      "x": 617.4,
+      "y": 708.7,
+      "clients": [
+        "Lins CM",
+        "Lins PM"
+      ]
+    },
+    {
+      "id": "matao-sp",
+      "city": "Matão",
+      "uf": "SP",
+      "x": 652.4,
+      "y": 706.9,
+      "clients": [
+        "Matão - CM",
+        "Matão PM"
+      ]
+    },
+    {
+      "id": "maua-sp",
+      "city": "Mauá",
+      "uf": "SP",
+      "x": 700.5,
+      "y": 760.8,
+      "clients": [
+        "Mauá CM",
+        "SAMA - Saneamento Básico Município de Mauá"
+      ]
+    },
+    {
+      "id": "mirassol-sp",
+      "city": "Mirassol",
+      "uf": "SP",
+      "x": 623.2,
+      "y": 686.4,
+      "clients": [
+        "Mirassol CM",
+        "Mirassol PM"
+      ]
+    },
+    {
+      "id": "nova-granada-sp",
+      "city": "Nova Granada",
+      "uf": "SP",
+      "x": 628.5,
+      "y": 679,
+      "clients": [
+        "Nova Granada CM",
+        "Nova Granada PM"
       ]
     },
     {
@@ -114,17 +198,1068 @@
       "x": 626.9,
       "y": 686.3,
       "clients": [
-        "Cliente exemplo 05"
+        "São José do Rio Preto CM - Empro",
+        "São José do Rio Preto PM - Empro"
       ]
     },
     {
-      "id": "sao-paulo-sp",
-      "city": "São Paulo",
+      "id": "alambari-sp",
+      "city": "Alambari",
       "uf": "SP",
-      "x": 696,
+      "x": 664.2,
+      "y": 757.7,
+      "clients": [
+        "Alambari"
+      ]
+    },
+    {
+      "id": "aluminio-sp",
+      "city": "Alumínio",
+      "uf": "SP",
+      "x": 680.4,
+      "y": 757.2,
+      "clients": [
+        "Alumínio CM"
+      ]
+    },
+    {
+      "id": "americana-sp",
+      "city": "Americana",
+      "uf": "SP",
+      "x": 678.5,
+      "y": 736.5,
+      "clients": [
+        "Americana CM"
+      ]
+    },
+    {
+      "id": "amparo-sp",
+      "city": "Amparo",
+      "uf": "SP",
+      "x": 692.6,
+      "y": 735.8,
+      "clients": [
+        "2º Tabelião de Notas e Protesto de Letra e Títulos de Amparo"
+      ]
+    },
+    {
+      "id": "anhembi-sp",
+      "city": "Anhembi",
+      "uf": "SP",
+      "x": 658.2,
+      "y": 738,
+      "clients": [
+        "Anhembi CM"
+      ]
+    },
+    {
+      "id": "aracariguama-sp",
+      "city": "Araçariguama",
+      "uf": "SP",
+      "x": 685.3,
+      "y": 754.8,
+      "clients": [
+        "Araçariguama CM"
+      ]
+    },
+    {
+      "id": "araras-sp",
+      "city": "Araras",
+      "uf": "SP",
+      "x": 677.2,
+      "y": 726.6,
+      "clients": [
+        "Araras CM"
+      ]
+    },
+    {
+      "id": "aruja-sp",
+      "city": "Arujá",
+      "uf": "SP",
+      "x": 704,
+      "y": 753.7,
+      "clients": [
+        "Arujá CM"
+      ]
+    },
+    {
+      "id": "avare-sp",
+      "city": "Avaré",
+      "uf": "SP",
+      "x": 638.3,
+      "y": 746.2,
+      "clients": [
+        "Avaré CM"
+      ]
+    },
+    {
+      "id": "bady-bassitt-sp",
+      "city": "Bady Bassitt",
+      "uf": "SP",
+      "x": 625.3,
+      "y": 689.1,
+      "clients": [
+        "Bady Bassitt CM"
+      ]
+    },
+    {
+      "id": "barra-bonita-sp",
+      "city": "Barra Bonita",
+      "uf": "SP",
+      "x": 647.5,
+      "y": 730.1,
+      "clients": [
+        "Barra Bonita CM"
+      ]
+    },
+    {
+      "id": "bastos-sp",
+      "city": "Bastos",
+      "uf": "SP",
+      "x": 592.5,
+      "y": 715.2,
+      "clients": [
+        "Bastos CM"
+      ]
+    },
+    {
+      "id": "bebedouro-sp",
+      "city": "Bebedouro",
+      "uf": "SP",
+      "x": 649.5,
+      "y": 689.9,
+      "clients": [
+        "Bebedouro CM"
+      ]
+    },
+    {
+      "id": "botucatu-sp",
+      "city": "Botucatu",
+      "uf": "SP",
+      "x": 650.4,
+      "y": 740.3,
+      "clients": [
+        "Botucatu CM"
+      ]
+    },
+    {
+      "id": "braganca-pa",
+      "city": "Bragança",
+      "uf": "PA",
+      "x": 692.4,
+      "y": 171.1,
+      "clients": [
+        "Bragança CM"
+      ]
+    },
+    {
+      "id": "campinas-sp",
+      "city": "Campinas",
+      "uf": "SP",
+      "x": 685.2,
+      "y": 740.9,
+      "clients": [
+        "Campinas CM"
+      ]
+    },
+    {
+      "id": "campo-limpo-paulista-sp",
+      "city": "Campo Limpo Paulista",
+      "uf": "SP",
+      "x": 692.2,
+      "y": 748.8,
+      "clients": [
+        "Campo Limpo Paulista CM"
+      ]
+    },
+    {
+      "id": "campo-novo-do-parecis-mt",
+      "city": "Campo Novo do Parecis",
+      "uf": "MT",
+      "x": 411.9,
+      "y": 499.7,
+      "clients": [
+        "Campo Novo do Parecis CM"
+      ]
+    },
+    {
+      "id": "campos-de-julio-mt",
+      "city": "Campos de Júlio",
+      "uf": "MT",
+      "x": 376.6,
+      "y": 501.4,
+      "clients": [
+        "Campos de Júlio CM"
+      ]
+    },
+    {
+      "id": "capivari-sp",
+      "city": "Capivari",
+      "uf": "SP",
+      "x": 674.1,
+      "y": 743.2,
+      "clients": [
+        "Capivari CM"
+      ]
+    },
+    {
+      "id": "cerquilho-sp",
+      "city": "Cerquilho",
+      "uf": "SP",
+      "x": 668,
+      "y": 747.7,
+      "clients": [
+        "Cerquilho CM"
+      ]
+    },
+    {
+      "id": "charqueada-sp",
+      "city": "Charqueada",
+      "uf": "SP",
+      "x": 667.3,
+      "y": 730.6,
+      "clients": [
+        "Charqueada CM"
+      ]
+    },
+    {
+      "id": "colombia-sp",
+      "city": "Colômbia",
+      "uf": "SP",
+      "x": 644.3,
+      "y": 669.7,
+      "clients": [
+        "Colômbia PM"
+      ]
+    },
+    {
+      "id": "conchas-sp",
+      "city": "Conchas",
+      "uf": "SP",
+      "x": 661.3,
+      "y": 743.8,
+      "clients": [
+        "Conchas CM"
+      ]
+    },
+    {
+      "id": "cordeiropolis-sp",
+      "city": "Cordeirópolis",
+      "uf": "SP",
+      "x": 675.5,
+      "y": 729.8,
+      "clients": [
+        "Cordeirópolis CM"
+      ]
+    },
+    {
+      "id": "corumbatai-sp",
+      "city": "Corumbataí",
+      "uf": "SP",
+      "x": 671.2,
+      "y": 723.1,
+      "clients": [
+        "Corumbatai CM"
+      ]
+    },
+    {
+      "id": "cotia-sp",
+      "city": "Cotia",
+      "uf": "SP",
+      "x": 688.9,
+      "y": 759.1,
+      "clients": [
+        "Cotia CM"
+      ]
+    },
+    {
+      "id": "divinolandia-sp",
+      "city": "Divinolândia",
+      "uf": "SP",
+      "x": 693.5,
+      "y": 708.5,
+      "clients": [
+        "Divinolândia CM"
+      ]
+    },
+    {
+      "id": "dois-corregos-sp",
+      "city": "Dois Córregos",
+      "uf": "SP",
+      "x": 652,
+      "y": 726.9,
+      "clients": [
+        "Dois Córregos CM"
+      ]
+    },
+    {
+      "id": "franca-sp",
+      "city": "Franca",
+      "uf": "SP",
+      "x": 676.7,
+      "y": 679.1,
+      "clients": [
+        "Franca CM"
+      ]
+    },
+    {
+      "id": "fronteira-mg",
+      "city": "Fronteira",
+      "uf": "MG",
+      "x": 631.4,
+      "y": 672.3,
+      "clients": [
+        "Fronteira CM"
+      ]
+    },
+    {
+      "id": "frutal-mg",
+      "city": "Frutal",
+      "uf": "MG",
+      "x": 638,
+      "y": 665.8,
+      "clients": [
+        "Frutal CM"
+      ]
+    },
+    {
+      "id": "guapiacu-sp",
+      "city": "Guapiaçu",
+      "uf": "SP",
+      "x": 630.9,
+      "y": 685.9,
+      "clients": [
+        "Guapiaçu PM"
+      ]
+    },
+    {
+      "id": "guaraci-sp",
+      "city": "Guaraci",
+      "uf": "SP",
+      "x": 637.9,
+      "y": 678.1,
+      "clients": [
+        "Guaraci CM"
+      ]
+    },
+    {
+      "id": "guararapes-sp",
+      "city": "Guararapes",
+      "uf": "SP",
+      "x": 594.8,
+      "y": 697.8,
+      "clients": [
+        "Guararapes CM"
+      ]
+    },
+    {
+      "id": "guaruja-sp",
+      "city": "Guarujá",
+      "uf": "SP",
+      "x": 705.6,
+      "y": 769.2,
+      "clients": [
+        "Guarujá CM"
+      ]
+    },
+    {
+      "id": "iaras-sp",
+      "city": "Iaras",
+      "uf": "SP",
+      "x": 632.2,
+      "y": 739.9,
+      "clients": [
+        "Iaras CM"
+      ]
+    },
+    {
+      "id": "ibate-sp",
+      "city": "Ibaté",
+      "uf": "SP",
+      "x": 661.9,
+      "y": 716.2,
+      "clients": [
+        "Ibate CM"
+      ]
+    },
+    {
+      "id": "ibira-sp",
+      "city": "Ibirá",
+      "uf": "SP",
+      "x": 630.2,
+      "y": 693.4,
+      "clients": [
+        "Ibirá PM"
+      ]
+    },
+    {
+      "id": "ibiraci-mg",
+      "city": "Ibiraci",
+      "uf": "MG",
+      "x": 683.8,
+      "y": 677.2,
+      "clients": [
+        "Ibiraci CM"
+      ]
+    },
+    {
+      "id": "ipero-sp",
+      "city": "Iperó",
+      "uf": "SP",
+      "x": 669.4,
+      "y": 752.5,
+      "clients": [
+        "Iperó CM"
+      ]
+    },
+    {
+      "id": "ipeuna-sp",
+      "city": "Ipeúna",
+      "uf": "SP",
+      "x": 668.8,
+      "y": 728.7,
+      "clients": [
+        "Ipeúna CM"
+      ]
+    },
+    {
+      "id": "iracemapolis-sp",
+      "city": "Iracemápolis",
+      "uf": "SP",
+      "x": 673.7,
+      "y": 732.5,
+      "clients": [
+        "Iracemápolis PM"
+      ]
+    },
+    {
+      "id": "itai-sp",
+      "city": "Itaí",
+      "uf": "SP",
+      "x": 634,
+      "y": 754.4,
+      "clients": [
+        "Itaí PM"
+      ]
+    },
+    {
+      "id": "itajobi-sp",
+      "city": "Itajobi",
+      "uf": "SP",
+      "x": 634.8,
+      "y": 699.4,
+      "clients": [
+        "Itajobi CM"
+      ]
+    },
+    {
+      "id": "itajuba-mg",
+      "city": "Itajubá",
+      "uf": "MG",
+      "x": 725.8,
+      "y": 728.3,
+      "clients": [
+        "Itajubá CM"
+      ]
+    },
+    {
+      "id": "itanhaem-sp",
+      "city": "Itanhaém",
+      "uf": "SP",
+      "x": 692.2,
+      "y": 774,
+      "clients": [
+        "Itanhaém CM"
+      ]
+    },
+    {
+      "id": "itapetininga-sp",
+      "city": "Itapetininga",
+      "uf": "SP",
+      "x": 660.4,
+      "y": 758.7,
+      "clients": [
+        "Itapetininga CM"
+      ]
+    },
+    {
+      "id": "itapevi-sp",
+      "city": "Itapevi",
+      "uf": "SP",
+      "x": 688.6,
+      "y": 757.7,
+      "clients": [
+        "Itapevi CM"
+      ]
+    },
+    {
+      "id": "itaquaquecetuba-sp",
+      "city": "Itaquaquecetuba",
+      "uf": "SP",
+      "x": 703.4,
+      "y": 756,
+      "clients": [
+        "Itaquaquecetuba CM"
+      ]
+    },
+    {
+      "id": "itatiba-sp",
+      "city": "Itatiba",
+      "uf": "SP",
+      "x": 690.7,
+      "y": 743.5,
+      "clients": [
+        "Itatiba CM"
+      ]
+    },
+    {
+      "id": "itu-sp",
+      "city": "Itu",
+      "uf": "SP",
+      "x": 679.5,
+      "y": 750,
+      "clients": [
+        "Itu CM"
+      ]
+    },
+    {
+      "id": "jarinu-sp",
+      "city": "Jarinu",
+      "uf": "SP",
+      "x": 693.7,
+      "y": 746.1,
+      "clients": [
+        "Jarinu CM"
+      ]
+    },
+    {
+      "id": "leme-sp",
+      "city": "Leme",
+      "uf": "SP",
+      "x": 677.2,
+      "y": 722,
+      "clients": [
+        "Leme CM"
+      ]
+    },
+    {
+      "id": "lencois-paulista-sp",
+      "city": "Lençóis Paulista",
+      "uf": "SP",
+      "x": 641.3,
+      "y": 733,
+      "clients": [
+        "Lençois Paulista CM"
+      ]
+    },
+    {
+      "id": "limeira-sp",
+      "city": "Limeira",
+      "uf": "SP",
+      "x": 676.8,
+      "y": 732.1,
+      "clients": [
+        "Limeira CM"
+      ]
+    },
+    {
+      "id": "lorena-sp",
+      "city": "Lorena",
+      "uf": "SP",
+      "x": 734.4,
+      "y": 736.4,
+      "clients": [
+        "Lorena CM"
+      ]
+    },
+    {
+      "id": "louveira-sp",
+      "city": "Louveira",
+      "uf": "SP",
+      "x": 688.2,
+      "y": 745.6,
+      "clients": [
+        "Louveira CM"
+      ]
+    },
+    {
+      "id": "maria-da-fe-mg",
+      "city": "Maria da Fé",
+      "uf": "MG",
+      "x": 727.8,
+      "y": 725.2,
+      "clients": [
+        "Maria da Fé CM"
+      ]
+    },
+    {
+      "id": "mogi-mirim-sp",
+      "city": "Mogi Mirim",
+      "uf": "SP",
+      "x": 688.1,
+      "y": 728.6,
+      "clients": [
+        "Mogi Mirim CM"
+      ]
+    },
+    {
+      "id": "mongagua-sp",
+      "city": "Mongaguá",
+      "uf": "SP",
+      "x": 696.3,
+      "y": 771.6,
+      "clients": [
+        "Mongaguá CM"
+      ]
+    },
+    {
+      "id": "monte-alto-sp",
+      "city": "Monte Alto",
+      "uf": "SP",
+      "x": 649.1,
+      "y": 698.1,
+      "clients": [
+        "Monte Alto CM"
+      ]
+    },
+    {
+      "id": "monte-azul-paulista-sp",
+      "city": "Monte Azul Paulista",
+      "uf": "SP",
+      "x": 645.5,
+      "y": 688.8,
+      "clients": [
+        "Monte Azul Paulista CM"
+      ]
+    },
+    {
+      "id": "monte-siao-mg",
+      "city": "Monte Sião",
+      "uf": "MG",
+      "x": 697.7,
+      "y": 728.6,
+      "clients": [
+        "Monte Sião CM"
+      ]
+    },
+    {
+      "id": "neves-paulista-sp",
+      "city": "Neves Paulista",
+      "uf": "SP",
+      "x": 620.3,
+      "y": 687.1,
+      "clients": [
+        "Neves Paulista CM"
+      ]
+    },
+    {
+      "id": "nipoa-sp",
+      "city": "Nipoã",
+      "uf": "SP",
+      "x": 616.6,
+      "y": 688.9,
+      "clients": [
+        "Nipoa"
+      ]
+    },
+    {
+      "id": "niteroi-rj",
+      "city": "Niterói",
+      "uf": "RJ",
+      "x": 785.3,
+      "y": 740.3,
+      "clients": [
+        "Niterói CM"
+      ]
+    },
+    {
+      "id": "nova-odessa-sp",
+      "city": "Nova Odessa",
+      "uf": "SP",
+      "x": 679.4,
+      "y": 737.7,
+      "clients": [
+        "Nova Odessa CM"
+      ]
+    },
+    {
+      "id": "olimpia-sp",
+      "city": "Olímpia",
+      "uf": "SP",
+      "x": 638.6,
+      "y": 684.3,
+      "clients": [
+        "Olímpia CM"
+      ]
+    },
+    {
+      "id": "orindiuva-sp",
+      "city": "Orindiúva",
+      "uf": "SP",
+      "x": 627.6,
+      "y": 670,
+      "clients": [
+        "Orindiúva CM"
+      ]
+    },
+    {
+      "id": "palestina-sp",
+      "city": "Palestina",
+      "uf": "SP",
+      "x": 625.5,
+      "y": 675.3,
+      "clients": [
+        "Palestina CM"
+      ]
+    },
+    {
+      "id": "paraiso-sp",
+      "city": "Paraíso",
+      "uf": "SP",
+      "x": 642,
+      "y": 691.6,
+      "clients": [
+        "Paraíso CM"
+      ]
+    },
+    {
+      "id": "paulinia-sp",
+      "city": "Paulínia",
+      "uf": "SP",
+      "x": 683.1,
+      "y": 737,
+      "clients": [
+        "Paulinia CM"
+      ]
+    },
+    {
+      "id": "paulo-de-faria-sp",
+      "city": "Paulo de Faria",
+      "uf": "SP",
+      "x": 626.3,
+      "y": 665.9,
+      "clients": [
+        "Paulo de Faria CM"
+      ]
+    },
+    {
+      "id": "pereira-barreto-sp",
+      "city": "Pereira Barreto",
+      "uf": "SP",
+      "x": 583,
+      "y": 681.7,
+      "clients": [
+        "Pereira Barreto CM"
+      ]
+    },
+    {
+      "id": "pindorama-sp",
+      "city": "Pindorama",
+      "uf": "SP",
+      "x": 638.7,
+      "y": 696,
+      "clients": [
+        "Pindorama CM"
+      ]
+    },
+    {
+      "id": "pirassununga-sp",
+      "city": "Pirassununga",
+      "uf": "SP",
+      "x": 676.1,
+      "y": 717.2,
+      "clients": [
+        "Pirassununga CM"
+      ]
+    },
+    {
+      "id": "poa-sp",
+      "city": "Poá",
+      "uf": "SP",
+      "x": 703.4,
       "y": 757.3,
       "clients": [
-        "Cliente exemplo 07"
+        "Poá CM"
+      ]
+    },
+    {
+      "id": "pocos-de-caldas-mg",
+      "city": "Poços de Caldas",
+      "uf": "MG",
+      "x": 697.7,
+      "y": 711.6,
+      "clients": [
+        "Poços de Caldas CM"
+      ]
+    },
+    {
+      "id": "promissao-sp",
+      "city": "Promissão",
+      "uf": "SP",
+      "x": 614.6,
+      "y": 705.2,
+      "clients": [
+        "Promissão CM"
+      ]
+    },
+    {
+      "id": "quadra-sp",
+      "city": "Quadra",
+      "uf": "SP",
+      "x": 660.2,
+      "y": 751.2,
+      "clients": [
+        "Quadra CM"
+      ]
+    },
+    {
+      "id": "redencao-da-serra-sp",
+      "city": "Redenção da Serra",
+      "uf": "SP",
+      "x": 723.7,
+      "y": 750.3,
+      "clients": [
+        "CM Redenção Da Serra"
+      ]
+    },
+    {
+      "id": "rio-das-pedras-sp",
+      "city": "Rio das Pedras",
+      "uf": "SP",
+      "x": 671.6,
+      "y": 739.2,
+      "clients": [
+        "Rio das Pedras CM"
+      ]
+    },
+    {
+      "id": "saltinho-sp",
+      "city": "Saltinho",
+      "uf": "SP",
+      "x": 669.8,
+      "y": 739.3,
+      "clients": [
+        "Saltinho PM"
+      ]
+    },
+    {
+      "id": "santa-adelia-sp",
+      "city": "Santa Adélia",
+      "uf": "SP",
+      "x": 641.3,
+      "y": 697.5,
+      "clients": [
+        "Santa Adélia PM"
+      ]
+    },
+    {
+      "id": "santa-barbara-d-oeste-sp",
+      "city": "Santa Bárbara d'Oeste",
+      "uf": "SP",
+      "x": 676.4,
+      "y": 737,
+      "clients": [
+        "Santa Bárbara D Oeste CM"
+      ]
+    },
+    {
+      "id": "santa-gertrudes-sp",
+      "city": "Santa Gertrudes",
+      "uf": "SP",
+      "x": 673.6,
+      "y": 729.2,
+      "clients": [
+        "Santa Gertrudes CM"
+      ]
+    },
+    {
+      "id": "santa-rita-do-passa-quatro-sp",
+      "city": "Santa Rita do Passa Quatro",
+      "uf": "SP",
+      "x": 674.8,
+      "y": 709.7,
+      "clients": [
+        "Santa Rita do Passa Quatro CM"
+      ]
+    },
+    {
+      "id": "santa-rosa-de-viterbo-sp",
+      "city": "Santa Rosa de Viterbo",
+      "uf": "SP",
+      "x": 677.7,
+      "y": 703.7,
+      "clients": [
+        "Santa Rosa de Viterbo CM"
+      ]
+    },
+    {
+      "id": "santana-de-parnaiba-sp",
+      "city": "Santana de Parnaíba",
+      "uf": "SP",
+      "x": 688.9,
+      "y": 755,
+      "clients": [
+        "1º Tabelião de Notas de Santana de Parnaíba - Cartório Rodrigues Cruz"
+      ]
+    },
+    {
+      "id": "sao-bento-do-sapucai-sp",
+      "city": "São Bento do Sapucaí",
+      "uf": "SP",
+      "x": 719,
+      "y": 735.1,
+      "clients": [
+        "São Bento do Sapucaí CM"
+      ]
+    },
+    {
+      "id": "sao-miguel-arcanjo-sp",
+      "city": "São Miguel Arcanjo",
+      "uf": "SP",
+      "x": 661.8,
+      "y": 766.3,
+      "clients": [
+        "São Miguel Arcanjo CM"
+      ]
+    },
+    {
+      "id": "sao-pedro-sp",
+      "city": "São Pedro",
+      "uf": "SP",
+      "x": 663.9,
+      "y": 731.6,
+      "clients": [
+        "São Pedro CM"
+      ]
+    },
+    {
+      "id": "sao-roque-sp",
+      "city": "São Roque",
+      "uf": "SP",
+      "x": 683.4,
+      "y": 757,
+      "clients": [
+        "São Roque CM"
+      ]
+    },
+    {
+      "id": "serrania-mg",
+      "city": "Serrania",
+      "uf": "MG",
+      "x": 711.1,
+      "y": 705.4,
+      "clients": [
+        "Serrania CM"
+      ]
+    },
+    {
+      "id": "silvianopolis-mg",
+      "city": "Silvianópolis",
+      "uf": "MG",
+      "x": 716.2,
+      "y": 718,
+      "clients": [
+        "Silvianopolis CM"
+      ]
+    },
+    {
+      "id": "socorro-sp",
+      "city": "Socorro",
+      "uf": "SP",
+      "x": 698.9,
+      "y": 732.7,
+      "clients": [
+        "1 Tabelião de Noras e de Protestos de Letras e Títulos de Socorro"
+      ]
+    },
+    {
+      "id": "sorocaba-sp",
+      "city": "Sorocaba",
+      "uf": "SP",
+      "x": 675.6,
+      "y": 756.3,
+      "clients": [
+        "4º Tabelião de Notas de Sorocaba (Cartório Pires)"
+      ]
+    },
+    {
+      "id": "sorriso-mt",
+      "city": "Sorriso",
+      "uf": "MT",
+      "x": 466.6,
+      "y": 470.6,
+      "clients": [
+        "Sorriso CM"
+      ]
+    },
+    {
+      "id": "sumare-sp",
+      "city": "Sumaré",
+      "uf": "SP",
+      "x": 680,
+      "y": 738.7,
+      "clients": [
+        "Sumaré CM"
+      ]
+    },
+    {
+      "id": "tanabi-sp",
+      "city": "Tanabi",
+      "uf": "SP",
+      "x": 619.8,
+      "y": 681.4,
+      "clients": [
+        "Tanabi CM"
+      ]
+    },
+    {
+      "id": "tatui-sp",
+      "city": "Tatuí",
+      "uf": "SP",
+      "x": 665.5,
+      "y": 752.5,
+      "clients": [
+        "Tatui CM"
+      ]
+    },
+    {
+      "id": "turvolandia-mg",
+      "city": "Turvolândia",
+      "uf": "MG",
+      "x": 717.5,
+      "y": 714,
+      "clients": [
+        "Turvolândia - CM"
+      ]
+    },
+    {
+      "id": "vargem-grande-paulista-sp",
+      "city": "Vargem Grande Paulista",
+      "uf": "SP",
+      "x": 686.3,
+      "y": 759,
+      "clients": [
+        "Vargem Grande Paulista CM"
+      ]
+    },
+    {
+      "id": "varzea-paulista-sp",
+      "city": "Várzea Paulista",
+      "uf": "SP",
+      "x": 691.3,
+      "y": 748.9,
+      "clients": [
+        "Várzea Paulista CM"
+      ]
+    },
+    {
+      "id": "vinhedo-sp",
+      "city": "Vinhedo",
+      "uf": "SP",
+      "x": 687.3,
+      "y": 744.2,
+      "clients": [
+        "Vinhedo PM"
       ]
     }
   ]

@@ -3,7 +3,7 @@
   --title-mask-bleed: 0.24em;
   --title-size: clamp(2.25rem, 11vw, 3rem);
   --subtitle-size: clamp(1rem, 4.4vw, 1.5rem);
-  --stat-size: clamp(2.5rem, 12vw, 4rem);
+  --stat-size: clamp(2.25rem, 11vw, 3.5rem);
   --stat-label-size: 0.875rem;
   --place-size: 1rem;
 
@@ -146,7 +146,7 @@
   .panel {
     --title-size: clamp(2rem, calc(var(--u) * 3.33), 4.5rem);
     --subtitle-size: clamp(0.875rem, calc(var(--u) * 1.67), 2.25rem);
-    --stat-size: clamp(2.5rem, calc(var(--u) * 5.2), 7rem);
+    --stat-size: clamp(2.25rem, calc(var(--u) * 4.2), 6rem);
     --stat-label-size: clamp(0.75rem, calc(var(--u) * 1.11), 1.5rem);
     --place-size: clamp(0.8125rem, calc(var(--u) * 1.15), 1.5rem);
 
@@ -190,7 +190,7 @@
   }
 
   .stats {
-    gap: calc(var(--u) * 3);
+    gap: calc(var(--u) * 2.2);
   }
 
   .places {

@@ -1,6 +1,7 @@
 // Busca os locais de atendimento no Milldesk e gera src/data/clients.json,
 // só com o que o site mostra: cliente, cidade, UF e posição no mapa.
-// E-mail, telefone e endereço da API nunca saem deste script.
+// E-mail, telefone e endereço da API nunca saem deste script, e locais
+// desabilitados no Milldesk ficam de fora.
 //
 // Uso:
 //   npm run sync:clients                  (lê MILLDESK_API_KEY do .env)
@@ -136,11 +137,14 @@ const resolveCity = (record) => {
 
 const source = readArgument('--from');
 const payload = source !== null ? JSON.parse(await readFile(source, 'utf8')) : await fetchLocals();
-const records = toRecords(payload).filter((record) => String(record?.location ?? '').trim());
+const named = toRecords(payload).filter((record) => String(record?.location ?? '').trim());
+// Só entram os locais com "Habilitado" marcado no Milldesk (`enabled: true`).
+const records = named.filter((record) => record.enabled === true);
+const disabledCount = named.length - records.length;
 
 // Uma resposta vazia ou em formato inesperado não pode apagar os dados atuais.
 if (records.length === 0) {
-  fail(`Nenhum local encontrado na resposta: ${OUTPUT} não foi alterado.`);
+  fail(`Nenhum local habilitado encontrado na resposta: ${OUTPUT} não foi alterado.`);
 }
 
 const grouped = new Map();
@@ -186,7 +190,7 @@ await mkdir('src/data', { recursive: true });
 await writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`);
 
 process.stdout.write(
-  `${records.length} locais lidos: ${output.totals.clients} clientes em ${output.totals.cities} cidades e ${output.totals.states} estados -> ${OUTPUT}\n`,
+  `${records.length} locais habilitados lidos (${disabledCount} desabilitados ignorados): ${output.totals.clients} clientes em ${output.totals.cities} cidades e ${output.totals.states} estados -> ${OUTPUT}\n`,
 );
 if (unmatched.length > 0) {
   process.stdout.write(
