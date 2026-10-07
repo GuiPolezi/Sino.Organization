@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -6,6 +6,7 @@ import { MEDIA } from '../../utils/media.js';
 import CompanyCard from './CompanyCard.jsx';
 import DecorShape from './DecorShape.jsx';
 import SectorsList from './SectorsList.jsx';
+import { TrackContext } from './TrackContext.js';
 import YearsCounter from './YearsCounter.jsx';
 import {
   playIntro,
@@ -26,6 +27,7 @@ export default function Hero({ children }) {
   const viewport = useRef(null);
   const track = useRef(null);
   const panel = useRef(null);
+  const [scrollTween, setScrollTween] = useState(null);
 
   useGSAP(
     () => {
@@ -33,13 +35,16 @@ export default function Hero({ children }) {
 
       mm.add(MEDIA.motion, () => playIntro(panel.current));
       mm.add(MEDIA.reducedMotion, () => playReducedIntro(panel.current));
-      mm.add(MEDIA.horizontalScroll, () =>
-        setupHorizontalScroll({
-          viewport: viewport.current,
-          track: track.current,
-          panel: panel.current,
-        }),
-      );
+      mm.add(MEDIA.horizontalScroll, () => {
+        setScrollTween(
+          setupHorizontalScroll({
+            viewport: viewport.current,
+            track: track.current,
+            panel: panel.current,
+          }),
+        );
+        return () => setScrollTween(null);
+      });
     },
     { scope: viewport },
   );
@@ -59,7 +64,7 @@ export default function Hero({ children }) {
           </div>
         </section>
 
-        {children}
+        <TrackContext value={scrollTween}>{children}</TrackContext>
       </div>
     </div>
   );

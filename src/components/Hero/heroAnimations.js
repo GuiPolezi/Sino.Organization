@@ -19,8 +19,9 @@ const AT = {
 };
 
 // Parallax durante o scroll horizontal, em fração da largura da viewport.
+// O anel anda o bastante para revelar, no painel seguinte, a metade escondida.
 const PARALLAX = {
-  shape: 0.1,
+  shape: 0.045,
   counter: -0.04,
 };
 
@@ -135,7 +136,8 @@ export function playReducedIntro(scope) {
 }
 
 export function setupHorizontalScroll({ viewport, track, panel }) {
-  const q = gsap.utils.selector(panel);
+  // O anel decorativo se repete nos painéis seguintes: a busca é no track.
+  const q = gsap.utils.selector(track);
   const distance = () => track.scrollWidth - viewport.clientWidth;
 
   const scrollTween = gsap.to(track, {
@@ -165,4 +167,6 @@ export function setupHorizontalScroll({ viewport, track, panel }) {
       },
     });
   });
+
+  return scrollTween;
 }

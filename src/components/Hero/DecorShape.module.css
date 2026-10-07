@@ -2,18 +2,29 @@
   --shape-size: 110vw;
   --shape-right: -62vw;
   --shape-bottom: -50vw;
+  --shape-fill: var(--color-olive-dark);
 
   position: absolute;
-  right: var(--shape-right);
   bottom: var(--shape-bottom);
   width: var(--shape-size);
   pointer-events: none;
 }
 
+.hero {
+  right: var(--shape-right);
+}
+
+/* Espelha a posição do Hero: o centro do anel é o mesmo ponto do track. */
+.systems {
+  --shape-fill: var(--color-olive-soft);
+
+  left: calc((var(--shape-right) + var(--shape-size)) * -1);
+}
+
 .svg {
   width: 100%;
   height: auto;
-  fill: var(--color-olive-dark);
+  fill: var(--shape-fill);
 }
 
 @media (min-width: 1024px) {

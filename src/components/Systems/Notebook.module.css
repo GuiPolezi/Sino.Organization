@@ -1,0 +1,224 @@
+.scene {
+  /* Medidas do aparelho, todas derivadas da largura da base. */
+  --nb-w: 62vw;
+  --nb-d: calc(var(--nb-w) * 0.64);
+  --nb-h: calc(var(--nb-w) * 0.62);
+  --nb-t: calc(var(--nb-w) * 0.022);
+  --nb-r: calc(var(--nb-w) * 0.03);
+
+  /* Cores do aparelho (fora da paleta do site, por serem do "objeto"). */
+  --nb-shell: #5a5a52;
+  --nb-shell-light: #6c6c63;
+  --nb-edge: #8a6b4f;
+  --nb-edge-dark: #5f4a38;
+  --nb-key: #2a2b27;
+  --nb-well: #161714;
+  --nb-bezel: #0d0e0c;
+  --nb-cta: #1fa97a;
+
+  position: relative;
+  width: var(--nb-w);
+  height: var(--nb-d);
+  perspective: calc(var(--nb-w) * 5);
+}
+
+.tilt,
+.ground,
+.laptop,
+.lid {
+  transform-style: preserve-3d;
+}
+
+.tilt,
+.ground,
+.laptop,
+.base,
+.bottom {
+  position: absolute;
+  inset: 0;
+}
+
+.ground {
+  transform: rotateX(68deg) rotateZ(-26deg);
+}
+
+.shadow {
+  position: absolute;
+  inset: 4% -4% -8% 6%;
+  border-radius: 12%;
+  background: var(--color-shadow);
+  filter: blur(calc(var(--nb-w) * 0.05));
+  transform: translateZ(calc(var(--nb-t) * -3));
+}
+
+.base,
+.bottom,
+.lid,
+.display {
+  border-radius: var(--nb-r);
+}
+
+.base {
+  background: linear-gradient(160deg, var(--nb-shell-light), var(--nb-shell));
+}
+
+.bottom {
+  background: var(--nb-edge-dark);
+  transform: translateZ(calc(var(--nb-t) * -1));
+}
+
+.sideFront,
+.sideLeft {
+  position: absolute;
+  background: linear-gradient(90deg, var(--nb-edge-dark), var(--nb-edge));
+}
+
+.sideFront {
+  top: 100%;
+  left: var(--nb-r);
+  width: calc(100% - var(--nb-r) * 2);
+  height: var(--nb-t);
+  transform-origin: top;
+  transform: rotateX(-90deg);
+}
+
+.sideLeft {
+  top: var(--nb-r);
+  left: 0;
+  width: var(--nb-t);
+  height: calc(100% - var(--nb-r) * 2);
+  transform-origin: left;
+  transform: rotateY(90deg);
+}
+
+.keyboard {
+  position: absolute;
+  top: 7%;
+  right: 5%;
+  left: 5%;
+  height: 50%;
+  border: calc(var(--nb-w) * 0.006) solid var(--nb-well);
+  border-radius: calc(var(--nb-r) * 0.5);
+  background-color: var(--nb-key);
+  background-image:
+    linear-gradient(90deg, var(--nb-well) 14%, transparent 14%),
+    linear-gradient(0deg, var(--nb-well) 14%, transparent 14%);
+  background-size:
+    calc(100% / 14) 100%,
+    100% calc(100% / 5);
+}
+
+.trackpad {
+  position: absolute;
+  top: 63%;
+  left: 31%;
+  width: 38%;
+  height: 32%;
+  border-radius: calc(var(--nb-r) * 0.5);
+  background: color-mix(in srgb, var(--nb-shell-light) 80%, var(--color-white));
+  opacity: 0.55;
+}
+
+/* A tampa fica "acima" da dobradiça e gira para trás. Mesmo ângulo de LID_OPEN. */
+.lid {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  height: var(--nb-h);
+  background: var(--nb-shell);
+  transform-origin: bottom;
+  transform: rotateX(-62deg);
+}
+
+.display {
+  position: absolute;
+  inset: 0;
+  padding: 2.2%;
+  background: var(--nb-bezel);
+  backface-visibility: hidden;
+  transform: translateZ(1px);
+}
+
+.notch {
+  position: absolute;
+  top: 2.2%;
+  left: 50%;
+  width: 12%;
+  height: 4%;
+  border-radius: 0 0 20% 20% / 0 0 60% 60%;
+  background: var(--nb-bezel);
+  transform: translateX(-50%);
+}
+
+.screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: calc(var(--nb-r) * 0.6);
+  background:
+    radial-gradient(
+      circle at 62% 38%,
+      color-mix(in srgb, var(--nb-cta) 35%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-mint) 55%, var(--color-white)),
+      var(--color-mint)
+    );
+}
+
+.tile {
+  position: absolute;
+  top: calc(var(--y) * 1%);
+  left: calc(var(--x) * 1%);
+  width: 9%;
+  aspect-ratio: 1;
+  border-radius: 24%;
+  background: color-mix(in srgb, var(--color-white) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 60%, transparent);
+}
+
+.login {
+  position: absolute;
+  top: 8%;
+  right: 7%;
+  bottom: 8%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5%;
+  width: 34%;
+  padding: 5% 4%;
+  border-radius: 8%;
+  background: color-mix(in srgb, var(--color-white) 35%, transparent);
+}
+
+.crest {
+  width: 18%;
+  aspect-ratio: 1;
+  margin-bottom: 6%;
+  border-radius: 50%;
+  background: var(--color-olive);
+}
+
+.field,
+.cta,
+.ghost {
+  width: 100%;
+  height: 9%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-white) 85%, transparent);
+}
+
+.cta {
+  margin-top: 8%;
+  background: var(--nb-cta);
+}
+
+@media (min-width: 1024px) {
+  .scene {
+    --nb-w: calc(var(--u) * 33);
+  }
+}

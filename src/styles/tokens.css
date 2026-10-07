@@ -4,10 +4,13 @@
   --color-olive: #606c38; /* fundo principal */
   --color-cream: #fefae0; /* títulos, números, destaques */
   --color-olive-dark: #3b4726; /* elementos decorativos, linhas, sombras */
+  --color-mint: #b0dac9; /* balões e detalhes da seção Sistemas */
+  --color-ink: #11140c; /* texto sobre o mint */
 
   /* Variações por opacidade (sempre a partir da paleta) */
   --color-cream-muted: color-mix(in srgb, var(--color-cream) 55%, transparent);
   --color-shadow: color-mix(in srgb, var(--color-olive-dark) 60%, transparent);
+  --color-olive-soft: color-mix(in srgb, var(--color-olive-dark) 72%, var(--color-cream));
 
   /* Tipografia */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;

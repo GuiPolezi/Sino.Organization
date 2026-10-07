@@ -1,5 +1,5 @@
 import Hero from './components/Hero/Hero.jsx';
-import PlaceholderPanel from './components/PlaceholderPanel/PlaceholderPanel.jsx';
+import Systems from './components/Systems/Systems.jsx';
 import { useLenis } from './hooks/useLenis.js';
 
 export default function App() {
@@ -8,7 +8,7 @@ export default function App() {
   return (
     <main>
       <Hero>
-        <PlaceholderPanel />
+        <Systems />
       </Hero>
     </main>
   );
