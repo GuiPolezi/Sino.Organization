@@ -1,0 +1,8 @@
+{
+  "team": [
+    { "id": "roberto", "agent": "Roberto" },
+    { "id": "fabio", "agent": "Fábio" },
+    { "id": "guilherme-p", "agent": "Guilherme P." },
+    { "id": "luiz", "agent": "Luiz" }
+  ]
+}

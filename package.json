@@ -10,7 +10,9 @@
     "optimize:images": "node scripts/optimize-images.mjs",
     "build:geo": "node scripts/build-geo-data.mjs",
     "sync:clients": "node --env-file-if-exists=.env scripts/sync-clients.mjs",
-    "test:resolver": "node --test scripts/resolve-city.test.mjs"
+    "sync:team": "node --env-file-if-exists=.env scripts/sync-team.mjs",
+    "test:resolver": "node --test scripts/resolve-city.test.mjs",
+    "test:team": "node --test scripts/build-team.test.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

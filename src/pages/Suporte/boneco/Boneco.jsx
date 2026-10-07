@@ -8,8 +8,30 @@ import { useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
 
 const LADOS = [-1, 1];
+const GRAUS = Math.PI / 180;
 
-function Cabelo({ estilo, material }) {
+// Cachos espalhados pela cabeça, sem cobrir o rosto: anéis do topo até a nuca.
+// Cada anel: [ângulo a partir do topo, primeiro e último giro a partir da frente, quantidade].
+const ANEIS_CACHOS = [
+  [0, 0, 0, 1],
+  [35, 0, 300, 6],
+  [62, 70, 290, 8],
+  [90, 95, 265, 7],
+  [115, 120, 240, 6],
+  [138, 150, 210, 4],
+];
+const RAIO_CACHOS = 0.33;
+const CACHOS = ANEIS_CACHOS.flatMap(([polar, inicio, fim, quantidade]) =>
+  Array.from({ length: quantidade }, (_, i) => {
+    const giro = (inicio + ((fim - inicio) * i) / Math.max(1, quantidade - 1)) * GRAUS;
+    const raio = RAIO_CACHOS * Math.sin(polar * GRAUS);
+    return [raio * Math.sin(giro), RAIO_CACHOS * Math.cos(polar * GRAUS), raio * Math.cos(giro)];
+  }),
+);
+// Duas a cada cinco mechas recebem a cor das luzes, sem formar fileiras.
+const temLuzes = (indice) => indice % 5 === 1 || indice % 5 === 3;
+
+function Cabelo({ estilo, material, materialMechas }) {
   if (estilo === 'curto') return <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />;
   if (estilo === 'coque') {
     return (
@@ -27,6 +49,24 @@ function Cabelo({ estilo, material }) {
       </>
     );
   }
+  if (estilo === 'topete') {
+    return (
+      <>
+        <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />
+        <mesh geometry={G.topete} material={material} position={[0, 0.3, 0.2]} scale={[1.2, 0.9, 1.1]} />
+      </>
+    );
+  }
+  if (estilo === 'cacheado') {
+    return CACHOS.map((posicao, indice) => (
+      <mesh
+        key={indice}
+        geometry={G.cacho}
+        material={temLuzes(indice) ? materialMechas : material}
+        position={posicao}
+      />
+    ));
+  }
   if (estilo === 'moicano') {
     return (
       <mesh
@@ -39,6 +79,28 @@ function Cabelo({ estilo, material }) {
     );
   }
   return null;
+}
+
+// Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo.
+function Barba({ estilo, material }) {
+  if (estilo !== 'bigode' && estilo !== 'cavanhaque') return null;
+
+  return (
+    <>
+      {LADOS.map((lado) => (
+        <mesh
+          key={lado}
+          geometry={G.bigode}
+          material={material}
+          position={[0.05 * lado, -0.085, 0.328]}
+          rotation-z={(Math.PI / 2 - 0.3) * lado}
+        />
+      ))}
+      {estilo === 'cavanhaque' && (
+        <mesh geometry={G.cavanhaque} material={material} position={[0, -0.215, 0.245]} scale={[1, 0.8, 0.6]} />
+      )}
+    </>
+  );
 }
 
 // Acessórios presos à cabeça; maleta e gravata ficam no corpo.
@@ -92,11 +154,14 @@ export default function Boneco({ tecnico }) {
       camisa: clay(aparencia.camisa),
       calca: clay(aparencia.calca),
       cabelo: clay(aparencia.cabelo.cor),
+      // Só existem para quem tem luzes no cabelo ou olhos claros.
+      mechas: aparencia.cabelo.mechas ? clay(aparencia.cabelo.mechas) : null,
+      olhos: aparencia.olhos ? clay(aparencia.olhos) : null,
     }),
     [aparencia],
   );
   useEffect(
-    () => () => Object.values(materiais).forEach((material) => material.dispose()),
+    () => () => Object.values(materiais).forEach((material) => material?.dispose()),
     [materiais],
   );
 
@@ -173,12 +238,20 @@ export default function Boneco({ tecnico }) {
           <mesh geometry={G.cabeca} material={materiais.pele} />
           {LADOS.map((lado) => (
             <group key={lado}>
-              <mesh geometry={G.olho} material={ESCURO} position={[0.12 * lado, 0.04, 0.31]} />
+              <mesh geometry={G.olho} material={materiais.olhos ?? ESCURO} position={[0.12 * lado, 0.04, 0.31]} />
+              {materiais.olhos && (
+                <mesh geometry={G.pupila} material={ESCURO} position={[0.12 * lado, 0.04, 0.343]} />
+              )}
               <mesh geometry={G.brilho} material={BRANCO} position={[0.12 * lado + 0.015, 0.06, 0.35]} />
               <mesh geometry={G.bochecha} material={BOCHECHA} position={[0.2 * lado, -0.07, 0.27]} scale={[1, 0.6, 0.4]} />
             </group>
           ))}
-          <Cabelo estilo={aparencia.cabelo.estilo} material={materiais.cabelo} />
+          <Cabelo
+            estilo={aparencia.cabelo.estilo}
+            material={materiais.cabelo}
+            materialMechas={materiais.mechas ?? materiais.cabelo}
+          />
+          <Barba estilo={aparencia.barba} material={materiais.cabelo} />
           <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.camisa} />
         </group>
       </group>

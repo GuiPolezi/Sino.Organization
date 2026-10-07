@@ -14,16 +14,14 @@
 //   npm run sync:clients -- --from arq.json   (usa um JSON local no formato da API)
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { normalize } from './lib/geo.mjs';
+import { MilldeskError, fetchMilldesk, toRecords } from './lib/milldesk.mjs';
 import { createCityResolver } from './lib/resolve-city.mjs';
 
-const API_URL = 'https://v1.milldesk.com/api';
 const CITIES_FILE = new URL('./data/municipios.json', import.meta.url);
 const OVERRIDES_FILE = new URL('./data/client-overrides.json', import.meta.url);
 // Estado-sede: entre cidades homônimas, e sem CEP, vale a deste estado.
 const HOME_UF = 'SP';
 const OUTPUT = 'src/data/clients.json';
-const API_TIMEOUT_MS = 15000;
-const ERROR_PREVIEW_LENGTH = 80;
 
 // Faixas de CEP (3 primeiros dígitos) de cada UF, para desempatar cidades homônimas.
 // A região do cadastro não é usada: muitas estão incorretas.
@@ -55,38 +53,10 @@ const readArgument = (name) => {
   return value || fail(`Informe o arquivo depois de ${name}.`);
 };
 
-const fetchLocals = async () => {
-  const apiKey = process.env.MILLDESK_API_KEY;
-  if (!apiKey) {
-    fail('Defina MILLDESK_API_KEY no arquivo .env (veja .env.example).');
-  }
-
-  // A chave vai na URL: nunca registre a URL em logs ou mensagens de erro.
-  // Sem seguir redirecionamentos, para a chave não ser enviada a outro endereço.
-  const response = await fetch(`${API_URL}/${encodeURIComponent(apiKey)}/listLocals`, {
-    redirect: 'error',
-    signal: AbortSignal.timeout(API_TIMEOUT_MS),
-  }).catch(() => {
-    fail('Não foi possível conectar à API do Milldesk.');
-  });
-  if (!response.ok) fail(`A API do Milldesk respondeu HTTP ${response.status}.`);
-
-  return response.json().catch(() => fail('A API do Milldesk não devolveu JSON.'));
-};
-
-const toRecords = (payload) => {
-  if (payload?.error) {
-    // A mensagem vem do servidor: tira a chave dela, crua ou codificada na URL.
-    const apiKey = process.env.MILLDESK_API_KEY;
-    const secrets = apiKey ? [apiKey, encodeURIComponent(apiKey)] : [];
-    const reason = secrets
-      .reduce((text, secret) => text.replaceAll(secret, '***'), String(payload.error))
-      .slice(0, ERROR_PREVIEW_LENGTH);
-    fail(`A API do Milldesk recusou a requisição: ${reason}.`);
-  }
-  if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === 'object') return Object.values(payload);
-  return fail('Formato de resposta inesperado da API do Milldesk.');
+// Os erros da API já chegam com mensagem segura (sem a chave).
+const orFail = (error) => {
+  if (error instanceof MilldeskError) fail(error.message);
+  throw error;
 };
 
 const cities = JSON.parse(await readFile(CITIES_FILE, 'utf8')).map(
@@ -125,8 +95,12 @@ const locate = (record) => {
 };
 
 const source = readArgument('--from');
-const payload = source !== null ? JSON.parse(await readFile(source, 'utf8')) : await fetchLocals();
-const named = toRecords(payload).filter((record) => String(record?.location ?? '').trim());
+const loadRecords = async () => {
+  const payload =
+    source !== null ? JSON.parse(await readFile(source, 'utf8')) : await fetchMilldesk('listLocals');
+  return toRecords(payload);
+};
+const named = (await loadRecords().catch(orFail)).filter((record) => String(record?.location ?? '').trim());
 // Só entram os locais com "Habilitado" marcado no Milldesk (`enabled: true`).
 const enabled = named.filter((record) => record.enabled === true);
 const records = enabled.filter((record) => !excluded.has(normalize(record.location)));

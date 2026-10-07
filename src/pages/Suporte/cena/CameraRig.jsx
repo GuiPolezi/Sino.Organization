@@ -24,10 +24,11 @@ export default function CameraRig() {
     const pos = selecionado ? posicoes.get(selecionado) : null;
 
     if (pos) {
-      // No desktop o boneco fica à esquerda do card; no mobile, acima do bottom sheet.
+      // No desktop o boneco fica à esquerda do card; no mobile, acima do bottom sheet
+      // (hoje baixo: só nome e cargo. Quando o card crescer, o boneco precisa subir).
       const dx = estreito ? 0 : 1.35;
-      alvoPos.current.set(pos.x + dx, estreito ? 3.8 : 2.7, pos.z + (estreito ? 14 : 7.2));
-      alvoOlhar.current.set(pos.x + dx, estreito ? -1.2 : 1.0, pos.z);
+      alvoPos.current.set(pos.x + dx, estreito ? 3.2 : 2.7, pos.z + (estreito ? 11 : 7.2));
+      alvoOlhar.current.set(pos.x + dx, estreito ? 0.7 : 1.0, pos.z);
     } else {
       alvoPos.current.set(0, 6.2 * recuo, 14 * recuo);
       alvoOlhar.current.set(0, 0.4, 0.3);

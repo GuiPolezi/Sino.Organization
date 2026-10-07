@@ -1,6 +1,7 @@
 // Aparência de cada técnico = configuração do MESMO boneco base, mapeada pelo
-// ID do Mildesk. Técnicos sem entrada aqui recebem uma aparência gerada a
-// partir do ID, sempre a mesma.
+// id do técnico em scripts/data/support-team.json. Para ajustar alguém, edite a
+// entrada dele em `aparencias`. Técnicos sem entrada recebem uma aparência
+// gerada a partir do id, sempre a mesma.
 
 /** @import { AparenciaTecnico } from '../tipos.js' */
 
@@ -11,12 +12,43 @@ export const CABELOS = ['#2B1E16', '#5B3A24', '#8A5A33', '#C9A26B', '#3A3A3A', '
 export const ESTILOS = ['curto', 'coque', 'moicano', 'careca', 'longo'];
 export const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 
+// Camisa verde do uniforme do suporte.
+const UNIFORME = '#4FA46B';
+const PRETO = '#17130F';
+
 /** @type {Record<string, AparenciaTecnico>} */
 export const aparencias = {
-  'MD-1042': { pele: PELES[1], camisa: '#7FA7D9', calca: CALCAS[0], cabelo: { estilo: 'longo', cor: CABELOS[0] }, acessorio: 'headset', altura: 0.96 },
-  'MD-1057': { pele: PELES[3], camisa: '#F2C46D', calca: CALCAS[2], cabelo: { estilo: 'curto', cor: CABELOS[0] }, acessorio: 'bone', altura: 1.06 },
-  'MD-1063': { pele: PELES[0], camisa: '#B79CE0', calca: CALCAS[1], cabelo: { estilo: 'coque', cor: CABELOS[5] }, acessorio: 'oculos', altura: 0.98 },
-  'MD-1071': { pele: PELES[2], camisa: '#6FC3C8', calca: CALCAS[4], cabelo: { estilo: 'moicano', cor: CABELOS[1] }, acessorio: 'headset', altura: 1.0 },
+  roberto: {
+    pele: PELES[0],
+    camisa: UNIFORME,
+    calca: CALCAS[0],
+    cabelo: { estilo: 'curto', cor: '#4A3020' },
+    acessorio: 'oculos',
+    barba: 'bigode',
+  },
+  fabio: {
+    pele: PELES[0],
+    camisa: UNIFORME,
+    calca: CALCAS[4],
+    cabelo: { estilo: 'topete', cor: PRETO },
+    acessorio: 'nenhum',
+    olhos: '#3F8FE0',
+  },
+  'guilherme-p': {
+    pele: PELES[0],
+    camisa: UNIFORME,
+    calca: CALCAS[2],
+    cabelo: { estilo: 'cacheado', cor: PRETO, mechas: '#EFEAE0' },
+    acessorio: 'nenhum',
+  },
+  luiz: {
+    pele: PELES[0],
+    camisa: UNIFORME,
+    calca: CALCAS[3],
+    cabelo: { estilo: 'careca', cor: '#3A2A20' },
+    acessorio: 'oculos',
+    barba: 'cavanhaque',
+  },
 };
 
 function hash(texto) {
@@ -27,7 +59,7 @@ function hash(texto) {
 
 /** @returns {AparenciaTecnico} */
 export function aparenciaDe(id) {
-  if (aparencias[id]) return aparencias[id];
+  if (Object.hasOwn(aparencias, id)) return aparencias[id];
 
   const h = hash(id);
   const escolher = (lista, deslocamento) => lista[(h >>> deslocamento) % lista.length];

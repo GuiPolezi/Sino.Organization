@@ -1,13 +1,14 @@
-import { mapearTecnico } from '../mappers/mildesk.js';
-import { respostaMildeskMock } from '../mocks/tecnicos.mock.js';
+import dados from '../../../data/team.json';
+import { mapearTecnico } from '../mappers/equipe.js';
 
 /** @import { Tecnico } from '../tipos.js' */
 
 /**
- * Hoje devolve o mock. Na integração, só o corpo desta função muda: ela passa
- * a chamar o backend, que é quem fala com o Mildesk (o token nunca vem ao navegador).
+ * A equipe vem de src/data/team.json, gerado a partir do Milldesk por
+ * `npm run sync:team` (a chave da API nunca vem ao navegador). Se um dia os
+ * dados vierem de um backend, só o corpo desta função muda.
  * @returns {Promise<Tecnico[]>}
  */
 export async function buscarEquipe() {
-  return respostaMildeskMock.map(mapearTecnico);
+  return dados.team.map(mapearTecnico);
 }

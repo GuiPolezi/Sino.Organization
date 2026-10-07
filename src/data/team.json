@@ -1,0 +1,29 @@
+{
+  "source": "milldesk",
+  "team": [
+    {
+      "id": "roberto",
+      "name": "Roberto",
+      "role": "Analista de Suporte",
+      "absent": false
+    },
+    {
+      "id": "fabio",
+      "name": "Fábio",
+      "role": "Analista de Suporte",
+      "absent": false
+    },
+    {
+      "id": "guilherme-p",
+      "name": "Guilherme P.",
+      "role": "Analista de Suporte",
+      "absent": false
+    },
+    {
+      "id": "luiz",
+      "name": "Luiz",
+      "role": "Coordenador de Suporte a Sistemas",
+      "absent": false
+    }
+  ]
+}

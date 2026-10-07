@@ -6,12 +6,6 @@ import Cena from './cena/Cena.jsx';
 import { useEquipe } from './store.js';
 import styles from './Suporte.module.css';
 
-const ROTULO_STATUS = {
-  disponivel: 'Disponível',
-  em_atendimento: 'Em atendimento',
-  ausente: 'Ausente',
-};
-
 function webglDisponivel() {
   try {
     const canvas = document.createElement('canvas');
@@ -20,8 +14,6 @@ function webglDisponivel() {
     return false;
   }
 }
-
-const primeiroNome = (nome) => nome.split(' ')[0];
 
 // Navegação rápida e acessível por teclado: um botão por técnico.
 function Elenco({ tecnicos, selecionado }) {
@@ -36,15 +28,13 @@ function Elenco({ tecnicos, selecionado }) {
           type="button"
           className={id === selecionado ? styles.ativo : undefined}
           aria-pressed={id === selecionado}
-          aria-label={nome}
           onClick={() => selecionar(id)}
           onMouseEnter={() => setHover(id)}
           onMouseLeave={() => setHover(null)}
           onFocus={() => setHover(id)}
           onBlur={() => setHover(null)}
         >
-          <i style={{ background: aparenciaDe(id).camisa }} />
-          {primeiroNome(nome)}
+          {nome}
         </button>
       ))}
     </nav>
@@ -57,7 +47,7 @@ function ListaTecnicos({ tecnicos, selecionado }) {
 
   return (
     <ul className={styles.lista} aria-label="Técnicos">
-      {tecnicos.map(({ id, nome, funcao, status, avatarIniciais }) => (
+      {tecnicos.map(({ id, nome, funcao, ausente, avatarIniciais }) => (
         <li key={id}>
           <button
             type="button"
@@ -69,8 +59,8 @@ function ListaTecnicos({ tecnicos, selecionado }) {
               {avatarIniciais}
             </span>
             <strong>{nome}</strong>
-            <span>{funcao}</span>
-            <span className={styles.itemStatus}>{ROTULO_STATUS[status] ?? ROTULO_STATUS.ausente}</span>
+            {funcao && <span>{funcao}</span>}
+            {ausente && <span className={styles.itemStatus}>Ausente</span>}
           </button>
         </li>
       ))}
