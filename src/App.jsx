@@ -1,3 +1,4 @@
+import Clients from './components/Clients/Clients.jsx';
 import Hero from './components/Hero/Hero.jsx';
 import Systems from './components/Systems/Systems.jsx';
 import { useLenis } from './hooks/useLenis.js';
@@ -10,6 +11,7 @@ export default function App() {
       <Hero>
         <Systems />
       </Hero>
+      <Clients />
     </main>
   );
 }

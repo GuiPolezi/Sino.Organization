@@ -1,0 +1,131 @@
+{
+  "source": "sample",
+  "totals": {
+    "clients": 13,
+    "cities": 12,
+    "states": 6
+  },
+  "cities": [
+    {
+      "id": "braganca-paulista-sp",
+      "city": "Bragança Paulista",
+      "uf": "SP",
+      "x": 698.4,
+      "y": 742.1,
+      "clients": [
+        "Cliente exemplo 01",
+        "Cliente exemplo 02"
+      ]
+    },
+    {
+      "id": "atibaia-sp",
+      "city": "Atibaia",
+      "uf": "SP",
+      "x": 698.1,
+      "y": 746.4,
+      "clients": [
+        "Cliente exemplo 03"
+      ]
+    },
+    {
+      "id": "campinas-sp",
+      "city": "Campinas",
+      "uf": "SP",
+      "x": 685.2,
+      "y": 740.9,
+      "clients": [
+        "Cliente exemplo 04"
+      ]
+    },
+    {
+      "id": "cuiaba-mt",
+      "city": "Cuiabá",
+      "uf": "MT",
+      "x": 457.1,
+      "y": 550.4,
+      "clients": [
+        "Cliente exemplo 10"
+      ]
+    },
+    {
+      "id": "curitiba-pr",
+      "city": "Curitiba",
+      "uf": "PR",
+      "x": 629.7,
+      "y": 806.5,
+      "clients": [
+        "Cliente exemplo 09"
+      ]
+    },
+    {
+      "id": "itatiba-sp",
+      "city": "Itatiba",
+      "uf": "SP",
+      "x": 690.7,
+      "y": 743.5,
+      "clients": [
+        "Cliente exemplo 13 de Itatiba"
+      ]
+    },
+    {
+      "id": "juiz-de-fora-mg",
+      "city": "Juiz de Fora",
+      "uf": "MG",
+      "x": 779.3,
+      "y": 711,
+      "clients": [
+        "Cliente exemplo 08"
+      ]
+    },
+    {
+      "id": "palmas-to",
+      "city": "Palmas",
+      "uf": "TO",
+      "x": 652.6,
+      "y": 410.6,
+      "clients": [
+        "Cliente exemplo 11"
+      ]
+    },
+    {
+      "id": "redencao-pa",
+      "city": "Redenção",
+      "uf": "PA",
+      "x": 610.3,
+      "y": 352.8,
+      "clients": [
+        "Cliente exemplo 12"
+      ]
+    },
+    {
+      "id": "ribeirao-preto-sp",
+      "city": "Ribeirão Preto",
+      "uf": "SP",
+      "x": 666.4,
+      "y": 695.6,
+      "clients": [
+        "Cliente exemplo 06"
+      ]
+    },
+    {
+      "id": "sao-jose-do-rio-preto-sp",
+      "city": "São José do Rio Preto",
+      "uf": "SP",
+      "x": 626.9,
+      "y": 686.3,
+      "clients": [
+        "Cliente exemplo 05"
+      ]
+    },
+    {
+      "id": "sao-paulo-sp",
+      "city": "São Paulo",
+      "uf": "SP",
+      "x": 696,
+      "y": 757.3,
+      "clients": [
+        "Cliente exemplo 07"
+      ]
+    }
+  ]
+}

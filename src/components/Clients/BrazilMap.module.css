@@ -1,0 +1,220 @@
+.scene {
+  /* Medidas do mapa, todas derivadas da largura. */
+  --map-w: 92vw;
+  --map-depth: calc(var(--map-w) * 0.006);
+  --pin-height: calc(var(--map-w) * 0.06);
+  --dot-size: calc(var(--map-w) * 0.018);
+  /* Inclinação do tabuleiro; o .billboard desfaz as duas para encarar a tela. */
+  --ground-x: 52deg;
+  --ground-z: -6deg;
+
+  position: relative;
+  width: var(--map-w);
+  aspect-ratio: 1000 / 1031;
+  perspective: calc(var(--map-w) * 4);
+}
+
+.tilt,
+.ground,
+.board,
+.pins,
+.pin {
+  transform-style: preserve-3d;
+}
+
+.tilt,
+.ground,
+.board,
+.shadow,
+.depth,
+.surface,
+.pins {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ground {
+  transform: rotateX(var(--ground-x)) rotateZ(var(--ground-z));
+}
+
+.shadow {
+  fill: var(--color-olive-dark);
+  opacity: 0.55;
+  filter: blur(calc(var(--map-w) * 0.022));
+  transform: translateZ(calc(var(--map-w) * -0.07));
+}
+
+.depth {
+  fill: var(--color-olive-dark);
+  stroke: var(--color-olive-dark);
+  stroke-width: 2;
+  transform: translateZ(calc(var(--map-depth) * var(--layer) * -1));
+}
+
+.surface {
+  fill: color-mix(in srgb, var(--color-cream) 24%, var(--color-olive));
+  stroke: color-mix(in srgb, var(--color-cream) 60%, transparent);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.surface path {
+  vector-effect: non-scaling-stroke;
+}
+
+.pins {
+  pointer-events: none;
+}
+
+/* Ponto de origem do pino: a posição da cidade sobre o tabuleiro. */
+.pin {
+  position: absolute;
+  top: calc(var(--y) / 1031 * 100%);
+  left: calc(var(--x) / 1000 * 100%);
+  width: 0;
+  height: 0;
+}
+
+.ring {
+  position: absolute;
+  top: calc(var(--dot-size) * -0.5);
+  left: calc(var(--dot-size) * -0.5);
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border: 1px solid var(--color-mint);
+  border-radius: 50%;
+}
+
+/* Haste em pé: sai do tabuleiro e sobe até o ponto. */
+.beam {
+  position: absolute;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  height: var(--pin-height);
+  transform-origin: bottom;
+  transform: rotateX(-90deg);
+}
+
+.beamLight {
+  display: block;
+  height: 100%;
+  background: linear-gradient(
+    to top,
+    transparent,
+    color-mix(in srgb, var(--color-mint) 85%, transparent)
+  );
+  transform-origin: bottom;
+}
+
+/*
+ * Caixa centrada na ponta da haste e virada para a tela. Tem três vezes o
+ * tamanho do ponto porque o navegador recorta, na cena 3D, o que passa da
+ * caixa: o brilho precisa caber dentro dela.
+ */
+.billboard {
+  --dot: calc(var(--dot-size) * (0.75 + var(--weight) * 0.25));
+
+  position: absolute;
+  top: calc(var(--dot) * -1.5);
+  left: calc(var(--dot) * -1.5);
+  width: calc(var(--dot) * 3);
+  height: calc(var(--dot) * 3);
+  pointer-events: none;
+  transform-style: preserve-3d;
+  transform: translateZ(var(--pin-height)) rotateZ(calc(var(--ground-z) * -1))
+    rotateX(calc(var(--ground-x) * -1));
+}
+
+.dotAnchor {
+  position: absolute;
+  inset: var(--dot);
+}
+
+.dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 2px solid var(--color-mint);
+  border-radius: 50%;
+  background: var(--color-cream);
+  box-shadow: 0 0 calc(var(--dot) * 0.7)
+    color-mix(in srgb, var(--color-mint) 70%, transparent);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Área de toque maior que o ponto visível. */
+.dot::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--dot) * -0.6);
+  border-radius: 50%;
+}
+
+.dot:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 3px;
+}
+
+/* Destaque só por cor: ampliar o ponto faz o navegador recortá-lo na cena 3D. */
+.pin[data-active] .dot {
+  border-color: var(--color-cream);
+  background: var(--color-mint);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% - var(--dot) * 0.5);
+  left: 50%;
+  width: max-content;
+  max-width: 15rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--color-white) 60%, transparent);
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--color-cream) 92%, transparent);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-olive-dark) 45%, transparent);
+  color: var(--color-olive-dark);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* Avança em direção à câmera para ficar à frente dos outros pinos. */
+  transform: translate3d(-50%, 6px, calc(var(--map-w) * 0.1));
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    visibility 0.25s;
+}
+
+.pin[data-active] .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(-50%, 0, calc(var(--map-w) * 0.1));
+}
+
+.tooltipCity {
+  font-weight: var(--weight-black);
+  color: var(--color-olive);
+}
+
+.tooltipClients {
+  margin-top: 0.25rem;
+}
+
+.tooltipMore {
+  color: color-mix(in srgb, var(--color-olive) 70%, transparent);
+}
+
+@media (min-width: 1024px) {
+  .scene {
+    --map-w: calc(var(--u) * 62);
+  }
+}
