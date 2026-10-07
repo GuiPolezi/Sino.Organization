@@ -11,8 +11,11 @@ import { useLenis } from './hooks/useLenis.js';
 const routes = {
   '/suporte': lazy(() => import('./pages/Suporte/index.jsx')),
 };
+const NotFound = lazy(() => import('./pages/NotFound/index.jsx'));
 
-// "/suporte/" e "/Suporte" valem como "/suporte".
+const HOME_PATHS = ['', '/index.html'];
+
+// "/suporte/" e "/Suporte" valem como "/suporte"; "/" vira "".
 const currentPath = () => window.location.pathname.replace(/\/+$/, '').toLowerCase();
 
 function Home() {
@@ -29,8 +32,11 @@ function Home() {
 }
 
 export default function App() {
-  const Page = routes[currentPath()];
-  if (!Page) return <Home />;
+  const path = currentPath();
+  if (HOME_PATHS.includes(path)) return <Home />;
+
+  // Object.hasOwn: "/constructor" e afins não podem cair numa chave herdada.
+  const Page = Object.hasOwn(routes, path) ? routes[path] : NotFound;
 
   return (
     <Suspense fallback={<p className="sr-only">Carregando…</p>}>
