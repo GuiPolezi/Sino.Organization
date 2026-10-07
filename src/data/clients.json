@@ -1,7 +1,7 @@
 {
   "source": "milldesk",
   "totals": {
-    "clients": 163,
+    "clients": 161,
     "cities": 132,
     "states": 4
   },
@@ -15,11 +15,10 @@
       "clients": [
         "2º Tabelião de Notas de Piracicaba Bortoletto",
         "4º Tabelião de Notas de Piracicaba (Rua Prudente)",
+        "Agência PCJ",
         "CCPNET - Piracicaba",
         "Clube  de Campo de Piracicaba - CCP",
-        "Piracicaba CM",
-        "Sino",
-        "Sino - Compilação"
+        "Piracicaba CM"
       ]
     },
     {
@@ -32,8 +31,7 @@
         "1 Registro Civil e Tabelionato de Notas de Ermelino Matarazzo",
         "11º Tabelião de Notas de São Paulo",
         "15º Cartório de Notas de São Paulo - Tabelião Oliveira Lima",
-        "21º Tabelião de Notas de São Paulo",
-        "Agência PCJ"
+        "21º Tabelião de Notas de São Paulo"
       ]
     },
     {

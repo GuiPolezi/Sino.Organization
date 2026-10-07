@@ -1,6 +1,7 @@
 {
-  "exclude": ["Softlândia CM"],
+  "exclude": ["Softlândia CM", "Sino", "Sino - Compilação"],
   "cities": {
-    "Aracangua CM": "Santo Antônio do Aracanguá/SP"
+    "Aracangua CM": "Santo Antônio do Aracanguá/SP",
+    "Agência PCJ": "Piracicaba/SP"
   }
 }
