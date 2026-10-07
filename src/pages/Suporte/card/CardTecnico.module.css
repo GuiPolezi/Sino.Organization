@@ -1,0 +1,348 @@
+.card {
+  /* Cores de status: não existem na paleta do site, valem só dentro do card. */
+  --ok: var(--color-olive);
+  --aviso: #96650f;
+  --critico: #a8382c;
+  --neutro: color-mix(in srgb, var(--color-olive-dark) 62%, transparent);
+  --linha: color-mix(in srgb, var(--color-olive) 22%, transparent);
+  --fundo-suave: color-mix(in srgb, var(--color-olive) 10%, transparent);
+
+  position: fixed;
+  top: 50%;
+  right: clamp(16px, 3vw, 40px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  width: min(22.5rem, calc(100% - 32px));
+  max-height: calc(100svh - 48px);
+  padding: 1.375rem;
+  border: 1px solid color-mix(in srgb, var(--color-white) 65%, transparent);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-cream) 90%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 30px 70px color-mix(in srgb, var(--color-olive-dark) 38%, transparent);
+  color: var(--color-olive-dark);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transform: translateY(-50%);
+  animation: entrar 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translate(16px, -50%);
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.card h3,
+.card dl,
+.card dd {
+  margin: 0;
+}
+
+.topo {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0.875rem;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--cor-avatar);
+  box-shadow:
+    inset 0 -5px 10px rgb(0 0 0 / 0.14),
+    inset 0 4px 8px rgb(255 255 255 / 0.5);
+  color: var(--color-ink);
+  font-size: 1.125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+.titulo {
+  min-width: 0;
+}
+
+.titulo h2 {
+  margin: 2px 0 4px;
+  font-size: 1.375rem;
+  font-weight: var(--weight-black);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-olive);
+}
+
+.titulo p {
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.sutil {
+  color: var(--neutro);
+}
+
+.pequeno {
+  margin-top: 6px;
+  font-size: 0.75rem;
+}
+
+.fechar {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-olive) 12%, transparent);
+  color: var(--color-olive);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.fechar:hover {
+  background: color-mix(in srgb, var(--color-olive) 22%, transparent);
+}
+
+.fechar svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.card button:focus-visible {
+  outline: 2px solid var(--color-olive);
+  outline-offset: 3px;
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.aviso {
+  color: var(--aviso);
+}
+
+.critico {
+  color: var(--critico);
+}
+
+.neutro {
+  color: var(--neutro);
+}
+
+.pill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px 6px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+.pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.rotulo {
+  font-size: 0.6875rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--neutro);
+}
+
+section > .rotulo {
+  margin-bottom: 10px;
+}
+
+.contadores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.contadores div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--fundo-suave);
+}
+
+.contadores dt {
+  font-size: 0.75rem;
+  color: var(--neutro);
+}
+
+.contadores dd {
+  font-size: 1.625rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.alerta dd {
+  color: var(--critico);
+}
+
+.metricas {
+  display: grid;
+  gap: 1rem;
+}
+
+.linhaMetrica {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.linhaMetrica strong {
+  font-size: 1.125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.linhaMetrica small {
+  font-size: 0.75rem;
+  font-weight: var(--weight-regular);
+  color: var(--neutro);
+}
+
+.barra {
+  position: relative;
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 99px;
+  background: var(--fundo-suave);
+}
+
+.barra span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+  background: currentColor;
+}
+
+/* Marca da meta de SLA. */
+.barra em {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--color-olive-dark);
+}
+
+.pontos {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.pontos span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    var(--color-olive) calc(var(--preench) * 100%),
+    var(--fundo-suave) 0
+  );
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chips li {
+  padding: 6px 10px;
+  border: 1px solid var(--linha);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+}
+
+.rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--linha);
+  font-size: 0.75rem;
+  color: var(--neutro);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--neutro);
+}
+
+.nav button {
+  width: 2.5rem;
+  height: 2rem;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-olive-dark);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.nav button:hover {
+  background: var(--fundo-suave);
+}
+
+/* Mobile: bottom sheet. Mesma largura de LARGURA_ESTREITA em CameraRig.jsx. */
+@media (max-width: 760px) {
+  .card {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 62svh;
+    padding: 1.25rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    transform: none;
+    animation-name: subir;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}

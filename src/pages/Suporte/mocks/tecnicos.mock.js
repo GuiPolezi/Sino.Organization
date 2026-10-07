@@ -1,0 +1,8 @@
+// Dados fictícios no formato "cru" que imaginamos vir do Mildesk.
+// Os nomes reais dos campos ainda serão confirmados; só o mapper os conhece.
+export const respostaMildeskMock = [
+  { id_usuario: 'MD-1042', nome: 'Ana Ribeiro', cargo: 'Analista de Suporte N2', departamento: 'Suporte ao Cliente', situacao: 'disponivel', chamados_abertos: 4, chamados_andamento: 2, concluidos_mes: 38, atrasados: 0, sla_percentual: 97, nota_media: 4.9, ultima_interacao: '2026-10-07T10:21:00-03:00', habilidades: ['Processo Legislativo', 'Sessões Plenárias', 'Treinamento'] },
+  { id_usuario: 'MD-1057', nome: 'Bruno Carvalho', cargo: 'Técnico de Implantação', departamento: 'Implantação', situacao: 'em_atendimento', chamados_abertos: 7, chamados_andamento: 3, concluidos_mes: 29, atrasados: 1, sla_percentual: 91, nota_media: 4.6, ultima_interacao: '2026-10-07T10:02:00-03:00', habilidades: ['Migração de dados', 'Votação eletrônica', 'Painel'] },
+  { id_usuario: 'MD-1063', nome: 'Camila Duarte', cargo: 'Analista de Sistemas', departamento: 'Sustentação', situacao: 'disponivel', chamados_abertos: 3, chamados_andamento: 1, concluidos_mes: 22, atrasados: 0, sla_percentual: 99, nota_media: 4.8, ultima_interacao: '2026-10-07T09:47:00-03:00', habilidades: ['Integrações', 'SQL', 'Portal da Transparência'] },
+  { id_usuario: 'MD-1071', nome: 'Diego Martins', cargo: 'Analista de Suporte N1', departamento: 'Service Desk', situacao: 'ausente', chamados_abertos: 11, chamados_andamento: 0, concluidos_mes: 54, atrasados: 2, sla_percentual: 88, nota_media: 4.4, ultima_interacao: '2026-10-06T18:12:00-03:00', habilidades: ['Acessos', 'Protocolo', 'Assinatura digital'] },
+];

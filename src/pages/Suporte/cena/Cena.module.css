@@ -1,0 +1,5 @@
+/* O <Canvas> põe position: relative inline no próprio wrapper. */
+.cena {
+  position: absolute !important;
+  inset: 0;
+}

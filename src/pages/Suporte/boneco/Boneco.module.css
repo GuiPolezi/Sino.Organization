@@ -1,0 +1,13 @@
+/* Nome flutuando sobre o boneco no hover e na seleção. */
+.etiqueta {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--color-cream);
+  box-shadow: 0 4px 14px var(--color-shadow);
+  color: var(--color-olive-dark);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateY(-4px);
+}
