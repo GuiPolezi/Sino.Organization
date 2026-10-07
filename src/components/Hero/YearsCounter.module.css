@@ -1,0 +1,63 @@
+.counter {
+  --number-size: clamp(6rem, 30vw, 12.5rem);
+  --label-size: clamp(1.5rem, 7vw, 3rem);
+  --since-size: 1rem;
+  --counter-gap: 1rem;
+
+  color: var(--color-cream);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--counter-gap);
+}
+
+.number {
+  position: relative;
+  font-size: var(--number-size);
+  font-weight: var(--weight-black);
+  line-height: 0.75;
+  letter-spacing: -0.01em;
+}
+
+.sizer {
+  visibility: hidden;
+}
+
+.value {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: var(--label-size);
+  line-height: 1.2;
+}
+
+.since {
+  font-size: var(--since-size);
+  color: var(--color-cream-muted);
+}
+
+@media (min-width: 1024px) {
+  .counter {
+    --number-size: clamp(5rem, calc(var(--u) * 13.9), 19rem);
+    --label-size: clamp(1.5rem, calc(var(--u) * 3.33), 4.5rem);
+    --since-size: clamp(0.75rem, calc(var(--u) * 1.39), 1.875rem);
+    --counter-gap: calc(var(--u) * 3.4);
+
+    flex: none;
+    padding-top: calc(var(--u) * 2.5);
+  }
+
+  .label {
+    margin-top: calc(var(--u) * 0.3);
+  }
+}

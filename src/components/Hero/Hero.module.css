@@ -1,0 +1,77 @@
+.viewport {
+  overflow: hidden;
+}
+
+.track {
+  display: flex;
+  flex-direction: column;
+}
+
+.track > * {
+  flex: none;
+  min-height: 100svh;
+}
+
+.panel {
+  --panel-padding-top: var(--gutter-mobile);
+  --panel-padding-inline: var(--gutter-mobile);
+  --panel-padding-bottom: 4rem;
+  --top-gap: 2.5rem;
+  --sectors-gap: 3.5rem;
+  --sectors-indent: 0px;
+
+  position: relative;
+  overflow: hidden;
+  padding: var(--panel-padding-top) var(--panel-padding-inline)
+    var(--panel-padding-bottom);
+  background: var(--color-olive);
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sectors-gap);
+  padding-left: 0;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--top-gap);
+}
+
+.content > nav {
+  margin-left: var(--sectors-indent);
+}
+
+@media (min-width: 1024px) {
+  .panel {
+    --panel-padding-top: calc(var(--u) * 2);
+    --panel-padding-inline: calc(var(--u) * 1.67);
+    --panel-padding-bottom: 0px;
+    --counter-inset-right: calc(var(--u) * 7.4);
+    --sectors-gap: calc(var(--u) * 6.5);
+    --sectors-indent: calc(var(--u) * 1.87);
+  }
+
+  .top {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-right: var(--counter-inset-right);
+  }
+}
+
+/* Mesma condição de MEDIA.horizontalScroll (src/utils/media.js). */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .track {
+    flex-direction: row;
+    will-change: transform;
+  }
+
+  .track > * {
+    flex: 0 0 100%;
+    height: 100svh;
+  }
+}

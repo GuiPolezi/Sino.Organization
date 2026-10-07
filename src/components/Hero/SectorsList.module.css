@@ -1,0 +1,75 @@
+.sectors {
+  --label-size: 1rem;
+  --label-gap: 1.5rem;
+  --item-size: clamp(1.25rem, 7vw, 3.125rem);
+  --item-gap: 1.25rem;
+  --line-width: 15vw;
+  --line-gap: 12px;
+
+  position: relative;
+}
+
+.label {
+  margin-bottom: var(--label-gap);
+  font-size: var(--label-size);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--color-cream-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--item-gap);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--line-gap);
+  font-size: var(--item-size);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Zera qualquer aparência padrão de link, em todos os estados. */
+.link,
+.link:link,
+.link:visited,
+.link:hover,
+.link:active {
+  color: var(--color-cream);
+  text-decoration: none;
+}
+
+.link:focus-visible {
+  outline: 1px solid var(--color-cream);
+  outline-offset: 8px;
+  border-radius: 2px;
+}
+
+.line {
+  flex: none;
+  width: var(--line-width);
+  height: 1px;
+  background: var(--color-olive-dark);
+  transform-origin: left center;
+}
+
+.text {
+  display: block;
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .sectors {
+    --label-size: clamp(0.875rem, calc(var(--u) * 1.72), 2.25rem);
+    --label-gap: calc(var(--u) * 3.13);
+    --item-size: clamp(1.75rem, calc(var(--u) * 3.33), 4.75rem);
+    --item-gap: calc(var(--u) * 3.4);
+    --line-width: calc(var(--u) * 17.5);
+    --line-gap: calc(var(--u) * 1.87);
+  }
+}

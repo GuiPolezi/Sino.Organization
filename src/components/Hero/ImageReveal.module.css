@@ -1,0 +1,31 @@
+.reveal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: clamp(200px, 20vw, 320px);
+  aspect-ratio: 4 / 3;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.inner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-olive-dark);
+  background-size: cover;
+  background-position: center;
+}
+
+@media (hover: none) {
+  .reveal {
+    display: none;
+  }
+}

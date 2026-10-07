@@ -1,0 +1,27 @@
+:root {
+  /* Paleta */
+  --color-white: #ffffff;
+  --color-olive: #606c38; /* fundo principal */
+  --color-cream: #fefae0; /* títulos, números, destaques */
+  --color-olive-dark: #3b4726; /* elementos decorativos, linhas, sombras */
+
+  /* Variações por opacidade (sempre a partir da paleta) */
+  --color-cream-muted: color-mix(in srgb, var(--color-cream) 55%, transparent);
+  --color-shadow: color-mix(in srgb, var(--color-olive-dark) 60%, transparent);
+
+  /* Tipografia */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --weight-regular: 400;
+  --weight-bold: 700;
+  --weight-black: 900;
+
+  /*
+   * Unidade do design: 1% da largura da arte (1440×1024), limitada também pela
+   * altura, para a composição inteira caber em qualquer viewport desktop.
+   * Ex.: 84px na arte = 84 / 14.4 = 5.83u.
+   */
+  --u: min(1vw, 1.40625vh);
+
+  --radius-card: clamp(16px, calc(var(--u) * 1.67), 32px);
+  --gutter-mobile: 16px;
+}

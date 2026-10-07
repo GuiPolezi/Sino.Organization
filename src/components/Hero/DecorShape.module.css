@@ -1,0 +1,26 @@
+.shape {
+  --shape-size: 110vw;
+  --shape-right: -62vw;
+  --shape-bottom: -50vw;
+
+  position: absolute;
+  right: var(--shape-right);
+  bottom: var(--shape-bottom);
+  width: var(--shape-size);
+  pointer-events: none;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  fill: var(--color-olive-dark);
+}
+
+@media (min-width: 1024px) {
+  /* Na arte: 786px de lado, com o centro a 43px da direita e 134px da base. */
+  .shape {
+    --shape-size: calc(var(--u) * 54.6);
+    --shape-right: calc(var(--u) * -24.3);
+    --shape-bottom: calc(var(--u) * -18);
+  }
+}
