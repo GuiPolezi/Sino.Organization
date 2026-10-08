@@ -1,0 +1,221 @@
+/* Gráfico de atendimentos do card do técnico. Usa as variáveis de .card. */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+/* Pílula com as setas nas pontas e a semana no meio. */
+.seletor {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--color-olive);
+  color: var(--color-white);
+}
+
+.seletor button {
+  display: grid;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.seletor button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-white) 18%, transparent);
+}
+
+.seletor button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Dentro da pílula oliva, o contorno de foco do card não aparece. */
+.seletor button:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 1px;
+}
+
+.seletor svg {
+  width: 0.5625rem;
+  height: 0.5625rem;
+  fill: currentColor;
+}
+
+.semana {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 4.75rem;
+  margin: 0;
+  line-height: 1;
+  white-space: nowrap;
+  animation: trocar 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.semana strong {
+  font-size: 0.6875rem;
+  font-weight: var(--weight-bold);
+}
+
+.semana span {
+  font-size: 0.5625rem;
+  color: color-mix(in srgb, var(--color-cream) 80%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes trocar {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+/*
+ * Grade: a coluna estreita das marcas do eixo Y e a área das barras; por cima,
+ * o título do eixo Y e, por baixo, os dias e o título do eixo X.
+ */
+.grafico {
+  --altura-area: 9.5rem;
+
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: 6px;
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--neutro);
+  font-variant-numeric: tabular-nums;
+}
+
+.eixo {
+  grid-column: 1 / -1;
+  margin-bottom: 10px;
+  color: var(--color-olive-dark);
+}
+
+.eixoDias {
+  margin: 8px 0 0;
+  text-align: right;
+}
+
+.marcas {
+  position: relative;
+  height: var(--altura-area);
+}
+
+.marcas span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  transition: bottom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.area {
+  position: relative;
+  height: var(--altura-area);
+  border-bottom: 1.5px solid var(--color-olive-dark);
+  border-left: 1.5px solid var(--color-olive-dark);
+}
+
+/* Linhas de grade pontilhadas, uma por marca. */
+.area i {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px dashed var(--linha);
+  transition: bottom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.colunas {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.colunas div {
+  position: relative;
+}
+
+.barra {
+  position: absolute;
+  right: 20%;
+  bottom: 0;
+  left: 20%;
+  height: var(--altura);
+  border-radius: 5px 5px 0 0;
+  background: var(--color-olive-dark);
+  transform-origin: bottom;
+  transition: height 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: crescer 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--ordem) * 45ms + 320ms);
+}
+
+.valor {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--altura) + 4px);
+  left: 0;
+  color: var(--color-olive-dark);
+  text-align: center;
+  transition: bottom 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: aparecer 0.4s ease both;
+  animation-delay: calc(var(--ordem) * 45ms + 700ms);
+}
+
+@keyframes crescer {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+.dias {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-top: 7px;
+  text-align: center;
+}
+
+.hoje {
+  color: var(--color-olive-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .semana,
+  .barra,
+  .valor {
+    animation: none;
+  }
+
+  .seletor button,
+  .marcas span,
+  .area i,
+  .barra,
+  .valor {
+    transition: none;
+  }
+}

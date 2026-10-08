@@ -222,12 +222,12 @@
 @media (min-width: 761px) {
   .comCard .elenco {
     left: var(--margem);
-    max-width: calc(100% - 28.75rem);
+    max-width: calc(100% - 30.25rem);
     transform: none;
   }
 
   .plano.comCard {
-    padding-right: 26.25rem;
+    padding-right: 27.75rem;
   }
 }
 

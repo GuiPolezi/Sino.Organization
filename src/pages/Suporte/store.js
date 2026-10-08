@@ -11,9 +11,12 @@ export const useEquipe = create((set) => ({
   hover: null,
   // Dados do quadro que não saem dos técnicos (api/resumoEquipe.js).
   extrasQuadro: null,
+  // Atendimentos de cada técnico, por id, para o card (api/atendimentosTecnico.js).
+  atendimentos: {},
   setTecnicos: (tecnicos) => set({ tecnicos, carregando: false, erro: false }),
   setErro: () => set({ carregando: false, erro: true }),
   setExtrasQuadro: (extrasQuadro) => set({ extrasQuadro }),
+  setAtendimentos: (atendimentos) => set({ atendimentos }),
   // Card do técnico e painel do quadro nunca ficam abertos juntos.
   selecionar: (id) => set({ selecionado: id, painel: null }),
   abrirQuadro: () => set({ painel: 'quadro', selecionado: null, hover: null }),

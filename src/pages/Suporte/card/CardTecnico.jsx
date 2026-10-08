@@ -1,29 +1,10 @@
 import { useEffect } from 'react';
 import { aparenciaDe } from '../boneco/aparencia.js';
+import { hojeEmBrasilia, totaisDeAtendimentos } from '../mappers/atendimentos.js';
 import { useEquipe } from '../store.js';
+import Contagem from './Contagem.jsx';
+import GraficoAtendimentos from './GraficoAtendimentos.jsx';
 import styles from './CardTecnico.module.css';
-
-const META_SLA = 95;
-const NOTAS = [1, 2, 3, 4, 5];
-
-const FUSO = 'America/Sao_Paulo';
-const formatoHora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: FUSO });
-const formatoDia = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: FUSO });
-const UM_DIA_MS = 864e5;
-
-function quando(iso) {
-  const data = new Date(iso);
-  const dia = formatoDia.format(data);
-  const hoje = formatoDia.format(new Date());
-  const ontem = formatoDia.format(new Date(Date.now() - UM_DIA_MS));
-  const prefixo = dia === hoje ? 'hoje' : dia === ontem ? 'ontem' : dia;
-  return `${prefixo}, ${formatoHora.format(data)}`;
-}
-
-const classeSla = (sla) => {
-  if (sla >= META_SLA) return styles.ok;
-  return sla >= 90 ? styles.aviso : styles.critico;
-};
 
 // Teclado enquanto há um técnico selecionado: Esc fecha, ← → navega.
 function useAtalhos() {
@@ -41,77 +22,67 @@ function useAtalhos() {
   }, []);
 }
 
-function Chamados({ tarefas }) {
+function Atendimentos({ totais, tempoMedioMin }) {
   return (
-    <section>
-      <h3 className={styles.rotulo}>Chamados</h3>
-      <dl className={styles.contadores}>
+    <section className={styles.surge} style={{ '--ordem': 1 }}>
+      <h3 className={styles.secao}>Atendimentos</h3>
+      <dl className={styles.blocos}>
         <div>
-          <dt>Abertos</dt>
-          <dd>{tarefas.abertas}</dd>
-        </div>
-        <div>
-          <dt>Em andamento</dt>
-          <dd>{tarefas.emAndamento}</dd>
+          <dt>Hoje</dt>
+          <dd>
+            <Contagem valor={totais.hoje} />
+          </dd>
         </div>
         <div>
-          <dt>Concluídos no mês</dt>
-          <dd>{tarefas.concluidasMes}</dd>
+          <dt>Semana</dt>
+          <dd>
+            <Contagem valor={totais.semana} />
+          </dd>
         </div>
-        <div className={tarefas.atrasadas > 0 ? styles.alerta : undefined}>
-          <dt>Atrasados</dt>
-          <dd>{tarefas.atrasadas}</dd>
+        <div>
+          <dt>Mês</dt>
+          <dd>
+            <Contagem valor={totais.mes} />
+          </dd>
         </div>
+        {tempoMedioMin !== undefined && (
+          <div>
+            <dt>Tempo Médio Diário de Atendimentos</dt>
+            <dd>
+              <Contagem valor={tempoMedioMin} />
+              <small>Min</small>
+            </dd>
+          </div>
+        )}
       </dl>
     </section>
   );
 }
 
-function Sla({ valor }) {
-  const classe = classeSla(valor);
-
+function Tickets({ atribuidos }) {
   return (
-    <div>
-      <div className={styles.linhaMetrica}>
-        <h3 className={styles.rotulo}>SLA cumprido</h3>
-        <strong className={classe}>{valor}%</strong>
-      </div>
-      <div className={styles.barra} role="img" aria-label={`SLA de ${valor} por cento`}>
-        <span className={classe} style={{ width: `${valor}%` }} />
-        <em style={{ left: `${META_SLA}%` }} />
-      </div>
-      <p className={`${styles.sutil} ${styles.pequeno}`}>Meta: {META_SLA}%</p>
-    </div>
-  );
-}
-
-function Avaliacao({ valor }) {
-  return (
-    <div>
-      <div className={styles.linhaMetrica}>
-        <h3 className={styles.rotulo}>Avaliação</h3>
+    <section className={styles.surge} style={{ '--ordem': 2 }}>
+      <h3 className={styles.secao}>Tickets</h3>
+      <p className={styles.tickets}>
         <strong>
-          {valor.toFixed(1).replace('.', ',')}
-          <small> / 5</small>
+          <Contagem valor={atribuidos} />
         </strong>
-      </div>
-      <div className={styles.pontos} aria-hidden="true">
-        {NOTAS.map((n) => (
-          <span key={n} style={{ '--preench': Math.max(0, Math.min(1, valor - n + 1)) }} />
-        ))}
-      </div>
-    </div>
+        <span>{atribuidos === 1 ? 'Chamado atribuído ao técnico' : 'Chamados atribuídos ao técnico'}</span>
+      </p>
+    </section>
   );
 }
 
 /*
  * Card com os dados do técnico selecionado. Overlay HTML fora do <Canvas>:
- * lateral no desktop e bottom sheet no mobile. Cada seção só aparece quando o
- * dado dela existe; hoje o Milldesk fornece nome, cargo e ausência.
+ * lateral no desktop e bottom sheet no mobile. As seções de atendimentos só
+ * aparecem para quem tem esses dados (api/atendimentosTecnico.js); hoje são
+ * números de demonstração.
  */
 export default function CardTecnico() {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const selecionado = useEquipe((s) => s.selecionado);
+  const atendimentos = useEquipe((s) => s.atendimentos[s.selecionado]);
   const selecionar = useEquipe((s) => s.selecionar);
   const navegar = useEquipe((s) => s.navegar);
   useAtalhos();
@@ -120,11 +91,10 @@ export default function CardTecnico() {
   const tecnico = tecnicos[indice];
   if (!tecnico) return null;
 
-  const { tarefas, slaCumprido, avaliacaoMedia, especialidades, ultimaAtividade } = tecnico;
-  const temMetricas = slaCumprido !== undefined || avaliacaoMedia !== undefined;
+  const hoje = hojeEmBrasilia();
 
   return (
-    // A key refaz a animação de entrada ao trocar de técnico.
+    // A key refaz as animações de entrada ao trocar de técnico.
     <aside key={tecnico.id} className={styles.card} aria-label={`Informações de ${tecnico.nome}`}>
       <header className={styles.topo}>
         <div
@@ -146,44 +116,32 @@ export default function CardTecnico() {
       </header>
 
       {tecnico.ausente && (
-        <span className={`${styles.pill} ${styles.neutro}`}>
+        <span className={`${styles.pill} ${styles.neutro} ${styles.surge}`} style={{ '--ordem': 0 }}>
           <i />
           Ausente
         </span>
       )}
 
-      {tarefas && <Chamados tarefas={tarefas} />}
-
-      {temMetricas && (
-        <section className={styles.metricas}>
-          {slaCumprido !== undefined && <Sla valor={slaCumprido} />}
-          {avaliacaoMedia !== undefined && <Avaliacao valor={avaliacaoMedia} />}
-        </section>
+      {atendimentos && (
+        <>
+          <Atendimentos
+            totais={totaisDeAtendimentos(atendimentos.porDia, hoje)}
+            tempoMedioMin={atendimentos.tempoMedioMin}
+          />
+          {atendimentos.chamadosAtribuidos !== undefined && <Tickets atribuidos={atendimentos.chamadosAtribuidos} />}
+          <div className={styles.surge} style={{ '--ordem': 3 }}>
+            <GraficoAtendimentos porDia={atendimentos.porDia} hoje={hoje} />
+          </div>
+        </>
       )}
 
-      {especialidades?.length > 0 && (
-        <section>
-          <h3 className={styles.rotulo}>Especialidades</h3>
-          <ul className={styles.chips}>
-            {especialidades.map((especialidade) => (
-              <li key={especialidade}>{especialidade}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {ultimaAtividade && (
-        <footer className={styles.rodape}>
-          <span>Última atividade: {quando(ultimaAtividade)}</span>
-        </footer>
-      )}
-
-      <nav className={styles.nav} aria-label="Navegar entre técnicos">
+      <nav className={`${styles.nav} ${styles.surge}`} style={{ '--ordem': 4 }} aria-label="Navegar entre técnicos">
         <button type="button" aria-label="Técnico anterior" onClick={() => navegar(-1)}>
           ←
         </button>
         <span>
           {indice + 1} de {tecnicos.length}
+          {atendimentos?.ficticio && <small>Dados de demonstração</small>}
         </span>
         <button type="button" aria-label="Próximo técnico" onClick={() => navegar(1)}>
           →

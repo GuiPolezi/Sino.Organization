@@ -14,7 +14,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.125rem;
-  width: min(22.5rem, calc(100% - 32px));
+  width: min(24rem, calc(100% - 32px));
   max-height: calc(100svh - 48px);
   padding: 1.375rem;
   border: 1px solid color-mix(in srgb, var(--color-white) 65%, transparent);
@@ -278,17 +278,102 @@ section > .rotulo {
   );
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* Título de seção do card do técnico. */
+.secao {
+  font-size: 1.0625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  color: var(--neutro);
 }
 
-.chips li {
-  padding: 6px 10px;
-  border: 1px solid var(--linha);
-  border-radius: 999px;
+section > .secao {
+  margin-bottom: 12px;
+}
+
+/* Entrada em cascata: cada parte do card sobe e aparece depois da anterior. */
+.surge {
+  animation: surgir 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--ordem) * 70ms + 100ms);
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Os quatro números de atendimentos, em blocos oliva. */
+.blocos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.blocos div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 7px;
+  min-height: 5.5rem;
+  padding: 14px 16px 16px;
+  border-radius: 20px;
+  background: var(--color-olive);
+  color: var(--color-white);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease;
+}
+
+.blocos dd {
+  font-size: 2.125rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unidade ao lado do número ("Min"). */
+.blocos small {
+  margin-left: 1px;
+  font-size: 1.125rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0;
+}
+
+.blocos dt {
   font-size: 0.8125rem;
+  line-height: 1.25;
+  color: var(--color-cream);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .blocos div:hover {
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
+    transform: translateY(-3px);
+  }
+}
+
+.tickets {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tickets strong {
+  font-size: 3rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.tickets span {
+  max-width: 12rem;
+  font-size: 1rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
 }
 
 .rodape {
@@ -306,23 +391,39 @@ section > .rotulo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.2;
   color: var(--neutro);
+  text-align: center;
+}
+
+/* Aviso discreto enquanto os números do card são de demonstração. */
+.nav small {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.625rem;
 }
 
 .nav button {
-  width: 2.5rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.25rem;
   border: 1px solid var(--linha);
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   color: var(--color-olive-dark);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .nav button:hover {
   background: var(--fundo-suave);
+}
+
+.nav button:active {
+  transform: scale(0.94);
 }
 
 /* Mobile: bottom sheet. Mesma largura de LARGURA_ESTREITA em CameraRig.jsx. */
@@ -342,7 +443,13 @@ section > .rotulo {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card {
+  .card,
+  .surge {
     animation: none;
+  }
+
+  .blocos div,
+  .nav button {
+    transition: none;
   }
 }

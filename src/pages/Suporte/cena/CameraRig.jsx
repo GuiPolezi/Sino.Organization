@@ -31,11 +31,11 @@ export default function CameraRig() {
       alvoPos.current.set(QUADRO.x + dx, estreito ? 6.2 : 5.2, QUADRO.z + (estreito ? 10 : 7.2));
       alvoOlhar.current.set(QUADRO.x + dx, estreito ? -0.4 : 1.6, QUADRO.z);
     } else if (pos) {
-      // No desktop o boneco fica à esquerda do card; no mobile, acima do bottom sheet
-      // (hoje baixo: só nome e cargo. Quando o card crescer, o boneco precisa subir).
+      // No desktop o boneco fica à esquerda do card. No mobile a câmera olha para baixo
+      // dele, para ele subir acima do bottom sheet (que ocupa até 62% da altura).
       const dx = estreito ? 0 : 1.35;
       alvoPos.current.set(pos.x + dx, estreito ? 3.2 : 2.7, pos.z + (estreito ? 11 : 7.2));
-      alvoOlhar.current.set(pos.x + dx, estreito ? 0.7 : 1.0, pos.z);
+      alvoOlhar.current.set(pos.x + dx, estreito ? -1.1 : 1.0, pos.z);
     } else {
       alvoPos.current.set(0, 6.2 * recuo, 14 * recuo);
       alvoOlhar.current.set(0, 0.4, 0.3);

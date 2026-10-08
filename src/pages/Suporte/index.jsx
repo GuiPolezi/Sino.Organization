@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { buscarAtendimentos } from './api/atendimentosTecnico.js';
 import { buscarEquipe } from './api/equipeTecnica.js';
 import { buscarExtrasQuadro } from './api/resumoEquipe.js';
 import { aparenciaDe } from './boneco/aparencia.js';
@@ -80,7 +81,7 @@ export default function Suporte() {
 
   useEffect(() => {
     let ativo = true;
-    const { setTecnicos, setExtrasQuadro, setErro, limpar } = useEquipe.getState();
+    const { setTecnicos, setExtrasQuadro, setAtendimentos, setErro, limpar } = useEquipe.getState();
 
     buscarEquipe()
       .then((equipe) => {
@@ -89,6 +90,10 @@ export default function Suporte() {
         // Sem os extras o quadro continua de pé, só com o que os técnicos trazem.
         buscarExtrasQuadro(equipe)
           .then((extras) => ativo && setExtrasQuadro(extras))
+          .catch(() => {});
+        // Idem para o card: sem os atendimentos, ele mostra só nome e cargo.
+        buscarAtendimentos(equipe)
+          .then((atendimentos) => ativo && setAtendimentos(atendimentos))
           .catch(() => {});
       })
       .catch(() => ativo && setErro());
