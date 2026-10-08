@@ -12,9 +12,11 @@
     "sync:clients": "node --env-file-if-exists=.env scripts/sync-clients.mjs",
     "sync:team": "node --env-file-if-exists=.env scripts/sync-team.mjs",
     "test:resolver": "node --test scripts/resolve-city.test.mjs",
-    "test:team": "node --test scripts/build-team.test.mjs"
+    "test:team": "node --test scripts/build-team.test.mjs",
+    "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs"
   },
   "dependencies": {
+    "@fontsource/caveat": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@gsap/react": "^2.1.2",
     "@react-three/drei": "^10.7.9",

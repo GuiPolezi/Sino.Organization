@@ -49,7 +49,9 @@ export const ESTACOES = BASES.map((base) => ({
 export const MAX_SENTADOS = ESTACOES.length;
 
 // Obstáculos (círculos) que os técnicos contornam e nunca atravessam.
-// r é a distância mínima entre o centro do técnico e o centro do círculo.
+// r é a distância mínima entre o centro do técnico e o centro do círculo;
+// com r = 0 o obstáculo está desligado (ex.: o corredor do quadro, fechado).
+// O quadro da equipe acrescenta os dele a esta lista (quadro/posicao.js).
 export const OBSTACULOS = ESTACOES.flatMap((estacao) => [
   { ...pontoLocal(estacao, -0.45, 0), r: 0.78, estacao: estacao.id }, // metade esquerda da mesa
   { ...pontoLocal(estacao, 0.45, 0), r: 0.78, estacao: estacao.id }, // metade direita da mesa
@@ -61,9 +63,10 @@ export const dentroDaArea = (area, ponto, folga = 0) =>
   (ponto.x / (area.rx - folga)) ** 2 + (ponto.z / (area.rz - folga)) ** 2 <= 1;
 
 export const longeDosObstaculos = (ponto, margem = 0.3) =>
-  OBSTACULOS.every((o) => Math.hypot(ponto.x - o.x, ponto.z - o.z) > o.r + margem);
+  OBSTACULOS.every((o) => o.r <= 0 || Math.hypot(ponto.x - o.x, ponto.z - o.z) > o.r + margem);
 
-// Retângulo que envolve todos os obstáculos, e a folga com que os técnicos o contornam.
+// Retângulo que envolve os obstáculos das estações (calculado antes de o quadro
+// acrescentar os dele), e a folga com que os técnicos o contornam.
 const BLOCO = {
   minX: Math.min(...OBSTACULOS.map((o) => o.x - o.r)),
   maxX: Math.max(...OBSTACULOS.map((o) => o.x + o.r)),

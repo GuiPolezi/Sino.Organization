@@ -80,7 +80,7 @@ function desviar(pos, dirX, dirZ, idDestino) {
   let vx = dirX;
   let vz = dirZ;
   for (const o of OBSTACULOS) {
-    if (o.estacao === idDestino) continue;
+    if (o.r <= 0 || o.estacao === idDestino) continue;
     const ox = pos.x - o.x;
     const oz = pos.z - o.z;
     const dist = Math.hypot(ox, oz);

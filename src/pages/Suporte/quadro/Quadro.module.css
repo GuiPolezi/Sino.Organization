@@ -1,0 +1,13 @@
+/* Convite flutuando sobre o quadro no hover. */
+.etiqueta {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe08a, #f2b632);
+  box-shadow: 0 6px 20px rgb(233 169 31 / 0.45);
+  color: #3a2a05;
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateY(-4px);
+}

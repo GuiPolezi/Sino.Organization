@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { buscarEquipe } from './api/equipeTecnica.js';
+import { buscarExtrasQuadro } from './api/resumoEquipe.js';
 import { aparenciaDe } from './boneco/aparencia.js';
+import CardQuadro from './card/CardQuadro.jsx';
 import CardTecnico from './card/CardTecnico.jsx';
 import Cena from './cena/Cena.jsx';
 import { useEquipe } from './store.js';
@@ -72,14 +74,23 @@ export default function Suporte() {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const erro = useEquipe((s) => s.erro);
   const selecionado = useEquipe((s) => s.selecionado);
+  const painel = useEquipe((s) => s.painel);
+  const abrirQuadro = useEquipe((s) => s.abrirQuadro);
   const [temWebgl] = useState(webglDisponivel);
 
   useEffect(() => {
     let ativo = true;
-    const { setTecnicos, setErro, limpar } = useEquipe.getState();
+    const { setTecnicos, setExtrasQuadro, setErro, limpar } = useEquipe.getState();
 
     buscarEquipe()
-      .then((equipe) => ativo && setTecnicos(equipe))
+      .then((equipe) => {
+        if (!ativo) return;
+        setTecnicos(equipe);
+        // Sem os extras o quadro continua de pé, só com o que os técnicos trazem.
+        buscarExtrasQuadro(equipe)
+          .then((extras) => ativo && setExtrasQuadro(extras))
+          .catch(() => {});
+      })
       .catch(() => ativo && setErro());
 
     return () => {
@@ -90,7 +101,7 @@ export default function Suporte() {
     };
   }, []);
 
-  const classes = [styles.palco, selecionado && styles.comCard, !temWebgl && styles.plano]
+  const classes = [styles.palco, (selecionado || painel) && styles.comCard, !temWebgl && styles.plano]
     .filter(Boolean)
     .join(' ');
 
@@ -116,6 +127,11 @@ export default function Suporte() {
         )}
       </header>
 
+      {/* O quadro não entra no elenco: este botão só aparece com o foco do teclado. */}
+      <button type="button" className={`sr-only ${styles.atalhoQuadro}`} onClick={abrirQuadro}>
+        Abrir o quadro da equipe (visão geral)
+      </button>
+
       {temWebgl ? (
         <Elenco tecnicos={tecnicos} selecionado={selecionado} />
       ) : (
@@ -123,6 +139,7 @@ export default function Suporte() {
       )}
 
       <CardTecnico />
+      <CardQuadro />
     </main>
   );
 }

@@ -6,10 +6,18 @@ export const useEquipe = create((set) => ({
   carregando: true,
   erro: false,
   selecionado: null,
+  // 'quadro' quando o painel do quadro da equipe está aberto.
+  painel: null,
   hover: null,
+  // Dados do quadro que não saem dos técnicos (api/resumoEquipe.js).
+  extrasQuadro: null,
   setTecnicos: (tecnicos) => set({ tecnicos, carregando: false, erro: false }),
   setErro: () => set({ carregando: false, erro: true }),
-  selecionar: (id) => set({ selecionado: id }),
+  setExtrasQuadro: (extrasQuadro) => set({ extrasQuadro }),
+  // Card do técnico e painel do quadro nunca ficam abertos juntos.
+  selecionar: (id) => set({ selecionado: id, painel: null }),
+  abrirQuadro: () => set({ painel: 'quadro', selecionado: null, hover: null }),
+  fecharPainel: () => set({ painel: null }),
   setHover: (id) => set({ hover: id }),
   // Vai para o técnico vizinho do selecionado, dando a volta na lista.
   navegar: (passo) =>
@@ -19,7 +27,7 @@ export const useEquipe = create((set) => ({
       const proximo = (atual + passo + tecnicos.length) % tecnicos.length;
       return { selecionado: tecnicos[proximo].id };
     }),
-  limpar: () => set({ selecionado: null, hover: null }),
+  limpar: () => set({ selecionado: null, painel: null, hover: null }),
 }));
 
 // id -> THREE.Vector3, mutado dentro de useFrame.

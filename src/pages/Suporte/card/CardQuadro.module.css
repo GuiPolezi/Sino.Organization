@@ -1,0 +1,206 @@
+/* Painel "Quadro da equipe": só o que ele acrescenta ao card (CardTecnico.module.css). */
+.quadro {
+  /* Dourado do quadro da cena: não existe na paleta do site, vale só aqui. */
+  --ouro: #c98a12;
+  --ouro-suave: color-mix(in srgb, #f2b632 24%, transparent);
+
+  border-color: color-mix(in srgb, var(--ouro) 45%, var(--color-white));
+}
+
+/* Com .quadro na frente, vence o .avatar do card seja qual for a ordem dos arquivos. */
+.quadro .avatar {
+  background: #fff3a8;
+  box-shadow:
+    inset 0 -5px 10px rgb(120 90 0 / 0.18),
+    0 0 0 3px color-mix(in srgb, var(--ouro) 55%, transparent);
+  color: #5a4a10;
+}
+
+.quadro .avatar svg {
+  width: 1.625rem;
+  height: 1.625rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.total {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--ouro-suave);
+}
+
+.numero {
+  font-size: 2.75rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.legendaTotal {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+}
+
+.dias {
+  display: grid;
+  grid-template-columns: repeat(var(--colunas), 1fr);
+  gap: 8px;
+  height: 112px;
+}
+
+.dias > div {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.valor {
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--neutro);
+}
+
+.coluna {
+  align-self: end;
+  width: 100%;
+  max-width: 34px;
+  border-radius: 8px 8px 3px 3px;
+  background: color-mix(in srgb, var(--color-olive) 38%, transparent);
+}
+
+.dia {
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: var(--neutro);
+}
+
+.hoje .valor {
+  color: var(--color-olive-dark);
+}
+
+.hoje .coluna {
+  background: var(--ouro);
+}
+
+.unidade {
+  font-size: 0.8125rem;
+  font-weight: var(--weight-regular);
+  color: var(--neutro);
+}
+
+.distribuicao {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.distribuicao span {
+  flex-basis: 0;
+  background: currentColor;
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  font-size: 0.8125rem;
+}
+
+.legenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legenda i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* A cor de status fica só na bolinha; o texto segue a cor do card. */
+.legenda span {
+  color: var(--color-olive-dark);
+}
+
+.legenda strong {
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ranking button {
+  display: grid;
+  grid-template-columns: 20px 12px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-olive-dark);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ranking button:hover {
+  background: var(--fundo-suave);
+}
+
+.posicao {
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  color: var(--neutro);
+}
+
+.ranking li:first-child .posicao {
+  color: var(--ouro);
+}
+
+.ranking i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 -2px 3px rgb(0 0 0 / 0.18);
+}
+
+.nome {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quantidade {
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.quantidade small {
+  font-size: 0.75rem;
+  font-weight: var(--weight-regular);
+  color: var(--neutro);
+}

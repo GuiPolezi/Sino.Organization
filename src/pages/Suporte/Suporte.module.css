@@ -122,6 +122,27 @@
   outline-offset: 2px;
 }
 
+/* Atalho de teclado para o quadro da equipe: o foco tira o botão do sr-only. */
+.atalhoQuadro:focus-visible {
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 50%;
+  z-index: 30;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--color-cream);
+  color: var(--color-olive-dark);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  clip-path: none;
+  outline: 2px solid var(--color-olive-dark);
+  outline-offset: 2px;
+  transform: translateX(-50%);
+}
+
 /* Sem WebGL: a página rola e a equipe vira uma grade de cards 2D. */
 .plano {
   height: auto;
