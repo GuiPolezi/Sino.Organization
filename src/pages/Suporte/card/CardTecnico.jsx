@@ -135,15 +135,15 @@ export default function CardTecnico() {
         </>
       )}
 
-      <nav className={`${styles.nav} ${styles.surge}`} style={{ '--ordem': 4 }} aria-label="Navegar entre técnicos">
-        <button type="button" aria-label="Técnico anterior" onClick={() => navegar(-1)}>
+      <nav className={`${styles.nav} ${styles.surge}`} style={{ '--ordem': 4 }} aria-label="Navegar pela equipe">
+        <button type="button" aria-label="Anterior" onClick={() => navegar(-1)}>
           ←
         </button>
         <span>
           {indice + 1} de {tecnicos.length}
           {atendimentos?.ficticio && <small>Dados de demonstração</small>}
         </span>
-        <button type="button" aria-label="Próximo técnico" onClick={() => navegar(1)}>
+        <button type="button" aria-label="Próximo" onClick={() => navegar(1)}>
           →
         </button>
       </nav>

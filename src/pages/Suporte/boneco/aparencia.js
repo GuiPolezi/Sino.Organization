@@ -52,6 +52,11 @@ export const aparencias = {
   },
 };
 
+// Acrescenta as aparências de outra equipe (ex.: os desenvolvedores) às conhecidas.
+export function registrarAparencias(novas) {
+  Object.assign(aparencias, novas);
+}
+
 function hash(texto) {
   let h = 2166136261;
   for (let i = 0; i < texto.length; i++) h = Math.imul(h ^ texto.charCodeAt(i), 16777619);

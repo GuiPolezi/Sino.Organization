@@ -1,0 +1,15 @@
+{
+  "source": "placeholder",
+  "team": [
+    { "id": "dev-1", "name": "Dev 1", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-2", "name": "Dev 2", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-3", "name": "Dev 3", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-4", "name": "Dev 4", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-5", "name": "Dev 5", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-6", "name": "Dev 6", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-7", "name": "Dev 7", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-8", "name": "Dev 8", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-9", "name": "Dev 9", "role": "Desenvolvedor", "absent": false },
+    { "id": "dev-10", "name": "Dev 10", "role": "Desenvolvedor", "absent": false }
+  ]
+}

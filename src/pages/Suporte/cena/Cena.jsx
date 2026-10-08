@@ -40,7 +40,8 @@ function useMovimentoReduzido() {
   }, []);
 }
 
-export default function Cena() {
+// `simples`: só o tapete, sem as estações de trabalho nem o quadro da equipe.
+export default function Cena({ simples = false }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const selecionar = useEquipe((s) => s.selecionar);
   const [area, setArea] = useState(() => ({ ...AREA }));
@@ -62,8 +63,12 @@ export default function Cena() {
       <directionalLight position={[-6, 4, -4]} intensity={0.35} color="#C9D6FF" />
 
       <Cenario area={area} />
-      <EstacoesTrabalho />
-      <Quadro area={area} />
+      {!simples && (
+        <>
+          <EstacoesTrabalho />
+          <Quadro area={area} />
+        </>
+      )}
 
       {tecnicos.map((tecnico) => (
         <Boneco key={tecnico.id} tecnico={tecnico} />

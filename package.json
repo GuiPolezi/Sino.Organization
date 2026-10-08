@@ -14,7 +14,8 @@
     "test:resolver": "node --test scripts/resolve-city.test.mjs",
     "test:team": "node --test scripts/build-team.test.mjs",
     "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs",
-    "test:card": "node --test src/pages/Suporte/mappers/atendimentos.test.mjs"
+    "test:card": "node --test src/pages/Suporte/mappers/atendimentos.test.mjs",
+    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs"
   },
   "dependencies": {
     "@fontsource/caveat": "^5.3.0",

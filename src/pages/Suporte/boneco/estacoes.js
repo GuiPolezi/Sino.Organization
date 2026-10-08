@@ -123,7 +123,8 @@ function distanciasAteAlvo(alvo) {
  * as mesas e nunca chega.
  */
 export function rotaAte(pos, alvo) {
-  if (dentroDoBloco(alvo) || !cruzaBloco(pos, alvo)) return { ponto: alvo, comprimento: distancia(pos, alvo) };
+  // Sem estações (cenário vazio) não há bloco para contornar.
+  if (!ESTACOES.length || dentroDoBloco(alvo) || !cruzaBloco(pos, alvo)) return { ponto: alvo, comprimento: distancia(pos, alvo) };
 
   const ateAlvo = distanciasAteAlvo(alvo);
   let melhor = alvo;
@@ -170,6 +171,17 @@ export function liberarEstacao(estadoTecnico) {
 // O técnico ainda é o dono da estação em que está sentado?
 export const aindaEDono = (estadoTecnico) =>
   !!estadoTecnico.estacao && estadoTecnico.estacao.ocupante === estadoTecnico.id;
+
+/*
+ * Cenário vazio: tira as estações e todos os obstáculos, inclusive os que outros
+ * módulos acrescentaram (o quadro da equipe). Os bonecos passam a só andar e
+ * fazer ações. Vale para a página inteira e é chamado uma vez, antes de a cena
+ * nascer (pages/Desenvolvimento).
+ */
+export function esvaziarCenario() {
+  ESTACOES.length = 0;
+  OBSTACULOS.length = 0;
+}
 
 // Zera todas as reservas (hot reload e testes).
 export function resetarEstacoes() {
