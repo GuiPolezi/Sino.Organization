@@ -86,10 +86,13 @@ function AtendimentosPorDia({ dias }) {
           <div
             key={i}
             className={dia.hoje ? styles.hoje : undefined}
-            style={{ '--altura': `${(dia.valor / maximo) * 100}%`, '--ordem': i }}
+            style={{ '--fracao': dia.valor / maximo, '--ordem': i }}
           >
-            <b>{dia.valor}</b>
-            <i />
+            {/* O valor fica colado no topo da barra dele, seja ela alta ou baixa. */}
+            <div className={styles.coluna}>
+              <b>{dia.valor}</b>
+              <i />
+            </div>
             <small>{dia.rotulo}</small>
           </div>
         ))}

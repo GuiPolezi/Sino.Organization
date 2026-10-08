@@ -164,26 +164,46 @@
 
 .dias > div {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   justify-items: center;
   gap: 6px;
   height: 100%;
 }
 
+/*
+ * Área de uma coluna: a barra parte da base e o valor fica logo acima do topo
+ * dela. A barra mais alta para antes do topo da área (--folga), para o valor
+ * dela caber.
+ */
+.coluna {
+  --folga: 1.25rem;
+  --altura: calc((100% - var(--folga)) * var(--fracao));
+
+  position: relative;
+  width: 100%;
+  max-width: 2.625rem;
+}
+
 .dias b {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--altura) + 5px);
+  left: 0;
   font-size: 0.8125rem;
   font-weight: var(--weight-bold);
   line-height: 1;
   color: var(--neutro-pequeno);
   font-variant-numeric: tabular-nums;
+  text-align: center;
   animation: aparecer 0.4s ease backwards;
   animation-delay: calc(var(--ordem) * 60ms + 650ms);
 }
 
 .dias i {
-  align-self: end;
-  width: 100%;
-  max-width: 2.625rem;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
   height: var(--altura);
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-olive) 42%, transparent);
