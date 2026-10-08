@@ -59,7 +59,12 @@ export default function GraficoAtendimentos({ porDia, hoje }) {
   return (
     <section>
       <div className={styles.cabecalho}>
-        <h3 className={card.secao}>Gráfico de Atendimentos</h3>
+        {/* Em duas linhas, para o seletor de semana caber ao lado. */}
+        <h3 className={card.secao}>
+          Gráfico
+          <br />
+          de Atendimentos
+        </h3>
         <SeletorDeSemana semana={semana} recuo={recuo} limite={semanasAnteriores(porDia, hoje)} onMudar={setRecuo} />
       </div>
 

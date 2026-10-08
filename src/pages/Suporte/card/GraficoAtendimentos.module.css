@@ -1,10 +1,10 @@
 /* Gráfico de atendimentos do card do técnico. Usa as variáveis de .card. */
+/* Título à esquerda e seletor de semana à direita, sempre na mesma linha. */
 .cabecalho {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -12,8 +12,8 @@
 .seletor {
   display: flex;
   align-items: center;
+  flex: none;
   gap: 2px;
-  margin-left: auto;
   padding: 3px;
   border-radius: 999px;
   background: var(--color-olive);
