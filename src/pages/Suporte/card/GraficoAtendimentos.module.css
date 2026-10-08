@@ -4,8 +4,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+/* Em tela muito estreita o título cede (quebra mais uma linha), em vez de empurrar o seletor para fora. */
+.cabecalho h3 {
+  min-width: 0;
 }
 
 /* Pílula com as setas nas pontas e a semana no meio. */
@@ -63,7 +68,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  min-width: 4.75rem;
+  min-width: 4.25rem;
   margin: 0;
   line-height: 1;
   white-space: nowrap;

@@ -61,7 +61,7 @@ export default function GraficoAtendimentos({ porDia, hoje }) {
       <div className={styles.cabecalho}>
         {/* Em duas linhas, para o seletor de semana caber ao lado. */}
         <h3 className={card.secao}>
-          Gráfico
+          Gráfico{' '}
           <br />
           de Atendimentos
         </h3>
