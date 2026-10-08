@@ -8,11 +8,6 @@
   margin-bottom: 12px;
 }
 
-/* Em tela muito estreita o título cede (quebra mais uma linha), em vez de empurrar o seletor para fora. */
-.cabecalho h3 {
-  min-width: 0;
-}
-
 /* Pílula com as setas nas pontas e a semana no meio. */
 .seletor {
   display: flex;
