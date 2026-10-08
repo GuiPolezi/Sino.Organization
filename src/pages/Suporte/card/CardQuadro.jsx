@@ -161,6 +161,8 @@ export default function CardQuadro() {
 
   const { totalTecnicos, ranking, tickets } = resumo;
   const temRodape = resumo.atualizadoEm !== null || resumo.ficticio;
+  // Sem nenhum atendimento no mês, ninguém está em destaque.
+  const destaque = ranking[0]?.atendimentosMes > 0 ? ranking[0] : null;
 
   return (
     <aside className={`${card.card} ${styles.quadro}`} aria-label="Quadro da equipe: visão geral">
@@ -186,7 +188,7 @@ export default function CardQuadro() {
       </header>
 
       {resumo.atendimentosMes !== null && <TotalDoMes total={resumo.atendimentosMes} hoje={resumo.atendimentosHoje} />}
-      {ranking.length > 0 && <TecnicoEmDestaque tecnico={ranking[0]} />}
+      {destaque && <TecnicoEmDestaque tecnico={destaque} />}
       {resumo.dias.length > 0 && <AtendimentosPorDia dias={resumo.dias} />}
       {tickets.length > 0 && <Tickets tickets={tickets} />}
       {ranking.length > 0 && <Ranking ranking={ranking} />}

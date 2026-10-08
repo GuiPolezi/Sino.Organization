@@ -219,9 +219,10 @@
 }
 
 /* ── Tickets: um bloco oliva por técnico ── */
+/* minmax(0, …): um número largo não alarga a coluna além da metade do card. */
 .tickets {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -245,10 +246,12 @@
   line-height: 1.15;
 }
 
+/* Se o número não deixar espaço, a legenda desce para a linha de baixo. */
 .tickets p {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
 }
 
 .tickets strong {
@@ -258,11 +261,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Texto de 10px: creme cheio, para o contraste sobre o oliva passar de 4,5:1. */
 .tickets small {
+  flex: 1;
+  min-width: 4.5rem;
   font-size: 0.625rem;
   font-weight: var(--weight-bold);
   line-height: 1.2;
-  color: color-mix(in srgb, var(--color-cream) 85%, transparent);
+  color: var(--color-cream);
 }
 
 @media (hover: hover) and (pointer: fine) {
