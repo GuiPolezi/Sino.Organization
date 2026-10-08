@@ -363,7 +363,7 @@ section > .secao {
 }
 
 .tickets strong {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: var(--weight-black);
   line-height: 1;
   letter-spacing: -0.02em;
@@ -371,7 +371,8 @@ section > .secao {
   font-variant-numeric: tabular-nums;
 }
 
-.tickets span {
+/* Com ">": o texto ao lado, e nunca os spans do contador dentro do <strong>. */
+.tickets > span {
   max-width: 12rem;
   font-size: 1rem;
   font-weight: var(--weight-bold);
