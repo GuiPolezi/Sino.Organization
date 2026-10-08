@@ -23,6 +23,8 @@ const CHANCE_DE_TRABALHAR = 0.35;
 const PRAZO_ATE_ESTACAO = 14;
 // Até onde, além do raio do obstáculo, o boneco já começa a desviar.
 const ALCANCE_DESVIO = 0.8;
+// Velocidade (m/s) com que o boneco sai de dentro de um obstáculo suave.
+const VELOCIDADE_SAIDA = 2.2;
 
 const rand = (min, max) => min + Math.random() * (max - min);
 const { clamp, damp } = THREE.MathUtils;
@@ -280,13 +282,15 @@ function aplicarLimites(id, pos, idSelecionado, dt) {
   }
 
   // Nunca atravessa mesas e cadeiras: quem entrou no círculo volta para a borda.
+  // De um obstáculo suave (o corredor do quadro) ele sai aos poucos, sem salto.
   for (const o of OBSTACULOS) {
     const ox = pos.x - o.x;
     const oz = pos.z - o.z;
     const dist = Math.hypot(ox, oz);
     if (dist < o.r && dist > 1e-4) {
-      pos.x = o.x + (ox / dist) * o.r;
-      pos.z = o.z + (oz / dist) * o.r;
+      const recuo = o.suave ? Math.min(o.r - dist, VELOCIDADE_SAIDA * dt) : o.r - dist;
+      pos.x += (ox / dist) * recuo;
+      pos.z += (oz / dist) * recuo;
     }
   }
 

@@ -6,7 +6,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import '@fontsource/caveat/latin-600.css';
 import '@fontsource/caveat/latin-700.css';
 import { MOVIMENTO, useEquipe } from '../store.js';
-import { CONFIG_QUADRO, QUADRO, atualizarCorredor, posicionarQuadro, removerQuadro } from './posicao.js';
+import { CONFIG_QUADRO, QUADRO, atualizarObstaculos, posicionarQuadro, removerQuadro } from './posicao.js';
 import { texturaFolhaPautada, texturaPapelRasgado, texturaPostIt, texturaQuadroBranco } from './texturas.js';
 import { useResumo } from './useResumo.js';
 import styles from './Quadro.module.css';
@@ -257,8 +257,9 @@ export default function Quadro({ area }) {
   useEffect(() => () => descartarMateriais(M), [M]);
   useEffect(() => {
     setPosicao(posicionarQuadro(area, retrato));
-    return removerQuadro;
   }, [area, retrato]);
+  // Só ao sair de cena: numa mudança de tela, posicionarQuadro cuida dos obstáculos.
+  useEffect(() => removerQuadro, []);
 
   const grupo = useRef(null);
   const losango = useRef(null);
@@ -270,7 +271,7 @@ export default function Quadro({ area }) {
     const dt = Math.min(delta, 0.05);
     // Com movimento reduzido o quadro acende, mas nada pulsa nem flutua.
     const t = MOVIMENTO.reduzido ? 0 : state.clock.elapsedTime;
-    atualizarCorredor(dt, aberto);
+    atualizarObstaculos(dt, aberto);
 
     brilho.current = damp(brilho.current, emHover || aberto ? 1 : 0, 8, dt);
     const b = brilho.current;

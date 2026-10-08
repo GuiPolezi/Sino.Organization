@@ -26,6 +26,8 @@ const formatoDiaSemana = new Intl.DateTimeFormat('pt-BR', { weekday: 'short', ti
 
 const soma = (lista, valorDe) => lista.reduce((total, item) => total + valorDe(item), 0);
 const media = (lista, valorDe) => soma(lista, valorDe) / lista.length;
+// Data ISO que não dá para ler vira null: o painel só mostra a hora quando ela é válida.
+const dataValida = (iso) => (typeof iso === 'string' && !Number.isNaN(Date.parse(iso)) ? iso : null);
 const maiuscula = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
 function contarStatus(tecnicos) {
@@ -98,7 +100,7 @@ export function resumoEquipe(tecnicos, extras, agora = Date.now()) {
     tempoMedioPrimeiraResposta: dados.tempoMedioPrimeiraResposta ?? null,
     resolvidosPrimeiroContato: dados.resolvidosPrimeiroContato ?? null,
     satisfacaoClientes: dados.satisfacaoClientes ?? null,
-    atualizadoEm: dados.atualizadoEm ?? null,
+    atualizadoEm: dataValida(dados.atualizadoEm),
     ficticio: dados.ficticio === true,
   };
 }

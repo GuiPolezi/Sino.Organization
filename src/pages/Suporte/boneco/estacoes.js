@@ -50,7 +50,8 @@ export const MAX_SENTADOS = ESTACOES.length;
 
 // Obstáculos (círculos) que os técnicos contornam e nunca atravessam.
 // r é a distância mínima entre o centro do técnico e o centro do círculo;
-// com r = 0 o obstáculo está desligado (ex.: o corredor do quadro, fechado).
+// com r = 0 o obstáculo está desligado (ex.: o corredor do quadro, fechado);
+// com `suave`, quem está dentro sai aos poucos, em vez de ir direto para a borda.
 // O quadro da equipe acrescenta os dele a esta lista (quadro/posicao.js).
 export const OBSTACULOS = ESTACOES.flatMap((estacao) => [
   { ...pontoLocal(estacao, -0.45, 0), r: 0.78, estacao: estacao.id }, // metade esquerda da mesa

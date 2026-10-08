@@ -81,3 +81,10 @@ test('os últimos dias terminam em hoje, com os dias da semana antes', () => {
     { rotulo: 'Hoje', valor: 47, hoje: true },
   ]);
 });
+
+test('data de atualização ilegível vira null', () => {
+  assert.equal(resumoEquipe([], { atualizadoEm: '2026-10-08T15:00:00Z' }).atualizadoEm, '2026-10-08T15:00:00Z');
+  assert.equal(resumoEquipe([], { atualizadoEm: 'ontem à tarde' }).atualizadoEm, null);
+  assert.equal(resumoEquipe([], { atualizadoEm: 1234 }).atualizadoEm, null);
+  assert.equal(resumoEquipe([], {}).atualizadoEm, null);
+});
