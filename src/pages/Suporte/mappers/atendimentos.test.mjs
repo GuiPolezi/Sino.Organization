@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  diasRecentes,
   escalaY,
   hojeEmBrasilia,
   semanaDoGrafico,
@@ -75,4 +76,26 @@ test('o topo do eixo fica sempre acima do maior valor, com poucas marcas', () =>
     assert.ok(marcas.length <= 7, `${marcas.length} marcas para ${maximo}`);
     assert.equal(marcas.at(-1), topo);
   }
+});
+
+test('os dias recentes pulam fim de semana vazio e terminam em hoje', () => {
+  // Hoje é quinta 08/10; sábado 03 e domingo 04 não têm registro e saem.
+  // Sexta 02 também não tem, mas é dia útil: fica, com zero.
+  assert.deepEqual(
+    diasRecentes(POR_DIA, HOJE).map((dia) => `${dia.rotulo}:${dia.valor}`),
+    ['Sex:0', 'Seg:31', 'Ter:36', 'Qua:9', 'Hoje:15'],
+  );
+  // Fim de semana com atendimento entra.
+  assert.deepEqual(
+    diasRecentes({ ...POR_DIA, '2026-10-04': 3 }, HOJE, 4).map((dia) => `${dia.rotulo}:${dia.valor}`),
+    ['Seg:31', 'Ter:36', 'Qua:9', 'Hoje:15'],
+  );
+  assert.deepEqual(
+    diasRecentes({ ...POR_DIA, '2026-10-04': 3 }, HOJE).map((dia) => dia.rotulo),
+    ['Dom', 'Seg', 'Ter', 'Qua', 'Hoje'],
+  );
+  // Hoje entra mesmo num domingo sem atendimento, e só o último dia é "hoje".
+  const noDomingo = diasRecentes({}, '2026-10-04', 3);
+  assert.deepEqual(noDomingo.map((dia) => dia.rotulo), ['Qui', 'Sex', 'Hoje']);
+  assert.deepEqual(noDomingo.map((dia) => dia.hoje), [false, false, true]);
 });

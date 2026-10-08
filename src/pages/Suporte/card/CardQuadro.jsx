@@ -1,25 +1,16 @@
 import { useEffect } from 'react';
-import { aparenciaDe } from '../boneco/aparencia.js';
 import { useResumo } from '../quadro/useResumo.js';
 import { useEquipe } from '../store.js';
+import Contagem from './Contagem.jsx';
 import card from './CardTecnico.module.css';
 import styles from './CardQuadro.module.css';
-
-const META_SLA = 95;
-const NOTAS = [1, 2, 3, 4, 5];
 
 const formatoHora = new Intl.DateTimeFormat('pt-BR', {
   hour: '2-digit',
   minute: '2-digit',
   timeZone: 'America/Sao_Paulo',
 });
-const formatoNumero = new Intl.NumberFormat('pt-BR');
-const decimal = (valor) => valor.toFixed(1).replace('.', ',');
-
-const classeSla = (sla) => {
-  if (sla >= META_SLA) return card.ok;
-  return sla >= 90 ? card.aviso : card.critico;
-};
+const primeiroNome = (nome) => nome.split(' ')[0];
 
 // Esc fecha o painel enquanto ele está aberto.
 function useFecharComEsc(aberto, fechar) {
@@ -34,15 +25,52 @@ function useFecharComEsc(aberto, fechar) {
   }, [aberto, fechar]);
 }
 
-function TotalDoMes({ chamados, atendimentosHoje }) {
+function TotalDoMes({ total, hoje }) {
   return (
-    <section className={styles.total}>
+    <section className={`${styles.total} ${card.surge}`} style={{ '--ordem': 0 }}>
       <h3 className={card.rotulo}>Atendimentos concluídos no mês</h3>
-      <p className={styles.numero}>{formatoNumero.format(chamados.concluidasMes)}</p>
-      <p className={`${card.sutil} ${styles.legendaTotal}`}>
-        {atendimentosHoje !== null && `${atendimentosHoje} hoje · `}soma de toda a equipe
+      <p className={styles.numero}>
+        <Contagem valor={total} />
       </p>
+      <p className={styles.legendaTotal}>{hoje !== null && `${hoje} hoje · `}soma de toda a equipe</p>
     </section>
+  );
+}
+
+function Estrela() {
+  return (
+    <svg className={styles.estrela} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 1.8l3 6.7 7.2.8-5.4 4.9 1.5 7.2L12 17.7l-6.3 3.7 1.5-7.2L1.8 9.3l7.2-.8z" />
+    </svg>
+  );
+}
+
+// O primeiro do ranking. Clicar abre o card dele.
+function TecnicoEmDestaque({ tecnico }) {
+  const selecionar = useEquipe((s) => s.selecionar);
+
+  return (
+    // A entrada em cascata fica no invólucro, para não disputar o transform com o hover do botão.
+    <div className={card.surge} style={{ '--ordem': 1 }}>
+      <button type="button" className={styles.destaque} onClick={() => selecionar(tecnico.id)}>
+        <span className={styles.destaqueTitulo}>Técnico em Destaque</span>
+        <span className={styles.destaqueLinha}>
+          <span className={styles.destaqueQuem}>
+            <strong>
+              {primeiroNome(tecnico.nome)}
+              <Estrela />
+            </strong>
+            {tecnico.funcao && <small>{tecnico.funcao}</small>}
+          </span>
+          <span className={styles.destaqueTotal}>
+            <strong>
+              <Contagem valor={tecnico.atendimentosMes} />
+            </strong>
+            <small>Atendimentos no Mês</small>
+          </span>
+        </span>
+      </button>
+    </div>
   );
 }
 
@@ -51,81 +79,39 @@ function AtendimentosPorDia({ dias }) {
   const descricao = dias.map((dia) => `${dia.rotulo}: ${dia.valor}`).join(', ');
 
   return (
-    <section>
+    <section className={card.surge} style={{ '--ordem': 2 }}>
       <h3 className={card.rotulo}>Atendimentos por dia</h3>
-      <div
-        className={styles.dias}
-        style={{ '--colunas': dias.length }}
-        role="img"
-        aria-label={descricao}
-      >
+      <div className={styles.dias} style={{ '--colunas': dias.length }} role="img" aria-label={descricao}>
         {dias.map((dia, i) => (
-          <div key={i} className={dia.hoje ? styles.hoje : undefined}>
-            <span className={styles.valor}>{dia.valor}</span>
-            <span className={styles.coluna} style={{ height: `${(dia.valor / maximo) * 100}%` }} />
-            <span className={styles.dia}>{dia.rotulo}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ChamadosDaEquipe({ chamados, primeiraResposta }) {
-  return (
-    <section>
-      <h3 className={card.rotulo}>Chamados da equipe</h3>
-      <dl className={card.contadores}>
-        <div>
-          <dt>Abertos</dt>
-          <dd>{chamados.abertos}</dd>
-        </div>
-        <div>
-          <dt>Em andamento</dt>
-          <dd>{chamados.emAndamento}</dd>
-        </div>
-        <div className={chamados.atrasadas > 0 ? card.alerta : undefined}>
-          <dt>Atrasados</dt>
-          <dd>{chamados.atrasadas}</dd>
-        </div>
-        {primeiraResposta !== null && (
-          <div>
-            <dt>1ª resposta (média)</dt>
-            <dd>
-              {primeiraResposta}
-              <small className={styles.unidade}> min</small>
-            </dd>
-          </div>
-        )}
-      </dl>
-    </section>
-  );
-}
-
-function EquipeAgora({ status, aoVivo }) {
-  // "Em atendimento" só existe quando os técnicos trazem o status ao vivo.
-  const grupos = [
-    { classe: card.ok, rotulo: 'Disponíveis', total: status.disponivel },
-    aoVivo && { classe: card.aviso, rotulo: 'Em atendimento', total: status.em_atendimento },
-    { classe: card.neutro, rotulo: 'Ausentes', total: status.ausente },
-  ].filter(Boolean);
-  const descricao = grupos.map(({ rotulo, total }) => `${rotulo}: ${total}`).join(', ');
-
-  return (
-    <section>
-      <h3 className={card.rotulo}>Equipe agora</h3>
-      <div className={styles.distribuicao} role="img" aria-label={descricao}>
-        {grupos.map(({ classe, rotulo, total }) => (
-          <span key={rotulo} className={classe} style={{ flexGrow: total }} />
-        ))}
-      </div>
-      <ul className={styles.legenda}>
-        {grupos.map(({ classe, rotulo, total }) => (
-          <li key={rotulo} className={classe}>
+          <div
+            key={i}
+            className={dia.hoje ? styles.hoje : undefined}
+            style={{ '--altura': `${(dia.valor / maximo) * 100}%`, '--ordem': i }}
+          >
+            <b>{dia.valor}</b>
             <i />
-            <span>
-              {rotulo} <strong>{total}</strong>
-            </span>
+            <small>{dia.rotulo}</small>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Tickets({ tickets }) {
+  return (
+    <section className={card.surge} style={{ '--ordem': 3 }}>
+      <h3 className={card.secao}>Tickets</h3>
+      <ul className={styles.tickets}>
+        {tickets.map(({ id, nome, atribuidos }) => (
+          <li key={id}>
+            <h4>Tickets com {primeiroNome(nome)}</h4>
+            <p>
+              <strong>
+                <Contagem valor={atribuidos} />
+              </strong>
+              <small>{atribuidos === 1 ? 'Chamado atribuído ao técnico' : 'Chamados atribuídos ao técnico'}</small>
+            </p>
           </li>
         ))}
       </ul>
@@ -133,66 +119,23 @@ function EquipeAgora({ status, aoVivo }) {
   );
 }
 
-function SlaMedio({ valor, primeiroContato }) {
-  const classe = classeSla(valor);
-
-  return (
-    <div>
-      <div className={card.linhaMetrica}>
-        <h3 className={card.rotulo}>SLA médio</h3>
-        <strong className={classe}>{valor}%</strong>
-      </div>
-      <div className={card.barra} role="img" aria-label={`SLA médio de ${valor} por cento`}>
-        <span className={classe} style={{ width: `${Math.min(valor, 100)}%` }} />
-        <em style={{ left: `${META_SLA}%` }} />
-      </div>
-      <p className={`${card.sutil} ${card.pequeno}`}>
-        Meta: {META_SLA}%
-        {primeiroContato !== null && ` · ${primeiroContato}% resolvidos no 1º contato`}
-      </p>
-    </div>
-  );
-}
-
-function AvaliacaoMedia({ valor, satisfacao }) {
-  return (
-    <div>
-      <div className={card.linhaMetrica}>
-        <h3 className={card.rotulo}>Avaliação média</h3>
-        <strong>
-          {decimal(valor)}
-          <small> / 5</small>
-        </strong>
-      </div>
-      <div className={card.pontos} aria-hidden="true">
-        {NOTAS.map((n) => (
-          <span key={n} style={{ '--preench': Math.max(0, Math.min(1, valor - n + 1)) }} />
-        ))}
-      </div>
-      {satisfacao !== null && (
-        <p className={`${card.sutil} ${card.pequeno}`}>{satisfacao}% dos clientes satisfeitos</p>
-      )}
-    </div>
-  );
-}
-
-// Clicar num destaque abre o card daquele técnico.
-function DestaquesDoMes({ destaques }) {
+// Todos os técnicos, do que mais atendeu no mês para o que menos. Clicar abre o card dele.
+function Ranking({ ranking }) {
   const selecionar = useEquipe((s) => s.selecionar);
 
   return (
-    <section>
-      <h3 className={card.rotulo}>Destaques do mês</h3>
+    <section className={card.surge} style={{ '--ordem': 4 }}>
+      <h3 className={card.secao}>Ranking de Atendimentos</h3>
       <ol className={styles.ranking}>
-        {destaques.map(({ id, nome, concluidasMes }, i) => (
-          <li key={id}>
+        {ranking.map(({ id, nome, atendimentosMes }, i) => (
+          <li key={id} style={{ '--ordem': i }}>
             <button type="button" onClick={() => selecionar(id)}>
-              <span className={styles.posicao}>{i + 1}</span>
-              <i style={{ background: aparenciaDe(id).camisa }} />
+              <b>{i + 1} -</b>
               <span className={styles.nome}>{nome}</span>
-              <span className={styles.quantidade}>
-                {concluidasMes} <small>concluídos</small>
-              </span>
+              <i className={styles.seta} aria-hidden="true" />
+              <strong>
+                <Contagem valor={atendimentosMes} />
+              </strong>
             </button>
           </li>
         ))}
@@ -202,9 +145,11 @@ function DestaquesDoMes({ destaques }) {
 }
 
 /*
- * Painel "Quadro da equipe": a visão geral, com o mesmo visual do card do
- * técnico (as classes dele são reaproveitadas). Abre pelo quadro da cena e,
- * como no card, cada seção só aparece quando o dado dela existe.
+ * Painel "Quadro da equipe": a visão geral, com a moldura e o cabeçalho do card
+ * do técnico (as classes dele são reaproveitadas). Abre pelo quadro da cena e,
+ * como no card, cada seção só aparece quando o dado dela existe. Os números
+ * saem dos atendimentos de cada técnico (mappers/resumoEquipe.js); hoje são de
+ * demonstração.
  */
 export default function CardQuadro() {
   const aberto = useEquipe((s) => s.painel === 'quadro');
@@ -214,8 +159,7 @@ export default function CardQuadro() {
 
   if (!aberto) return null;
 
-  const { chamados, slaMedio, avaliacaoMedia, status, totalTecnicos } = resumo;
-  const temMetricas = slaMedio !== null || avaliacaoMedia !== null;
+  const { totalTecnicos, ranking, tickets } = resumo;
   const temRodape = resumo.atualizadoEm !== null || resumo.ficticio;
 
   return (
@@ -241,33 +185,14 @@ export default function CardQuadro() {
         </button>
       </header>
 
-      {resumo.temStatusAoVivo && (
-        <span className={`${card.pill} ${card.ok}`}>
-          <i />
-          Ao vivo · {status.em_atendimento} em atendimento agora
-        </span>
-      )}
-
-      {chamados && <TotalDoMes chamados={chamados} atendimentosHoje={resumo.atendimentosHoje} />}
+      {resumo.atendimentosMes !== null && <TotalDoMes total={resumo.atendimentosMes} hoje={resumo.atendimentosHoje} />}
+      {ranking.length > 0 && <TecnicoEmDestaque tecnico={ranking[0]} />}
       {resumo.dias.length > 0 && <AtendimentosPorDia dias={resumo.dias} />}
-      {chamados && (
-        <ChamadosDaEquipe chamados={chamados} primeiraResposta={resumo.tempoMedioPrimeiraResposta} />
-      )}
-      {totalTecnicos > 0 && <EquipeAgora status={status} aoVivo={resumo.temStatusAoVivo} />}
-
-      {temMetricas && (
-        <section className={card.metricas}>
-          {slaMedio !== null && <SlaMedio valor={slaMedio} primeiroContato={resumo.resolvidosPrimeiroContato} />}
-          {avaliacaoMedia !== null && (
-            <AvaliacaoMedia valor={avaliacaoMedia} satisfacao={resumo.satisfacaoClientes} />
-          )}
-        </section>
-      )}
-
-      {resumo.destaques.length > 0 && <DestaquesDoMes destaques={resumo.destaques} />}
+      {tickets.length > 0 && <Tickets tickets={tickets} />}
+      {ranking.length > 0 && <Ranking ranking={ranking} />}
 
       {temRodape && (
-        <footer className={card.rodape}>
+        <footer className={`${card.rodape} ${card.surge}`} style={{ '--ordem': 5 }}>
           {resumo.atualizadoEm !== null && (
             <span>Atualizado às {formatoHora.format(new Date(resumo.atualizadoEm))}</span>
           )}

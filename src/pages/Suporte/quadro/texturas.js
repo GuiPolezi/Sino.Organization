@@ -200,7 +200,7 @@ export function texturaFolhaPautada(resumo) {
 
 // Post-it: o total de atendimentos do mês ou, sem esse dado, o tamanho da equipe.
 function destaqueDoPostIt(resumo) {
-  if (resumo.chamados) return { numero: resumo.chamados.concluidasMes, linhas: ['atendimentos', 'no mês ★'] };
+  if (resumo.atendimentosMes !== null) return { numero: resumo.atendimentosMes, linhas: ['atendimentos', 'no mês ★'] };
   if (resumo.totalTecnicos > 0) return { numero: resumo.totalTecnicos, linhas: ['técnicos', 'na equipe ★'] };
   return null;
 }

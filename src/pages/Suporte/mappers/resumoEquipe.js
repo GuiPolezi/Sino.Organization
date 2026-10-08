@@ -1,4 +1,7 @@
+import { diasRecentes, hojeEmBrasilia, totaisDeAtendimentos } from './atendimentos.js';
+
 /** @import { Tecnico } from '../tipos.js' */
+/** @import { AtendimentosTecnico } from './atendimentos.js' */
 
 /**
  * Dados da equipe que não saem da lista de técnicos (api/resumoEquipe.js).
@@ -70,37 +73,97 @@ function destaquesDoMes(tecnicos, comTarefas, extras) {
   return candidatos.toSorted((a, b) => b.concluidasMes - a.concluidasMes).slice(0, TOTAL_DESTAQUES);
 }
 
+// Atendimentos da equipe inteira por dia: a soma dos de cada técnico.
+function somarPorDia(listas) {
+  const total = {};
+  for (const porDia of listas) {
+    for (const [data, valor] of Object.entries(porDia)) total[data] = (total[data] ?? 0) + valor;
+  }
+  return total;
+}
+
+/*
+ * O que sai dos atendimentos de cada técnico (os mesmos do card do técnico):
+ * totais da equipe, os últimos dias, o ranking do mês e os chamados atribuídos.
+ * Devolve null quando nenhum técnico tem atendimentos.
+ */
+function resumoDosAtendimentos(tecnicos, atendimentos, hoje) {
+  const comAtendimentos = tecnicos.filter((t) => atendimentos[t.id]?.porDia);
+  if (!comAtendimentos.length) return null;
+
+  const daEquipe = somarPorDia(comAtendimentos.map((t) => atendimentos[t.id].porDia));
+  const totais = totaisDeAtendimentos(daEquipe, hoje);
+
+  return {
+    atendimentosMes: totais.mes,
+    atendimentosHoje: totais.hoje,
+    dias: diasRecentes(daEquipe, hoje),
+    ranking: comAtendimentos
+      .map(({ id, nome, funcao }) => ({
+        id,
+        nome,
+        funcao,
+        atendimentosMes: totaisDeAtendimentos(atendimentos[id].porDia, hoje).mes,
+      }))
+      .toSorted((a, b) => b.atendimentosMes - a.atendimentosMes),
+    ficticio: comAtendimentos.some((t) => atendimentos[t.id].ficticio === true),
+  };
+}
+
+// Chamados atribuídos a cada técnico, na ordem da equipe.
+const ticketsPorTecnico = (tecnicos, atendimentos) =>
+  tecnicos.flatMap(({ id, nome }) => {
+    const atribuidos = atendimentos[id]?.chamadosAtribuidos;
+    return atribuidos === undefined ? [] : [{ id, nome, atribuidos }];
+  });
+
 /**
- * Visão geral da equipe para o quadro e o painel. O que os técnicos já trazem
- * (chamados, SLA, avaliação) é somado aqui; o que falta vem de `extras`. Campo
- * sem dado sai como null (ou lista vazia) e a parte dele não é desenhada.
+ * Visão geral da equipe para o quadro e o painel. Os atendimentos de cada
+ * técnico (os mesmos do card dele) são somados aqui, assim como o que os
+ * técnicos já trazem (chamados, SLA, avaliação); o que falta vem de `extras`.
+ * Campo sem dado sai como null (ou lista vazia) e a parte dele não é desenhada.
  *
  * @param {Tecnico[]} tecnicos
  * @param {ExtrasQuadro | null} [extras]
+ * @param {Record<string, AtendimentosTecnico>} [atendimentos] por id do técnico
  */
-export function resumoEquipe(tecnicos, extras, agora = Date.now()) {
+export function resumoEquipe(tecnicos, extras, atendimentos = {}, agora = Date.now()) {
   const dados = extras ?? {};
   const comTarefas = tecnicos.filter((t) => t.tarefas);
   const comSla = tecnicos.filter((t) => t.slaCumprido !== undefined);
   const comAvaliacao = tecnicos.filter((t) => t.avaliacaoMedia !== undefined);
+  const chamados = comTarefas.length ? somarChamados(comTarefas) : (dados.chamados ?? null);
+  const destaques = destaquesDoMes(tecnicos, comTarefas, dados);
+  const dosAtendimentos = resumoDosAtendimentos(tecnicos, atendimentos, hojeEmBrasilia(agora));
 
   return {
     totalTecnicos: tecnicos.length,
     status: contarStatus(tecnicos),
     // Só há "em atendimento" quando os técnicos trazem o status ao vivo.
     temStatusAoVivo: tecnicos.some((t) => t.status !== undefined),
-    chamados: comTarefas.length ? somarChamados(comTarefas) : (dados.chamados ?? null),
+    chamados,
     slaMedio: comSla.length ? Math.round(media(comSla, (t) => t.slaCumprido)) : (dados.slaMedio ?? null),
     avaliacaoMedia: comAvaliacao.length
       ? media(comAvaliacao, (t) => t.avaliacaoMedia)
       : (dados.avaliacaoMedia ?? null),
-    destaques: destaquesDoMes(tecnicos, comTarefas, dados),
-    atendimentosHoje: dados.atendimentosHoje ?? null,
-    dias: ultimosDias(dados.atendimentosUltimosDias ?? [], agora),
+    destaques,
+    // Dos atendimentos dos técnicos quando existem; senão, dos chamados e dos extras.
+    atendimentosMes: dosAtendimentos?.atendimentosMes ?? chamados?.concluidasMes ?? null,
+    atendimentosHoje: dosAtendimentos?.atendimentosHoje ?? dados.atendimentosHoje ?? null,
+    dias: dosAtendimentos?.dias ?? ultimosDias(dados.atendimentosUltimosDias ?? [], agora),
+    ranking:
+      dosAtendimentos?.ranking ??
+      destaques.map(({ id, nome, concluidasMes }) => ({
+        id,
+        nome,
+        funcao: tecnicos.find((t) => t.id === id)?.funcao ?? null,
+        atendimentosMes: concluidasMes,
+      })),
+    tickets: ticketsPorTecnico(tecnicos, atendimentos),
     tempoMedioPrimeiraResposta: dados.tempoMedioPrimeiraResposta ?? null,
     resolvidosPrimeiroContato: dados.resolvidosPrimeiroContato ?? null,
     satisfacaoClientes: dados.satisfacaoClientes ?? null,
     atualizadoEm: dataValida(dados.atualizadoEm),
-    ficticio: dados.ficticio === true,
+    ficticio: dados.ficticio === true || dosAtendimentos?.ficticio === true,
   };
 }

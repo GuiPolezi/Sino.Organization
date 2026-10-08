@@ -91,6 +91,32 @@ export function semanasAnteriores(porDia, hoje) {
   return Math.round((paraUtc(domingoDe(hoje)) - paraUtc(domingoDe(maisAntiga))) / (UM_DIA_MS * DIAS_NA_SEMANA));
 }
 
+const DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+// Até onde procurar para trás pelos dias do resumo.
+const MAX_RECUO = 14;
+
+/**
+ * Os últimos dias até hoje, do mais antigo para o mais novo. Sábado e domingo
+ * sem atendimento ficam de fora, para o resumo não gastar colunas com zeros.
+ *
+ * @param {Record<string, number>} porDia
+ * @param {string} hoje "AAAA-MM-DD"
+ * @param {number} [quantidade]
+ * @returns {{ rotulo: string, valor: number, hoje: boolean }[]}
+ */
+export function diasRecentes(porDia, hoje, quantidade = 5) {
+  const dias = [];
+  for (let recuo = 0; dias.length < quantidade && recuo < MAX_RECUO; recuo++) {
+    const data = somarDias(hoje, -recuo);
+    const valor = porDia[data] ?? 0;
+    const semana = diaDaSemana(data);
+    const fimDeSemanaVazio = recuo > 0 && valor === 0 && (semana === 0 || semana === 6);
+    if (fimDeSemanaVazio) continue;
+    dias.unshift({ rotulo: recuo === 0 ? 'Hoje' : DIAS_CURTOS[semana], valor, hoje: recuo === 0 });
+  }
+  return dias;
+}
+
 /**
  * Eixo Y que acompanha os dados: o topo é o primeiro múltiplo do passo acima do
  * maior valor (sobra um respiro sobre a barra mais alta) e o passo cresce para

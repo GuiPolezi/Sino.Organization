@@ -1,8 +1,5 @@
 .card {
-  /* Cores de status: não existem na paleta do site, valem só dentro do card. */
-  --ok: var(--color-olive);
-  --aviso: #96650f;
-  --critico: #a8382c;
+  /* Tons de apoio: variações da paleta do site que valem só dentro do card. */
   --neutro: color-mix(in srgb, var(--color-olive-dark) 62%, transparent);
   /* Como o --neutro, mas escuro o bastante para texto pequeno (contraste acima de 4,5:1). */
   --neutro-pequeno: color-mix(in srgb, var(--color-olive-dark) 82%, transparent);
@@ -97,11 +94,6 @@
   color: var(--neutro);
 }
 
-.pequeno {
-  margin-top: 6px;
-  font-size: 0.75rem;
-}
-
 .fechar {
   display: grid;
   place-items: center;
@@ -134,18 +126,6 @@
   outline-offset: 3px;
 }
 
-.ok {
-  color: var(--ok);
-}
-
-.aviso {
-  color: var(--aviso);
-}
-
-.critico {
-  color: var(--critico);
-}
-
 .neutro {
   color: var(--neutro);
 }
@@ -176,111 +156,14 @@
   line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--neutro);
+  color: var(--neutro-pequeno);
 }
 
 section > .rotulo {
   margin-bottom: 10px;
 }
 
-.contadores {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.contadores div {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 4px;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--fundo-suave);
-}
-
-.contadores dt {
-  font-size: 0.75rem;
-  color: var(--neutro);
-}
-
-.contadores dd {
-  font-size: 1.625rem;
-  font-weight: var(--weight-black);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.alerta dd {
-  color: var(--critico);
-}
-
-.metricas {
-  display: grid;
-  gap: 1rem;
-}
-
-.linhaMetrica {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-
-.linhaMetrica strong {
-  font-size: 1.125rem;
-  font-weight: var(--weight-bold);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.linhaMetrica small {
-  font-size: 0.75rem;
-  font-weight: var(--weight-regular);
-  color: var(--neutro);
-}
-
-.barra {
-  position: relative;
-  height: 8px;
-  margin-top: 10px;
-  border-radius: 99px;
-  background: var(--fundo-suave);
-}
-
-.barra span {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 99px;
-  background: currentColor;
-}
-
-/* Marca da meta de SLA. */
-.barra em {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--color-olive-dark);
-}
-
-.pontos {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.pontos span {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(
-    90deg,
-    var(--color-olive) calc(var(--preench) * 100%),
-    var(--fundo-suave) 0
-  );
-}
-
-/* Título de seção do card do técnico. */
+/* Título de seção (card do técnico e painel do quadro). */
 .secao {
   font-size: 1.0625rem;
   font-weight: var(--weight-bold);
@@ -387,7 +270,7 @@ section > .secao {
   padding-top: 14px;
   border-top: 1px solid var(--linha);
   font-size: 0.75rem;
-  color: var(--neutro);
+  color: var(--neutro-pequeno);
 }
 
 .nav {

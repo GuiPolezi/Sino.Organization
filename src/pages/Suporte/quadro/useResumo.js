@@ -6,5 +6,6 @@ import { useEquipe } from '../store.js';
 export function useResumo() {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const extras = useEquipe((s) => s.extrasQuadro);
-  return useMemo(() => resumoEquipe(tecnicos, extras), [tecnicos, extras]);
+  const atendimentos = useEquipe((s) => s.atendimentos);
+  return useMemo(() => resumoEquipe(tecnicos, extras, atendimentos), [tecnicos, extras, atendimentos]);
 }

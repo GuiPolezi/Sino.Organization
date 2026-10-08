@@ -1,8 +1,14 @@
-/* Painel "Quadro da equipe": só o que ele acrescenta ao card (CardTecnico.module.css). */
+/*
+ * Painel "Quadro da equipe": só o que ele acrescenta ao card (CardTecnico.module.css).
+ * Os números são desenhados por Contagem, que usa <span>: por isso nenhuma regra
+ * daqui mira "span" solto, só classes e outras tags.
+ */
 .quadro {
   /* Dourado do quadro da cena: não existe na paleta do site, vale só aqui. */
   --ouro: #c98a12;
-  --ouro-suave: color-mix(in srgb, #f2b632 24%, transparent);
+  --ouro-vivo: #f2b632;
+  --ouro-suave: color-mix(in srgb, var(--ouro-vivo) 26%, transparent);
+  --suave: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   border-color: color-mix(in srgb, var(--ouro) 45%, var(--color-white));
 }
@@ -26,14 +32,15 @@
   stroke-linejoin: round;
 }
 
+/* ── Atendimentos concluídos no mês ── */
 .total {
-  padding: 14px 16px;
-  border-radius: 16px;
+  padding: 16px 18px 18px;
+  border-radius: 20px;
   background: var(--ouro-suave);
 }
 
 .numero {
-  font-size: 2.75rem;
+  font-size: 3.25rem;
   font-weight: var(--weight-black);
   line-height: 1;
   letter-spacing: -0.03em;
@@ -41,150 +48,271 @@
 }
 
 .legendaTotal {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 0.8125rem;
+  color: var(--neutro-pequeno);
 }
 
+/* ── Técnico em destaque ── */
+.destaque {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 18px 18px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--color-olive);
+  color: var(--color-white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.35s var(--suave),
+    box-shadow 0.35s ease;
+}
+
+.destaqueTitulo {
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+}
+
+.destaqueLinha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.destaqueQuem,
+.destaqueTotal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.destaque strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.75rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.destaqueQuem strong {
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.destaque small {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--color-cream) 82%, transparent);
+}
+
+/* A estrela gira ao entrar e depois fica cintilando devagar. */
+.estrela {
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: var(--ouro-vivo);
+  animation:
+    chegar 0.8s var(--suave) 0.55s backwards,
+    cintilar 3.2s ease-in-out 1.4s infinite;
+}
+
+@keyframes chegar {
+  from {
+    opacity: 0;
+    transform: scale(0.2) rotate(-90deg);
+  }
+}
+
+@keyframes cintilar {
+  50% {
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ouro-vivo) 85%, transparent));
+    transform: scale(1.12);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .destaque:hover {
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
+    transform: translateY(-3px);
+  }
+}
+
+/* Sobre o fundo oliva, o contorno de foco do card não aparece. */
+.quadro .destaque:focus-visible {
+  outline: 2px solid var(--color-olive-dark);
+  outline-offset: 3px;
+}
+
+/* ── Atendimentos por dia ── */
 .dias {
   display: grid;
   grid-template-columns: repeat(var(--colunas), 1fr);
-  gap: 8px;
-  height: 112px;
+  gap: 10px;
+  height: 8.5rem;
+  padding: 0 6px;
 }
 
 .dias > div {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   justify-items: center;
-  gap: 4px;
+  gap: 6px;
   height: 100%;
 }
 
-.valor {
-  font-size: 0.75rem;
+.dias b {
+  font-size: 0.8125rem;
   font-weight: var(--weight-bold);
   line-height: 1;
+  color: var(--neutro-pequeno);
   font-variant-numeric: tabular-nums;
-  color: var(--neutro);
+  animation: aparecer 0.4s ease backwards;
+  animation-delay: calc(var(--ordem) * 60ms + 650ms);
 }
 
-.coluna {
+.dias i {
   align-self: end;
   width: 100%;
-  max-width: 34px;
-  border-radius: 8px 8px 3px 3px;
-  background: color-mix(in srgb, var(--color-olive) 38%, transparent);
+  max-width: 2.625rem;
+  height: var(--altura);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-olive) 42%, transparent);
+  transform-origin: bottom;
+  animation: crescer 0.75s var(--suave) backwards;
+  animation-delay: calc(var(--ordem) * 60ms + 300ms);
 }
 
-.dia {
-  font-size: 0.6875rem;
+.dias small {
+  font-size: 0.75rem;
   line-height: 1;
-  color: var(--neutro);
+  color: var(--neutro-pequeno);
 }
 
-.hoje .valor {
+.hoje b {
   color: var(--color-olive-dark);
 }
 
-.hoje .coluna {
+.hoje i {
   background: var(--ouro);
 }
 
-.unidade {
-  font-size: 0.8125rem;
-  font-weight: var(--weight-regular);
-  color: var(--neutro);
+@keyframes crescer {
+  from {
+    transform: scaleY(0);
+  }
 }
 
-.distribuicao {
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ── Tickets: um bloco oliva por técnico ── */
+.tickets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tickets li {
   display: flex;
-  gap: 3px;
-  height: 12px;
-  border-radius: 99px;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px 16px;
+  border-radius: 20px;
+  background: var(--color-olive);
+  color: var(--color-white);
+  transition:
+    transform 0.35s var(--suave),
+    box-shadow 0.35s ease;
 }
 
-.distribuicao span {
-  flex-basis: 0;
-  background: currentColor;
-}
-
-.legenda {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-top: 10px;
+.tickets h4 {
+  margin: 0;
   font-size: 0.8125rem;
-}
-
-.legenda li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legenda i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-/* A cor de status fica só na bolinha; o texto segue a cor do card. */
-.legenda span {
-  color: var(--color-olive-dark);
-}
-
-.legenda strong {
   font-weight: var(--weight-bold);
+  line-height: 1.15;
+}
+
+.tickets p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tickets strong {
+  font-size: 2.125rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
+.tickets small {
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--color-cream) 85%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tickets li:hover {
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
+    transform: translateY(-3px);
+  }
+}
+
+/* ── Ranking de atendimentos ── */
 .ranking {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .ranking button {
-  display: grid;
-  grid-template-columns: 20px 12px 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 9px 10px;
+  padding: 7px 8px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
-  color: var(--color-olive-dark);
+  color: var(--color-ink);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: 1rem;
   line-height: 1.2;
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.25s ease;
 }
 
 .ranking button:hover {
   background: var(--fundo-suave);
 }
 
-.posicao {
-  font-size: 0.75rem;
-  font-weight: var(--weight-bold);
-  color: var(--neutro);
+.ranking b,
+.ranking strong {
+  flex: none;
+  font-weight: var(--weight-black);
+  font-variant-numeric: tabular-nums;
 }
 
-.ranking li:first-child .posicao {
-  color: var(--ouro);
-}
-
-.ranking i {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: inset 0 -2px 3px rgb(0 0 0 / 0.18);
+.ranking strong {
+  min-width: 2.25rem;
+  font-size: 1.0625rem;
 }
 
 .nome {
@@ -194,13 +322,48 @@
   white-space: nowrap;
 }
 
-.quantidade {
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
+/* A linha que liga o nome ao total: desenha-se da esquerda para a direita, com a ponta no fim. */
+.seta {
+  position: relative;
+  flex: 1;
+  min-width: 1.5rem;
+  height: 1px;
+  margin: 0 6px 0 4px;
+  background: var(--color-olive-dark);
+  transform-origin: left;
+  animation: tracar 0.7s var(--suave) backwards;
+  animation-delay: calc(var(--ordem) * 90ms + 550ms);
 }
 
-.quantidade small {
-  font-size: 0.75rem;
-  font-weight: var(--weight-regular);
-  color: var(--neutro);
+.seta::after {
+  position: absolute;
+  top: 50%;
+  right: -1px;
+  border: 3px solid transparent;
+  border-right: 0;
+  border-left: 5px solid var(--color-olive-dark);
+  content: '';
+  transform: translateY(-50%);
+}
+
+@keyframes tracar {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .estrela,
+  .dias b,
+  .dias i,
+  .seta {
+    animation: none;
+  }
+
+  .destaque,
+  .tickets li,
+  .ranking button {
+    transition: none;
+  }
 }

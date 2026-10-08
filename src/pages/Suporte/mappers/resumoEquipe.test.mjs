@@ -73,7 +73,7 @@ test('dados reais dos técnicos têm prioridade sobre os extras', () => {
 test('os últimos dias terminam em hoje, com os dias da semana antes', () => {
   // 2026-10-08 12:00 em São Paulo é uma quinta-feira.
   const agora = Date.parse('2026-10-08T15:00:00Z');
-  const { dias } = resumoEquipe([], { atendimentosUltimosDias: [41, 52, 47] }, agora);
+  const { dias } = resumoEquipe([], { atendimentosUltimosDias: [41, 52, 47] }, {}, agora);
 
   assert.deepEqual(dias, [
     { rotulo: 'Ter', valor: 41, hoje: false },
@@ -87,4 +87,57 @@ test('data de atualização ilegível vira null', () => {
   assert.equal(resumoEquipe([], { atualizadoEm: 'ontem à tarde' }).atualizadoEm, null);
   assert.equal(resumoEquipe([], { atualizadoEm: 1234 }).atualizadoEm, null);
   assert.equal(resumoEquipe([], {}).atualizadoEm, null);
+});
+
+test('sem atendimentos nem tarefas, total do mês, ranking e tickets saem vazios', () => {
+  const resumo = resumoEquipe([tecnico('a')], null);
+
+  assert.equal(resumo.atendimentosMes, null);
+  assert.deepEqual(resumo.ranking, []);
+  assert.deepEqual(resumo.tickets, []);
+});
+
+test('sem atendimentos, o total do mês e o ranking vêm dos extras', () => {
+  const extras = {
+    chamados: { abertos: 5, emAndamento: 4, concluidasMes: 90, atrasadas: 1 },
+    destaques: [{ id: 'a', concluidasMes: 60 }],
+  };
+  const resumo = resumoEquipe([tecnico('a', { funcao: 'Analista' })], extras);
+
+  assert.equal(resumo.atendimentosMes, 90);
+  assert.deepEqual(resumo.ranking, [{ id: 'a', nome: 'a', funcao: 'Analista', atendimentosMes: 60 }]);
+});
+
+test('os atendimentos dos técnicos viram os totais, os dias, o ranking e os tickets da equipe', () => {
+  // 08/10/2026 é uma quinta-feira.
+  const agora = Date.parse('2026-10-08T15:00:00Z');
+  const atendimentos = {
+    a: { ficticio: true, chamadosAtribuidos: 5, porDia: { '2026-09-30': 9, '2026-10-06': 10, '2026-10-08': 4 } },
+    b: { chamadosAtribuidos: 0, porDia: { '2026-10-02': 7, '2026-10-06': 20, '2026-10-07': 6, '2026-10-08': 11 } },
+    fantasma: { chamadosAtribuidos: 9, porDia: { '2026-10-08': 99 } },
+  };
+  const equipe = [tecnico('a', { funcao: 'Analista' }), tecnico('b'), tecnico('c')];
+  const extras = { atendimentosHoje: 1, atendimentosUltimosDias: [1, 2], chamados: { abertos: 0, emAndamento: 0, concluidasMes: 1, atrasadas: 0 } };
+  const resumo = resumoEquipe(equipe, extras, atendimentos, agora);
+
+  // Só outubro e só quem está na equipe: 10 + 4 de "a" e 7 + 20 + 6 + 11 de "b".
+  assert.equal(resumo.atendimentosMes, 58);
+  assert.equal(resumo.atendimentosHoje, 15);
+  // Domingo 04 e sábado 03 não têm atendimento e ficam de fora.
+  assert.deepEqual(resumo.dias, [
+    { rotulo: 'Sex', valor: 7, hoje: false },
+    { rotulo: 'Seg', valor: 0, hoje: false },
+    { rotulo: 'Ter', valor: 30, hoje: false },
+    { rotulo: 'Qua', valor: 6, hoje: false },
+    { rotulo: 'Hoje', valor: 15, hoje: true },
+  ]);
+  assert.deepEqual(resumo.ranking, [
+    { id: 'b', nome: 'b', funcao: null, atendimentosMes: 44 },
+    { id: 'a', nome: 'a', funcao: 'Analista', atendimentosMes: 14 },
+  ]);
+  assert.deepEqual(resumo.tickets, [
+    { id: 'a', nome: 'a', atribuidos: 5 },
+    { id: 'b', nome: 'b', atribuidos: 0 },
+  ]);
+  assert.equal(resumo.ficticio, true);
 });
