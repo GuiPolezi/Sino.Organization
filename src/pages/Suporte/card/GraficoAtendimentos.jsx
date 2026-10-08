@@ -17,15 +17,28 @@ function Seta({ sentido, ...botao }) {
 
 // Troca a semana do gráfico: volta até a do registro mais antigo e não passa da atual.
 function SeletorDeSemana({ semana, recuo, limite, onMudar }) {
+  const podeVoltar = recuo < limite;
+  const podeAvancar = recuo > 0;
+  const voltar = () => podeVoltar && onMudar(recuo + 1);
+  const avancar = () => podeAvancar && onMudar(recuo - 1);
+
+  // Com o foco no seletor, ← e → trocam a semana, e não o técnico (atalho global do card).
+  const onKeyDown = (event) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.stopPropagation();
+    if (event.key === 'ArrowLeft') voltar();
+    else avancar();
+  };
+
   return (
-    <div className={styles.seletor}>
-      <Seta sentido="voltar" aria-label="Semana anterior" disabled={recuo >= limite} onClick={() => onMudar(recuo + 1)} />
+    <div className={styles.seletor} onKeyDown={onKeyDown}>
+      <Seta sentido="voltar" aria-label="Semana anterior" aria-disabled={!podeVoltar} onClick={voltar} />
       {/* A key refaz a animação do rótulo a cada troca de semana. */}
       <p key={recuo} className={styles.semana} aria-live="polite">
         <strong>Semana {semana.numero}</strong>
         <span>{semana.periodo}</span>
       </p>
-      <Seta sentido="avancar" aria-label="Próxima semana" disabled={recuo === 0} onClick={() => onMudar(recuo - 1)} />
+      <Seta sentido="avancar" aria-label="Próxima semana" aria-disabled={!podeAvancar} onClick={avancar} />
     </div>
   );
 }
@@ -68,7 +81,7 @@ export default function GraficoAtendimentos({ porDia, hoje }) {
           <div className={styles.colunas}>
             {semana.dias.map((dia, i) => (
               <div key={i} style={{ '--altura': porcento(dia.total, topo), '--ordem': i }}>
-                {dia.total > 0 && <span className={styles.valor}>{dia.total}</span>}
+                <span className={dia.total > 0 ? styles.valor : `${styles.valor} ${styles.zerado}`}>{dia.total}</span>
                 <span className={styles.barra} />
               </div>
             ))}

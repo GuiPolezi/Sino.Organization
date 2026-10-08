@@ -4,6 +4,8 @@
   --aviso: #96650f;
   --critico: #a8382c;
   --neutro: color-mix(in srgb, var(--color-olive-dark) 62%, transparent);
+  /* Como o --neutro, mas escuro o bastante para texto pequeno (contraste acima de 4,5:1). */
+  --neutro-pequeno: color-mix(in srgb, var(--color-olive-dark) 82%, transparent);
   --linha: color-mix(in srgb, var(--color-olive) 22%, transparent);
   --fundo-suave: color-mix(in srgb, var(--color-olive) 10%, transparent);
 
@@ -393,7 +395,7 @@ section > .secao {
   justify-content: space-between;
   font-size: 0.875rem;
   line-height: 1.2;
-  color: var(--neutro);
+  color: var(--neutro-pequeno);
   text-align: center;
 }
 
