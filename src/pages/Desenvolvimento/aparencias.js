@@ -10,14 +10,14 @@ const PRETO = '#17130F';
 
 /** @type {Record<string, AparenciaTecnico>} */
 export const APARENCIAS_DEV = {
-  'dev-1': {
+  adriano: {
     pele: PELES[0],
     camisa: CAMISAS[0],
     calca: CALCAS[0],
     cabelo: { estilo: 'curto', cor: CABELOS[1] },
     acessorio: 'oculos',
   },
-  'dev-2': {
+  antonio: {
     pele: PELES[2],
     camisa: CAMISAS[1],
     calca: CALCAS[4],
@@ -25,7 +25,7 @@ export const APARENCIAS_DEV = {
     acessorio: 'headset',
     altura: 0.95,
   },
-  'dev-3': {
+  arnaldo: {
     pele: PELES[1],
     camisa: CAMISAS[2],
     calca: CALCAS[2],
@@ -34,14 +34,14 @@ export const APARENCIAS_DEV = {
     barba: 'cavanhaque',
     altura: 1.05,
   },
-  'dev-4': {
+  caique: {
     pele: PELES[3],
     camisa: CAMISAS[3],
     calca: CALCAS[1],
     cabelo: { estilo: 'cacheado', cor: PRETO },
     acessorio: 'oculos',
   },
-  'dev-5': {
+  donizeti: {
     pele: PELES[0],
     camisa: CAMISAS[4],
     calca: CALCAS[3],
@@ -50,7 +50,7 @@ export const APARENCIAS_DEV = {
     olhos: '#4F9A6A',
     altura: 0.93,
   },
-  'dev-6': {
+  eduardo: {
     pele: PELES[4],
     camisa: CAMISAS[5],
     calca: CALCAS[0],
@@ -59,14 +59,14 @@ export const APARENCIAS_DEV = {
     barba: 'bigode',
     altura: 1.08,
   },
-  'dev-7': {
+  'guilherme-a': {
     pele: PELES[1],
     camisa: CAMISAS[6],
     calca: CALCAS[4],
     cabelo: { estilo: 'moicano', cor: CABELOS[5] },
     acessorio: 'nenhum',
   },
-  'dev-8': {
+  ketlyn: {
     pele: PELES[2],
     camisa: CAMISAS[7],
     calca: CALCAS[2],
@@ -74,7 +74,7 @@ export const APARENCIAS_DEV = {
     acessorio: 'oculos',
     altura: 0.97,
   },
-  'dev-9': {
+  gustavo: {
     pele: PELES[0],
     camisa: CAMISAS[8],
     calca: CALCAS[1],
@@ -83,7 +83,7 @@ export const APARENCIAS_DEV = {
     barba: 'cavanhaque',
     altura: 1.02,
   },
-  'dev-10': {
+  rafael: {
     pele: PELES[3],
     camisa: '#5C7CFA',
     calca: CALCAS[3],

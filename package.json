@@ -11,6 +11,7 @@
     "build:geo": "node scripts/build-geo-data.mjs",
     "sync:clients": "node --env-file-if-exists=.env scripts/sync-clients.mjs",
     "sync:team": "node --env-file-if-exists=.env scripts/sync-team.mjs",
+    "sync:dev-team": "node --env-file-if-exists=.env scripts/sync-team.mjs desenvolvimento",
     "test:resolver": "node --test scripts/resolve-city.test.mjs",
     "test:team": "node --test scripts/build-team.test.mjs",
     "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs",

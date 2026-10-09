@@ -16,8 +16,8 @@ test('são dez desenvolvedores, com ids únicos e no formato da equipe', () => {
   assert.equal(team.length, 10);
   assert.equal(new Set(team.map((pessoa) => pessoa.id)).size, 10);
 
-  const dev = mapearTecnico(team[9]);
-  assert.deepEqual(dev, { id: 'dev-10', nome: 'Dev 10', funcao: 'Desenvolvedor', ausente: false, avatarIniciais: 'D1' });
+  const dev = mapearTecnico({ id: 'rafael', name: 'Rafael', role: 'Analista de Sistemas', absent: false });
+  assert.deepEqual(dev, { id: 'rafael', nome: 'Rafael', funcao: 'Analista de Sistemas', ausente: false, avatarIniciais: 'R' });
 });
 
 test('cada desenvolvedor tem uma aparência própria e válida', () => {
@@ -37,9 +37,9 @@ test('cada desenvolvedor tem uma aparência própria e válida', () => {
 });
 
 test('registradas, as aparências passam a valer para os ids dos desenvolvedores', () => {
-  assert.notEqual(aparenciaDe('dev-1'), APARENCIAS_DEV['dev-1']);
+  assert.notEqual(aparenciaDe('adriano'), APARENCIAS_DEV['adriano']);
   registrarAparencias(APARENCIAS_DEV);
-  assert.equal(aparenciaDe('dev-1'), APARENCIAS_DEV['dev-1']);
+  assert.equal(aparenciaDe('adriano'), APARENCIAS_DEV['adriano']);
   // As do suporte continuam lá.
   assert.equal(aparenciaDe('roberto').acessorio, 'oculos');
 });
