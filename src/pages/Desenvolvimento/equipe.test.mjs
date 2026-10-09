@@ -31,9 +31,16 @@ test('cada desenvolvedor tem uma aparência própria e válida', () => {
     assert.ok(ACESSORIOS.includes(aparencia.acessorio), `acessório de ${id}`);
   }
 
-  // Ninguém repete a combinação de camisa, cabelo e acessório.
-  const combinacoes = Object.values(APARENCIAS_DEV).map((a) => `${a.camisa}|${a.cabelo.estilo}|${a.acessorio}`);
+  // Com a mesma camisa em todos, ninguém repete a combinação de cabelo e acessório.
+  const combinacoes = Object.values(APARENCIAS_DEV).map((a) => `${a.cabelo.estilo}|${a.acessorio}`);
   assert.equal(new Set(combinacoes).size, combinacoes.length);
+});
+
+test('todos vestem o uniforme do suporte, com o logo no peito', () => {
+  for (const [id, aparencia] of Object.entries(APARENCIAS_DEV)) {
+    assert.equal(aparencia.camisa, aparenciaDe('roberto').camisa, `camisa de ${id}`);
+    assert.equal(aparencia.logo, true, `logo de ${id}`);
+  }
 });
 
 test('registradas, as aparências passam a valer para os ids dos desenvolvedores', () => {

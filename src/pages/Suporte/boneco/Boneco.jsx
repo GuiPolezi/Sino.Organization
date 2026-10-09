@@ -3,7 +3,7 @@ import { Html } from '@react-three/drei';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe } from './aparencia.js';
-import { BOCHECHA, BRANCO, ESCURO, G, INVISIVEL, clay } from './geometrias.js';
+import { BOCHECHA, BRANCO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
 import { useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
 
@@ -217,6 +217,8 @@ export default function Boneco({ tecnico }) {
 
         {/* Tronco */}
         <mesh geometry={G.corpo} material={materiais.camisa} position-y={0.86} />
+        {/* No peito esquerdo de quem veste: o boneco olha para +z. */}
+        {aparencia.logo && <mesh geometry={G.logo} material={LOGO} position-y={0.99} rotation-y={0.47} />}
         {aparencia.acessorio === 'gravata' && (
           <mesh geometry={G.gravata} material={ESCURO} position={[0, 0.93, 0.33]} rotation-x={-0.12} />
         )}

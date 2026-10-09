@@ -12,8 +12,8 @@ export const CABELOS = ['#2B1E16', '#5B3A24', '#8A5A33', '#C9A26B', '#3A3A3A', '
 export const ESTILOS = ['curto', 'coque', 'moicano', 'careca', 'longo'];
 export const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 
-// Camisa verde do uniforme do suporte.
-const UNIFORME = '#4FA46B';
+// Camisa verde do uniforme da empresa.
+export const UNIFORME = '#4FA46B';
 const PRETO = '#17130F';
 
 /** @type {Record<string, AparenciaTecnico>} */

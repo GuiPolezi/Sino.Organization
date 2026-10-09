@@ -28,6 +28,7 @@
  * @property {'nenhuma' | 'bigode' | 'cavanhaque'} [barba]  usa a cor do cabelo
  * @property {string} [olhos]  hex; escuros quando ausente
  * @property {number} [altura] escala de 0.9 a 1.1
+ * @property {boolean} [logo]  logo da empresa no peito esquerdo da camisa
  */
 
 export {};

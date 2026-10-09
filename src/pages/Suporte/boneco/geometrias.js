@@ -1,8 +1,13 @@
 import * as THREE from 'three';
+import logoUrl from '../../../assets/images/logo-sino.png';
+
+// Tronco: é sobre ele que o logo da camisa se curva.
+const RAIO_CORPO = 0.34;
+const LADO_LOGO = 0.14;
 
 // Geometrias e materiais base: criados uma vez e compartilhados por todos os bonecos.
 export const G = {
-  corpo: new THREE.CapsuleGeometry(0.34, 0.36, 10, 24),
+  corpo: new THREE.CapsuleGeometry(RAIO_CORPO, 0.36, 10, 24),
   cabeca: new THREE.SphereGeometry(0.34, 36, 28),
   perna: new THREE.CapsuleGeometry(0.115, 0.2, 8, 14),
   braco: new THREE.CapsuleGeometry(0.085, 0.28, 8, 14),
@@ -27,6 +32,17 @@ export const G = {
   aba: new THREE.CylinderGeometry(0.26, 0.26, 0.035, 24),
   maleta: new THREE.BoxGeometry(0.34, 0.24, 0.09),
   gravata: new THREE.CapsuleGeometry(0.05, 0.2, 4, 8),
+  // Retalho quadrado da lateral de um cilindro, rente ao tronco e centrado na frente.
+  logo: new THREE.CylinderGeometry(
+    RAIO_CORPO + 0.004,
+    RAIO_CORPO + 0.004,
+    LADO_LOGO,
+    8,
+    1,
+    true,
+    -LADO_LOGO / RAIO_CORPO / 2,
+    LADO_LOGO / RAIO_CORPO,
+  ),
   anel: new THREE.TorusGeometry(0.55, 0.035, 10, 48),
   hit: new THREE.CylinderGeometry(0.5, 0.5, 2.1, 10),
 };
@@ -36,6 +52,16 @@ export const clay = (color) =>
   new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0 });
 
 export const ESCURO = clay('#1F1A24');
+// Logo estampado na camisa: a imagem tem fundo transparente.
+const texturaLogo = new THREE.TextureLoader().load(logoUrl);
+texturaLogo.colorSpace = THREE.SRGBColorSpace;
+export const LOGO = new THREE.MeshStandardMaterial({
+  map: texturaLogo,
+  roughness: 0.82,
+  metalness: 0,
+  transparent: true,
+  depthWrite: false,
+});
 export const BRANCO = new THREE.MeshBasicMaterial({ color: '#ffffff' });
 export const BOCHECHA = new THREE.MeshStandardMaterial({
   color: '#F08A8A',

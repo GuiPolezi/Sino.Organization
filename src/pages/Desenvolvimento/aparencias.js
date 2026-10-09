@@ -1,8 +1,9 @@
 // Aparência de cada desenvolvedor: a configuração do mesmo boneco base do
 // suporte, mapeada pelo id em src/data/dev-team.json. Para ajustar alguém,
-// edite a entrada dele aqui. Sem uniforme: cada um com a sua camisa.
+// edite a entrada dele aqui. Todos vestem a camisa verde do uniforme, a mesma do
+// suporte, com o logo da empresa no peito.
 
-import { CABELOS, CALCAS, CAMISAS, PELES } from '../Suporte/boneco/aparencia.js';
+import { CABELOS, CALCAS, PELES, UNIFORME } from '../Suporte/boneco/aparencia.js';
 
 /** @import { AparenciaTecnico } from '../Suporte/tipos.js' */
 
@@ -12,14 +13,16 @@ const PRETO = '#17130F';
 export const APARENCIAS_DEV = {
   adriano: {
     pele: PELES[0],
-    camisa: CAMISAS[0],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[0],
     cabelo: { estilo: 'curto', cor: CABELOS[1] },
     acessorio: 'oculos',
   },
   antonio: {
     pele: PELES[2],
-    camisa: CAMISAS[1],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[4],
     cabelo: { estilo: 'longo', cor: PRETO },
     acessorio: 'headset',
@@ -27,7 +30,8 @@ export const APARENCIAS_DEV = {
   },
   arnaldo: {
     pele: PELES[1],
-    camisa: CAMISAS[2],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[2],
     cabelo: { estilo: 'topete', cor: CABELOS[0] },
     acessorio: 'nenhum',
@@ -36,14 +40,16 @@ export const APARENCIAS_DEV = {
   },
   caique: {
     pele: PELES[3],
-    camisa: CAMISAS[3],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[1],
     cabelo: { estilo: 'cacheado', cor: PRETO },
     acessorio: 'oculos',
   },
   donizeti: {
     pele: PELES[0],
-    camisa: CAMISAS[4],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[3],
     cabelo: { estilo: 'coque', cor: CABELOS[3] },
     acessorio: 'nenhum',
@@ -52,7 +58,8 @@ export const APARENCIAS_DEV = {
   },
   eduardo: {
     pele: PELES[4],
-    camisa: CAMISAS[5],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[0],
     cabelo: { estilo: 'careca', cor: PRETO },
     acessorio: 'headset',
@@ -61,14 +68,16 @@ export const APARENCIAS_DEV = {
   },
   'guilherme-a': {
     pele: PELES[1],
-    camisa: CAMISAS[6],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[4],
     cabelo: { estilo: 'moicano', cor: CABELOS[5] },
     acessorio: 'nenhum',
   },
   ketlyn: {
     pele: PELES[2],
-    camisa: CAMISAS[7],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[2],
     cabelo: { estilo: 'longo', cor: CABELOS[2], mechas: CABELOS[3] },
     acessorio: 'oculos',
@@ -76,7 +85,8 @@ export const APARENCIAS_DEV = {
   },
   gustavo: {
     pele: PELES[0],
-    camisa: CAMISAS[8],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[1],
     cabelo: { estilo: 'curto', cor: CABELOS[4] },
     acessorio: 'bone',
@@ -85,7 +95,8 @@ export const APARENCIAS_DEV = {
   },
   rafael: {
     pele: PELES[3],
-    camisa: '#5C7CFA',
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[3],
     cabelo: { estilo: 'cacheado', cor: CABELOS[0], mechas: CABELOS[2] },
     acessorio: 'gravata',
