@@ -90,6 +90,7 @@ export const APARENCIAS_DEV = {
     calca: CALCAS[1],
     cabelo: { estilo: 'curto', cor: CABELOS[4] },
     acessorio: 'bone',
+    bone: '#FFFFFF',
     barba: 'cavanhaque',
     altura: 1.02,
   },

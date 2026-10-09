@@ -154,9 +154,10 @@ export default function Boneco({ tecnico }) {
       camisa: clay(aparencia.camisa),
       calca: clay(aparencia.calca),
       cabelo: clay(aparencia.cabelo.cor),
-      // Só existem para quem tem luzes no cabelo ou olhos claros.
+      // Só existem para quem tem luzes no cabelo, olhos claros ou boné de outra cor.
       mechas: aparencia.cabelo.mechas ? clay(aparencia.cabelo.mechas) : null,
       olhos: aparencia.olhos ? clay(aparencia.olhos) : null,
+      bone: aparencia.bone ? clay(aparencia.bone) : null,
     }),
     [aparencia],
   );
@@ -254,7 +255,7 @@ export default function Boneco({ tecnico }) {
             materialMechas={materiais.mechas ?? materiais.cabelo}
           />
           <Barba estilo={aparencia.barba} material={materiais.cabelo} />
-          <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.camisa} />
+          <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.bone ?? materiais.camisa} />
         </group>
       </group>
 

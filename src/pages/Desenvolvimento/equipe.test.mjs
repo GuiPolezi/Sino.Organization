@@ -43,6 +43,13 @@ test('todos vestem o uniforme do suporte, com o logo no peito', () => {
   }
 });
 
+test('o boné do gustavo é branco; ninguém mais muda a cor do boné', () => {
+  assert.equal(APARENCIAS_DEV.gustavo.acessorio, 'bone');
+  assert.equal(APARENCIAS_DEV.gustavo.bone, '#FFFFFF');
+  const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'gustavo');
+  for (const [id, aparencia] of outros) assert.equal(aparencia.bone, undefined, `boné de ${id}`);
+});
+
 test('registradas, as aparências passam a valer para os ids dos desenvolvedores', () => {
   assert.notEqual(aparenciaDe('adriano'), APARENCIAS_DEV['adriano']);
   registrarAparencias(APARENCIAS_DEV);
