@@ -21,6 +21,7 @@ export const aparencias = {
   roberto: {
     pele: PELES[0],
     camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[0],
     cabelo: { estilo: 'curto', cor: '#4A3020' },
     acessorio: 'oculos',
@@ -29,6 +30,7 @@ export const aparencias = {
   fabio: {
     pele: PELES[0],
     camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[4],
     cabelo: { estilo: 'topete', cor: PRETO },
     acessorio: 'nenhum',
@@ -38,6 +40,7 @@ export const aparencias = {
   'guilherme-p': {
     pele: PELES[0],
     camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[2],
     cabelo: { estilo: 'cacheado', cor: PRETO, mechas: '#EFEAE0' },
     acessorio: 'nenhum',
@@ -45,6 +48,7 @@ export const aparencias = {
   luiz: {
     pele: PELES[0],
     camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[3],
     cabelo: { estilo: 'careca', cor: '#3A2A20' },
     acessorio: 'oculos',

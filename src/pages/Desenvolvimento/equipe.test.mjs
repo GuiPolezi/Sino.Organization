@@ -50,3 +50,10 @@ test('registradas, as aparências passam a valer para os ids dos desenvolvedores
   // As do suporte continuam lá.
   assert.equal(aparenciaDe('roberto').acessorio, 'oculos');
 });
+
+test('os técnicos do suporte também levam o logo; quem não tem aparência própria, não', () => {
+  for (const id of ['roberto', 'fabio', 'guilherme-p', 'luiz']) {
+    assert.equal(aparenciaDe(id).logo, true, `logo de ${id}`);
+  }
+  assert.equal(aparenciaDe('alguem-novo').logo, undefined);
+});
