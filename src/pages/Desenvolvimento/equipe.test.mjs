@@ -31,8 +31,8 @@ test('cada desenvolvedor tem uma aparência própria e válida', () => {
     assert.ok(ACESSORIOS.includes(aparencia.acessorio), `acessório de ${id}`);
   }
 
-  // Com a mesma camisa em todos, ninguém repete a combinação de cabelo e acessório.
-  const combinacoes = Object.values(APARENCIAS_DEV).map((a) => `${a.cabelo.estilo}|${a.acessorio}`);
+  // Com a mesma camisa em quase todos, ninguém repete a combinação de cabelo, acessório e barba.
+  const combinacoes = Object.values(APARENCIAS_DEV).map((a) => `${a.cabelo.estilo}|${a.acessorio}|${a.barba ?? 'nenhuma'}`);
   assert.equal(new Set(combinacoes).size, combinacoes.length);
 });
 
@@ -52,6 +52,15 @@ test('o caique vai de moletom cinza com capuz, sem logo, de cabelo raspado e sem
   assert.equal(caique.acessorio, 'nenhum');
   const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'caique');
   for (const [id, aparencia] of outros) assert.equal(aparencia.moletom, undefined, `moletom de ${id}`);
+});
+
+test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo curto', () => {
+  const donizeti = APARENCIAS_DEV.donizeti;
+  assert.equal(donizeti.pele, aparenciaDe('roberto').pele);
+  assert.equal(donizeti.acessorio, 'oculos');
+  assert.equal(donizeti.olhos, undefined);
+  assert.equal(donizeti.barba, 'fechada');
+  assert.equal(donizeti.cabelo.estilo, 'curto');
 });
 
 test('o boné do gustavo é branco; ninguém mais muda a cor do boné', () => {

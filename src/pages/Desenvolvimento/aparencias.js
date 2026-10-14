@@ -53,8 +53,8 @@ export const APARENCIAS_DEV = {
     logo: true,
     calca: CALCAS[3],
     cabelo: { estilo: 'curto', cor: CABELOS[3] },
-    acessorio: 'nenhum',
-    olhos: '#4F9A6A',
+    acessorio: 'oculos',
+    barba: 'fechada',
     altura: 0.93,
   },
   eduardo: {

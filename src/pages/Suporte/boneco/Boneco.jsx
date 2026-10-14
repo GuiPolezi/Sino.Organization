@@ -82,9 +82,10 @@ function Cabelo({ estilo, material, materialMechas }) {
   return null;
 }
 
-// Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo.
+// Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo e a
+// barba fechada, a casca que cobre o queixo e as bochechas de baixo.
 function Barba({ estilo, material }) {
-  if (estilo !== 'bigode' && estilo !== 'cavanhaque') return null;
+  if (estilo !== 'bigode' && estilo !== 'cavanhaque' && estilo !== 'fechada') return null;
 
   return (
     <>
@@ -97,6 +98,7 @@ function Barba({ estilo, material }) {
           rotation-z={(Math.PI / 2 - 0.3) * lado}
         />
       ))}
+      {estilo === 'fechada' && <mesh geometry={G.barbaFechada} material={material} />}
       {estilo === 'cavanhaque' && (
         <mesh geometry={G.cavanhaque} material={material} position={[0, -0.215, 0.245]} scale={[1, 0.8, 0.6]} />
       )}

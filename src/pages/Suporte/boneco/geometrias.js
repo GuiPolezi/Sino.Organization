@@ -26,6 +26,8 @@ export const G = {
   cacho: new THREE.SphereGeometry(0.11, 16, 12),
   bigode: new THREE.CapsuleGeometry(0.026, 0.07, 6, 10),
   cavanhaque: new THREE.SphereGeometry(0.075, 14, 10),
+  // Barba fechada: casca na metade da frente da cabeça, da altura do bigode até o queixo.
+  barbaFechada: new THREE.SphereGeometry(0.352, 32, 12, 0, Math.PI, Math.PI * 0.6, Math.PI * 0.3),
   pupila: new THREE.SphereGeometry(0.022, 10, 8),
   lente: new THREE.TorusGeometry(0.085, 0.018, 8, 22),
   ponte: new THREE.CylinderGeometry(0.012, 0.012, 0.08, 6),

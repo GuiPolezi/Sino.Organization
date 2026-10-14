@@ -25,7 +25,7 @@
  * @property {string} calca   hex
  * @property {{ estilo: EstiloCabelo, cor: string, mechas?: string }} cabelo  mechas: cor das luzes
  * @property {'nenhum' | 'oculos' | 'headset' | 'bone' | 'maleta' | 'gravata'} acessorio
- * @property {'nenhuma' | 'bigode' | 'cavanhaque'} [barba]  usa a cor do cabelo
+ * @property {'nenhuma' | 'bigode' | 'cavanhaque' | 'fechada'} [barba]  usa a cor do cabelo
  * @property {string} [olhos]  hex; escuros quando ausente
  * @property {number} [altura] escala de 0.9 a 1.1
  * @property {string} [bone]   hex; o boné tem a cor da camisa quando ausente
