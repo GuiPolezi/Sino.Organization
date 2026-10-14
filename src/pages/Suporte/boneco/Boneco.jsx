@@ -73,20 +73,20 @@ function Cabelo({ estilo, material, materialMechas }) {
     );
   }
   // Até o ombro: cabelo longo de homem, liso e solto. A base tem a franja alta
-  // (acima dos óculos) e desce até a nuca; atrás, o cabelo cai quase até os
-  // ombros, e de cada lado do rosto uma faixa achatada desce rente até o queixo.
+  // (acima dos óculos) e desce até a nuca; atrás, o cabelo cobre o pescoço, e
+  // de cada lado do rosto uma faixa achatada desce rente até o maxilar.
   if (estilo === 'ombro') {
     return (
       <>
         <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.7} scale={1.03} />
-        <mesh geometry={G.rabo} material={material} position={[0, -0.16, -0.24]} scale={[1.2, 0.75, 0.5]} />
+        <mesh geometry={G.rabo} material={material} position={[0, -0.124, -0.24]} scale={[1.2, 0.65, 0.5]} />
         {LADOS.map((lado) => (
           <mesh
             key={lado}
             geometry={G.mechaLateral}
             material={material}
-            position={[0.31 * lado, -0.085, -0.04]}
-            scale={[0.8, 1, 1.6]}
+            position={[0.31 * lado, -0.05, -0.04]}
+            scale={[0.8, 0.85, 1.6]}
           />
         ))}
       </>
