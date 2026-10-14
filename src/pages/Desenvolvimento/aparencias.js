@@ -9,7 +9,6 @@ import { CABELOS, CALCAS, PELES, UNIFORME } from '../Suporte/boneco/aparencia.js
 
 const PRETO = '#17130F';
 const MOLETOM_CINZA = '#6E7480';
-const GRISALHO = '#7E7A74';
 
 /** @type {Record<string, AparenciaTecnico>} */
 export const APARENCIAS_DEV = {
@@ -63,9 +62,8 @@ export const APARENCIAS_DEV = {
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[0],
-    cabelo: { estilo: 'curto', cor: GRISALHO },
+    cabelo: { estilo: 'topete', cor: PRETO },
     acessorio: 'oculos',
-    barba: 'bigode',
     altura: 1.08,
   },
   'guilherme-a': {
