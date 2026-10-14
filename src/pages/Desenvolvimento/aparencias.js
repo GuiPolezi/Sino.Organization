@@ -9,7 +9,7 @@ import { CABELOS, CALCAS, PELES, UNIFORME } from '../Suporte/boneco/aparencia.js
 
 const PRETO = '#17130F';
 const MOLETOM_CINZA = '#6E7480';
-const GRISALHO = '#A9A6A0';
+const GRISALHO = '#7E7A74';
 
 /** @type {Record<string, AparenciaTecnico>} */
 export const APARENCIAS_DEV = {

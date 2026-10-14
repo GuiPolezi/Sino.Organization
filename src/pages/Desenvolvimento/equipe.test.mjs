@@ -84,7 +84,7 @@ test('o eduardo é branco, de óculos, cabelo curto e bigode grisalhos, sem fone
   const eduardo = APARENCIAS_DEV.eduardo;
   assert.equal(eduardo.pele, aparenciaDe('roberto').pele);
   assert.equal(eduardo.cabelo.estilo, 'curto');
-  assert.equal(eduardo.cabelo.cor, '#A9A6A0');
+  assert.equal(eduardo.cabelo.cor, '#7E7A74');
   assert.equal(eduardo.barba, 'bigode');
   assert.equal(eduardo.acessorio, 'oculos');
 });
