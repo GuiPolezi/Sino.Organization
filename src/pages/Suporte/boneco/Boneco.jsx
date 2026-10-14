@@ -8,6 +8,7 @@ import { useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
 
 const LADOS = [-1, 1];
+const OPACIDADE_BARBA_RALA = 0.55;
 const GRAUS = Math.PI / 180;
 
 // Cachos espalhados pela cabeça em anéis, sem cobrir o rosto. Cada anel:
@@ -221,6 +222,11 @@ export default function Boneco({ tecnico }) {
       mechas: aparencia.cabelo.mechas ? clay(aparencia.cabelo.mechas) : null,
       olhos: aparencia.olhos ? clay(aparencia.olhos) : null,
       bone: aparencia.bone ? clay(aparencia.bone) : null,
+      // A barba curta é rala: da cor do cabelo, mas deixa a pele aparecer.
+      barbaRala:
+        aparencia.barba === 'curta'
+          ? Object.assign(clay(aparencia.cabelo.cor), { transparent: true, opacity: OPACIDADE_BARBA_RALA })
+          : null,
     }),
     [aparencia],
   );
@@ -320,7 +326,7 @@ export default function Boneco({ tecnico }) {
             material={materiais.cabelo}
             materialMechas={materiais.mechas ?? materiais.cabelo}
           />
-          <Barba estilo={aparencia.barba} material={materiais.cabelo} />
+          <Barba estilo={aparencia.barba} material={materiais.barbaRala ?? materiais.cabelo} />
           <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.bone ?? materiais.camisa} />
         </group>
       </group>
