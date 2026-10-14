@@ -43,12 +43,12 @@ test('todos, menos o caique, vestem o uniforme do suporte, com o logo no peito',
   }
 });
 
-test('o caique vai de moletom cinza com capuz, sem logo, de cabelo raspado e sem óculos', () => {
+test('o caique vai de moletom cinza com capuz, sem logo, de cabelo com degradê e sem óculos', () => {
   const caique = APARENCIAS_DEV.caique;
   assert.equal(caique.moletom, true);
   assert.notEqual(caique.camisa, aparenciaDe('roberto').camisa);
   assert.equal(caique.logo, undefined);
-  assert.equal(caique.cabelo.estilo, 'raspado');
+  assert.equal(caique.cabelo.estilo, 'degrade');
   assert.equal(caique.acessorio, 'nenhum');
   const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'caique');
   for (const [id, aparencia] of outros) assert.equal(aparencia.moletom, undefined, `moletom de ${id}`);

@@ -47,7 +47,7 @@ export const APARENCIAS_DEV = {
     camisa: MOLETOM_CINZA,
     moletom: true,
     calca: CALCAS[1],
-    cabelo: { estilo: 'raspado', cor: PRETO },
+    cabelo: { estilo: 'degrade', cor: PRETO },
     acessorio: 'nenhum',
   },
   donizeti: {
