@@ -8,7 +8,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
 const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
-const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'cacheado', 'careca'];
+const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'cacheado', 'cachinhos', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;
 
@@ -64,13 +64,21 @@ test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo vo
   assert.equal(donizeti.cabelo.cor, '#17130F');
 });
 
-test('só o donizeti, de barba fechada, fica sem as bochechas rosadas', () => {
-  assert.equal(temBochechas(APARENCIAS_DEV.donizeti), false);
-  const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'donizeti');
+test('só o donizeti e o guilherme, de barba fechada e curta, ficam sem as bochechas rosadas', () => {
+  const barbudos = ['donizeti', 'guilherme-a'];
+  for (const id of barbudos) assert.equal(temBochechas(APARENCIAS_DEV[id]), false, `bochechas de ${id}`);
+  const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => !barbudos.includes(id));
   for (const [id, aparencia] of outros) assert.equal(temBochechas(aparencia), true, `bochechas de ${id}`);
   for (const id of ['roberto', 'fabio', 'guilherme-p', 'luiz', 'alguem-novo']) {
     assert.equal(temBochechas(aparenciaDe(id)), true, `bochechas de ${id}`);
   }
+});
+
+test('o guilherme tem cabelo curto de cachinhos e barba curta, pretos', () => {
+  const guilherme = APARENCIAS_DEV['guilherme-a'];
+  assert.equal(guilherme.cabelo.estilo, 'cachinhos');
+  assert.equal(guilherme.cabelo.cor, '#17130F');
+  assert.equal(guilherme.barba, 'curta');
 });
 
 test('a ketlyn tem cabelo comprido e preto, sem óculos', () => {

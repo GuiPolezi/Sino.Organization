@@ -71,8 +71,9 @@ export const APARENCIAS_DEV = {
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[4],
-    cabelo: { estilo: 'moicano', cor: CABELOS[5] },
+    cabelo: { estilo: 'cachinhos', cor: PRETO },
     acessorio: 'nenhum',
+    barba: 'curta',
   },
   ketlyn: {
     pele: PELES[2],

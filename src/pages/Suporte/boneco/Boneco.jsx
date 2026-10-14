@@ -10,24 +10,32 @@ import styles from './Boneco.module.css';
 const LADOS = [-1, 1];
 const GRAUS = Math.PI / 180;
 
-// Cachos espalhados pela cabeça, sem cobrir o rosto: anéis do topo até a nuca.
-// Cada anel: [ângulo a partir do topo, primeiro e último giro a partir da frente, quantidade].
-const ANEIS_CACHOS = [
+// Cachos espalhados pela cabeça em anéis, sem cobrir o rosto. Cada anel:
+// [ângulo a partir do topo, primeiro e último giro a partir da frente, quantidade].
+const espalharCachos = (aneis, raioEsfera) =>
+  aneis.flatMap(([polar, inicio, fim, quantidade]) =>
+    Array.from({ length: quantidade }, (_, i) => {
+      const giro = (inicio + ((fim - inicio) * i) / Math.max(1, quantidade - 1)) * GRAUS;
+      const raio = raioEsfera * Math.sin(polar * GRAUS);
+      return [raio * Math.sin(giro), raioEsfera * Math.cos(polar * GRAUS), raio * Math.cos(giro)];
+    }),
+  );
+// Cacheado: cachos grandes do topo até a nuca.
+const CACHOS = espalharCachos([
   [0, 0, 0, 1],
   [35, 0, 300, 6],
   [62, 70, 290, 8],
   [90, 95, 265, 7],
   [115, 120, 240, 6],
   [138, 150, 210, 4],
-];
-const RAIO_CACHOS = 0.33;
-const CACHOS = ANEIS_CACHOS.flatMap(([polar, inicio, fim, quantidade]) =>
-  Array.from({ length: quantidade }, (_, i) => {
-    const giro = (inicio + ((fim - inicio) * i) / Math.max(1, quantidade - 1)) * GRAUS;
-    const raio = RAIO_CACHOS * Math.sin(polar * GRAUS);
-    return [raio * Math.sin(giro), RAIO_CACHOS * Math.cos(polar * GRAUS), raio * Math.cos(giro)];
-  }),
-);
+], 0.33);
+// Cachinhos: cabelo curto, cachos pequenos e juntos só no alto da cabeça.
+const CACHINHOS = espalharCachos([
+  [0, 0, 0, 1],
+  [25, 0, 315, 8],
+  [50, 0, 330, 12],
+  [72, 60, 300, 11],
+], 0.335);
 // Duas a cada cinco mechas recebem a cor das luzes, sem formar fileiras.
 const temLuzes = (indice) => indice % 5 === 1 || indice % 5 === 3;
 
@@ -89,6 +97,17 @@ function Cabelo({ estilo, material, materialMechas }) {
       />
     ));
   }
+  // Sobre a base do curto, para não aparecer couro entre os cachinhos.
+  if (estilo === 'cachinhos') {
+    return (
+      <>
+        <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />
+        {CACHINHOS.map((posicao, indice) => (
+          <mesh key={indice} geometry={G.cachinho} material={material} position={posicao} />
+        ))}
+      </>
+    );
+  }
   if (estilo === 'moicano') {
     return (
       <mesh
@@ -104,9 +123,10 @@ function Cabelo({ estilo, material, materialMechas }) {
 }
 
 // Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo. A
-// barba fechada soma ao bigode as costeletas, o maxilar e o volume do queixo.
+// barba fechada soma ao bigode as costeletas, o maxilar e o volume do queixo; a
+// curta tem o mesmo contorno, rente ao rosto e sem o volume.
 function Barba({ estilo, material }) {
-  if (estilo !== 'bigode' && estilo !== 'cavanhaque' && estilo !== 'fechada') return null;
+  if (!['bigode', 'cavanhaque', 'fechada', 'curta'].includes(estilo)) return null;
 
   return (
     <>
@@ -119,6 +139,7 @@ function Barba({ estilo, material }) {
           rotation-z={(Math.PI / 2 - 0.3) * lado}
         />
       ))}
+      {estilo === 'curta' && <mesh geometry={G.barbaCurta} material={material} />}
       {estilo === 'fechada' && (
         <>
           <mesh geometry={G.barbaFechada} material={material} />

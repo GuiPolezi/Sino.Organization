@@ -5,10 +5,11 @@ import logoUrl from '../../../assets/images/logo-sino.png';
 const RAIO_CORPO = 0.34;
 const LADO_LOGO = 0.14;
 
-// Barba fechada: casca rente ao rosto, de uma orelha à outra pela frente. A
-// borda de cima sobe nas laterais até o cabelo (costeletas) e desce na frente
-// para deixar as bochechas livres; a de baixo acompanha o maxilar até o queixo.
-function criarBarbaFechada() {
+// Barba: casca rente ao rosto, de uma orelha à outra pela frente. A borda de
+// cima sobe nas laterais até o cabelo (costeletas) e desce na frente para deixar
+// as bochechas livres; a de baixo acompanha o maxilar até o queixo. `volume`
+// engrossa a parte de baixo da frente: a barba fechada tem, a curta não.
+function criarBarba({ raio: raioBase, volume }) {
   const COLUNAS = 40;
   const LINHAS = 12;
   const GIRO_MAX = (95 * Math.PI) / 180;
@@ -26,7 +27,7 @@ function criarBarbaFechada() {
       const t = j / LINHAS;
       const polar = topo + (base - topo) * t;
       // Mais cheia embaixo, sobretudo na frente.
-      const raio = 0.35 + 0.02 * t * frente;
+      const raio = raioBase + volume * t * frente;
       posicoes.push(
         raio * Math.sin(polar) * Math.sin(giro),
         raio * Math.cos(polar),
@@ -71,9 +72,11 @@ export const G = {
   moicano: new THREE.CapsuleGeometry(0.07, 0.42, 6, 12),
   topete: new THREE.SphereGeometry(0.16, 20, 16),
   cacho: new THREE.SphereGeometry(0.11, 16, 12),
+  cachinho: new THREE.SphereGeometry(0.065, 12, 10),
   bigode: new THREE.CapsuleGeometry(0.026, 0.07, 6, 10),
   cavanhaque: new THREE.SphereGeometry(0.075, 14, 10),
-  barbaFechada: criarBarbaFechada(),
+  barbaFechada: criarBarba({ raio: 0.35, volume: 0.02 }),
+  barbaCurta: criarBarba({ raio: 0.346, volume: 0 }),
   queixo: new THREE.SphereGeometry(0.11, 18, 14),
   pupila: new THREE.SphereGeometry(0.022, 10, 8),
   lente: new THREE.TorusGeometry(0.085, 0.018, 8, 22),

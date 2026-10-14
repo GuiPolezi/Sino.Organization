@@ -61,8 +61,8 @@ export function registrarAparencias(novas) {
   Object.assign(aparencias, novas);
 }
 
-// A barba fechada cobre as bochechas: quem a usa fica sem o rosado delas.
-export const temBochechas = (aparencia) => aparencia.barba !== 'fechada';
+// A barba fechada e a curta cobrem as bochechas: quem as usa fica sem o rosado delas.
+export const temBochechas = (aparencia) => aparencia.barba !== 'fechada' && aparencia.barba !== 'curta';
 
 function hash(texto) {
   let h = 2166136261;
