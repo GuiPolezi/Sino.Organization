@@ -88,8 +88,9 @@ test('a ketlyn tem cabelo comprido e preto, sem óculos', () => {
   assert.equal(ketlyn.acessorio, 'nenhum');
 });
 
-test('o antonio tem cabelo curto loiro escuro e não tem barba', () => {
+test('o antonio é branco, de cabelo curto loiro escuro e sem barba', () => {
   const antonio = APARENCIAS_DEV.antonio;
+  assert.equal(antonio.pele, aparenciaDe('roberto').pele);
   assert.equal(antonio.cabelo.estilo, 'curto');
   assert.equal(antonio.cabelo.cor, '#A07A45');
   assert.equal(antonio.barba, undefined);

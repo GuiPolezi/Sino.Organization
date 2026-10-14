@@ -22,7 +22,7 @@ export const APARENCIAS_DEV = {
     acessorio: 'oculos',
   },
   antonio: {
-    pele: PELES[2],
+    pele: PELES[0],
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[4],
