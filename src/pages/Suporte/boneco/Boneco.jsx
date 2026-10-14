@@ -3,7 +3,7 @@ import { Html } from '@react-three/drei';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe } from './aparencia.js';
-import { BOCHECHA, BRANCO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
+import { BOCHECHA, BRANCO, CORDAO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
 import { useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
 
@@ -33,6 +33,7 @@ const temLuzes = (indice) => indice % 5 === 1 || indice % 5 === 3;
 
 function Cabelo({ estilo, material, materialMechas }) {
   if (estilo === 'curto') return <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />;
+  if (estilo === 'raspado') return <mesh geometry={G.cabeloRaspado} material={material} rotation-x={-0.3} />;
   if (estilo === 'coque') {
     return (
       <>
@@ -99,6 +100,19 @@ function Barba({ estilo, material }) {
       {estilo === 'cavanhaque' && (
         <mesh geometry={G.cavanhaque} material={material} position={[0, -0.215, 0.245]} scale={[1, 0.8, 0.6]} />
       )}
+    </>
+  );
+}
+
+// Moletom com capuz: o capuz caído nas costas, a gola e os dois cordões na frente.
+function Moletom({ material }) {
+  return (
+    <>
+      <mesh geometry={G.capuz} material={material} position={[0, 1.14, -0.27]} scale={[1.25, 0.8, 0.6]} />
+      <mesh geometry={G.gola} material={material} position-y={1.3} rotation-x={Math.PI / 2} />
+      {LADOS.map((lado) => (
+        <mesh key={lado} geometry={G.ponte} material={CORDAO} position={[0.07 * lado, 1.13, 0.31]} rotation-x={-0.25} scale={[1, 2, 1]} />
+      ))}
     </>
   );
 }
@@ -220,6 +234,7 @@ export default function Boneco({ tecnico }) {
         <mesh geometry={G.corpo} material={materiais.camisa} position-y={0.86} />
         {/* No peito esquerdo de quem veste: o boneco olha para +z. */}
         {aparencia.logo && <mesh geometry={G.logo} material={LOGO} position-y={0.99} rotation-y={0.47} />}
+        {aparencia.moletom && <Moletom material={materiais.camisa} />}
         {aparencia.acessorio === 'gravata' && (
           <mesh geometry={G.gravata} material={ESCURO} position={[0, 0.93, 0.33]} rotation-x={-0.12} />
         )}

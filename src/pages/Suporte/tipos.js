@@ -17,7 +17,7 @@
  * @property {string} [ultimaAtividade]  data ISO
  * @property {string[]} [especialidades]
  *
- * @typedef {'curto' | 'topete' | 'coque' | 'moicano' | 'longo' | 'cacheado' | 'careca'} EstiloCabelo
+ * @typedef {'curto' | 'raspado' | 'topete' | 'coque' | 'moicano' | 'longo' | 'cacheado' | 'careca'} EstiloCabelo
  *
  * @typedef {object} AparenciaTecnico
  * @property {string} pele    hex
@@ -30,6 +30,7 @@
  * @property {number} [altura] escala de 0.9 a 1.1
  * @property {string} [bone]   hex; o boné tem a cor da camisa quando ausente
  * @property {boolean} [logo]  logo da empresa no peito esquerdo da camisa
+ * @property {boolean} [moletom]  a camisa vira um moletom com capuz, da mesma cor
  */
 
 export {};

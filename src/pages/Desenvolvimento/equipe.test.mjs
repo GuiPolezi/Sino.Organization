@@ -8,7 +8,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
 const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
-const ESTILOS = ['curto', 'topete', 'coque', 'moicano', 'longo', 'cacheado', 'careca'];
+const ESTILOS = ['curto', 'raspado', 'topete', 'coque', 'moicano', 'longo', 'cacheado', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;
 
@@ -36,11 +36,22 @@ test('cada desenvolvedor tem uma aparência própria e válida', () => {
   assert.equal(new Set(combinacoes).size, combinacoes.length);
 });
 
-test('todos vestem o uniforme do suporte, com o logo no peito', () => {
-  for (const [id, aparencia] of Object.entries(APARENCIAS_DEV)) {
+test('todos, menos o caique, vestem o uniforme do suporte, com o logo no peito', () => {
+  for (const [id, aparencia] of Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'caique')) {
     assert.equal(aparencia.camisa, aparenciaDe('roberto').camisa, `camisa de ${id}`);
     assert.equal(aparencia.logo, true, `logo de ${id}`);
   }
+});
+
+test('o caique vai de moletom cinza com capuz, sem logo, de cabelo raspado e sem óculos', () => {
+  const caique = APARENCIAS_DEV.caique;
+  assert.equal(caique.moletom, true);
+  assert.notEqual(caique.camisa, aparenciaDe('roberto').camisa);
+  assert.equal(caique.logo, undefined);
+  assert.equal(caique.cabelo.estilo, 'raspado');
+  assert.equal(caique.acessorio, 'nenhum');
+  const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'caique');
+  for (const [id, aparencia] of outros) assert.equal(aparencia.moletom, undefined, `moletom de ${id}`);
 });
 
 test('o boné do gustavo é branco; ninguém mais muda a cor do boné', () => {

@@ -1,13 +1,14 @@
 // Aparência de cada desenvolvedor: a configuração do mesmo boneco base do
 // suporte, mapeada pelo id em src/data/dev-team.json. Para ajustar alguém,
-// edite a entrada dele aqui. Todos vestem a camisa verde do uniforme, a mesma do
-// suporte, com o logo da empresa no peito.
+// edite a entrada dele aqui. Quase todos vestem a camisa verde do uniforme, a
+// mesma do suporte, com o logo da empresa no peito; o Caique vai de moletom.
 
 import { CABELOS, CALCAS, PELES, UNIFORME } from '../Suporte/boneco/aparencia.js';
 
 /** @import { AparenciaTecnico } from '../Suporte/tipos.js' */
 
 const PRETO = '#17130F';
+const MOLETOM_CINZA = '#6E7480';
 
 /** @type {Record<string, AparenciaTecnico>} */
 export const APARENCIAS_DEV = {
@@ -40,11 +41,11 @@ export const APARENCIAS_DEV = {
   },
   caique: {
     pele: PELES[3],
-    camisa: UNIFORME,
-    logo: true,
+    camisa: MOLETOM_CINZA,
+    moletom: true,
     calca: CALCAS[1],
-    cabelo: { estilo: 'cacheado', cor: PRETO },
-    acessorio: 'oculos',
+    cabelo: { estilo: 'raspado', cor: PRETO },
+    acessorio: 'nenhum',
   },
   donizeti: {
     pele: PELES[0],

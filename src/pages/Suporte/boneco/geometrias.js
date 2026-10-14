@@ -16,6 +16,8 @@ export const G = {
   brilho: new THREE.SphereGeometry(0.014, 8, 6),
   bochecha: new THREE.SphereGeometry(0.06, 14, 10),
   cabeloCurto: new THREE.SphereGeometry(0.36, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.42),
+  // Cabelo raspado: uma película rente à cabeça, um pouco mais baixa que o curto.
+  cabeloRaspado: new THREE.SphereGeometry(0.348, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.46),
   cabeloLongo: new THREE.SphereGeometry(0.365, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
   coque: new THREE.SphereGeometry(0.15, 18, 14),
   rabo: new THREE.CapsuleGeometry(0.22, 0.32, 8, 16),
@@ -32,6 +34,9 @@ export const G = {
   aba: new THREE.CylinderGeometry(0.26, 0.26, 0.035, 24),
   maleta: new THREE.BoxGeometry(0.34, 0.24, 0.09),
   gravata: new THREE.CapsuleGeometry(0.05, 0.2, 4, 8),
+  // Moletom: o capuz caído nas costas e a gola em volta do pescoço.
+  capuz: new THREE.SphereGeometry(0.26, 24, 16),
+  gola: new THREE.TorusGeometry(0.2, 0.05, 10, 28),
   // Retalho quadrado da lateral de um cilindro, rente ao tronco e centrado na frente.
   logo: new THREE.CylinderGeometry(
     RAIO_CORPO + 0.004,
@@ -52,6 +57,7 @@ export const clay = (color) =>
   new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0 });
 
 export const ESCURO = clay('#1F1A24');
+export const CORDAO = clay('#EFEAE0');
 // Logo estampado na camisa: a imagem tem fundo transparente.
 const texturaLogo = new THREE.TextureLoader().load(logoUrl);
 texturaLogo.colorSpace = THREE.SRGBColorSpace;
