@@ -40,8 +40,12 @@ const CACHINHOS = espalharCachos([
 // Duas a cada cinco mechas recebem a cor das luzes, sem formar fileiras.
 const temLuzes = (indice) => indice % 5 === 1 || indice % 5 === 3;
 
-function Cabelo({ estilo, material, materialMechas }) {
+function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
   if (estilo === 'curto') return <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />;
+  // Degradê: cheio em cima, sumindo nas laterais e na nuca (geometrias.js).
+  if (estilo === 'degrade') {
+    return <mesh geometry={G.degrade} material={materialDegrade} rotation-x={-0.35} />;
+  }
   if (estilo === 'raspado') return <mesh geometry={G.cabeloRaspado} material={material} rotation-x={-0.3} />;
   if (estilo === 'coque') {
     return (
@@ -248,6 +252,11 @@ export default function Boneco({ tecnico }) {
         aparencia.barba === 'curta'
           ? Object.assign(clay(aparencia.cabelo.cor), { transparent: true, opacity: OPACIDADE_BARBA_RALA })
           : null,
+      // O degradê tira a transparência de cada ponto da cor dos vértices.
+      degrade:
+        aparencia.cabelo.estilo === 'degrade'
+          ? Object.assign(clay(aparencia.cabelo.cor), { transparent: true, vertexColors: true })
+          : null,
     }),
     [aparencia],
   );
@@ -346,6 +355,7 @@ export default function Boneco({ tecnico }) {
             estilo={aparencia.cabelo.estilo}
             material={materiais.cabelo}
             materialMechas={materiais.mechas ?? materiais.cabelo}
+            materialDegrade={materiais.degrade}
           />
           <Barba estilo={aparencia.barba} material={materiais.barbaRala ?? materiais.cabelo} />
           <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.bone ?? materiais.camisa} />

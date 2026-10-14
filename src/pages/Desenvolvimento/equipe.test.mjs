@@ -8,7 +8,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
 const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
-const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'ombro', 'cacheado', 'cachinhos', 'careca'];
+const ESTILOS = ['curto', 'degrade', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'ombro', 'cacheado', 'cachinhos', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;
 
@@ -94,6 +94,14 @@ test('o adriano tem cabelo curto preto e barba rala, sem óculos', () => {
   assert.equal(adriano.cabelo.cor, '#17130F');
   assert.equal(adriano.barba, 'curta');
   assert.equal(adriano.acessorio, 'nenhum');
+});
+
+test('o arnaldo tem cabelo curto preto com degradê, cavanhaque preto e óculos', () => {
+  const arnaldo = APARENCIAS_DEV.arnaldo;
+  assert.equal(arnaldo.cabelo.estilo, 'degrade');
+  assert.equal(arnaldo.cabelo.cor, '#17130F');
+  assert.equal(arnaldo.barba, 'cavanhaque');
+  assert.equal(arnaldo.acessorio, 'oculos');
 });
 
 test('o antonio é branco, de cabelo curto loiro escuro e sem barba', () => {

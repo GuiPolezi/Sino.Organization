@@ -51,6 +51,56 @@ function criarBarba({ raio: raioBase, volume, topoFrente = 0.58, estreitar = 4 }
   return geometria;
 }
 
+const suavizar = (inicio, fim, x) => {
+  const t = Math.min(1, Math.max(0, (x - inicio) / (fim - inicio)));
+  return t * t * (3 - 2 * t);
+};
+
+// Degradê: uma casca só, sem degraus. Grossa em cima; nas laterais e na nuca vai
+// ficando rente à cabeça e some na pele (a transparência vai na cor de cada
+// vértice). Na frente o corte não esfuma: só a borda da franja se afina.
+function criarDegrade() {
+  const COLUNAS = 48;
+  const LINHAS = 20;
+  const POLAR_MAX = Math.PI * 0.47;
+  const RAIO_PELE = 0.345;
+  const VOLUME = 0.045;
+  const posicoes = [];
+  const cores = [];
+  const indices = [];
+  for (let i = 0; i <= COLUNAS; i++) {
+    const giro = (2 * Math.PI * i) / COLUNAS;
+    // 0 na frente, 1 nas laterais e atrás.
+    const lateral = 1 - Math.max(0, Math.cos(giro)) ** 2;
+    const inicioAfinar = 0.9 - 0.45 * lateral;
+    const inicioSumir = 0.95 - 0.35 * lateral;
+    for (let j = 0; j <= LINHAS; j++) {
+      const u = j / LINHAS;
+      const polar = POLAR_MAX * u;
+      const raio = RAIO_PELE + VOLUME * (1 - suavizar(inicioAfinar, 1, u));
+      posicoes.push(
+        raio * Math.sin(polar) * Math.sin(giro),
+        raio * Math.cos(polar),
+        raio * Math.sin(polar) * Math.cos(giro),
+      );
+      cores.push(1, 1, 1, 1 - suavizar(inicioSumir, 1, u));
+    }
+  }
+  for (let i = 0; i < COLUNAS; i++) {
+    for (let j = 0; j < LINHAS; j++) {
+      const a = i * (LINHAS + 1) + j;
+      const b = a + LINHAS + 1;
+      indices.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+  }
+  const geometria = new THREE.BufferGeometry();
+  geometria.setAttribute('position', new THREE.Float32BufferAttribute(posicoes, 3));
+  geometria.setAttribute('color', new THREE.Float32BufferAttribute(cores, 4));
+  geometria.setIndex(indices);
+  geometria.computeVertexNormals();
+  return geometria;
+}
+
 // Geometrias e materiais base: criados uma vez e compartilhados por todos os bonecos.
 export const G = {
   corpo: new THREE.CapsuleGeometry(RAIO_CORPO, 0.36, 10, 24),
@@ -62,6 +112,7 @@ export const G = {
   brilho: new THREE.SphereGeometry(0.014, 8, 6),
   bochecha: new THREE.SphereGeometry(0.06, 14, 10),
   cabeloCurto: new THREE.SphereGeometry(0.36, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.42),
+  degrade: criarDegrade(),
   // Cabelo volumoso: mais grosso e um pouco mais baixo que o curto.
   cabeloVolumoso: new THREE.SphereGeometry(0.375, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.44),
   // Cabelo raspado: uma película rente à cabeça, um pouco mais baixa que o curto.
