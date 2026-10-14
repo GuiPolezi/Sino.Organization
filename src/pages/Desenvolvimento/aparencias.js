@@ -103,8 +103,7 @@ export const APARENCIAS_DEV = {
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[3],
-    cabelo: { estilo: 'classico', cor: CASTANHO_ESCURO },
+    cabelo: { estilo: 'ombro', cor: CASTANHO_ESCURO },
     acessorio: 'oculos',
-    olhos: '#3F8FE0',
   },
 };
