@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { aparenciaDe, registrarAparencias } from '../Suporte/boneco/aparencia.js';
+import { aparenciaDe, registrarAparencias, temBochechas } from '../Suporte/boneco/aparencia.js';
 import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
@@ -62,6 +62,15 @@ test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo vo
   assert.equal(donizeti.barba, 'fechada');
   assert.equal(donizeti.cabelo.estilo, 'volumoso');
   assert.equal(donizeti.cabelo.cor, '#17130F');
+});
+
+test('só o donizeti, de barba fechada, fica sem as bochechas rosadas', () => {
+  assert.equal(temBochechas(APARENCIAS_DEV.donizeti), false);
+  const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'donizeti');
+  for (const [id, aparencia] of outros) assert.equal(temBochechas(aparencia), true, `bochechas de ${id}`);
+  for (const id of ['roberto', 'fabio', 'guilherme-p', 'luiz', 'alguem-novo']) {
+    assert.equal(temBochechas(aparenciaDe(id)), true, `bochechas de ${id}`);
+  }
 });
 
 test('a ketlyn tem cabelo comprido e preto, sem óculos', () => {

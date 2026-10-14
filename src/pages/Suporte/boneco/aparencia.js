@@ -61,6 +61,9 @@ export function registrarAparencias(novas) {
   Object.assign(aparencias, novas);
 }
 
+// A barba fechada cobre as bochechas: quem a usa fica sem o rosado delas.
+export const temBochechas = (aparencia) => aparencia.barba !== 'fechada';
+
 function hash(texto) {
   let h = 2166136261;
   for (let i = 0; i < texto.length; i++) h = Math.imul(h ^ texto.charCodeAt(i), 16777619);

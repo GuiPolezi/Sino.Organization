@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Html } from '@react-three/drei';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
-import { aparenciaDe } from './aparencia.js';
+import { aparenciaDe, temBochechas } from './aparencia.js';
 import { BOCHECHA, BRANCO, CORDAO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
 import { useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
@@ -289,7 +289,9 @@ export default function Boneco({ tecnico }) {
                 <mesh geometry={G.pupila} material={ESCURO} position={[0.12 * lado, 0.04, 0.343]} />
               )}
               <mesh geometry={G.brilho} material={BRANCO} position={[0.12 * lado + 0.015, 0.06, 0.35]} />
-              <mesh geometry={G.bochecha} material={BOCHECHA} position={[0.2 * lado, -0.07, 0.27]} scale={[1, 0.6, 0.4]} />
+              {temBochechas(aparencia) && (
+                <mesh geometry={G.bochecha} material={BOCHECHA} position={[0.2 * lado, -0.07, 0.27]} scale={[1, 0.6, 0.4]} />
+              )}
             </group>
           ))}
           <Cabelo
