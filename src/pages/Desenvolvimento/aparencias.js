@@ -80,8 +80,8 @@ export const APARENCIAS_DEV = {
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[2],
-    cabelo: { estilo: 'longo', cor: CABELOS[2], mechas: CABELOS[3] },
-    acessorio: 'oculos',
+    cabelo: { estilo: 'comprido', cor: PRETO },
+    acessorio: 'nenhum',
     altura: 0.97,
   },
   gustavo: {

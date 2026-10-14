@@ -66,6 +66,8 @@ export const G = {
   cabeloLongo: new THREE.SphereGeometry(0.365, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
   coque: new THREE.SphereGeometry(0.15, 18, 14),
   rabo: new THREE.CapsuleGeometry(0.22, 0.32, 8, 16),
+  // Mecha que cai do lado do rosto até o ombro, no cabelo comprido.
+  mechaLateral: new THREE.CapsuleGeometry(0.08, 0.3, 6, 12),
   moicano: new THREE.CapsuleGeometry(0.07, 0.42, 6, 12),
   topete: new THREE.SphereGeometry(0.16, 20, 16),
   cacho: new THREE.SphereGeometry(0.11, 16, 12),

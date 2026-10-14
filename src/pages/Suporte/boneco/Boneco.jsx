@@ -50,6 +50,19 @@ function Cabelo({ estilo, material, materialMechas }) {
       </>
     );
   }
+  // Comprido: o mesmo topo do longo, um pouco maior, com o cabelo descendo pelas
+  // costas até as omoplatas e uma mecha de cada lado do rosto caindo no ombro.
+  if (estilo === 'comprido') {
+    return (
+      <>
+        <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.4} scale={1.03} />
+        <mesh geometry={G.rabo} material={material} position={[0, -0.32, -0.3]} scale={[1.25, 1.5, 0.5]} />
+        {LADOS.map((lado) => (
+          <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
+        ))}
+      </>
+    );
+  }
   if (estilo === 'volumoso') {
     return (
       <>

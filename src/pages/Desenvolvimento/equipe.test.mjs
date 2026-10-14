@@ -8,7 +8,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
 const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
-const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'cacheado', 'careca'];
+const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'cacheado', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;
 
@@ -62,6 +62,13 @@ test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo vo
   assert.equal(donizeti.barba, 'fechada');
   assert.equal(donizeti.cabelo.estilo, 'volumoso');
   assert.equal(donizeti.cabelo.cor, '#17130F');
+});
+
+test('a ketlyn tem cabelo comprido e preto, sem óculos', () => {
+  const ketlyn = APARENCIAS_DEV.ketlyn;
+  assert.equal(ketlyn.cabelo.estilo, 'comprido');
+  assert.equal(ketlyn.cabelo.cor, '#17130F');
+  assert.equal(ketlyn.acessorio, 'nenhum');
 });
 
 test('o boné do gustavo é branco; ninguém mais muda a cor do boné', () => {
