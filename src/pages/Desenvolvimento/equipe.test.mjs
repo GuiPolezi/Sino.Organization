@@ -80,11 +80,20 @@ test('a ketlyn tem cabelo comprido e preto, sem óculos', () => {
   assert.equal(ketlyn.acessorio, 'nenhum');
 });
 
-test('o boné do gustavo é branco; ninguém mais muda a cor do boné', () => {
-  assert.equal(APARENCIAS_DEV.gustavo.acessorio, 'bone');
-  assert.equal(APARENCIAS_DEV.gustavo.bone, '#FFFFFF');
-  const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => id !== 'gustavo');
-  for (const [id, aparencia] of outros) assert.equal(aparencia.bone, undefined, `boné de ${id}`);
+test('o gustavo é loiro de topete, olhos azuis e só bigode, sem boné', () => {
+  const gustavo = APARENCIAS_DEV.gustavo;
+  assert.equal(gustavo.cabelo.estilo, 'topete');
+  assert.equal(gustavo.cabelo.cor, '#C9A26B');
+  assert.equal(gustavo.olhos, '#3F8FE0');
+  assert.equal(gustavo.barba, 'bigode');
+  assert.equal(gustavo.acessorio, 'nenhum');
+});
+
+test('nenhum desenvolvedor usa boné nem muda a cor dele', () => {
+  for (const [id, aparencia] of Object.entries(APARENCIAS_DEV)) {
+    assert.notEqual(aparencia.acessorio, 'bone', `acessório de ${id}`);
+    assert.equal(aparencia.bone, undefined, `boné de ${id}`);
+  }
 });
 
 test('registradas, as aparências passam a valer para os ids dos desenvolvedores', () => {
