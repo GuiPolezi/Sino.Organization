@@ -73,6 +73,8 @@ export const G = {
   mechaLateral: new THREE.CapsuleGeometry(0.08, 0.3, 6, 12),
   moicano: new THREE.CapsuleGeometry(0.07, 0.42, 6, 12),
   topete: new THREE.SphereGeometry(0.16, 20, 16),
+  // Volume de cima do cabelo clássico, penteado para trás.
+  volumeClassico: new THREE.SphereGeometry(0.3, 28, 18),
   cacho: new THREE.SphereGeometry(0.11, 16, 12),
   cachinho: new THREE.SphereGeometry(0.065, 12, 10),
   bigode: new THREE.CapsuleGeometry(0.026, 0.07, 6, 10),

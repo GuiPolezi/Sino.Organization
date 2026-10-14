@@ -8,7 +8,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
 const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
-const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'cacheado', 'cachinhos', 'careca'];
+const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'classico', 'cacheado', 'cachinhos', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;
 
@@ -102,6 +102,15 @@ test('o antonio é branco, de cabelo curto loiro escuro e sem barba', () => {
   assert.equal(antonio.cabelo.estilo, 'curto');
   assert.equal(antonio.cabelo.cor, '#A07A45');
   assert.equal(antonio.barba, undefined);
+});
+
+test('o rafael é branco, de cabelo clássico castanho escuro, óculos e sem barba', () => {
+  const rafael = APARENCIAS_DEV.rafael;
+  assert.equal(rafael.pele, aparenciaDe('roberto').pele);
+  assert.equal(rafael.cabelo.estilo, 'classico');
+  assert.equal(rafael.cabelo.cor, '#4A2F1E');
+  assert.equal(rafael.acessorio, 'oculos');
+  assert.equal(rafael.barba, undefined);
 });
 
 test('o eduardo é branco, de óculos, cabelo preto de topete e sem bigode nem fone', () => {
