@@ -64,8 +64,8 @@ test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo vo
   assert.equal(donizeti.cabelo.cor, '#17130F');
 });
 
-test('só o donizeti e o guilherme, de barba fechada e curta, ficam sem as bochechas rosadas', () => {
-  const barbudos = ['donizeti', 'guilherme-a'];
+test('só os de barba fechada ou curta ficam sem as bochechas rosadas', () => {
+  const barbudos = ['adriano', 'donizeti', 'guilherme-a'];
   for (const id of barbudos) assert.equal(temBochechas(APARENCIAS_DEV[id]), false, `bochechas de ${id}`);
   const outros = Object.entries(APARENCIAS_DEV).filter(([id]) => !barbudos.includes(id));
   for (const [id, aparencia] of outros) assert.equal(temBochechas(aparencia), true, `bochechas de ${id}`);
@@ -86,6 +86,14 @@ test('a ketlyn tem cabelo comprido e preto, sem óculos', () => {
   assert.equal(ketlyn.cabelo.estilo, 'comprido');
   assert.equal(ketlyn.cabelo.cor, '#17130F');
   assert.equal(ketlyn.acessorio, 'nenhum');
+});
+
+test('o adriano tem cabelo curto preto e barba rala, sem óculos', () => {
+  const adriano = APARENCIAS_DEV.adriano;
+  assert.equal(adriano.cabelo.estilo, 'curto');
+  assert.equal(adriano.cabelo.cor, '#17130F');
+  assert.equal(adriano.barba, 'curta');
+  assert.equal(adriano.acessorio, 'nenhum');
 });
 
 test('o antonio é branco, de cabelo curto loiro escuro e sem barba', () => {
