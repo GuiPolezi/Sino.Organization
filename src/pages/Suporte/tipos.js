@@ -17,7 +17,7 @@
  * @property {string} [ultimaAtividade]  data ISO
  * @property {string[]} [especialidades]
  *
- * @typedef {'curto' | 'raspado' | 'volumoso' | 'topete' | 'coque' | 'moicano' | 'longo' | 'comprido' | 'classico' | 'ombro' | 'cacheado' | 'cachinhos' | 'careca'} EstiloCabelo
+ * @typedef {'curto' | 'raspado' | 'volumoso' | 'topete' | 'coque' | 'moicano' | 'longo' | 'comprido' | 'ombro' | 'cacheado' | 'cachinhos' | 'careca'} EstiloCabelo
  *
  * @typedef {object} AparenciaTecnico
  * @property {string} pele    hex

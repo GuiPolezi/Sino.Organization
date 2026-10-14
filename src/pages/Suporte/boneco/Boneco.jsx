@@ -92,23 +92,6 @@ function Cabelo({ estilo, material, materialMechas }) {
       </>
     );
   }
-  // Clássico ("old money"): liso, comprido em cima e penteado para trás com risca
-  // de lado. A base desce atrás até a nuca e cobre as laterais rente, sem
-  // degradê; o volume de cima pende para um lado e avança um pouco na testa.
-  if (estilo === 'classico') {
-    return (
-      <>
-        <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.7} scale={1.02} />
-        <mesh
-          geometry={G.volumeClassico}
-          material={material}
-          position={[0.03, 0.25, -0.03]}
-          rotation-z={-0.08}
-          scale={[0.85, 0.45, 1.1]}
-        />
-      </>
-    );
-  }
   if (estilo === 'volumoso') {
     return (
       <>
