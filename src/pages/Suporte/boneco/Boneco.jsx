@@ -50,6 +50,14 @@ function Cabelo({ estilo, material, materialMechas }) {
       </>
     );
   }
+  if (estilo === 'volumoso') {
+    return (
+      <>
+        <mesh geometry={G.cabeloVolumoso} material={material} rotation-x={-0.35} />
+        <mesh geometry={G.topete} material={material} position={[0, 0.32, 0.19]} scale={[1.05, 0.6, 0.85]} />
+      </>
+    );
+  }
   if (estilo === 'topete') {
     return (
       <>
@@ -82,8 +90,8 @@ function Cabelo({ estilo, material, materialMechas }) {
   return null;
 }
 
-// Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo e a
-// barba fechada, a casca que cobre o queixo e as bochechas de baixo.
+// Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo. A
+// barba fechada soma ao bigode as costeletas, o maxilar e o volume do queixo.
 function Barba({ estilo, material }) {
   if (estilo !== 'bigode' && estilo !== 'cavanhaque' && estilo !== 'fechada') return null;
 
@@ -98,7 +106,12 @@ function Barba({ estilo, material }) {
           rotation-z={(Math.PI / 2 - 0.3) * lado}
         />
       ))}
-      {estilo === 'fechada' && <mesh geometry={G.barbaFechada} material={material} />}
+      {estilo === 'fechada' && (
+        <>
+          <mesh geometry={G.barbaFechada} material={material} />
+          <mesh geometry={G.queixo} material={material} position={[0, -0.21, 0.24]} scale={[1.45, 0.9, 0.7]} />
+        </>
+      )}
       {estilo === 'cavanhaque' && (
         <mesh geometry={G.cavanhaque} material={material} position={[0, -0.215, 0.245]} scale={[1, 0.8, 0.6]} />
       )}

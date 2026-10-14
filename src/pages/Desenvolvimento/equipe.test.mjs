@@ -8,7 +8,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
 const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
-const ESTILOS = ['curto', 'raspado', 'topete', 'coque', 'moicano', 'longo', 'cacheado', 'careca'];
+const ESTILOS = ['curto', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'cacheado', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;
 
@@ -54,13 +54,14 @@ test('o caique vai de moletom cinza com capuz, sem logo, de cabelo raspado e sem
   for (const [id, aparencia] of outros) assert.equal(aparencia.moletom, undefined, `moletom de ${id}`);
 });
 
-test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo curto', () => {
+test('o donizeti é branco, de óculos, olhos escuros, barba fechada e cabelo volumoso, pretos', () => {
   const donizeti = APARENCIAS_DEV.donizeti;
   assert.equal(donizeti.pele, aparenciaDe('roberto').pele);
   assert.equal(donizeti.acessorio, 'oculos');
   assert.equal(donizeti.olhos, undefined);
   assert.equal(donizeti.barba, 'fechada');
-  assert.equal(donizeti.cabelo.estilo, 'curto');
+  assert.equal(donizeti.cabelo.estilo, 'volumoso');
+  assert.equal(donizeti.cabelo.cor, '#17130F');
 });
 
 test('o boné do gustavo é branco; ninguém mais muda a cor do boné', () => {

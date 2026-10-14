@@ -52,7 +52,7 @@ export const APARENCIAS_DEV = {
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[3],
-    cabelo: { estilo: 'curto', cor: CABELOS[3] },
+    cabelo: { estilo: 'volumoso', cor: PRETO },
     acessorio: 'oculos',
     barba: 'fechada',
     altura: 0.93,

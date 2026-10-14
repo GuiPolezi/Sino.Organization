@@ -5,6 +5,49 @@ import logoUrl from '../../../assets/images/logo-sino.png';
 const RAIO_CORPO = 0.34;
 const LADO_LOGO = 0.14;
 
+// Barba fechada: casca rente ao rosto, de uma orelha à outra pela frente. A
+// borda de cima sobe nas laterais até o cabelo (costeletas) e desce na frente
+// para deixar as bochechas livres; a de baixo acompanha o maxilar até o queixo.
+function criarBarbaFechada() {
+  const COLUNAS = 40;
+  const LINHAS = 12;
+  const GIRO_MAX = (95 * Math.PI) / 180;
+  const posicoes = [];
+  const indices = [];
+  for (let i = 0; i <= COLUNAS; i++) {
+    // Giro a partir da frente (+z): negativo à direita do boneco, positivo à esquerda.
+    const giro = -GIRO_MAX + (2 * GIRO_MAX * i) / COLUNAS;
+    const lateral = Math.abs(Math.sin(giro)) ** 4;
+    const frente = Math.cos(giro) ** 2;
+    // Ângulos a partir do topo da cabeça.
+    const topo = Math.PI * (0.58 - 0.16 * lateral);
+    const base = Math.PI * (0.76 + 0.14 * frente);
+    for (let j = 0; j <= LINHAS; j++) {
+      const t = j / LINHAS;
+      const polar = topo + (base - topo) * t;
+      // Mais cheia embaixo, sobretudo na frente.
+      const raio = 0.35 + 0.02 * t * frente;
+      posicoes.push(
+        raio * Math.sin(polar) * Math.sin(giro),
+        raio * Math.cos(polar),
+        raio * Math.sin(polar) * Math.cos(giro),
+      );
+    }
+  }
+  for (let i = 0; i < COLUNAS; i++) {
+    for (let j = 0; j < LINHAS; j++) {
+      const a = i * (LINHAS + 1) + j;
+      const b = a + LINHAS + 1;
+      indices.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+  }
+  const geometria = new THREE.BufferGeometry();
+  geometria.setAttribute('position', new THREE.Float32BufferAttribute(posicoes, 3));
+  geometria.setIndex(indices);
+  geometria.computeVertexNormals();
+  return geometria;
+}
+
 // Geometrias e materiais base: criados uma vez e compartilhados por todos os bonecos.
 export const G = {
   corpo: new THREE.CapsuleGeometry(RAIO_CORPO, 0.36, 10, 24),
@@ -16,6 +59,8 @@ export const G = {
   brilho: new THREE.SphereGeometry(0.014, 8, 6),
   bochecha: new THREE.SphereGeometry(0.06, 14, 10),
   cabeloCurto: new THREE.SphereGeometry(0.36, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.42),
+  // Cabelo volumoso: mais grosso e um pouco mais baixo que o curto.
+  cabeloVolumoso: new THREE.SphereGeometry(0.375, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.44),
   // Cabelo raspado: uma película rente à cabeça, um pouco mais baixa que o curto.
   cabeloRaspado: new THREE.SphereGeometry(0.348, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.46),
   cabeloLongo: new THREE.SphereGeometry(0.365, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
@@ -26,8 +71,8 @@ export const G = {
   cacho: new THREE.SphereGeometry(0.11, 16, 12),
   bigode: new THREE.CapsuleGeometry(0.026, 0.07, 6, 10),
   cavanhaque: new THREE.SphereGeometry(0.075, 14, 10),
-  // Barba fechada: casca na metade da frente da cabeça, da altura do bigode até o queixo.
-  barbaFechada: new THREE.SphereGeometry(0.352, 32, 12, 0, Math.PI, Math.PI * 0.6, Math.PI * 0.3),
+  barbaFechada: criarBarbaFechada(),
+  queixo: new THREE.SphereGeometry(0.11, 18, 14),
   pupila: new THREE.SphereGeometry(0.022, 10, 8),
   lente: new THREE.TorusGeometry(0.085, 0.018, 8, 22),
   ponte: new THREE.CylinderGeometry(0.012, 0.012, 0.08, 6),
