@@ -1,6 +1,9 @@
 /* Gráfico de tipos de solicitação do card do desenvolvedor. Usa as variáveis do card. */
 .grafico {
   --altura-area: 8.5rem;
+  /* O número sobre a coluna: o vão até a barra e a altura da linha dele. */
+  --vao-valor: 5px;
+  --altura-valor: calc(0.6875rem * 1.15);
   --eixo: var(--color-ink);
   --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
 
@@ -10,11 +13,16 @@
   color: var(--neutro-pequeno);
 }
 
-/* Eixos com seta: o Y sobra acima da linha mais alta e o X, à direita da última coluna. */
+/*
+ * Eixos com seta: o Y sobra acima da linha mais alta e o X, à direita da última coluna.
+ * A coluna mais alta pode chegar quase ao topo, então o número dela sai da área: a
+ * margem de cima guarda esse espaço e ainda deixa um respiro até as categorias (a
+ * margem de baixo delas se funde com esta).
+ */
 .area {
   position: relative;
   height: var(--altura-area);
-  margin: 14px 0 0 6px;
+  margin: calc(var(--vao-valor) + var(--altura-valor) + 16px) 0 0 6px;
   border-bottom: 1.5px solid var(--eixo);
   border-left: 1.5px solid var(--eixo);
 }
@@ -83,9 +91,10 @@
 .valor {
   position: absolute;
   right: 0;
-  bottom: calc(var(--altura) + 5px);
+  bottom: calc(var(--altura) + var(--vao-valor));
   left: 0;
   font-size: 0.6875rem;
+  line-height: 1.15;
   color: var(--color-ink);
   text-align: center;
   transition:
