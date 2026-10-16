@@ -1,0 +1,466 @@
+/*
+ * Card do desenvolvedor. O esqueleto (posição, fundo, cabeçalho, navegação) vem
+ * de CardTecnico.module.css; aqui fica só o que é deste card. Os tamanhos grandes
+ * são em cqi (1% da largura útil do card), para a composição do design ser a
+ * mesma no desktop e no bottom sheet do mobile.
+ */
+.card {
+  /* Números grandes, estrela e colunas do gráfico. */
+  --verde-noite: #283618;
+  /* O oliva claro do design, escurecido até o creme passar de 4,5:1 por cima. */
+  --fundo-status: color-mix(in srgb, var(--color-olive) 92%, var(--color-cream));
+  /* Categoria escolhida; o texto dela é escuro, porque branco não chega a 3:1. */
+  --ambar: #c98a12;
+  --cinza: color-mix(in srgb, var(--color-ink) 72%, transparent);
+  --vao: 10px;
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  container-type: inline-size;
+}
+
+.card dt,
+.card dd {
+  margin: 0;
+}
+
+/* Cabeçalho: avatar e nome maiores que os do card do técnico. */
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--cor-avatar);
+  box-shadow:
+    inset 0 -6px 12px rgb(0 0 0 / 0.14),
+    inset 0 5px 10px rgb(255 255 255 / 0.5);
+  color: var(--color-ink);
+  font-size: 1.5rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+.titulo {
+  align-self: center;
+  min-width: 0;
+}
+
+.titulo h2 {
+  margin-bottom: 5px;
+  font-size: 1.875rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-olive);
+}
+
+.titulo p {
+  font-size: 1rem;
+  line-height: 1.3;
+  color: var(--neutro-pequeno);
+}
+
+/* Título da seção à esquerda e período à direita. */
+.cabecalhoSecao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Período: rótulo, pílula e o menu que abre por baixo dela. */
+.periodo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--neutro-pequeno);
+}
+
+.periodoBotao {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px 8px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-olive-dark) 13%, transparent);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.periodoBotao:hover,
+.periodoBotao[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--color-olive-dark) 21%, transparent);
+}
+
+.periodoBotao svg {
+  width: 0.625rem;
+  height: 0.625rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.35s var(--facil);
+}
+
+.periodoBotao[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.periodoMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 3;
+  min-width: 10.5rem;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--color-cream);
+  box-shadow:
+    0 0 0 1px var(--linha),
+    0 18px 40px color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
+  transform-origin: top right;
+  animation: abrir 0.32s var(--facil);
+}
+
+.periodoMenu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 10px 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--neutro-pequeno);
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+  animation: surgirOpcao 0.36s var(--facil) both;
+  animation-delay: calc(var(--ordem) * 35ms + 40ms);
+}
+
+.periodoMenu button:hover,
+.periodoMenu button:focus-visible {
+  background: var(--fundo-suave);
+  color: var(--color-ink);
+}
+
+/* Dentro do menu, o fundo da opção já mostra o foco: o contorno fica rente. */
+.periodoMenu button:focus-visible {
+  outline-offset: -2px;
+}
+
+.periodoMenu button[aria-checked='true'] {
+  color: var(--color-ink);
+}
+
+.periodoMenu svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: var(--color-olive);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+
+.periodoMenu [aria-checked='true'] svg {
+  opacity: 1;
+}
+
+@keyframes abrir {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
+
+@keyframes surgirOpcao {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* O número em destaque, com o status ao lado. */
+.destaque div {
+  display: flex;
+  align-items: center;
+  gap: 4cqi;
+  margin-top: 6px;
+}
+
+/* Algarismos proporcionais: em tamanho de vitrine, os tabulares deixam o "1" folgado. */
+.destaque dd {
+  order: -1;
+  font-size: 23cqi;
+  font-weight: var(--weight-black);
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  color: var(--verde-noite);
+  white-space: nowrap;
+}
+
+.destaque dt {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: clamp(0.9375rem, 4.4cqi, 1.125rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+.destaque small {
+  font-size: 0.6875rem;
+  color: var(--neutro-pequeno);
+}
+
+/* Números compridos encolhem para não empurrar o texto ao lado. */
+.destaque dd[data-digitos='4'],
+.totalNumero[data-digitos='4'] {
+  font-size: 17cqi;
+}
+
+.destaque dd[data-digitos='5'],
+.totalNumero[data-digitos='5'] {
+  font-size: 14cqi;
+}
+
+/*
+ * Grade dos status, com a estrela por cima. As linhas têm a mesma altura (1fr),
+ * então o cruzamento das duas primeiras sai da altura da grade e de --linhas.
+ */
+.grade {
+  position: relative;
+  margin-top: 18px;
+}
+
+.status {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: var(--vao);
+}
+
+.status div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 2.5cqi;
+  min-height: 18cqi;
+  padding: 3cqi 3.5cqi;
+  border-radius: 18px;
+  background: var(--fundo-status);
+  color: var(--color-cream);
+  transition:
+    transform 0.35s var(--facil),
+    box-shadow 0.35s ease;
+}
+
+/* Com número ímpar de status, o último ocupa a linha inteira. */
+.status div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* O número vem antes na tela; o texto só quebra para baixo dele se a palavra mais longa não couber. */
+.status dd {
+  order: -1;
+  font-size: 11cqi;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.status dd[data-digitos='3'] {
+  font-size: 8.5cqi;
+}
+
+.status dd[data-digitos='4'],
+.status dd[data-digitos='5'] {
+  font-size: 7cqi;
+}
+
+.status dt {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 3px;
+  font-size: max(0.6875rem, 3cqi);
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+}
+
+.status small {
+  font-size: 0.625rem;
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.02em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .status div:hover {
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
+    transform: translateY(-3px);
+  }
+}
+
+/* Margens negativas, e não transform: o transform da estrela é do GSAP. */
+.estrela {
+  position: absolute;
+  top: calc((100% - (var(--linhas) - 1) * var(--vao)) / var(--linhas) + var(--vao) / 2);
+  left: 50%;
+  z-index: 2;
+  width: 26cqi;
+  height: 26cqi;
+  margin: -13cqi 0 0 -13cqi;
+  /* A sombra fica no elemento que não gira, para continuar caindo para baixo. */
+  filter: drop-shadow(0 5px 7px color-mix(in srgb, var(--verde-noite) 40%, transparent));
+  pointer-events: none;
+}
+
+.estrela svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--verde-noite);
+}
+
+/* Área do mouse: um círculo no miolo da estrela, que não gira com ela. */
+.estrelaAlvo {
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  pointer-events: auto;
+}
+
+/* Total atribuído: texto, setas e número numa linha; a parte feita por baixo. */
+.total {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 4cqi;
+  row-gap: 4px;
+}
+
+.total h3 {
+  width: min-content;
+  font-size: clamp(0.9375rem, 4.6cqi, 1.25rem);
+  font-weight: var(--weight-regular);
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+.setas {
+  width: 13cqi;
+  height: auto;
+  fill: none;
+  stroke: var(--color-olive);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.totalNumero {
+  justify-self: end;
+  font-size: 22cqi;
+  font-weight: var(--weight-black);
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.feito {
+  grid-column: 1 / -1;
+  justify-self: end;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: var(--cinza);
+}
+
+.feito strong {
+  font-size: clamp(1.5rem, 7cqi, 1.875rem);
+  font-weight: var(--weight-black);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Categorias: uma pílula por sistema; a escolhida, em âmbar. */
+.categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.categorias button {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-olive-dark) 10%, transparent);
+  color: var(--neutro-pequeno);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.25s var(--facil);
+}
+
+.categorias button:hover {
+  background: color-mix(in srgb, var(--color-olive-dark) 17%, transparent);
+  color: var(--color-ink);
+}
+
+.categorias button[aria-pressed='true'] {
+  background: var(--ambar);
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--ambar) 32%, transparent);
+  color: var(--color-ink);
+}
+
+.categorias button:active {
+  transform: scale(0.95);
+}
+
+.vazio {
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--neutro-pequeno);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .periodoMenu,
+  .periodoMenu button {
+    animation: none;
+  }
+
+  .periodoBotao,
+  .periodoBotao svg,
+  .status div,
+  .categorias button {
+    transition: none;
+  }
+}

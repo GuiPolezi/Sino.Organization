@@ -1,8 +1,11 @@
 import { registrarAparencias } from '../Suporte/boneco/aparencia.js';
 import { esvaziarCenario } from '../Suporte/boneco/estacoes.js';
 import PaginaEquipe from '../Suporte/PaginaEquipe.jsx';
+import { useEquipe } from '../Suporte/store.js';
+import { buscarChamados } from './api/chamados.js';
 import { buscarEquipe } from './api/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
+import CardDesenvolvedor from './card/CardDesenvolvedor.jsx';
 
 /*
  * A página reaproveita a cena da página de suporte, que guarda o cenário em
@@ -14,6 +17,13 @@ import { APARENCIAS_DEV } from './aparencias.js';
 esvaziarCenario();
 registrarAparencias(APARENCIAS_DEV);
 
+// Os chamados completam o card. Se a busca falhar, o card fica só com nome e cargo.
+function buscarComplementos(equipe, ativo) {
+  buscarChamados(equipe)
+    .then((chamados) => ativo() && useEquipe.getState().setChamados(chamados))
+    .catch(() => {});
+}
+
 export default function Desenvolvimento() {
   return (
     <PaginaEquipe
@@ -21,6 +31,9 @@ export default function Desenvolvimento() {
       subtitulo="Conheça nossa equipe de desenvolvimento"
       rotuloElenco="Desenvolvedores"
       buscarEquipe={buscarEquipe}
+      aoCarregar={buscarComplementos}
+      Card={CardDesenvolvedor}
+      larguraCard="28rem"
       simples
     />
   );

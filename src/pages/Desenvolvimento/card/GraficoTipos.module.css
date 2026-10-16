@@ -1,0 +1,136 @@
+/* Gráfico de tipos de solicitação do card do desenvolvedor. Usa as variáveis do card. */
+.grafico {
+  --altura-area: 8.5rem;
+  --eixo: var(--color-ink);
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  color: var(--neutro-pequeno);
+}
+
+/* Eixos com seta: o Y sobra acima da linha mais alta e o X, à direita da última coluna. */
+.area {
+  position: relative;
+  height: var(--altura-area);
+  margin: 14px 0 0 6px;
+  border-bottom: 1.5px solid var(--eixo);
+  border-left: 1.5px solid var(--eixo);
+}
+
+.area::before,
+.area::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: var(--eixo);
+}
+
+.area::before {
+  top: -12px;
+  left: -4.25px;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.area::after {
+  right: -6px;
+  bottom: -4.25px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Linhas de grade pontilhadas, uma por marca do eixo. */
+.area i {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px dashed var(--linha);
+  transition: bottom 0.5s var(--facil);
+}
+
+.colunas,
+.tipos {
+  display: grid;
+  grid-template-columns: repeat(var(--colunas), minmax(0, 1fr));
+  margin-right: 10px;
+}
+
+.colunas {
+  position: absolute;
+  inset: 0;
+}
+
+.colunas div {
+  position: relative;
+}
+
+.barra {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: min(68%, 3rem);
+  height: var(--altura);
+  border-radius: 3px 3px 0 0;
+  background: var(--verde-noite);
+  transform: translateX(-50%);
+  transform-origin: bottom;
+  transition: height 0.55s var(--facil);
+  animation: crescer 0.7s var(--facil) both;
+  animation-delay: calc(var(--ordem) * 50ms + 320ms);
+}
+
+.valor {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--altura) + 5px);
+  left: 0;
+  font-size: 0.6875rem;
+  color: var(--color-ink);
+  text-align: center;
+  transition:
+    bottom 0.55s var(--facil),
+    opacity 0.3s ease;
+  /* backwards: some antes de começar e, depois, a opacidade volta a ser a da classe. */
+  animation: aparecer 0.4s ease backwards;
+  animation-delay: calc(var(--ordem) * 50ms + 700ms);
+}
+
+/* Tipo sem chamado: o zero não aparece, mas o elemento fica para a troca ser suave. */
+.zerado {
+  opacity: 0;
+}
+
+.tipos {
+  margin: 8px 10px 0 6px;
+  text-align: center;
+}
+
+.tipos span {
+  padding: 0 2px;
+}
+
+@keyframes crescer {
+  from {
+    transform: translateX(-50%) scaleY(0);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra,
+  .valor {
+    animation: none;
+  }
+
+  .area i,
+  .barra,
+  .valor {
+    transition: none;
+  }
+}

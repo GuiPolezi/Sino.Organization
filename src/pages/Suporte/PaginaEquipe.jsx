@@ -81,8 +81,19 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  * @param {(equipe: import('./tipos.js').Tecnico[], ativo: () => boolean) => void} [props.aoCarregar]
  *   busca o que complementa a equipe; `ativo()` diz se a página ainda está na tela
  * @param {boolean} [props.simples] cenário só com o tapete, sem estações nem quadro da equipe
+ * @param {import('react').ComponentType} [props.Card] card de quem foi selecionado
+ * @param {string} [props.larguraCard] largura do card no desktop, quando não é a do card do técnico
  */
-export default function PaginaEquipe({ titulo, subtitulo, rotuloElenco, buscarEquipe, aoCarregar, simples = false }) {
+export default function PaginaEquipe({
+  titulo,
+  subtitulo,
+  rotuloElenco,
+  buscarEquipe,
+  aoCarregar,
+  simples = false,
+  Card = CardTecnico,
+  larguraCard,
+}) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const erro = useEquipe((s) => s.erro);
   const selecionado = useEquipe((s) => s.selecionado);
@@ -115,7 +126,7 @@ export default function PaginaEquipe({ titulo, subtitulo, rotuloElenco, buscarEq
     .join(' ');
 
   return (
-    <main className={classes}>
+    <main className={classes} style={larguraCard ? { '--largura-card': larguraCard } : undefined}>
       <title>{`${titulo} · sino.org`}</title>
 
       {temWebgl && <Cena simples={simples} />}
@@ -149,7 +160,7 @@ export default function PaginaEquipe({ titulo, subtitulo, rotuloElenco, buscarEq
         <ListaTecnicos tecnicos={tecnicos} selecionado={selecionado} rotulo={rotuloElenco} />
       )}
 
-      <CardTecnico />
+      <Card />
       {!simples && <CardQuadro />}
     </main>
   );

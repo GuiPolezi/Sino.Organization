@@ -1,26 +1,10 @@
-import { useEffect } from 'react';
 import { aparenciaDe } from '../boneco/aparencia.js';
 import { hojeEmBrasilia, totaisDeAtendimentos } from '../mappers/atendimentos.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
 import GraficoAtendimentos from './GraficoAtendimentos.jsx';
 import styles from './CardTecnico.module.css';
-
-// Teclado enquanto há um técnico selecionado: Esc fecha, ← → navega.
-function useAtalhos() {
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      const { selecionado, selecionar, navegar } = useEquipe.getState();
-      if (!selecionado) return;
-      if (event.key === 'Escape') selecionar(null);
-      if (event.key === 'ArrowRight') navegar(1);
-      if (event.key === 'ArrowLeft') navegar(-1);
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
-}
+import useAtalhos from './useAtalhos.js';
 
 function Atendimentos({ totais, tempoMedioMin }) {
   return (

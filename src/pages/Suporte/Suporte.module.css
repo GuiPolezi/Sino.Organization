@@ -1,6 +1,8 @@
 /* Palco em tela cheia: a cena 3D ao fundo, com título, elenco e card por cima. */
 .palco {
   --margem: clamp(16px, 4vw, 48px);
+  /* Largura do card no desktop; cada página pode trocar (PaginaEquipe). */
+  --largura-card: 24rem;
 
   position: relative;
   height: 100svh;
@@ -222,12 +224,12 @@
 @media (min-width: 761px) {
   .comCard .elenco {
     left: var(--margem);
-    max-width: calc(100% - 30.25rem);
+    max-width: calc(100% - var(--largura-card) - 6.25rem);
     transform: none;
   }
 
   .plano.comCard {
-    padding-right: 27.75rem;
+    padding-right: calc(var(--largura-card) + 3.75rem);
   }
 }
 
