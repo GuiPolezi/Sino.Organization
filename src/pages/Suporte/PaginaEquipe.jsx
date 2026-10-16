@@ -3,6 +3,7 @@ import { aparenciaDe } from './boneco/aparencia.js';
 import CardQuadro from './card/CardQuadro.jsx';
 import CardTecnico from './card/CardTecnico.jsx';
 import Cena from './cena/Cena.jsx';
+import QuadroSuporte from './quadro/QuadroSuporte.jsx';
 import { useEquipe } from './store.js';
 import styles from './Suporte.module.css';
 
@@ -80,8 +81,11 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  * @param {() => Promise<import('./tipos.js').Tecnico[]>} props.buscarEquipe
  * @param {(equipe: import('./tipos.js').Tecnico[], ativo: () => boolean) => void} [props.aoCarregar]
  *   busca o que complementa a equipe; `ativo()` diz se a página ainda está na tela
- * @param {boolean} [props.simples] cenário só com o tapete, sem estações nem quadro da equipe
+ * @param {boolean} [props.estacoes] estações de trabalho no tapete; sem elas, os bonecos só andam
  * @param {import('react').ComponentType} [props.Card] card de quem foi selecionado
+ * @param {import('react').ComponentType<{ area: { rx: number, rz: number } }>} [props.Quadro]
+ *   quadro da equipe na cena, com o que a página escreve nele
+ * @param {import('react').ComponentType} [props.PainelQuadro] painel que o quadro abre (visão geral)
  * @param {string} [props.larguraCard] largura do card no desktop, quando não é a do card do técnico
  */
 export default function PaginaEquipe({
@@ -90,8 +94,10 @@ export default function PaginaEquipe({
   rotuloElenco,
   buscarEquipe,
   aoCarregar,
-  simples = false,
+  estacoes = true,
   Card = CardTecnico,
+  Quadro = QuadroSuporte,
+  PainelQuadro = CardQuadro,
   larguraCard,
 }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
@@ -129,7 +135,7 @@ export default function PaginaEquipe({
     <main className={classes} style={larguraCard ? { '--largura-card': larguraCard } : undefined}>
       <title>{`${titulo} · sino.org`}</title>
 
-      {temWebgl && <Cena simples={simples} />}
+      {temWebgl && <Cena estacoes={estacoes} Quadro={Quadro} />}
 
       <header className={styles.cabecalho}>
         <a className={styles.voltar} href="/">
@@ -148,11 +154,9 @@ export default function PaginaEquipe({
       </header>
 
       {/* O quadro não entra no elenco: este botão só aparece com o foco do teclado. */}
-      {!simples && (
-        <button type="button" className={`sr-only ${styles.atalhoQuadro}`} onClick={abrirQuadro}>
-          Abrir o quadro da equipe (visão geral)
-        </button>
-      )}
+      <button type="button" className={`sr-only ${styles.atalhoQuadro}`} onClick={abrirQuadro}>
+        Abrir o quadro da equipe (visão geral)
+      </button>
 
       {temWebgl ? (
         <Elenco tecnicos={tecnicos} selecionado={selecionado} rotulo={rotuloElenco} />
@@ -161,7 +165,7 @@ export default function PaginaEquipe({
       )}
 
       <Card />
-      {!simples && <CardQuadro />}
+      <PainelQuadro />
     </main>
   );
 }

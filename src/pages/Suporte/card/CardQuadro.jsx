@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { useResumo } from '../quadro/useResumo.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
+import useFecharComEsc from './useFecharComEsc.js';
 import card from './CardTecnico.module.css';
 import styles from './CardQuadro.module.css';
 
@@ -11,19 +11,6 @@ const formatoHora = new Intl.DateTimeFormat('pt-BR', {
   timeZone: 'America/Sao_Paulo',
 });
 const primeiroNome = (nome) => nome.split(' ')[0];
-
-// Esc fecha o painel enquanto ele está aberto.
-function useFecharComEsc(aberto, fechar) {
-  useEffect(() => {
-    if (!aberto) return undefined;
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') fechar();
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [aberto, fechar]);
-}
 
 function TotalDoMes({ total, hoje }) {
   return (

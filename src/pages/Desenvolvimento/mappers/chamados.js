@@ -32,6 +32,7 @@ export const PERIODOS = [
 ];
 
 export const FECHADO = 'Fechado';
+export const COM_O_DESENVOLVEDOR = 'Com o desenvolvedor';
 
 /*
  * O número grande do card. "Fechado" e não "Com o desenvolvedor": o card abre
@@ -42,9 +43,21 @@ export const FECHADO = 'Fechado';
 export const STATUS_DESTAQUE = FECHADO;
 
 // Sempre na grade do card, mesmo zerados, nesta ordem (a do fluxo do chamado).
-const STATUS_FIXOS = ['Com o desenvolvedor', 'Em atendimento', FECHADO, 'Aguardando Testes', 'Aguardando Retorno do Solicitante'];
+const STATUS_FIXOS = [COM_O_DESENVOLVEDOR, 'Em atendimento', FECHADO, 'Aguardando Testes', 'Aguardando Retorno do Solicitante'];
 // Só entram na grade de quem tem chamados nesses status.
 const STATUS_EVENTUAIS = ['Pendente', 'Aguardando Deploy'];
+
+/**
+ * Ordena status pelo fluxo do chamado; os que o card não conhece vão para o fim,
+ * em ordem alfabética.
+ * @param {string} a
+ * @param {string} b
+ */
+export function compararStatus(a, b) {
+  const fluxo = [...STATUS_FIXOS, ...STATUS_EVENTUAIS];
+  const posicao = (status) => (fluxo.includes(status) ? fluxo.indexOf(status) : fluxo.length);
+  return posicao(a) - posicao(b) || porNome(a, b);
+}
 
 /** Tipos de solicitação do gráfico, sempre nesta ordem, mesmo zerados. */
 export const TIPOS = ['Bug/Erro', 'Melhoria/Função', 'Implantação', 'Dúvidas', 'Migração/Dados'];

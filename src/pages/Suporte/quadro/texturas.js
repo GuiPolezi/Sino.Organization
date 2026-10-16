@@ -1,17 +1,35 @@
 /*
  * Texturas do quadro da equipe, desenhadas em canvas: o fundo do quadro branco
- * e as anotações "escritas à mão". Cada anotação só existe quando há dado para
- * ela (a função devolve null), então o quadro acompanha o que o backend enviar.
+ * e as anotações "escritas à mão". O que cada uma diz vem pronto da página
+ * (AnotacoesQuadro, montado em quadro/anotacoes.js); a anotação que vier null
+ * não existe (a função devolve null), então o quadro acompanha o que o backend enviar.
  */
 import * as THREE from 'three';
 
+/**
+ * O que vai escrito no quadro. Cada página monta o seu a partir do resumo da equipe.
+ *
+ * @typedef {object} AnotacoesQuadro
+ * @property {string} assinatura  escrita de pincel no canto do quadro
+ * @property {{ titulo: string, subtitulo: string, dias: { rotulo: string, valor: number, hoje: boolean }[] } | null} grafico
+ *   papel rasgado com as barras dos últimos dias
+ * @property {{ titulo: string, linhas: { texto: string, alerta?: boolean }[] } | null} lista
+ *   folha pautada, com até cinco linhas; `alerta` pinta a linha de vermelho
+ * @property {{ numero: number, linhas: string[] } | null} postit  o número grande e duas linhas embaixo
+ */
+
 // Caveat vem de @fontsource/caveat (importada em Quadro.jsx).
 const MAO = '"Caveat", "Segoe Print", "Comic Sans MS", cursive';
-const META_SLA = 95;
 
 const TINTA = { escura: '#3B3A4A', suave: '#6B6A7A', azul: '#24407A', alerta: '#B8423A', pincel: '#2E8C93' };
 
-const decimal = (valor) => valor.toFixed(1).replace('.', ',');
+// Escreve na largura dada: se o texto não couber, a letra diminui até caber.
+function escreverCabendo(ctx, texto, x, y, larguraMaxima, peso, tamanho) {
+  ctx.font = `${peso} ${tamanho}px ${MAO}`;
+  const largura = ctx.measureText(texto).width;
+  if (largura > larguraMaxima) ctx.font = `${peso} ${Math.floor((tamanho * larguraMaxima) / largura)}px ${MAO}`;
+  ctx.fillText(texto, x, y);
+}
 
 function novaTextura(largura, altura, desenhar) {
   const canvas = document.createElement('canvas');
@@ -24,7 +42,8 @@ function novaTextura(largura, altura, desenhar) {
   return textura;
 }
 
-export function texturaQuadroBranco() {
+/** @param {string} assinatura escrita de pincel no canto, sublinhada na largura dela */
+export function texturaQuadroBranco(assinatura) {
   return novaTextura(1024, 662, (ctx, w, h) => {
     ctx.fillStyle = '#FBFBF8';
     ctx.fillRect(0, 0, w, h);
@@ -43,13 +62,15 @@ export function texturaQuadroBranco() {
     ctx.fillStyle = TINTA.pincel;
     ctx.font = `700 46px ${MAO}`;
     ctx.textAlign = 'right';
-    ctx.fillText('equipe técnica', w - 36, h - 40);
+    ctx.fillText(assinatura, w - 36, h - 40);
+    // O traço passa um pouco da escrita para a esquerda, com a barriga no meio.
+    const inicio = w - 40 - (ctx.measureText(assinatura).width + 14);
     ctx.strokeStyle = TINTA.pincel;
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(w - 270, h - 22);
-    ctx.quadraticCurveTo(w - 150, h - 10, w - 40, h - 24);
+    ctx.moveTo(inicio, h - 22);
+    ctx.quadraticCurveTo((inicio + w - 40) / 2 + 5, h - 10, w - 40, h - 24);
     ctx.stroke();
     ctx.fillStyle = '#E58F8F';
     ctx.font = `700 40px ${MAO}`;
@@ -108,10 +129,13 @@ function barrasDosDias(ctx, w, dias) {
   ctx.stroke();
 }
 
-// Papel rasgado com o mini gráfico dos atendimentos dos últimos dias.
-export function texturaPapelRasgado(resumo) {
-  const { dias } = resumo;
-  if (!dias.length) return null;
+/**
+ * Papel rasgado com o mini gráfico dos últimos dias.
+ * @param {AnotacoesQuadro['grafico']} grafico
+ */
+export function texturaPapelRasgado(grafico) {
+  if (!grafico?.dias.length) return null;
+  const { titulo, subtitulo, dias } = grafico;
 
   return novaTextura(512, 540, (ctx, w, h) => {
     contornoRasgado(ctx, w, h);
@@ -126,36 +150,22 @@ export function texturaPapelRasgado(resumo) {
     ctx.textAlign = 'left';
     ctx.fillStyle = TINTA.escura;
     ctx.font = `700 54px ${MAO}`;
-    ctx.fillText('Atendimentos', 36, 82);
+    ctx.fillText(titulo, 36, 82);
     ctx.fillStyle = TINTA.suave;
     ctx.font = `600 38px ${MAO}`;
-    ctx.fillText(`últimos ${dias.length} dias`, 36, 124);
+    ctx.fillText(subtitulo, 36, 124);
 
     barrasDosDias(ctx, w, dias);
   });
 }
 
-// Uma linha por meta que tem dado; `alerta` pinta a linha de vermelho.
-function metasDaSemana(resumo) {
-  const { slaMedio, atendimentosHoje, chamados, avaliacaoMedia, tempoMedioPrimeiraResposta } = resumo;
-  const metas = [];
-  if (slaMedio !== null) {
-    metas.push({ texto: `${slaMedio >= META_SLA ? '✓' : '•'} SLA ${slaMedio}%  (meta ${META_SLA}%)` });
-  }
-  if (atendimentosHoje !== null) metas.push({ texto: `✓ ${atendimentosHoje} atendimentos hoje` });
-  if (chamados?.atrasadas > 0) metas.push({ texto: `• ${chamados.atrasadas} atrasados → zerar!`, alerta: true });
-  else if (chamados) metas.push({ texto: '✓ nenhum chamado atrasado' });
-  if (avaliacaoMedia !== null) metas.push({ texto: `✓ nota média ${decimal(avaliacaoMedia)}` });
-  if (tempoMedioPrimeiraResposta !== null) {
-    metas.push({ texto: `• 1ª resposta: ${tempoMedioPrimeiraResposta} min` });
-  }
-  return metas;
-}
-
-// Folha pautada com as metas da semana.
-export function texturaFolhaPautada(resumo) {
-  const metas = metasDaSemana(resumo);
-  if (!metas.length) return null;
+/**
+ * Folha pautada com um título e uma lista curta.
+ * @param {AnotacoesQuadro['lista']} lista
+ */
+export function texturaFolhaPautada(lista) {
+  if (!lista?.linhas.length) return null;
+  const { titulo, linhas } = lista;
 
   return novaTextura(640, 512, (ctx, w, h) => {
     ctx.fillStyle = '#FBFAF4';
@@ -182,31 +192,27 @@ export function texturaFolhaPautada(resumo) {
     ctx.textAlign = 'left';
     ctx.fillStyle = TINTA.azul;
     ctx.font = `700 52px ${MAO}`;
-    ctx.fillText('Metas da semana', 58, 58);
+    ctx.fillText(titulo, 58, 58);
+    // O sublinhado acompanha o título e passa um pouco dele.
     ctx.strokeStyle = TINTA.azul;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(58, 68);
-    ctx.lineTo(380, 70);
+    ctx.lineTo(58 + ctx.measureText(titulo).width + 6, 70);
     ctx.stroke();
 
-    ctx.font = `600 40px ${MAO}`;
-    metas.forEach(({ texto, alerta }, i) => {
+    linhas.forEach(({ texto, alerta }, i) => {
       ctx.fillStyle = alerta ? TINTA.alerta : TINTA.azul;
-      ctx.fillText(texto, 58, 140 + i * 80);
+      escreverCabendo(ctx, texto, 58, 140 + i * 80, w - 58 - 24, 600, 40);
     });
   });
 }
 
-// Post-it: o total de atendimentos do mês ou, sem esse dado, o tamanho da equipe.
-function destaqueDoPostIt(resumo) {
-  if (resumo.atendimentosMes !== null) return { numero: resumo.atendimentosMes, linhas: ['atendimentos', 'no mês ★'] };
-  if (resumo.totalTecnicos > 0) return { numero: resumo.totalTecnicos, linhas: ['técnicos', 'na equipe ★'] };
-  return null;
-}
-
-export function texturaPostIt(resumo) {
-  const destaque = destaqueDoPostIt(resumo);
+/**
+ * Post-it com um número em destaque.
+ * @param {AnotacoesQuadro['postit']} destaque
+ */
+export function texturaPostIt(destaque) {
   if (!destaque) return null;
 
   return novaTextura(512, 512, (ctx, w, h) => {

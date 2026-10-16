@@ -8,8 +8,9 @@ import '@fontsource/caveat/latin-700.css';
 import { MOVIMENTO, useEquipe } from '../store.js';
 import { CONFIG_QUADRO, QUADRO, atualizarObstaculos, posicionarQuadro, removerQuadro } from './posicao.js';
 import { texturaFolhaPautada, texturaPapelRasgado, texturaPostIt, texturaQuadroBranco } from './texturas.js';
-import { useResumo } from './useResumo.js';
 import styles from './Quadro.module.css';
+
+/** @import { AnotacoesQuadro } from './texturas.js' */
 
 const OURO = '#FFC23D';
 const { damp } = THREE.MathUtils;
@@ -219,16 +220,17 @@ function useFonteManuscrita() {
   return versao;
 }
 
-function useTexturas(resumo) {
+/** @param {AnotacoesQuadro} escrito */
+function useTexturas(escrito) {
   const fonte = useFonteManuscrita();
-  const fundo = useMemo(() => texturaQuadroBranco(), [fonte]);
+  const fundo = useMemo(() => texturaQuadroBranco(escrito.assinatura), [escrito.assinatura, fonte]);
   const anotacoes = useMemo(
     () => ({
-      rasgado: texturaPapelRasgado(resumo),
-      pautada: texturaFolhaPautada(resumo),
-      postit: texturaPostIt(resumo),
+      rasgado: texturaPapelRasgado(escrito.grafico),
+      pautada: texturaFolhaPautada(escrito.lista),
+      postit: texturaPostIt(escrito.postit),
     }),
-    [resumo, fonte],
+    [escrito, fonte],
   );
 
   useEffect(() => () => fundo.dispose(), [fundo]);
@@ -237,22 +239,26 @@ function useTexturas(resumo) {
   return { fundo, anotacoes };
 }
 
-/*
+/**
  * Quadro da equipe: quadro branco em cavalete, estilo massinha, na borda do
- * tapete. As anotações mostram a visão geral da equipe (useResumo). O losango
- * dourado avisa que dá para clicar; no hover o quadro acende, ganha um anel no
- * chão e uma etiqueta; o clique abre o painel (CardQuadro). Com o painel aberto,
- * os técnicos saem da frente (posicao.js). Tudo o que anima é mutado em useFrame.
+ * tapete. O que vai escrito nele vem da página (QuadroSuporte, ou o do
+ * desenvolvimento). O losango dourado avisa que dá para clicar; no hover o quadro
+ * acende, ganha um anel no chão e uma etiqueta; o clique abre o painel da página.
+ * Com o painel aberto, os bonecos saem da frente (posicao.js). Tudo o que anima é
+ * mutado em useFrame.
+ *
+ * @param {object} props
+ * @param {{ rx: number, rz: number }} props.area
+ * @param {AnotacoesQuadro} props.anotacoes  com referência estável (useMemo), para as texturas não serem refeitas a cada render
  */
-export default function Quadro({ area }) {
+export default function Quadro({ area, anotacoes }) {
   const abrirQuadro = useEquipe((s) => s.abrirQuadro);
   const aberto = useEquipe((s) => s.painel === 'quadro');
   const retrato = useThree((s) => s.size.width / s.size.height < 1);
   const [posicao, setPosicao] = useState(() => ({ ...QUADRO }));
   const [emHover, setEmHover] = useState(false);
 
-  const resumo = useResumo();
-  const texturas = useTexturas(resumo);
+  const texturas = useTexturas(anotacoes);
   const M = useMemo(criarMateriais, []);
   useEffect(() => () => descartarMateriais(M), [M]);
   useEffect(() => {

@@ -3,7 +3,6 @@ import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MEDIA } from '../../../utils/media.js';
 import Boneco from '../boneco/Boneco.jsx';
-import Quadro from '../quadro/Quadro.jsx';
 import { AREA, MOVIMENTO, useEquipe } from '../store.js';
 import CameraRig from './CameraRig.jsx';
 import Cenario from './Cenario.jsx';
@@ -40,8 +39,13 @@ function useMovimentoReduzido() {
   }, []);
 }
 
-// `simples`: só o tapete, sem as estações de trabalho nem o quadro da equipe.
-export default function Cena({ simples = false }) {
+/**
+ * @param {object} props
+ * @param {boolean} props.estacoes  as estações de trabalho no meio do tapete
+ * @param {import('react').ComponentType<{ area: { rx: number, rz: number } }>} props.Quadro
+ *   o quadro da equipe, com o que a página escreve nele
+ */
+export default function Cena({ estacoes, Quadro }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const selecionar = useEquipe((s) => s.selecionar);
   const [area, setArea] = useState(() => ({ ...AREA }));
@@ -63,12 +67,8 @@ export default function Cena({ simples = false }) {
       <directionalLight position={[-6, 4, -4]} intensity={0.35} color="#C9D6FF" />
 
       <Cenario area={area} />
-      {!simples && (
-        <>
-          <EstacoesTrabalho />
-          <Quadro area={area} />
-        </>
-      )}
+      {estacoes && <EstacoesTrabalho />}
+      <Quadro area={area} />
 
       {tecnicos.map((tecnico) => (
         <Boneco key={tecnico.id} tecnico={tecnico} />

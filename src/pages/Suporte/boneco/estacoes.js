@@ -173,14 +173,16 @@ export const aindaEDono = (estadoTecnico) =>
   !!estadoTecnico.estacao && estadoTecnico.estacao.ocupante === estadoTecnico.id;
 
 /*
- * Cenário vazio: tira as estações e todos os obstáculos, inclusive os que outros
- * módulos acrescentaram (o quadro da equipe). Os bonecos passam a só andar e
- * fazer ações. Vale para a página inteira e é chamado uma vez, antes de a cena
- * nascer (pages/Desenvolvimento).
+ * Cenário sem estações: tira as mesas e os obstáculos delas. Os que outros
+ * módulos acrescentaram (o quadro da equipe) continuam, e os bonecos passam a
+ * só andar, fazer ações e contornar o quadro. Vale para a página inteira e é
+ * chamado uma vez, antes de a cena nascer (pages/Desenvolvimento).
  */
-export function esvaziarCenario() {
+export function tirarEstacoes() {
+  const dasEstacoes = new Set(ESTACOES.map(({ id }) => id));
+  const outros = OBSTACULOS.filter(({ estacao }) => !dasEstacoes.has(estacao));
+  OBSTACULOS.splice(0, OBSTACULOS.length, ...outros);
   ESTACOES.length = 0;
-  OBSTACULOS.length = 0;
 }
 
 // Zera todas as reservas (hot reload e testes).
