@@ -62,20 +62,25 @@
   color: var(--neutro-pequeno);
 }
 
-/* isolation: o marcador fica por cima das pílulas sem escapar do grupo. */
+/*
+ * isolation: o marcador fica por cima das pílulas sem escapar do grupo.
+ * Em painel estreito, as pílulas encolhem o respiro e, se ainda faltar espaço,
+ * quebram em duas linhas (o marcador acompanha pela posição da escolhida).
+ */
 .pilulas {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 8px clamp(4px, 1.8cqi, 8px);
   width: 100%;
   isolation: isolate;
 }
 
 .pilula {
   flex: none;
-  min-width: 4.25rem;
-  padding: 7px 12px;
+  min-width: clamp(3rem, 15cqi, 4.25rem);
+  padding: 7px clamp(7px, 2.8cqi, 12px);
   border: 0;
   border-radius: 999px;
   background: var(--pilula);
@@ -113,8 +118,9 @@
   top: 0;
   left: 0;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 8px clamp(4px, 1.8cqi, 8px);
 }
 
 .copia .pilula {
