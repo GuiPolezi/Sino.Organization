@@ -11,8 +11,9 @@
  * @typedef {object} Chamado
  * @property {string} data       dia em que o chamado foi atribuído, "AAAA-MM-DD"
  * @property {string} status     status atual, com o nome do Milldesk
- * @property {string} categoria  sistema do chamado ("Siscam Web", "Site"…)
+ * @property {string} categoria  sistema do chamado ("Siscam 9", "Site"…)
  * @property {string} tipo       tipo da solicitação ("Bug/Erro"…)
+ * @property {string} [local]    cidade do cliente que abriu o chamado
  *
  * @typedef {object} ChamadosDesenvolvedor
  * @property {boolean} [ficticio] dados de demonstração, ainda sem backend
@@ -61,6 +62,18 @@ export function compararStatus(a, b) {
 
 /** Tipos de solicitação do gráfico, sempre nesta ordem, mesmo zerados. */
 export const TIPOS = ['Bug/Erro', 'Melhoria/Função', 'Implantação', 'Dúvidas', 'Migração/Dados'];
+
+/** Categorias (sistemas) dos chamados, na ordem dos botões de Desempenho do quadro. */
+export const CATEGORIAS = [
+  'Cartórios',
+  'Siscam 9',
+  'Siscam 8',
+  'Site',
+  'App Mobile',
+  'Painel',
+  'Sistema (Outros)',
+  'Legislação Digital',
+];
 
 const paraUtc = (data) => Date.parse(`${data}T00:00:00Z`);
 const somarDias = (data, dias) => new Date(paraUtc(data) + dias * UM_DIA_MS).toISOString().slice(0, 10);

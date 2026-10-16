@@ -1,0 +1,289 @@
+/*
+ * Painel "Quadro da equipe" de /desenvolvimento. O esqueleto (posição, fundo,
+ * botão de fechar, rodapé) vem de CardTecnico.module.css e o ícone dourado, de
+ * ../../Suporte/card/CardQuadro.module.css; aqui fica o resto do design. Os
+ * tamanhos grandes são em cqi (1% da largura útil do painel), para a composição
+ * ser a mesma no desktop e no bottom sheet do mobile.
+ */
+.painel {
+  --verde-noite: #283618;
+  /* Cinza das pílulas e das chamadas do design, puxado para o tom do card. */
+  --pilula: #dcdbd3;
+  --pilula-hover: #cfcec5;
+  --chamada: #7c7a68;
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  container-type: inline-size;
+  gap: 1.375rem;
+}
+
+/* ── Cabeçalho: ícone e título maiores que os do painel do suporte ── */
+.painel > header .avatar {
+  width: 4rem;
+  height: 4rem;
+}
+
+.painel > header .avatar svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.titulo {
+  align-self: center;
+  min-width: 0;
+}
+
+.titulo h2 {
+  margin: 0 0 4px;
+  font-size: clamp(1.375rem, 6.6cqi, 1.75rem);
+  font-weight: var(--weight-black);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--color-olive);
+}
+
+.titulo p {
+  font-size: clamp(0.875rem, 4cqi, 1rem);
+  line-height: 1.35;
+  color: var(--neutro-pequeno);
+}
+
+/* ── Período: rótulo, pílulas e os traços por baixo ── */
+.periodo {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.periodoRotulo {
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--neutro-pequeno);
+}
+
+/* isolation: o marcador fica por cima das pílulas sem escapar do grupo. */
+.pilulas {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  isolation: isolate;
+}
+
+.pilula {
+  flex: none;
+  min-width: 4.25rem;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pilula);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.pilula:hover {
+  background: var(--pilula-hover);
+}
+
+/* O tamanho e a posição vêm do GSAP (PeriodoEmPilulas.jsx). */
+.marcador {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-olive);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--color-olive-dark) 32%, transparent);
+  pointer-events: none;
+}
+
+/* A cópia dos rótulos: mesma fila das pílulas, em claro e sem fundo. */
+.copia {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.copia .pilula {
+  background: transparent;
+  color: var(--color-white);
+}
+
+.tracos {
+  display: block;
+  width: 7rem;
+  height: auto;
+  margin: 14px auto 0;
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-olive-dark) 75%, transparent);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 2px 1.5px color-mix(in srgb, var(--color-olive-dark) 35%, transparent));
+}
+
+/* ── Total de tickets e Desempenho: as chamadas grandes, em itálico ── */
+.chamada {
+  font-size: clamp(1.375rem, 7.4cqi, 1.875rem);
+  font-style: italic;
+  font-weight: var(--weight-black);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--chamada);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.total {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+/* Algarismos proporcionais: em tamanho de vitrine, os tabulares deixam o "1" folgado. */
+.numero {
+  font-size: 23cqi;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--verde-noite);
+  white-space: nowrap;
+}
+
+/* Com o "+" e o ponto de milhar, cinco algarismos já pedem um número menor. */
+.numero[data-digitos='5'] {
+  font-size: 19cqi;
+}
+
+.numero[data-digitos='6'] {
+  font-size: 16cqi;
+}
+
+/* ── Gráficos ── */
+/* Lado a lado só quando cada pizza tem largura para os rótulos; no painel, uma embaixo da outra. */
+.pizzas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1.25rem 1rem;
+}
+
+.subtitulo {
+  margin-bottom: 10px;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: var(--neutro);
+}
+
+/* ── Desempenho: um botão por categoria ── */
+.desempenho {
+  display: grid;
+  gap: 16px;
+}
+
+.categorias {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.categorias button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--color-olive);
+  color: var(--color-white);
+  font: inherit;
+  font-size: clamp(0.8125rem, 3.6cqi, 0.9375rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+  cursor: pointer;
+  transition:
+    transform 0.35s var(--facil),
+    box-shadow 0.35s ease,
+    background-color 0.25s ease;
+}
+
+/* Sobre o oliva, o contorno de foco do card não aparece. */
+.painel .categorias button:focus-visible {
+  outline-color: var(--color-olive-dark);
+}
+
+.categorias button:active {
+  transform: scale(0.96);
+}
+
+/* O nome e o aviso ocupam a mesma célula; um sai enquanto o outro entra. */
+.nomeCategoria,
+.emBreve {
+  grid-area: 1 / 1;
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s var(--facil);
+}
+
+.emBreve {
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--color-cream);
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.categorias button[data-avisando] {
+  background: var(--color-olive-dark);
+}
+
+.categorias button[data-avisando] .nomeCategoria {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.categorias button[data-avisando] .emBreve {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .categorias button:hover {
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
+    transform: translateY(-3px);
+  }
+}
+
+/* Até aparecer na tela, o Desempenho espera escondido, para entrar à vista. */
+@media (prefers-reduced-motion: no-preference) {
+  .desempenho[data-esperando] :is(.chamada, .categorias li) {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pilula,
+  .categorias button,
+  .nomeCategoria,
+  .emBreve {
+    transition: none;
+  }
+}

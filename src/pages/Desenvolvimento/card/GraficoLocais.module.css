@@ -1,0 +1,194 @@
+/* "Carga por Local" do painel do quadro: barras deitadas, uma por local, divididas por tipo. */
+.grafico {
+  --coluna-local: 5.5rem;
+  --altura-linha: 1.625rem;
+  /* Espaço à direita da maior barra, para o valor dela. */
+  --espaco-valor: 2.75rem;
+  --eixo: var(--color-ink);
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  position: relative;
+}
+
+.area {
+  position: relative;
+  padding: 6px 0 4px;
+}
+
+/* Eixos: o vertical na frente das barras, o horizontal por baixo de tudo. */
+.eixoY,
+.eixoX {
+  position: absolute;
+  left: var(--coluna-local);
+  background: var(--eixo);
+}
+
+.eixoY {
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+}
+
+.eixoX {
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+}
+
+/*
+ * Cada linha fica na posição dela (--posicao) por transform: quando a ordem
+ * muda de um período para outro, a linha desliza até o lugar novo.
+ */
+.linhas {
+  position: relative;
+  height: calc(var(--linhas) * var(--altura-linha));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linhas > li {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: var(--coluna-local) minmax(0, 1fr);
+  align-items: center;
+  height: var(--altura-linha);
+  transform: translateY(calc(var(--posicao) * var(--altura-linha)));
+  transition:
+    transform 0.6s var(--facil),
+    opacity 0.25s ease;
+  animation: chegar 0.45s var(--facil) backwards;
+}
+
+/* Com o mouse sobre um local, os outros recuam. */
+.linhas[data-destaque] > li:not([data-ativa]) {
+  opacity: 0.4;
+}
+
+/* Até duas linhas; um nome maior que isso termina em reticências. */
+.local {
+  display: -webkit-box;
+  padding-right: 8px;
+  overflow: hidden;
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  color: var(--color-ink);
+  text-align: right;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.trilho {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-left: 1.5px;
+}
+
+/* A barra cresce até o valor; entre os tipos, um vão de 2px com o fundo do card. */
+.barra {
+  display: flex;
+  gap: 2px;
+  width: calc((100% - var(--espaco-valor)) * var(--fracao));
+  min-width: 3px;
+  height: 0.75rem;
+  border-radius: 0 4px 4px 0;
+  overflow: hidden;
+  transition: width 0.6s var(--facil);
+}
+
+.barra i {
+  flex: 0 1 0;
+  min-width: 0;
+  transition: flex-grow 0.6s var(--facil);
+}
+
+/* Tipo sem ticket: fica, com largura zero, para crescer suave se aparecer; a margem desfaz o vão dele. */
+.barra i[data-vazio] {
+  margin-left: -2px;
+}
+
+.valor {
+  flex: none;
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.legenda {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4rem, 1fr));
+  gap: 10px 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legenda li {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  font-size: 0.625rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  color: var(--neutro-pequeno);
+  text-align: center;
+}
+
+.legenda i {
+  width: 1.375rem;
+  height: 0.625rem;
+  border-radius: 2px;
+}
+
+.vazio {
+  padding: 2rem 0;
+  font-size: 0.875rem;
+  color: var(--neutro-pequeno);
+  text-align: center;
+}
+
+@keyframes chegar {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Até aparecer na tela, o gráfico espera vazio, para ser montado à vista. */
+@media (prefers-reduced-motion: no-preference) {
+  .grafico[data-esperando] .barra {
+    transform: scaleX(0);
+  }
+
+  .grafico[data-esperando] :is(.local, .valor, .legenda li) {
+    opacity: 0;
+  }
+
+  .grafico[data-esperando] .eixoY {
+    transform: scaleY(0);
+  }
+
+  .grafico[data-esperando] .eixoX {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linhas > li {
+    animation: none;
+  }
+
+  .linhas > li,
+  .barra,
+  .barra i {
+    transition: none;
+  }
+}

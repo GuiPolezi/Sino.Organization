@@ -14,10 +14,7 @@ const textos = (lista) => lista.linhas.map(({ texto }) => texto);
 const resumo = (extra = {}) => ({
   totalDesenvolvedores: 10,
   fechadosMes: 37,
-  fechadosHoje: 4,
   dias: DIAS,
-  ranking: [],
-  tickets: [],
   fila: [
     { status: 'Com o desenvolvedor', total: 41 },
     { status: 'Pendente', total: 1 },
@@ -66,7 +63,7 @@ test('a folha tem cinco linhas: com mais status, os últimos se juntam numa só'
 });
 
 test('sem chamados, sobra o post-it com o tamanho da equipe; sem equipe, nada', () => {
-  const vazio = { fechadosMes: null, fechadosHoje: null, dias: [], fila: [], ranking: [], tickets: [] };
+  const vazio = { fechadosMes: null, dias: [], fila: [] };
 
   const anotacoes = anotacoesDoQuadro(resumo({ ...vazio, totalDesenvolvedores: 10 }));
   assert.equal(anotacoes.grafico, null);

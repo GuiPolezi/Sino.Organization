@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buscarChamados } from '../api/chamados.js';
-import { FECHADO, PERIODOS, STATUS_DESTAQUE, TIPOS, filtrarPorPeriodo, resumirChamados } from './chamados.js';
+import { CATEGORIAS, FECHADO, PERIODOS, STATUS_DESTAQUE, TIPOS, filtrarPorPeriodo, resumirChamados } from './chamados.js';
 
 const HOJE = '2026-10-16';
 const chamado = (data, status, categoria = 'Siscam Web', tipo = 'Bug/Erro') => ({ data, status, categoria, tipo });
@@ -133,6 +133,8 @@ test('os chamados de demonstração são estáveis e coerentes para toda a equip
     assert.ok(lista.length > 100, `volume de ${id}`);
     assert.ok(lista.every(({ data }) => /^\d{4}-\d{2}-\d{2}$/.test(data) && data <= HOJE), `datas de ${id}`);
     assert.ok(lista.every(({ tipo }) => TIPOS.includes(tipo)), `tipos de ${id}`);
+    assert.ok(lista.every(({ categoria }) => CATEGORIAS.includes(categoria)), `categorias de ${id}`);
+    assert.ok(lista.every(({ local }) => typeof local === 'string' && local.length > 0), `locais de ${id}`);
     assert.ok(lista.some(({ data }) => data === HOJE), `chamados de hoje de ${id}`);
 
     const resumo = resumirChamados(lista, 'tudo', HOJE);

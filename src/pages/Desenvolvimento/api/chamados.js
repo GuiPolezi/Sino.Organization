@@ -1,5 +1,6 @@
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
-import { FECHADO, TIPOS } from '../mappers/chamados.js';
+import { CATEGORIAS, FECHADO, TIPOS } from '../mappers/chamados.js';
+import { sorteador } from '../sorteador.js';
 
 /** @import { Tecnico } from '../../Suporte/tipos.js' */
 /** @import { Chamado, ChamadosDesenvolvedor } from '../mappers/chamados.js' */
@@ -7,29 +8,39 @@ import { FECHADO, TIPOS } from '../mappers/chamados.js';
 const UM_DIA_MS = 864e5;
 // Um ano e meio de histórico, para "Todo o Tempo" ter centenas de chamados.
 const DIAS_DE_HISTORICO = 540;
-const CATEGORIAS = ['Siscam Web', 'Site', 'Siscam Desktop', 'Cartórios', 'Painel de Votação', 'Aplicativos'];
 // Peso das categorias de cada pessoa: a primeira concentra a maior parte.
 const PESOS_CATEGORIAS = [60, 25, 10, 5];
 // Peso de cada tipo de solicitação, na ordem de TIPOS.
 const PESOS_TIPOS = [50, 18, 6, 14, 12];
+// Cidades de clientes (src/data/clients.json), da que mais abre chamados para a que menos.
+const LOCAIS = [
+  'Bragança Paulista',
+  'Araras',
+  'Alumínio',
+  'Franca',
+  'Holambra',
+  'Poços de Caldas',
+  'Piracicaba',
+  'São Paulo',
+  'Americana',
+  'São José do Rio Preto',
+  'Amparo',
+  'Barretos',
+  'Guarulhos',
+  'Mirassol',
+  'Lins',
+  'Jales',
+  'Matão',
+  'Boituva',
+];
+// Peso de cada cidade: cai rápido, para poucas concentrarem a maior parte dos chamados.
+const PESOS_LOCAIS = LOCAIS.map((local, i) => [local, 1 / (i + 1) ** 1.2]);
 const EM_ABERTO = [
   ['Com o desenvolvedor', 34],
   ['Em atendimento', 30],
   ['Aguardando Testes', 16],
   ['Aguardando Retorno do Solicitante', 10],
 ];
-
-// Sequência pseudoaleatória fixa por texto (FNV-1a semeando um mulberry32).
-function sorteador(texto) {
-  let estado = 2166136261;
-  for (const letra of texto) estado = Math.imul(estado ^ letra.codePointAt(0), 16777619);
-  return () => {
-    estado = (estado + 0x6d2b79f5) | 0;
-    let t = Math.imul(estado ^ (estado >>> 15), estado | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 function escolher(sorteio, pares) {
   let resto = sorteio() * pares.reduce((soma, [, peso]) => soma + peso, 0);
@@ -63,6 +74,8 @@ const chanceDeFechado = (idade) => Math.min(0.97, 1 - 0.9 * Math.exp(-idade / 18
 
 function chamadosDoDia(id, jeito, data, idade) {
   const sorteio = sorteador(`${id}:${data}`);
+  // A cidade sai de outra sequência, para não mudar os chamados que já existiam.
+  const sorteioLocal = sorteador(`${id}:${data}:local`);
   const fimDeSemana = [0, 6].includes(new Date(`${data}T00:00:00Z`).getUTCDay());
   let quantidade = fimDeSemana ? 0 : Math.round(sorteio() * jeito.porDiaUtil * 2);
   // A demonstração sempre tem algo em "Hoje".
@@ -73,6 +86,7 @@ function chamadosDoDia(id, jeito, data, idade) {
     categoria: escolher(sorteio, jeito.categorias),
     tipo: escolher(sorteio, jeito.tipos),
     status: sorteio() < chanceDeFechado(idade) ? FECHADO : escolher(sorteio, jeito.emAberto),
+    local: escolher(sorteioLocal, PESOS_LOCAIS),
   }));
 }
 
@@ -90,7 +104,7 @@ function chamadosFicticios(id, hoje) {
  * Chamados atribuídos a cada desenvolvedor, para o card. Hoje são de
  * demonstração (`ficticio: true`): o Milldesk ainda não é consultado. Quando
  * for, só o corpo desta função muda, mantendo o formato de ChamadosDesenvolvedor;
- * os status e as categorias passam a ser os que vierem de lá.
+ * os status, as categorias e os locais passam a ser os que vierem de lá.
  *
  * @param {Pick<Tecnico, 'id'>[]} tecnicos
  * @param {string} [hoje] "AAAA-MM-DD"
