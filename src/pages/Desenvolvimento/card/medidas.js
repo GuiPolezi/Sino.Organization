@@ -29,19 +29,21 @@ export function useLargura(ref) {
  */
 export function useMedirTexto(ref, { peso = 700, tamanho = 11 } = {}) {
   const [familia, setFamilia] = useState(null);
-  const [fontesProntas, setFontesProntas] = useState(false);
+  // Com as fontes já carregadas (o normal depois da primeira abertura), nasce pronto: nada é remedido.
+  const [fontesProntas, setFontesProntas] = useState(() => document.fonts?.status === 'loaded');
 
   useLayoutEffect(() => {
     setFamilia(getComputedStyle(ref.current).fontFamily);
   }, [ref]);
 
   useEffect(() => {
+    if (fontesProntas) return undefined;
     let ativo = true;
     document.fonts?.ready.then(() => ativo && setFontesProntas(true));
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [fontesProntas]);
 
   // fontesProntas entra nas dependências: com a fonte carregada, as medidas mudam e a função também.
   return useMemo(() => {

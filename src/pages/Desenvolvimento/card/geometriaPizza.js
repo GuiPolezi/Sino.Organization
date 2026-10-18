@@ -1,11 +1,9 @@
 /*
- * Geometria da pizza rabiscada do painel do quadro: fatias, rótulos e rabiscos.
- * Tudo em pixels da tela (o SVG tem a largura medida do gráfico), para o texto
- * sair sempre do mesmo tamanho. Os ângulos partem do topo (0) e crescem no
- * sentido horário; um ponto a `r` do centro no ângulo `a` fica em
- * (cx + r·sen a, cy − r·cos a).
+ * Geometria da pizza do painel do quadro: fatias e rótulos. Tudo em pixels da
+ * tela (o SVG tem a largura medida do gráfico), para o texto sair sempre do
+ * mesmo tamanho. Os ângulos partem do topo (0) e crescem no sentido horário; um
+ * ponto a `r` do centro no ângulo `a` fica em (cx + r·sen a, cy − r·cos a).
  */
-import { sorteador } from '../sorteador.js';
 
 /** Altura de uma linha de rótulo, para o texto de 11px. */
 export const ALTURA_LINHA = 13;
@@ -23,9 +21,8 @@ const AFASTAMENTO = 16;
 const MARGEM = 4;
 // Acima e abaixo do círculo.
 const MARGEM_VERTICAL = 14;
-// Distância entre as passadas do rabisco e o miolo que ele deixa livre, para as fatias não se embolarem no centro.
-const PASSO_RABISCO = 6.5;
-const MIOLO_RABISCO = 0.22;
+// Quanto a fatia sob o mouse se afasta do centro (px).
+const SALTO = 3;
 const VOLTA = Math.PI * 2;
 
 /**
@@ -203,13 +200,15 @@ export function montarPizza({ itens, largura, medir }) {
         caminho: caminhoFatia(fatia, { cx, cy, raio }),
         guia: `M${guia.map(xy).join(' L')}`,
         etiqueta: { lado: lados[i], x, y, linhas: linhas[i] },
+        // Para onde a fatia salta no hover: para fora, pelo meio dela (a sozinha não tem para onde ir).
+        salto: sozinha ? [0, 0] : [SALTO * Math.sin(fatia.meio), -SALTO * Math.cos(fatia.meio)],
       };
     }),
   };
 }
 
 /**
- * Contorno da fatia (para o recorte do rabisco e a área do mouse).
+ * Contorno da fatia: o que é pintado e a área do mouse.
  * @param {{ inicio: number, fim: number }} fatia
  * @param {{ cx: number, cy: number, raio: number }} centro
  */
@@ -219,54 +218,4 @@ export function caminhoFatia({ inicio, fim }, { cx, cy, raio }) {
   }
   const grande = fim - inicio > Math.PI ? 1 : 0;
   return `M${xy([cx, cy])} L${xy(ponto(cx, cy, raio, inicio))} A${raio} ${raio} 0 ${grande} 1 ${xy(ponto(cx, cy, raio, fim))}Z`;
-}
-
-// Liga os pontos com curvas que passam pelo meio de cada trecho: o traço de um pincel, sem quinas.
-function suavizar(pontos) {
-  const meio = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-  const curvas = pontos.slice(1, -1).map((p, i) => `Q${xy(p)} ${xy(meio(p, pontos[i + 2]))}`);
-  return `M${xy(pontos[0])} ${curvas.join(' ')} L${xy(pontos.at(-1))}`;
-}
-
-// Leque: vai e volta do miolo à borda, girando pela fatia.
-function leque({ inicio, fim }, { cx, cy, raio }, tremor) {
-  const abertura = fim - inicio;
-  const folga = Math.min(abertura * 0.08, 0.05);
-  const passos = Math.max(2, Math.round((abertura - 2 * folga) / (PASSO_RABISCO / (raio * 0.85))));
-  return Array.from({ length: passos + 1 }, (_, k) => {
-    const angulo = inicio + folga + ((abertura - 2 * folga) * k) / passos + tremor(0.012);
-    const distancia = raio * (k % 2 === 0 ? MIOLO_RABISCO + tremor(0.04) : 0.9 + tremor(0.04));
-    return ponto(cx, cy, distancia, angulo);
-  });
-}
-
-// Faixas: arcos de um lado ao outro da fatia, cada um mais para fora, em zigue-zague.
-function faixas({ inicio, fim }, { cx, cy, raio }, tremor) {
-  const voltas = Math.max(2, Math.floor((raio * (0.92 - MIOLO_RABISCO)) / PASSO_RABISCO));
-  return Array.from({ length: voltas + 1 }, (_, j) => {
-    const distancia = raio * MIOLO_RABISCO + j * PASSO_RABISCO + tremor(1.2);
-    const folga = Math.min(3 / distancia, (fim - inicio) * 0.2);
-    const [de, ate] = j % 2 === 0 ? [inicio + folga, fim - folga] : [fim - folga, inicio + folga];
-    const amostras = Math.max(2, Math.ceil((Math.abs(ate - de) * distancia) / 10));
-    return Array.from({ length: amostras + 1 }, (_, k) =>
-      ponto(cx, cy, distancia + tremor(0.6), de + ((ate - de) * k) / amostras),
-    );
-  }).flat();
-}
-
-/**
- * O rabisco que preenche a fatia, como o de um pincel atômico no quadro. O
- * desenho alterna entre leque e faixas pela posição da fatia; o tremor da mão
- * é sorteado pela chave, então a mesma fatia sai sempre igual.
- *
- * @param {{ chave: string, inicio: number, fim: number }} fatia
- * @param {{ cx: number, cy: number, raio: number }} centro
- * @param {number} indice posição da fatia na pizza
- */
-export function rabisco(fatia, centro, indice) {
-  const sorteio = sorteador(`${fatia.chave}:${indice}`);
-  const tremor = (amplitude) => (sorteio() - 0.5) * 2 * amplitude;
-  // Numa fatia de mais de meia volta, os arcos dariam a volta toda: vai de leque.
-  const desenho = indice % 2 === 0 || fatia.fim - fatia.inicio > Math.PI ? leque : faixas;
-  return suavizar(desenho(fatia, centro, tremor));
 }

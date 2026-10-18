@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MEDIA } from '../../../utils/media.js';
@@ -40,12 +40,15 @@ function useMovimentoReduzido() {
 }
 
 /**
+ * A cena é memoizada: o painel e o card abrem e fecham sem a árvore 3D inteira
+ * (os bonecos, com dezenas de meshes cada) passar pelo reconciliador de novo.
+ *
  * @param {object} props
  * @param {boolean} props.estacoes  as estações de trabalho no meio do tapete
  * @param {import('react').ComponentType<{ area: { rx: number, rz: number } }>} props.Quadro
  *   o quadro da equipe, com o que a página escreve nele
  */
-export default function Cena({ estacoes, Quadro }) {
+function Cena({ estacoes, Quadro }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const selecionar = useEquipe((s) => s.selecionar);
   const [area, setArea] = useState(() => ({ ...AREA }));
@@ -76,3 +79,5 @@ export default function Cena({ estacoes, Quadro }) {
     </Canvas>
   );
 }
+
+export default memo(Cena);

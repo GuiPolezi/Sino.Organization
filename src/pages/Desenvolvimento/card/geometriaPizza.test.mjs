@@ -1,4 +1,4 @@
-// Casos da pizza rabiscada do painel: porcentagens, fatias, rótulos e rabiscos.
+// Casos da pizza do painel: porcentagens, fatias, rótulos e o salto do hover.
 // Uso: npm run test:quadro
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -9,7 +9,6 @@ import {
   fatiar,
   montarPizza,
   percentuais,
-  rabisco,
   textoPercentual,
 } from './geometriaPizza.js';
 
@@ -136,11 +135,12 @@ test('uma fatia só ocupa o círculo inteiro', () => {
   conferir(desenho, 404);
 });
 
-test('o rabisco é um caminho estável, sem números inválidos', () => {
-  const [fatia] = fatiar([item('a', 1), item('b', 2)]);
-  const caminho = rabisco(fatia, { cx: 100, cy: 100, raio: 60 }, 0);
-  assert.match(caminho, /^M[\d.-]+ [\d.-]+/);
-  assert.doesNotMatch(caminho, /NaN|Infinity/);
-  assert.equal(caminho, rabisco(fatia, { cx: 100, cy: 100, raio: 60 }, 0));
-  assert.notEqual(caminho, rabisco(fatia, { cx: 100, cy: 100, raio: 60 }, 1));
+test('cada fatia salta para fora pelo meio dela; a sozinha fica parada', () => {
+  const { fatias } = montarPizza({ itens: [item('a', 1), item('b', 1)], largura: 404, medir });
+  // A primeira fatia ocupa a metade direita: salta para a direita, sem subir nem descer.
+  assert.ok(fatias[0].salto[0] > 0);
+  assert.ok(Math.abs(fatias[0].salto[1]) < 1e-9);
+  assert.ok(fatias[1].salto[0] < 0);
+  const [sozinha] = montarPizza({ itens: [item('a', 3)], largura: 404, medir }).fatias;
+  assert.deepEqual(sozinha.salto, [0, 0]);
 });

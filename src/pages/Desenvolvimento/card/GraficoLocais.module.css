@@ -1,6 +1,7 @@
 /* "Carga por Local" do painel do quadro: barras deitadas, uma por local, divididas por tipo. */
 .grafico {
-  --coluna-local: 5.5rem;
+  /* Cabe o maior nome de uma palavra ("Americana", 53px a 10px); os de duas quebram na segunda linha. */
+  --coluna-local: 4.75rem;
   --altura-linha: 1.625rem;
   /* Espaço à direita da maior barra, para o valor dela. */
   --espaco-valor: 2.75rem;
@@ -78,6 +79,7 @@
   line-height: 1.1;
   color: var(--color-ink);
   text-align: right;
+  overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
