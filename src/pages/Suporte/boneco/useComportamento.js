@@ -130,7 +130,7 @@ function andar(s, dt) {
   }
 
   // Com o bloco de estações no caminho, mira primeiro o canto que dá a volta.
-  const { ponto } = rotaAte(pos, s.alvo);
+  const { ponto } = rotaAte(pos, s.alvo, AREA);
   const rx = ponto.x - pos.x;
   const rz = ponto.z - pos.z;
   const distPonto = Math.hypot(rx, rz) || 1;
@@ -153,7 +153,7 @@ function decidir(s) {
     s.estado = 'andando';
     s.alvo.set(estacao.aprox.x, 0, estacao.aprox.z);
     // Prazo para chegar: 14 s, ou mais quando a volta pelo bloco é longa para o passo dele.
-    s.timer = Math.max(PRAZO_ATE_ESTACAO, (2 * rotaAte(s.pos, s.alvo).comprimento) / velocidade(s));
+    s.timer = Math.max(PRAZO_ATE_ESTACAO, (2 * rotaAte(s.pos, s.alvo, AREA).comprimento) / velocidade(s));
   } else if (Math.random() < 0.4) {
     s.estado = 'acao';
     s.acao = ACOES[Math.floor(Math.random() * ACOES.length)];

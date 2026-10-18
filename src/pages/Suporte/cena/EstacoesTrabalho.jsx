@@ -72,12 +72,13 @@ function Estacao({ estacao, indice, materiais: M }) {
   );
 }
 
-/*
- * Desenha as estações de estacoes.js (mesa, monitor, teclado, mouse e cadeira).
- * Sem eventos de ponteiro: não bloqueia o clique nos técnicos, e clicar nelas
- * fecha o card como clicar no vazio.
+/**
+ * Desenha as estações (mesa, monitor, teclado, mouse e cadeira): as de
+ * estacoes.js ou as que a página passar. Sem eventos de ponteiro: não bloqueia
+ * o clique nos técnicos, e clicar nelas fecha o card como clicar no vazio.
+ * @param {{ estacoes?: import('../boneco/estacoes.js').Estacao[] }} props
  */
-export default function EstacoesTrabalho() {
+export default function EstacoesTrabalho({ estacoes = ESTACOES }) {
   // Materiais criados uma vez e compartilhados entre as estações.
   const materiais = useMemo(criarMateriais, []);
   useEffect(
@@ -90,7 +91,7 @@ export default function EstacoesTrabalho() {
 
   return (
     <group name="estacoes-de-trabalho">
-      {ESTACOES.map((estacao, indice) => (
+      {estacoes.map((estacao, indice) => (
         <Estacao key={estacao.id} estacao={estacao} indice={indice} materiais={materiais} />
       ))}
     </group>

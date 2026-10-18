@@ -3,6 +3,7 @@ import { aparenciaDe } from './boneco/aparencia.js';
 import CardQuadro from './card/CardQuadro.jsx';
 import CardTecnico from './card/CardTecnico.jsx';
 import Cena from './cena/Cena.jsx';
+import EstacoesTrabalho from './cena/EstacoesTrabalho.jsx';
 import QuadroSuporte from './quadro/QuadroSuporte.jsx';
 import { useEquipe } from './store.js';
 import styles from './Suporte.module.css';
@@ -81,7 +82,8 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  * @param {() => Promise<import('./tipos.js').Tecnico[]>} props.buscarEquipe
  * @param {(equipe: import('./tipos.js').Tecnico[], ativo: () => boolean) => void} [props.aoCarregar]
  *   busca o que complementa a equipe; `ativo()` diz se a página ainda está na tela
- * @param {boolean} [props.estacoes] estações de trabalho no tapete; sem elas, os bonecos só andam
+ * @param {import('react').ComponentType | null} [props.Estacoes] as estações de trabalho no tapete
+ *   (o bloco 2×2 do suporte por padrão; null: nenhuma, e os bonecos só andam)
  * @param {import('react').ComponentType} [props.Card] card de quem foi selecionado
  * @param {import('react').ComponentType<{ area: { rx: number, rz: number } }>} [props.Quadro]
  *   quadro da equipe na cena, com o que a página escreve nele
@@ -94,7 +96,7 @@ export default function PaginaEquipe({
   rotuloElenco,
   buscarEquipe,
   aoCarregar,
-  estacoes = true,
+  Estacoes = EstacoesTrabalho,
   Card = CardTecnico,
   Quadro = QuadroSuporte,
   PainelQuadro = CardQuadro,
@@ -135,7 +137,7 @@ export default function PaginaEquipe({
     <main className={classes} style={larguraCard ? { '--largura-card': larguraCard } : undefined}>
       <title>{`${titulo} · sino.org`}</title>
 
-      {temWebgl && <Cena estacoes={estacoes} Quadro={Quadro} />}
+      {temWebgl && <Cena Estacoes={Estacoes} Quadro={Quadro} />}
 
       <header className={styles.cabecalho}>
         <a className={styles.voltar} href="/">

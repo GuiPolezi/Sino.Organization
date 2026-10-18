@@ -2,12 +2,22 @@
  * Estações de trabalho do tapete: configuração e regras. Única fonte da verdade,
  * lida tanto pelo desenho (EstacoesTrabalho) quanto pelo comportamento do boneco.
  *
- * Bloco 2×2 no centro, fileiras frente a frente e monitores costas com costas:
+ * Cada página define as suas (definirEstacoes). A de /suporte nasce com o bloco
+ * 2×2 do centro, fileiras frente a frente e monitores costas com costas:
  *   e1 | e2   ← fileira de trás (técnico sentado de frente para a câmera)
  *   e3 | e4   ← fileira da frente (técnico sentado de costas para a câmera)
+ * A de /desenvolvimento põe duas mesas soltas em cantos do tapete.
  *
  * Convenção: rot é o giro da mesa em Y. A tela fica voltada para +z local e a
  * cadeira fica em +z local (lado de quem senta).
+ */
+
+/**
+ * @typedef {object} BaseEstacao
+ * @property {string} id
+ * @property {number} x
+ * @property {number} z
+ * @property {number} rot
  */
 
 /**
@@ -22,7 +32,8 @@
  * @property {number} yaw                       direção em que ele olha sentado (para o monitor)
  */
 
-const BASES = [
+/** O bloco 2×2 de /suporte. */
+export const BASES_SUPORTE = [
   { id: 'e1', x: -0.8, z: -0.4, rot: Math.PI },
   { id: 'e2', x: 0.8, z: -0.4, rot: Math.PI },
   { id: 'e3', x: -0.8, z: 0.4, rot: 0 },
@@ -37,27 +48,102 @@ export function pontoLocal(estacao, lx, lz) {
 }
 
 /** @type {Estacao[]} */
-export const ESTACOES = BASES.map((base) => ({
-  ...base,
-  ocupante: null,
-  assento: pontoLocal(base, 0, 0.64),
-  aprox: pontoLocal(base, 0, 1.5),
-  yaw: base.rot + Math.PI,
-}));
-
-// Todos podem trabalhar ao mesmo tempo (1 técnico por computador).
-export const MAX_SENTADOS = ESTACOES.length;
+export const ESTACOES = [];
 
 // Obstáculos (círculos) que os técnicos contornam e nunca atravessam.
 // r é a distância mínima entre o centro do técnico e o centro do círculo;
 // com r = 0 o obstáculo está desligado (ex.: o corredor do quadro, fechado);
 // com `suave`, quem está dentro sai aos poucos, em vez de ir direto para a borda.
 // O quadro da equipe acrescenta os dele a esta lista (quadro/posicao.js).
-export const OBSTACULOS = ESTACOES.flatMap((estacao) => [
-  { ...pontoLocal(estacao, -0.45, 0), r: 0.78, estacao: estacao.id }, // metade esquerda da mesa
-  { ...pontoLocal(estacao, 0.45, 0), r: 0.78, estacao: estacao.id }, // metade direita da mesa
-  { ...pontoLocal(estacao, 0, 0.78), r: 0.6, estacao: estacao.id }, // cadeira
-]);
+export const OBSTACULOS = [];
+
+// Pegada de uma estação no chão: as duas metades da mesa e a cadeira.
+const obstaculosDa = (estacao) => [
+  { ...pontoLocal(estacao, -0.45, 0), r: 0.78, estacao: estacao.id },
+  { ...pontoLocal(estacao, 0.45, 0), r: 0.78, estacao: estacao.id },
+  { ...pontoLocal(estacao, 0, 0.78), r: 0.6, estacao: estacao.id },
+];
+
+/*
+ * Blocos que os técnicos contornam: retângulos em volta das pegadas, um por
+ * grupo de estações encostadas (o 2×2 de /suporte é um bloco só; duas mesas
+ * soltas são dois). Cada bloco guarda os cantos, por onde a rota dá a volta.
+ */
+const FOLGA_CONTORNO = 0.5;
+let BLOCOS = [];
+
+const retanguloDe = (obstaculos) => ({
+  minX: Math.min(...obstaculos.map((o) => o.x - o.r)),
+  maxX: Math.max(...obstaculos.map((o) => o.x + o.r)),
+  minZ: Math.min(...obstaculos.map((o) => o.z - o.r)),
+  maxZ: Math.max(...obstaculos.map((o) => o.z + o.r)),
+});
+
+const seTocam = (a, b) => a.minX <= b.maxX && b.minX <= a.maxX && a.minZ <= b.maxZ && b.minZ <= a.maxZ;
+
+// Junta as pegadas que se tocam até não sobrar par encostado; cada grupo vira um bloco.
+function montarBlocos(estacoes) {
+  let grupos = estacoes.map((estacao) => ({ ids: [estacao.id], ...retanguloDe(obstaculosDa(estacao)) }));
+  let juntou = true;
+  while (juntou) {
+    juntou = false;
+    for (let i = 0; i < grupos.length && !juntou; i += 1) {
+      for (let j = i + 1; j < grupos.length; j += 1) {
+        if (!seTocam(grupos[i], grupos[j])) continue;
+        const [a, b] = [grupos[i], grupos[j]];
+        const unido = {
+          ids: [...a.ids, ...b.ids],
+          minX: Math.min(a.minX, b.minX),
+          maxX: Math.max(a.maxX, b.maxX),
+          minZ: Math.min(a.minZ, b.minZ),
+          maxZ: Math.max(a.maxZ, b.maxZ),
+        };
+        grupos = [...grupos.filter((_, k) => k !== i && k !== j), unido];
+        juntou = true;
+        break;
+      }
+    }
+  }
+  return grupos.map((bloco) => ({
+    ...bloco,
+    cantos: [
+      { x: bloco.minX - FOLGA_CONTORNO, z: bloco.minZ - FOLGA_CONTORNO },
+      { x: bloco.maxX + FOLGA_CONTORNO, z: bloco.minZ - FOLGA_CONTORNO },
+      { x: bloco.minX - FOLGA_CONTORNO, z: bloco.maxZ + FOLGA_CONTORNO },
+      { x: bloco.maxX + FOLGA_CONTORNO, z: bloco.maxZ + FOLGA_CONTORNO },
+    ],
+  }));
+}
+
+/**
+ * Define as estações do cenário: refaz ESTACOES, os obstáculos delas e os
+ * blocos de contorno. Os obstáculos de outros módulos (o quadro da equipe)
+ * ficam. Chamada antes de a cena nascer e de novo se o tapete mudar de forma.
+ * @param {BaseEstacao[]} bases
+ * @returns {Estacao[]} as estações novas (o próprio ESTACOES)
+ */
+export function definirEstacoes(bases) {
+  const antigas = new Set(ESTACOES.map(({ id }) => id));
+  const outros = OBSTACULOS.filter(({ estacao }) => !antigas.has(estacao));
+
+  ESTACOES.splice(
+    0,
+    ESTACOES.length,
+    ...bases.map((base) => ({
+      ...base,
+      ocupante: null,
+      assento: pontoLocal(base, 0, 0.64),
+      aprox: pontoLocal(base, 0, 1.5),
+      yaw: base.rot + Math.PI,
+    })),
+  );
+  OBSTACULOS.splice(0, OBSTACULOS.length, ...ESTACOES.flatMap(obstaculosDa), ...outros);
+  BLOCOS = montarBlocos(ESTACOES);
+  return ESTACOES;
+}
+
+// Todos podem trabalhar ao mesmo tempo (1 técnico por computador).
+export const maxSentados = () => ESTACOES.length;
 
 // O ponto está dentro da elipse da área livre? A folga encolhe a elipse.
 export const dentroDaArea = (area, ponto, folga = 0) =>
@@ -66,23 +152,7 @@ export const dentroDaArea = (area, ponto, folga = 0) =>
 export const longeDosObstaculos = (ponto, margem = 0.3) =>
   OBSTACULOS.every((o) => o.r <= 0 || Math.hypot(ponto.x - o.x, ponto.z - o.z) > o.r + margem);
 
-// Retângulo que envolve os obstáculos das estações (calculado antes de o quadro
-// acrescentar os dele), e a folga com que os técnicos o contornam.
-const BLOCO = {
-  minX: Math.min(...OBSTACULOS.map((o) => o.x - o.r)),
-  maxX: Math.max(...OBSTACULOS.map((o) => o.x + o.r)),
-  minZ: Math.min(...OBSTACULOS.map((o) => o.z - o.r)),
-  maxZ: Math.max(...OBSTACULOS.map((o) => o.z + o.r)),
-};
-const FOLGA_CONTORNO = 0.5;
-const CANTOS = [
-  { x: BLOCO.minX - FOLGA_CONTORNO, z: BLOCO.minZ - FOLGA_CONTORNO },
-  { x: BLOCO.maxX + FOLGA_CONTORNO, z: BLOCO.minZ - FOLGA_CONTORNO },
-  { x: BLOCO.minX - FOLGA_CONTORNO, z: BLOCO.maxZ + FOLGA_CONTORNO },
-  { x: BLOCO.maxX + FOLGA_CONTORNO, z: BLOCO.maxZ + FOLGA_CONTORNO },
-];
-
-const dentroDoBloco = (p) => p.x > BLOCO.minX && p.x < BLOCO.maxX && p.z > BLOCO.minZ && p.z < BLOCO.maxZ;
+const dentroDoBloco = (bloco, p) => p.x > bloco.minX && p.x < bloco.maxX && p.z > bloco.minZ && p.z < bloco.maxZ;
 
 // Trecho [t0, t1] do segmento a→b que fica dentro da faixa [min, max] de um eixo; null se nenhum.
 function recortar(origem, delta, min, max, t0, t1) {
@@ -94,10 +164,14 @@ function recortar(origem, delta, min, max, t0, t1) {
   return entrada < saida ? [entrada, saida] : null;
 }
 
-function cruzaBloco(a, b) {
-  const emX = recortar(a.x, b.x - a.x, BLOCO.minX, BLOCO.maxX, 0, 1);
-  return !!emX && !!recortar(a.z, b.z - a.z, BLOCO.minZ, BLOCO.maxZ, emX[0], emX[1]);
+// Onde (0..1) o segmento a→b entra no bloco; null se não cruza.
+function entradaNoBloco(bloco, a, b) {
+  const emX = recortar(a.x, b.x - a.x, bloco.minX, bloco.maxX, 0, 1);
+  const trecho = emX && recortar(a.z, b.z - a.z, bloco.minZ, bloco.maxZ, emX[0], emX[1]);
+  return trecho ? trecho[0] : null;
 }
+
+const cruzaBloco = (bloco, a, b) => entradaNoBloco(bloco, a, b) !== null;
 
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 // Para cada canto, os dois ligados a ele por um lado livre do retângulo.
@@ -105,43 +179,66 @@ const VIZINHOS = [[1, 2], [0, 3], [0, 3], [1, 2]];
 // Perto assim de um canto, o técnico já o alcançou e segue para o próximo.
 const CANTO_ALCANCADO = 0.35;
 
-// Distância de cada canto até o alvo, dando a volta pelos cantos vizinhos quando preciso.
-function distanciasAteAlvo(alvo) {
-  const ate = CANTOS.map((canto) => (cruzaBloco(canto, alvo) ? Infinity : distancia(canto, alvo)));
+// Distância de cada canto do bloco até o alvo, dando a volta pelos cantos vizinhos quando preciso.
+function distanciasAteAlvo(bloco, alvo) {
+  const { cantos } = bloco;
+  const ate = cantos.map((canto) => (cruzaBloco(bloco, canto, alvo) ? Infinity : distancia(canto, alvo)));
   for (let volta = 0; volta < 2; volta++) {
-    CANTOS.forEach((canto, i) => {
-      for (const j of VIZINHOS[i]) ate[i] = Math.min(ate[i], distancia(canto, CANTOS[j]) + ate[j]);
+    cantos.forEach((canto, i) => {
+      for (const j of VIZINHOS[i]) ate[i] = Math.min(ate[i], distancia(canto, cantos[j]) + ate[j]);
     });
   }
   return ate;
 }
 
+// Folga com que os cantos são trazidos para dentro da elipse.
+const FOLGA_CANTO = 0.25;
+
+// Um canto fora da área de caminhada é trazido para a borda dela: mirá-lo lá fora é ficar empurrando a borda.
+function cantoNaArea(canto, area) {
+  if (!area || dentroDaArea(area, canto, FOLGA_CANTO)) return canto;
+  const e = Math.sqrt((canto.x / (area.rx - FOLGA_CANTO)) ** 2 + (canto.z / (area.rz - FOLGA_CANTO)) ** 2);
+  return { x: canto.x / e, z: canto.z / e };
+}
+
 /*
  * Caminho até o alvo: para onde mirar agora e quanto falta andar. Mira o próprio
- * alvo ou, com o bloco de estações no meio, o próximo canto do caminho mais curto
- * em volta dele. Sem isso, quem vai para o outro lado do bloco fica empurrando
- * as mesas e nunca chega.
+ * alvo ou, com um bloco de estações no meio, o próximo canto do caminho mais
+ * curto em volta dele (o primeiro bloco que a reta cruza, se houver mais de um).
+ * Sem isso, quem vai para o outro lado de uma mesa fica empurrando a mesa e
+ * nunca chega. Com a área, os cantos de uma mesa encostada na borda ficam
+ * dentro dela.
+ * @param {{ rx: number, rz: number }} [area]
  */
-export function rotaAte(pos, alvo) {
-  // Sem estações (cenário vazio) não há bloco para contornar.
-  if (!ESTACOES.length || dentroDoBloco(alvo) || !cruzaBloco(pos, alvo)) return { ponto: alvo, comprimento: distancia(pos, alvo) };
+export function rotaAte(pos, alvo, area) {
+  const reto = { ponto: alvo, comprimento: distancia(pos, alvo) };
+  let bloco = null;
+  let maisPerto = Infinity;
+  for (const candidato of BLOCOS) {
+    if (dentroDoBloco(candidato, alvo)) continue;
+    const entrada = entradaNoBloco(candidato, pos, alvo);
+    if (entrada !== null && entrada < maisPerto) {
+      maisPerto = entrada;
+      bloco = candidato;
+    }
+  }
+  if (!bloco) return reto;
 
-  const ateAlvo = distanciasAteAlvo(alvo);
-  let melhor = alvo;
-  let comprimento = distancia(pos, alvo);
+  const ateAlvo = distanciasAteAlvo(bloco, alvo);
+  let melhor = reto;
   let menorCusto = Infinity;
-  CANTOS.forEach((canto, i) => {
+  bloco.cantos.forEach((cantoDoBloco, i) => {
+    const canto = cantoNaArea(cantoDoBloco, area);
     const ateCanto = distancia(pos, canto);
     if (ateCanto < CANTO_ALCANCADO) return;
     // Cantos escondidos atrás do bloco só servem se não houver outro.
-    const custo = ateCanto + ateAlvo[i] + (cruzaBloco(pos, canto) ? 100 : 0);
+    const custo = ateCanto + ateAlvo[i] + (cruzaBloco(bloco, pos, canto) ? 100 : 0);
     if (custo < menorCusto) {
       menorCusto = custo;
-      melhor = canto;
-      comprimento = ateCanto + ateAlvo[i];
+      melhor = { ponto: canto, comprimento: ateCanto + ateAlvo[i] };
     }
   });
-  return { ponto: melhor, comprimento };
+  return melhor;
 }
 
 /*
@@ -151,7 +248,7 @@ export function rotaAte(pos, alvo) {
 export function reservarEstacao(idTecnico, area) {
   if (ESTACOES.some((e) => e.ocupante === idTecnico)) return null;
   const ocupadas = ESTACOES.filter((e) => e.ocupante !== null).length;
-  if (ocupadas >= MAX_SENTADOS) return null;
+  if (ocupadas >= maxSentados()) return null;
   const livres = ESTACOES.filter((e) => e.ocupante === null && dentroDaArea(area, e.aprox, 0.2));
   if (!livres.length) return null;
   const estacao = livres[Math.floor(Math.random() * livres.length)];
@@ -175,15 +272,9 @@ export const aindaEDono = (estadoTecnico) =>
 /*
  * Cenário sem estações: tira as mesas e os obstáculos delas. Os que outros
  * módulos acrescentaram (o quadro da equipe) continuam, e os bonecos passam a
- * só andar, fazer ações e contornar o quadro. Vale para a página inteira e é
- * chamado uma vez, antes de a cena nascer (pages/Desenvolvimento).
+ * só andar, fazer ações e contornar o quadro.
  */
-export function tirarEstacoes() {
-  const dasEstacoes = new Set(ESTACOES.map(({ id }) => id));
-  const outros = OBSTACULOS.filter(({ estacao }) => !dasEstacoes.has(estacao));
-  OBSTACULOS.splice(0, OBSTACULOS.length, ...outros);
-  ESTACOES.length = 0;
-}
+export const tirarEstacoes = () => definirEstacoes([]);
 
 // Zera todas as reservas (hot reload e testes).
 export function resetarEstacoes() {
@@ -191,3 +282,6 @@ export function resetarEstacoes() {
     estacao.ocupante = null;
   });
 }
+
+// Já no carregamento, o bloco de /suporte: a página de desenvolvimento troca pelas mesas dela.
+definirEstacoes(BASES_SUPORTE);

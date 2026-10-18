@@ -14,9 +14,9 @@
     "sync:dev-team": "node --env-file-if-exists=.env scripts/sync-team.mjs desenvolvimento",
     "test:resolver": "node --test scripts/resolve-city.test.mjs",
     "test:team": "node --test scripts/build-team.test.mjs",
-    "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs src/pages/Suporte/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/mappers/resumoEquipe.test.mjs src/pages/Desenvolvimento/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/mappers/visaoGeral.test.mjs src/pages/Desenvolvimento/card/geometriaPizza.test.mjs",
+    "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs src/pages/Suporte/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/mappers/visaoGeral.test.mjs src/pages/Desenvolvimento/card/geometriaPizza.test.mjs",
     "test:card": "node --test src/pages/Suporte/mappers/atendimentos.test.mjs",
-    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs",
+    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/cena/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs",
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs"
   },
   "dependencies": {

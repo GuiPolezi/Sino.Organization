@@ -6,7 +6,6 @@ import Boneco from '../boneco/Boneco.jsx';
 import { AREA, MOVIMENTO, useEquipe } from '../store.js';
 import CameraRig from './CameraRig.jsx';
 import Cenario from './Cenario.jsx';
-import EstacoesTrabalho from './EstacoesTrabalho.jsx';
 import styles from './Cena.module.css';
 
 const AREA_PAISAGEM = { rx: 6.2, rz: 3.4 };
@@ -44,11 +43,11 @@ function useMovimentoReduzido() {
  * (os bonecos, com dezenas de meshes cada) passar pelo reconciliador de novo.
  *
  * @param {object} props
- * @param {boolean} props.estacoes  as estações de trabalho no meio do tapete
+ * @param {import('react').ComponentType | null} props.Estacoes  as estações de trabalho no tapete (null: nenhuma)
  * @param {import('react').ComponentType<{ area: { rx: number, rz: number } }>} props.Quadro
  *   o quadro da equipe, com o que a página escreve nele
  */
-function Cena({ estacoes, Quadro }) {
+function Cena({ Estacoes, Quadro }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const selecionar = useEquipe((s) => s.selecionar);
   const [area, setArea] = useState(() => ({ ...AREA }));
@@ -70,7 +69,7 @@ function Cena({ estacoes, Quadro }) {
       <directionalLight position={[-6, 4, -4]} intensity={0.35} color="#C9D6FF" />
 
       <Cenario area={area} />
-      {estacoes && <EstacoesTrabalho />}
+      {Estacoes && <Estacoes />}
       <Quadro area={area} />
 
       {tecnicos.map((tecnico) => (

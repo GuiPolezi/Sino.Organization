@@ -1,58 +1,67 @@
 /*
- * O que vai escrito no quadro da cena de /desenvolvimento, a partir da visão
- * geral da equipe (mappers/resumoEquipe.js). Cada anotação só existe quando há
+ * O que vai escrito no quadro da cena de /desenvolvimento: um resumo, à mão,
+ * do painel que ele abre (card/CardQuadro.jsx), feito das mesmas contas
+ * (mappers/visaoGeral.js, período "todo o tempo"). O post-it é o total de
+ * tickets, o papel rasgado é a pizza "Carga por Dev" e a folha é a "Carga por
+ * Local", com as mesmas cores do painel. Cada anotação só existe quando há
  * dado para ela; sem dado, ela sai null e não é desenhada.
  */
+import { CORES_TIPOS, fatiasPorDesenvolvedor } from '../card/cores.js';
+import { OUTROS } from '../mappers/visaoGeral.js';
 
 /** @import { AnotacoesQuadro } from '../../Suporte/quadro/texturas.js' */
 
-// A folha pautada do quadro tem cinco linhas (Suporte/quadro/texturas.js).
-const LINHAS_DA_FOLHA = 5;
+// No papel cabem seis fatias na legenda; na folha, cinco barras.
+const FATIAS_NO_PAPEL = 6;
+const BARRAS_NA_FOLHA = 5;
 
-// Como cada status vai escrito à mão na folha. O que não estiver aqui vai em minúsculas.
-const NA_FOLHA = {
-  'Com o desenvolvedor': 'com os desenvolvedores',
-  'Em atendimento': 'em atendimento',
-  'Aguardando Testes': 'aguardando testes',
-  'Aguardando Retorno do Solicitante': 'aguardando o solicitante',
-  'Aguardando Deploy': 'aguardando deploy',
-};
+const formato = new Intl.NumberFormat('pt-BR');
 
-const escrito = ({ status, total }) => {
-  if (status === 'Pendente') return total === 1 ? 'pendente' : 'pendentes';
-  return NA_FOLHA[status] ?? status.toLocaleLowerCase('pt-BR');
-};
+// As maiores fatias da pizza do painel; as demais se juntam em "outros".
+function fatiasDaPizza(porDesenvolvedor) {
+  const fatias = fatiasPorDesenvolvedor(porDesenvolvedor)
+    .filter(({ valor }) => valor > 0)
+    .toSorted((a, b) => b.valor - a.valor);
+  if (fatias.length <= FATIAS_NO_PAPEL) return fatias;
 
-// Uma linha por status em aberto. Se não couberem todos, os últimos viram uma linha só.
-function linhasDaFila(fila) {
-  const cabem = fila.length <= LINHAS_DA_FOLHA ? fila : fila.slice(0, LINHAS_DA_FOLHA - 1);
-  const linhas = cabem.map((item) => ({ texto: `• ${item.total} ${escrito(item)}` }));
-  if (cabem.length < fila.length) {
-    const resto = fila.slice(cabem.length).reduce((total, item) => total + item.total, 0);
-    linhas.push({ texto: `• ${resto} em outros status` });
-  }
-  return linhas;
+  const maiores = fatias.slice(0, FATIAS_NO_PAPEL - 1);
+  const resto = fatias.slice(FATIAS_NO_PAPEL - 1).reduce((soma, { valor }) => soma + valor, 0);
+  return [...maiores, { chave: OUTROS, rotulo: 'outros', valor: resto, cor: CORES_TIPOS[OUTROS] }];
 }
 
-// Post-it: os fechados no mês ou, sem chamados, o tamanho da equipe.
-function destaqueDoPostIt(resumo) {
-  if (resumo.fechadosMes !== null) return { numero: resumo.fechadosMes, linhas: ['fechados', 'no mês ★'] };
-  const total = resumo.totalDesenvolvedores;
-  if (total > 0) return { numero: total, linhas: [total === 1 ? 'desenvolvedor' : 'desenvolvedores', 'na equipe ★'] };
+// Os locais com mais tickets, cada barra dividida pelos tipos com ticket, nas cores do painel.
+const barrasDosLocais = (porLocal) =>
+  porLocal.slice(0, BARRAS_NA_FOLHA).map(({ local, total, tipos }) => ({
+    rotulo: local,
+    valor: total,
+    partes: tipos.filter((tipo) => tipo.total > 0).map((tipo) => ({ cor: CORES_TIPOS[tipo.tipo], valor: tipo.total })),
+  }));
+
+// Post-it: o total de tickets do painel ou, sem chamados, o tamanho da equipe.
+function destaqueDoPostIt({ totalDesenvolvedores, visao }) {
+  if (visao.total !== null) {
+    // Como no painel: o "+" só com ticket.
+    const numero = `${visao.total > 0 ? '+' : ''}${formato.format(visao.total)}`;
+    return { numero, linhas: ['total de', 'tickets ★'] };
+  }
+  if (totalDesenvolvedores > 0) {
+    const plural = totalDesenvolvedores === 1 ? 'desenvolvedor' : 'desenvolvedores';
+    return { numero: totalDesenvolvedores, linhas: [plural, 'na equipe ★'] };
+  }
   return null;
 }
 
 /**
- * @param {ReturnType<typeof import('../mappers/resumoEquipe.js').resumoEquipe>} resumo
+ * @param {ReturnType<typeof import('./useResumo.js').useResumo>} resumo
  * @returns {AnotacoesQuadro}
  */
 export function anotacoesDoQuadro(resumo) {
+  const fatias = fatiasDaPizza(resumo.visao.porDesenvolvedor);
+  const barras = barrasDosLocais(resumo.visao.porLocal);
   return {
     assinatura: 'desenvolvimento',
-    grafico: resumo.dias.length
-      ? { titulo: 'Chamados', subtitulo: `recebidos nos últimos ${resumo.dias.length} dias`, dias: resumo.dias }
-      : null,
-    lista: resumo.fila.length ? { titulo: 'Chamados em aberto', linhas: linhasDaFila(resumo.fila) } : null,
+    grafico: fatias.length ? { titulo: 'Carga por Dev', subtitulo: 'todo o tempo', fatias } : null,
+    lista: barras.length ? { titulo: 'Carga por Local', barras } : null,
     postit: destaqueDoPostIt(resumo),
   };
 }

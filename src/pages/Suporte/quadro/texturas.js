@@ -11,11 +11,13 @@ import * as THREE from 'three';
  *
  * @typedef {object} AnotacoesQuadro
  * @property {string} assinatura  escrita de pincel no canto do quadro
- * @property {{ titulo: string, subtitulo: string, dias: { rotulo: string, valor: number, hoje: boolean }[] } | null} grafico
- *   papel rasgado com as barras dos últimos dias
- * @property {{ titulo: string, linhas: { texto: string, alerta?: boolean }[] } | null} lista
- *   folha pautada, com até cinco linhas; `alerta` pinta a linha de vermelho
- * @property {{ numero: number, linhas: string[] } | null} postit  o número grande e duas linhas embaixo
+ * @property {{ titulo: string, subtitulo: string, dias: { rotulo: string, valor: number, hoje: boolean }[] }
+ *   | { titulo: string, subtitulo: string, fatias: { rotulo: string, valor: number, cor: string }[] } | null} grafico
+ *   papel rasgado com as barras dos últimos dias, ou com uma pizza e a legenda dela
+ * @property {{ titulo: string, linhas: { texto: string, alerta?: boolean }[] }
+ *   | { titulo: string, barras: { rotulo: string, valor: number, partes: { cor: string, valor: number }[] }[] } | null} lista
+ *   folha pautada com até cinco linhas (`alerta` pinta a linha de vermelho), ou com até cinco barras deitadas
+ * @property {{ numero: number | string, linhas: string[] } | null} postit  o número grande e duas linhas embaixo
  */
 
 // Caveat vem de @fontsource/caveat (importada em Quadro.jsx).
@@ -129,13 +131,48 @@ function barrasDosDias(ctx, w, dias) {
   ctx.stroke();
 }
 
+// Pizza à esquerda, com os vãos no creme do papel, e a legenda à direita, com a parte de cada fatia.
+function pizzaDasFatias(ctx, fatias) {
+  const total = fatias.reduce((soma, { valor }) => soma + valor, 0);
+  const cx = 150;
+  const cy = 304;
+  const raio = 116;
+  let angulo = -Math.PI / 2;
+
+  fatias.forEach(({ cor, valor }) => {
+    const fim = angulo + (valor / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, raio, angulo, fim);
+    ctx.closePath();
+    ctx.fillStyle = cor;
+    ctx.fill();
+    ctx.strokeStyle = '#F1ECDF';
+    ctx.lineWidth = 5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    angulo = fim;
+  });
+
+  ctx.textAlign = 'left';
+  fatias.forEach(({ rotulo, valor, cor }, i) => {
+    const y = 198 + i * 42;
+    ctx.fillStyle = cor;
+    ctx.beginPath();
+    ctx.arc(300, y - 9, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = TINTA.escura;
+    escreverCabendo(ctx, `${rotulo} ${Math.round((valor / total) * 100)}%`, 320, y, 170, 600, 32);
+  });
+}
+
 /**
- * Papel rasgado com o mini gráfico dos últimos dias.
+ * Papel rasgado com o mini gráfico dos últimos dias, ou com a pizza.
  * @param {AnotacoesQuadro['grafico']} grafico
  */
 export function texturaPapelRasgado(grafico) {
-  if (!grafico?.dias.length) return null;
-  const { titulo, subtitulo, dias } = grafico;
+  if (!grafico || !(grafico.dias?.length || grafico.fatias?.length)) return null;
+  const { titulo, subtitulo } = grafico;
 
   return novaTextura(512, 540, (ctx, w, h) => {
     contornoRasgado(ctx, w, h);
@@ -155,17 +192,60 @@ export function texturaPapelRasgado(grafico) {
     ctx.font = `600 38px ${MAO}`;
     ctx.fillText(subtitulo, 36, 124);
 
-    barrasDosDias(ctx, w, dias);
+    if (grafico.fatias) pizzaDasFatias(ctx, grafico.fatias);
+    else barrasDosDias(ctx, w, grafico.dias);
   });
 }
 
+// Barras deitadas, uma por linha: o nome à esquerda do eixo, a barra dividida por tipo e o total na ponta.
+function barrasDosLocais(ctx, w, barras) {
+  const maximo = Math.max(...barras.map(({ valor }) => valor), 1);
+  const eixo = 246;
+  const larguraMaxima = w - eixo - 96;
+  const topo = 108;
+  const passo = 70;
+  const altura = 30;
+
+  barras.forEach(({ rotulo, valor, partes }, i) => {
+    const y = topo + i * passo;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = TINTA.azul;
+    escreverCabendo(ctx, rotulo, eixo - 14, y + altura - 6, 176, 600, 32);
+
+    const largura = (valor / maximo) * larguraMaxima;
+    let x = eixo + 4;
+    partes.forEach(({ cor, valor: doTipo }, j) => {
+      const parte = (doTipo / valor) * largura - (j < partes.length - 1 ? 3 : 0);
+      if (parte <= 0) return;
+      ctx.fillStyle = cor;
+      ctx.beginPath();
+      ctx.roundRect(x, y, parte, altura, j === partes.length - 1 ? [0, 6, 6, 0] : 2);
+      ctx.fill();
+      x += parte + 3;
+    });
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = TINTA.escura;
+    ctx.font = `700 32px ${MAO}`;
+    ctx.fillText(String(valor), eixo + 4 + largura + 12, y + altura - 5);
+  });
+
+  ctx.strokeStyle = TINTA.escura;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(eixo, topo - 14);
+  ctx.lineTo(eixo + 2, topo + barras.length * passo - 24);
+  ctx.stroke();
+}
+
 /**
- * Folha pautada com um título e uma lista curta.
+ * Folha pautada com um título e uma lista curta, ou as barras por local.
  * @param {AnotacoesQuadro['lista']} lista
  */
 export function texturaFolhaPautada(lista) {
-  if (!lista?.linhas.length) return null;
-  const { titulo, linhas } = lista;
+  if (!lista || !(lista.linhas?.length || lista.barras?.length)) return null;
+  const { titulo } = lista;
 
   return novaTextura(640, 512, (ctx, w, h) => {
     ctx.fillStyle = '#FBFAF4';
@@ -201,7 +281,11 @@ export function texturaFolhaPautada(lista) {
     ctx.lineTo(58 + ctx.measureText(titulo).width + 6, 70);
     ctx.stroke();
 
-    linhas.forEach(({ texto, alerta }, i) => {
+    if (lista.barras) {
+      barrasDosLocais(ctx, w, lista.barras);
+      return;
+    }
+    lista.linhas.forEach(({ texto, alerta }, i) => {
       ctx.fillStyle = alerta ? TINTA.alerta : TINTA.azul;
       escreverCabendo(ctx, texto, 58, 140 + i * 80, w - 58 - 24, 600, 40);
     });
@@ -242,8 +326,7 @@ export function texturaPostIt(destaque) {
 
     ctx.fillStyle = '#4A3F12';
     ctx.textAlign = 'center';
-    ctx.font = `700 150px ${MAO}`;
-    ctx.fillText(String(destaque.numero), w / 2, 230);
+    escreverCabendo(ctx, String(destaque.numero), w / 2, 230, w - 56, 700, 150);
     ctx.font = `600 54px ${MAO}`;
     destaque.linhas.forEach((linha, i) => ctx.fillText(linha, w / 2, 310 + i * 60));
   });
