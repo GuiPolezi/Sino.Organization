@@ -44,3 +44,11 @@ export const AREA = { rx: 6.2, rz: 3.4 };
 
 // Espelho de prefers-reduced-motion, lido a cada frame sem consultar o matchMedia.
 export const MOVIMENTO = { reduzido: false };
+
+/**
+ * Tempo que um frame avança, em segundos. Depois de uma travada (um frame de
+ * mais de 100 ms, como a montagem de um painel), avança um frame comum: senão a
+ * câmera e os bonecos dariam o maior passo permitido de uma vez, num tranco.
+ * @param {number} delta segundos desde o frame anterior
+ */
+export const passoDoFrame = (delta) => (delta > 0.1 ? 1 / 60 : Math.min(delta, 0.05));

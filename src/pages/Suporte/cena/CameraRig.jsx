@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { QUADRO } from '../quadro/posicao.js';
-import { posicoes, useEquipe } from '../store.js';
+import { passoDoFrame, posicoes, useEquipe } from '../store.js';
 
 // Mesma largura em que o card vira bottom sheet (CardTecnico.module.css).
 const LARGURA_ESTREITA = 760;
@@ -16,7 +16,7 @@ export default function CameraRig() {
   const alvoOlhar = useRef(new THREE.Vector3());
 
   useFrame((_, delta) => {
-    const dt = Math.min(delta, 0.05);
+    const dt = passoDoFrame(delta);
     const aspecto = size.width / size.height;
     const estreito = size.width < LARGURA_ESTREITA;
     // Afasta a câmera em telas altas, para a área inteira continuar visível.

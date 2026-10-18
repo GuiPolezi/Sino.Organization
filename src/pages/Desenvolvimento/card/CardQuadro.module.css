@@ -158,7 +158,10 @@
   gap: 2px;
 }
 
-/* Algarismos proporcionais: em tamanho de vitrine, os tabulares deixam o "1" folgado. */
+/*
+ * Algarismos tabulares: a contagem (Contagem.jsx) troca os algarismos a cada
+ * quadro e, com os proporcionais, o número mudava de largura e tremia no centro.
+ */
 .numero {
   font-size: 23cqi;
   font-weight: var(--weight-black);
@@ -166,6 +169,7 @@
   letter-spacing: -0.03em;
   color: var(--verde-noite);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Com o "+" e o ponto de milhar, cinco algarismos já pedem um número menor. */

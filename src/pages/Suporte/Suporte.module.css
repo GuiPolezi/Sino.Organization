@@ -86,7 +86,9 @@
   overflow-x: auto;
   scrollbar-width: none;
   transform: translateX(-50%);
+  /* left entra na transição: com o card aberto, o elenco desliza até a esquerda em vez de pular. */
   transition:
+    left 0.25s ease,
     opacity 0.25s ease,
     transform 0.25s ease;
 }

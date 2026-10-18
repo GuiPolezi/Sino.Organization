@@ -27,6 +27,12 @@
   overscroll-behavior: contain;
   transform: translateY(-50%);
   animation: entrar 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  /*
+   * Fica numa camada própria o tempo todo. Sem isso, ao terminar a animação de
+   * entrada o Chrome refaz a composição da página e apresenta um frame só com a
+   * cor de fundo (a tela "pisca"), medido em /desenvolvimento sobre a cena WebGL.
+   */
+  will-change: transform;
 }
 
 @keyframes entrar {

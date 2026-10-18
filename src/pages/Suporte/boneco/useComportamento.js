@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { AREA, MOVIMENTO, posicoes, useEquipe } from '../store.js';
+import { AREA, MOVIMENTO, passoDoFrame, posicoes, useEquipe } from '../store.js';
 import {
   OBSTACULOS,
   aindaEDono,
@@ -402,7 +402,7 @@ export function useComportamento({ id, altura = 1 }) {
   }, [id]);
 
   useFrame((state, delta) => {
-    const dt = Math.min(delta, 0.05);
+    const dt = passoDoFrame(delta);
     const s = ia.current;
     const t = state.clock.elapsedTime;
     const { selecionado: idSelecionado, hover } = useEquipe.getState();

@@ -39,7 +39,7 @@ function Tracos() {
 
 function TotalDeTickets({ total }) {
   return (
-    <section className={styles.total} data-surge>
+    <section className={`${styles.total} ${card.surge}`} style={{ '--ordem': 2 }}>
       <h3 className={styles.chamada}>Total de Tickets</h3>
       <p className={styles.numero} data-digitos={digitos(total)}>
         {total > 0 && <span aria-hidden="true">+</span>}
@@ -71,7 +71,7 @@ function Desempenho() {
       gsap.matchMedia().add(MEDIA.motion, () => {
         gsap
           .timeline({ defaults: { ease: 'power3.out' } })
-          .from(`.${styles.chamada}`, { autoAlpha: 0, letterSpacing: '0.16em', duration: 0.9 })
+          .from(`.${styles.chamada}`, { autoAlpha: 0, duration: 0.9 })
           .from(`.${styles.categorias} li`, { autoAlpha: 0, y: 14, scale: 0.96, duration: 0.5, stagger: 0.05 }, 0.1);
       });
     },
@@ -102,15 +102,20 @@ function Desempenho() {
   );
 }
 
-// Entrada do painel: as partes do topo sobem em cascata, o ícone chega girando e os traços se desenham do centro.
+/*
+ * Entrada do painel: o ícone chega girando e os traços se desenham do centro.
+ * A cascata das seções é a animação CSS .surge do card (CardTecnico.module.css),
+ * que roda no compositor. Animar por aqui (estilos inline a cada quadro), e
+ * sobretudo animar o letter-spacing da chamada (relayout do texto grande a cada
+ * quadro), fazia o Chrome apresentar um frame só com a cor de fundo sobre a
+ * cena WebGL: a tela "piscava" ao abrir (medido por captura de tela).
+ */
 function animarEntrada(painel) {
   const q = gsap.utils.selector(painel);
   gsap
     .timeline({ defaults: { ease: 'power3.out' } })
-    .from(q('[data-surge]'), { autoAlpha: 0, y: 16, duration: 0.6, stagger: 0.07 }, 0.05)
     .from(q(`.${quadro.avatar}`), { scale: 0.6, rotation: -14, duration: 0.8, ease: 'back.out(1.8)' }, 0.1)
-    .from(q('[data-traco]'), { drawSVG: '50% 50%', duration: 0.7, ease: 'power2.inOut', stagger: 0.1 }, 0.35)
-    .from(q(`.${styles.total} .${styles.chamada}`), { letterSpacing: '0.16em', duration: 1.1 }, 0.3);
+    .from(q('[data-traco]'), { drawSVG: '50% 50%', duration: 0.7, ease: 'power2.inOut', stagger: 0.1 }, 0.35);
 }
 
 function Painel({ fechar }) {
@@ -133,7 +138,7 @@ function Painel({ fechar }) {
 
   return (
     <aside ref={raiz} className={`${card.card} ${quadro.quadro} ${styles.painel}`} aria-label="Quadro da equipe: visão geral">
-      <header className={card.topo} data-surge>
+      <header className={`${card.topo} ${card.surge}`} style={{ '--ordem': 0 }}>
         <div className={`${card.avatar} ${quadro.avatar} ${styles.avatar}`} aria-hidden="true">
           <svg viewBox="0 0 26 26" focusable="false">
             <rect x="3" y="3" width="20" height="14" rx="2" />
@@ -154,7 +159,7 @@ function Painel({ fechar }) {
         </button>
       </header>
 
-      <section data-surge>
+      <section className={card.surge} style={{ '--ordem': 1 }}>
         <PeriodoEmPilulas periodo={periodo} onMudar={setPeriodo} />
         <Tracos />
       </section>
@@ -162,7 +167,7 @@ function Painel({ fechar }) {
       {visao.total !== null && (
         <>
           <TotalDeTickets total={visao.total} />
-          <section className={styles.pizzas} data-surge aria-label="Carga de tickets">
+          <section className={`${styles.pizzas} ${card.surge}`} style={{ '--ordem': 3 }} aria-label="Carga de tickets">
             <GraficoPizza titulo="Carga por Dev" cabecalho="Desenvolvedor" itens={fatiasDev} />
             <GraficoPizza titulo="Carga por Categoria" cabecalho="Categoria" itens={fatiasCategoria} />
           </section>

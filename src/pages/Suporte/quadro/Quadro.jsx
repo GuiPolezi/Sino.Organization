@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import '@fontsource/caveat/latin-600.css';
 import '@fontsource/caveat/latin-700.css';
-import { MOVIMENTO, useEquipe } from '../store.js';
+import { MOVIMENTO, passoDoFrame, useEquipe } from '../store.js';
 import { CONFIG_QUADRO, QUADRO, atualizarObstaculos, posicionarQuadro, removerQuadro } from './posicao.js';
 import { texturaFolhaPautada, texturaPapelRasgado, texturaPostIt, texturaQuadroBranco } from './texturas.js';
 import styles from './Quadro.module.css';
@@ -274,7 +274,7 @@ export default function Quadro({ area, anotacoes }) {
   const brilho = useRef(0);
 
   useFrame((state, delta) => {
-    const dt = Math.min(delta, 0.05);
+    const dt = passoDoFrame(delta);
     // Com movimento reduzido o quadro acende, mas nada pulsa nem flutua.
     const t = MOVIMENTO.reduzido ? 0 : state.clock.elapsedTime;
     atualizarObstaculos(dt, aberto);
@@ -306,6 +306,8 @@ export default function Quadro({ area, anotacoes }) {
   };
   const onClick = (event) => {
     event.stopPropagation();
+    // O painel abre por cima do ponteiro: a "mãozinha" do hover não pode ficar presa.
+    document.body.style.cursor = '';
     abrirQuadro();
   };
 
