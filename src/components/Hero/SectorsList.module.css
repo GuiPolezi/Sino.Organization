@@ -1,8 +1,9 @@
 .sectors {
   --label-size: 1rem;
   --label-gap: 1.5rem;
-  --item-size: clamp(1.25rem, 7vw, 3.125rem);
-  --item-gap: 1.25rem;
+  /* 5.6vw: "DESENVOLVIMENTO" + linha cabem em telas de 360px. */
+  --item-size: clamp(1.125rem, 5.6vw, 2.75rem);
+  --item-gap: 1rem;
   --line-width: 15vw;
   --line-gap: 12px;
 
@@ -28,6 +29,14 @@
 .link {
   display: flex;
   align-items: center;
+  /* Reset para o <button> dos setores que abrem modal ficar igual ao link. */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
   gap: var(--line-gap);
   font-size: var(--item-size);
   font-weight: var(--weight-black);
@@ -68,8 +77,10 @@
   .sectors {
     --label-size: clamp(0.875rem, calc(var(--u) * 1.72), 2.25rem);
     --label-gap: calc(var(--u) * 3.13);
-    --item-size: clamp(1.75rem, calc(var(--u) * 3.33), 4.75rem);
-    --item-gap: calc(var(--u) * 3.4);
+    /* Menores que no design (3.33u / 3.4u) para os 4 setores caberem na
+       altura da tela. */
+    --item-size: clamp(1.5rem, calc(var(--u) * 2.7), 4rem);
+    --item-gap: calc(var(--u) * 2.6);
     --line-width: calc(var(--u) * 17.5);
     --line-gap: calc(var(--u) * 1.87);
   }
