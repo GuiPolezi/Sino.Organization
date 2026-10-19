@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MEDIA } from '../../../utils/media.js';
 import Boneco from '../boneco/Boneco.jsx';
+import Retratista from '../boneco/Retratos.jsx';
 import { AREA, MOVIMENTO, useEquipe } from '../store.js';
 import CameraRig from './CameraRig.jsx';
 import Cenario from './Cenario.jsx';
@@ -75,6 +76,7 @@ function Cena({ Estacoes, Quadro }) {
       {tecnicos.map((tecnico) => (
         <Boneco key={tecnico.id} tecnico={tecnico} />
       ))}
+      <Retratista />
     </Canvas>
   );
 }

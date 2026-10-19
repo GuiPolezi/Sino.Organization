@@ -253,7 +253,8 @@ function useTexturas(escrito) {
  */
 export default function Quadro({ area, anotacoes }) {
   const abrirQuadro = useEquipe((s) => s.abrirQuadro);
-  const aberto = useEquipe((s) => s.painel === 'quadro');
+  // Aberto também com o card de uma categoria, que sai do painel do quadro.
+  const aberto = useEquipe((s) => s.painel !== null);
   const retrato = useThree((s) => s.size.width / s.size.height < 1);
   const [posicao, setPosicao] = useState(() => ({ ...QUADRO }));
   const [emHover, setEmHover] = useState(false);

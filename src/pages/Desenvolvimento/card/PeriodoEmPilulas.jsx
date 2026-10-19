@@ -7,8 +7,8 @@ import styles from './CardQuadro.module.css';
 
 gsap.registerPlugin(useGSAP);
 
-// Como no design do quadro: "07 Dias", com o zero.
-const rotuloDe = ({ id, rotulo }) => (id === '7d' ? '07 Dias' : rotulo);
+// Como no design do quadro: "07 Dias", com o zero. No card da categoria, sem ele.
+const rotuloDe = ({ id, rotulo }, emLinha) => (id === '7d' && !emLinha ? '07 Dias' : rotulo);
 
 /**
  * Período do painel do quadro: uma pílula por opção, todas à vista. A escolhida
@@ -20,8 +20,9 @@ const rotuloDe = ({ id, rotulo }) => (id === '7d' ? '07 Dias' : rotulo);
  * @param {object} props
  * @param {import('../mappers/chamados.js').Periodo} props.periodo
  * @param {(periodo: import('../mappers/chamados.js').Periodo) => void} props.onMudar
+ * @param {boolean} [props.emLinha] rótulo à esquerda das pílulas, numa linha só (card da categoria)
  */
-export default function PeriodoEmPilulas({ periodo, onMudar }) {
+export default function PeriodoEmPilulas({ periodo, onMudar, emLinha = false }) {
   const grupo = useRef(null);
   const marcador = useRef(null);
   const copia = useRef(null);
@@ -56,7 +57,7 @@ export default function PeriodoEmPilulas({ periodo, onMudar }) {
   }, []);
 
   return (
-    <div className={styles.periodo}>
+    <div className={styles.periodo} data-em-linha={emLinha || undefined}>
       <h3 id={`${id}-rotulo`} className={styles.periodoRotulo}>
         Período
       </h3>
@@ -69,14 +70,14 @@ export default function PeriodoEmPilulas({ periodo, onMudar }) {
             aria-pressed={opcao.id === periodo}
             onClick={() => onMudar(opcao.id)}
           >
-            {rotuloDe(opcao)}
+            {rotuloDe(opcao, emLinha)}
           </button>
         ))}
         <span ref={marcador} className={styles.marcador} aria-hidden="true">
           <span ref={copia} className={styles.copia}>
             {PERIODOS.map((opcao) => (
               <span key={opcao.id} className={styles.pilula}>
-                {rotuloDe(opcao)}
+                {rotuloDe(opcao, emLinha)}
               </span>
             ))}
           </span>

@@ -1,0 +1,186 @@
+/*
+ * Card de uma categoria (CardCategoria.jsx). O esqueleto vem de
+ * CardTecnico.module.css, o ícone dourado de ../../Suporte/card/CardQuadro.module.css
+ * e o cabeçalho, as pílulas e as cores do painel do quadro (CardQuadro.module.css,
+ * classe .painel); aqui ficam os membros e os tickets criados. O ranking tem o
+ * próprio arquivo (Ranking.module.css).
+ */
+.card {
+  gap: 1.5rem;
+}
+
+/* ── Membros ── */
+.rotulos {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+}
+
+.rotulos h3 {
+  font-size: inherit;
+  font-weight: var(--weight-regular);
+}
+
+.membros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 14px 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.membros button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  width: 100%;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  color: var(--color-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.membros button:hover {
+  background: color-mix(in srgb, var(--color-olive) 10%, transparent);
+}
+
+.membros strong {
+  max-width: 100%;
+  margin-top: 6px;
+  overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.membros small {
+  font-size: 0.6875rem;
+  line-height: 1.25;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  text-wrap: balance;
+}
+
+/* O rosto num quadrado de cantos redondos, sobre o oliva da cena. */
+.rosto {
+  display: grid;
+  place-items: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 30%, #8fae68, #4d6b33 75%);
+  box-shadow: 0 6px 12px color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
+  color: var(--color-ink);
+  font-size: 1rem;
+  font-weight: var(--weight-bold);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.rosto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.12);
+  transform-origin: 50% 30%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .membros button:hover .rosto {
+    transform: translateY(-3px) scale(1.04);
+  }
+}
+
+.membros button:active .rosto {
+  transform: scale(0.95);
+}
+
+.vazio {
+  font-size: 0.875rem;
+  color: var(--neutro-pequeno);
+}
+
+/* ── Tickets criados ── */
+.criados h3 {
+  font-size: clamp(1.75rem, 9.4cqi, 2.375rem);
+  font-style: italic;
+  font-weight: var(--weight-black);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--chamada);
+}
+
+/* O número, o tracejado até o ponto e a frase, numa linha. */
+.linhaCriados {
+  display: grid;
+  grid-template-columns: auto minmax(3.5rem, 1fr) auto minmax(0, 9.25rem);
+  align-items: center;
+  margin-top: 4px;
+}
+
+.numero {
+  font-size: clamp(2.5rem, 15cqi, 4.25rem);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--verde-noite);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Com o "+" e o ponto de milhar, o número encolhe para o tracejado continuar à vista. */
+.numero[data-digitos='4'] {
+  font-size: clamp(2.5rem, 13cqi, 3.75rem);
+}
+
+.numero[data-digitos='5'],
+.numero[data-digitos='6'] {
+  font-size: clamp(2.25rem, 10.5cqi, 3rem);
+}
+
+.tracejado {
+  width: 100%;
+  height: 12px;
+  margin-left: 12px;
+  overflow: visible;
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-ink) 50%, transparent);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+  vector-effect: non-scaling-stroke;
+}
+
+.ponto {
+  width: 11px;
+  height: 11px;
+  margin-right: 14px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+.frase {
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: 1.35;
+  color: var(--color-ink);
+}
+
+.frase strong {
+  font-weight: var(--weight-black);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .membros button,
+  .rosto {
+    transition: none;
+  }
+}

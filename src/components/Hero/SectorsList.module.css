@@ -10,6 +10,7 @@
 }
 
 .label {
+  margin-top: 20px;
   margin-bottom: var(--label-gap);
   font-size: var(--label-size);
   font-weight: var(--weight-bold);

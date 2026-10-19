@@ -6,6 +6,7 @@ import { sorteador } from '../sorteador.js';
 /** @import { Chamado, ChamadosDesenvolvedor } from '../mappers/chamados.js' */
 
 const UM_DIA_MS = 864e5;
+const somarDias = (data, dias) => new Date(Date.parse(`${data}T00:00:00Z`) + dias * UM_DIA_MS).toISOString().slice(0, 10);
 // Um ano e meio de histórico, para "Todo o Tempo" ter centenas de chamados.
 const DIAS_DE_HISTORICO = 540;
 // Peso das categorias de cada pessoa: a primeira concentra a maior parte.
@@ -65,7 +66,19 @@ function perfil(id) {
   if (sorteio() < 0.45) emAberto.push(['Pendente', 12]);
   if (sorteio() < 0.5) emAberto.push(['Aguardando Deploy', 10]);
 
-  return { porDiaUtil, categorias, emAberto, tipos: TIPOS.map((tipo, i) => [tipo, PESOS_TIPOS[i]]) };
+  return { porDiaUtil, categorias, emAberto, tipos: TIPOS.map((tipo, i) => [tipo, PESOS_TIPOS[i]]), ritmo: ritmo(id) };
+}
+
+/*
+ * Quantos dias a pessoa costuma levar para fechar um chamado. Sai de outra
+ * sequência, para não mudar os chamados que já existiam.
+ */
+const ritmo = (id) => 2 + sorteador(`${id}:ritmo`)() * 6;
+
+// Dias até fechar: quase sempre poucos, às vezes semanas; nunca depois de hoje.
+function prazoAteFechar(sorteio, media, idade) {
+  const dias = Math.round(-Math.log(1 - sorteio()) * media);
+  return Math.min(dias, idade);
 }
 
 // Quanto mais velho o chamado, mais provável que já esteja fechado. Desenvolvimento leva
@@ -76,18 +89,23 @@ function chamadosDoDia(id, jeito, data, idade) {
   const sorteio = sorteador(`${id}:${data}`);
   // A cidade sai de outra sequência, para não mudar os chamados que já existiam.
   const sorteioLocal = sorteador(`${id}:${data}:local`);
+  const sorteioPrazo = sorteador(`${id}:${data}:prazo`);
   const fimDeSemana = [0, 6].includes(new Date(`${data}T00:00:00Z`).getUTCDay());
   let quantidade = fimDeSemana ? 0 : Math.round(sorteio() * jeito.porDiaUtil * 2);
   // A demonstração sempre tem algo em "Hoje".
   if (idade === 0) quantidade = Math.max(quantidade, 1 + Math.floor(sorteio() * 3));
 
-  return Array.from({ length: quantidade }, () => ({
-    data,
-    categoria: escolher(sorteio, jeito.categorias),
-    tipo: escolher(sorteio, jeito.tipos),
-    status: sorteio() < chanceDeFechado(idade) ? FECHADO : escolher(sorteio, jeito.emAberto),
-    local: escolher(sorteioLocal, PESOS_LOCAIS),
-  }));
+  return Array.from({ length: quantidade }, () => {
+    const chamado = {
+      data,
+      categoria: escolher(sorteio, jeito.categorias),
+      tipo: escolher(sorteio, jeito.tipos),
+      status: sorteio() < chanceDeFechado(idade) ? FECHADO : escolher(sorteio, jeito.emAberto),
+      local: escolher(sorteioLocal, PESOS_LOCAIS),
+    };
+    if (chamado.status === FECHADO) chamado.fechadoEm = somarDias(data, prazoAteFechar(sorteioPrazo, jeito.ritmo, idade));
+    return chamado;
+  });
 }
 
 /** @returns {Chamado[]} do mais novo para o mais antigo */

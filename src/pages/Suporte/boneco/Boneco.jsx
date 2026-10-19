@@ -10,6 +10,8 @@ import styles from './Boneco.module.css';
 const LADOS = [-1, 1];
 const OPACIDADE_BARBA_RALA = 0.55;
 const GRAUS = Math.PI / 180;
+// Giro do braço erguido no aceno do retrato: quase para cima, um pouco aberto.
+const ACENO = 2.55;
 
 // Cachos espalhados pela cabeça em anéis, sem cobrir o rosto. Cada anel:
 // [ângulo a partir do topo, primeiro e último giro a partir da frente, quantidade].
@@ -220,13 +222,8 @@ function AcessorioCabeca({ tipo, materialBone }) {
   return null;
 }
 
-/*
- * Visual do boneco em primitivas. Todo técnico é uma configuração deste mesmo
- * componente (aparencia.js); o movimento vem de useComportamento.
- */
-export default function Boneco({ tecnico }) {
-  const { id } = tecnico;
-  const aparencia = useMemo(() => aparenciaDe(id), [id]);
+/** Materiais de uma aparência, descartados quando ela muda ou quando quem a usa sai de cena. */
+export function useMateriais(aparencia) {
   const materiais = useMemo(
     () => ({
       pele: clay(aparencia.pele),
@@ -254,6 +251,89 @@ export default function Boneco({ tecnico }) {
     () => () => Object.values(materiais).forEach((material) => material?.dispose()),
     [materiais],
   );
+  return materiais;
+}
+
+/**
+ * O corpo do boneco, das pernas à cabeça, de pé e de frente para +z. `partes`
+ * traz as refs que o comportamento anima; sem elas, a pose fica parada. Com
+ * `aceno`, o braço direito sobe e a cabeça inclina um pouco: é a pose do
+ * retrato (Retratos.jsx).
+ *
+ * @param {object} props
+ * @param {ReturnType<typeof aparenciaDe>} props.aparencia
+ * @param {ReturnType<typeof useMateriais>} props.materiais
+ * @param {object} [props.partes]
+ * @param {boolean} [props.aceno]
+ */
+export function Figura({ aparencia, materiais, partes = {}, aceno = false }) {
+  return (
+    <group ref={partes.corpo}>
+      {/* Pernas (pivô no quadril) */}
+      <group ref={partes.pernaE} position={[-0.15, 0.42, 0]}>
+        <mesh geometry={G.perna} material={materiais.calca} position-y={-0.2} />
+      </group>
+      <group ref={partes.pernaD} position={[0.15, 0.42, 0]}>
+        <mesh geometry={G.perna} material={materiais.calca} position-y={-0.2} />
+      </group>
+
+      {/* Tronco */}
+      <mesh geometry={G.corpo} material={materiais.camisa} position-y={0.86} />
+      {/* No peito esquerdo de quem veste: o boneco olha para +z. */}
+      {aparencia.logo && <mesh geometry={G.logo} material={LOGO} position-y={0.99} rotation-y={0.47} />}
+      {aparencia.moletom && <Moletom material={materiais.camisa} />}
+      {aparencia.acessorio === 'gravata' && (
+        <mesh geometry={G.gravata} material={ESCURO} position={[0, 0.93, 0.33]} rotation-x={-0.12} />
+      )}
+
+      {/* Braços (pivô no ombro) */}
+      <group ref={partes.bracoE} position={[-0.39, 1.13, 0]}>
+        <mesh geometry={G.braco} material={materiais.camisa} position-y={-0.2} />
+        <mesh geometry={G.mao} material={materiais.pele} position-y={-0.42} />
+      </group>
+      <group ref={partes.bracoD} position={[0.39, 1.13, 0]} {...(aceno && { 'rotation-z': ACENO })}>
+        <mesh geometry={G.braco} material={materiais.camisa} position-y={-0.2} />
+        <mesh geometry={G.mao} material={materiais.pele} position-y={-0.42} />
+        {aparencia.acessorio === 'maleta' && (
+          <mesh geometry={G.maleta} material={ESCURO} position={[0, -0.6, 0]} />
+        )}
+      </group>
+
+      <group ref={partes.cabeca} position-y={1.56} {...(aceno && { 'rotation-z': -0.08 })}>
+        <mesh geometry={G.cabeca} material={materiais.pele} />
+        {LADOS.map((lado) => (
+          <group key={lado}>
+            <mesh geometry={G.olho} material={materiais.olhos ?? ESCURO} position={[0.12 * lado, 0.04, 0.31]} />
+            {materiais.olhos && (
+              <mesh geometry={G.pupila} material={ESCURO} position={[0.12 * lado, 0.04, 0.343]} />
+            )}
+            <mesh geometry={G.brilho} material={BRANCO} position={[0.12 * lado + 0.015, 0.06, 0.35]} />
+            {temBochechas(aparencia) && (
+              <mesh geometry={G.bochecha} material={BOCHECHA} position={[0.2 * lado, -0.07, 0.27]} scale={[1, 0.6, 0.4]} />
+            )}
+          </group>
+        ))}
+        <Cabelo
+          estilo={aparencia.cabelo.estilo}
+          material={materiais.cabelo}
+          materialMechas={materiais.mechas ?? materiais.cabelo}
+          materialDegrade={materiais.degrade}
+        />
+        <Barba estilo={aparencia.barba} material={materiais.barbaRala ?? materiais.cabelo} />
+        <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.bone ?? materiais.camisa} />
+      </group>
+    </group>
+  );
+}
+
+/*
+ * Visual do boneco em primitivas. Todo técnico é uma configuração deste mesmo
+ * componente (aparencia.js); o movimento vem de useComportamento.
+ */
+export default function Boneco({ tecnico }) {
+  const { id } = tecnico;
+  const aparencia = useMemo(() => aparenciaDe(id), [id]);
+  const materiais = useMateriais(aparencia);
 
   const selecionado = useEquipe((s) => s.selecionado === id);
   const emHover = useEquipe((s) => s.hover === id);
@@ -296,61 +376,7 @@ export default function Boneco({ tecnico }) {
         onClick={onClick}
       />
 
-      <group ref={partes.corpo}>
-        {/* Pernas (pivô no quadril) */}
-        <group ref={partes.pernaE} position={[-0.15, 0.42, 0]}>
-          <mesh geometry={G.perna} material={materiais.calca} position-y={-0.2} />
-        </group>
-        <group ref={partes.pernaD} position={[0.15, 0.42, 0]}>
-          <mesh geometry={G.perna} material={materiais.calca} position-y={-0.2} />
-        </group>
-
-        {/* Tronco */}
-        <mesh geometry={G.corpo} material={materiais.camisa} position-y={0.86} />
-        {/* No peito esquerdo de quem veste: o boneco olha para +z. */}
-        {aparencia.logo && <mesh geometry={G.logo} material={LOGO} position-y={0.99} rotation-y={0.47} />}
-        {aparencia.moletom && <Moletom material={materiais.camisa} />}
-        {aparencia.acessorio === 'gravata' && (
-          <mesh geometry={G.gravata} material={ESCURO} position={[0, 0.93, 0.33]} rotation-x={-0.12} />
-        )}
-
-        {/* Braços (pivô no ombro) */}
-        <group ref={partes.bracoE} position={[-0.39, 1.13, 0]}>
-          <mesh geometry={G.braco} material={materiais.camisa} position-y={-0.2} />
-          <mesh geometry={G.mao} material={materiais.pele} position-y={-0.42} />
-        </group>
-        <group ref={partes.bracoD} position={[0.39, 1.13, 0]}>
-          <mesh geometry={G.braco} material={materiais.camisa} position-y={-0.2} />
-          <mesh geometry={G.mao} material={materiais.pele} position-y={-0.42} />
-          {aparencia.acessorio === 'maleta' && (
-            <mesh geometry={G.maleta} material={ESCURO} position={[0, -0.6, 0]} />
-          )}
-        </group>
-
-        <group ref={partes.cabeca} position-y={1.56}>
-          <mesh geometry={G.cabeca} material={materiais.pele} />
-          {LADOS.map((lado) => (
-            <group key={lado}>
-              <mesh geometry={G.olho} material={materiais.olhos ?? ESCURO} position={[0.12 * lado, 0.04, 0.31]} />
-              {materiais.olhos && (
-                <mesh geometry={G.pupila} material={ESCURO} position={[0.12 * lado, 0.04, 0.343]} />
-              )}
-              <mesh geometry={G.brilho} material={BRANCO} position={[0.12 * lado + 0.015, 0.06, 0.35]} />
-              {temBochechas(aparencia) && (
-                <mesh geometry={G.bochecha} material={BOCHECHA} position={[0.2 * lado, -0.07, 0.27]} scale={[1, 0.6, 0.4]} />
-              )}
-            </group>
-          ))}
-          <Cabelo
-            estilo={aparencia.cabelo.estilo}
-            material={materiais.cabelo}
-            materialMechas={materiais.mechas ?? materiais.cabelo}
-            materialDegrade={materiais.degrade}
-          />
-          <Barba estilo={aparencia.barba} material={materiais.barbaRala ?? materiais.cabelo} />
-          <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.bone ?? materiais.camisa} />
-        </group>
-      </group>
+      <Figura aparencia={aparencia} materiais={materiais} partes={partes} />
 
       {/* Selecionado, o nome já está no card. */}
       {emHover && !selecionado && (

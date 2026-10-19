@@ -2,7 +2,7 @@ import gsap from 'gsap';
 
 // Graus por segundo com a estrela girando solta.
 const VELOCIDADE = 150;
-// A estrela de quatro pontas fica igual a cada quarto de volta: é onde ela pousa.
+// A estrela de quatro pontas fica igual a cada quarto de volta: é onde ela pousa (por padrão).
 const QUARTO = 90;
 // Duração da freada; sem velocidade para herdar, ela leva PARADA_DO_REPOUSO_S.
 const MIN_PARADA_S = 0.6;
@@ -29,12 +29,12 @@ function curvaDePouso(de, ate, v0, duracao) {
  * natural é o de uma freada constante (2·d/v); fica entre MIN e MAX_PARADA_S e
  * nunca passa de 3·d/v, o limite em que a curva começaria a passar do ponto.
  */
-function planejarPouso(angulo, velocidade) {
-  let destino = Math.ceil(angulo / QUARTO) * QUARTO;
+function planejarPouso(angulo, velocidade, simetria) {
+  let destino = Math.ceil(angulo / simetria) * simetria;
   if (velocidade <= 0) return { destino, duracao: PARADA_DO_REPOUSO_S };
 
   // Perto demais para frear sem passar do ponto: segue até o quarto seguinte.
-  while ((3 * (destino - angulo)) / velocidade < MIN_PARADA_S) destino += QUARTO;
+  while ((3 * (destino - angulo)) / velocidade < MIN_PARADA_S) destino += simetria;
   const distancia = destino - angulo;
   const limite = Math.min(MAX_PARADA_S, (3 * distancia) / velocidade);
   return { destino, duracao: gsap.utils.clamp(MIN_PARADA_S, limite, (2 * distancia) / velocidade) };
@@ -49,9 +49,10 @@ function planejarPouso(angulo, velocidade) {
  *
  * @param {HTMLElement} alvo
  * @param {SVGElement} estrela
+ * @param {number} [simetria] graus em que a estrela fica igual: 90 na de quatro pontas, 72 na de cinco
  * @returns {() => void} desfaz tudo
  */
-export function girarAoPassar(alvo, estrela) {
+export function girarAoPassar(alvo, estrela, simetria = QUARTO) {
   const giro = { velocidade: 0 };
   const girarPara = gsap.quickSetter(estrela, 'rotation', 'deg');
   let angulo = 0;
@@ -86,7 +87,7 @@ export function girarAoPassar(alvo, estrela) {
 
     const { velocidade } = giro;
     giro.velocidade = 0;
-    const { destino, duracao } = planejarPouso(angulo, velocidade);
+    const { destino, duracao } = planejarPouso(angulo, velocidade, simetria);
     const curva = curvaDePouso(angulo, destino, velocidade, duracao);
     const progresso = { s: 0 };
 

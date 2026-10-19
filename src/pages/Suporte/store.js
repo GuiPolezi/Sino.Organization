@@ -6,8 +6,10 @@ export const useEquipe = create((set) => ({
   carregando: true,
   erro: false,
   selecionado: null,
-  // 'quadro' quando o painel do quadro da equipe está aberto.
+  // 'quadro' com o painel do quadro da equipe aberto; 'categoria' com o card de uma categoria dele.
   painel: null,
+  // Categoria do card aberto pelo Desempenho do quadro (/desenvolvimento).
+  categoria: null,
   hover: null,
   // Dados do quadro que não saem dos técnicos (api/resumoEquipe.js).
   extrasQuadro: null,
@@ -23,6 +25,7 @@ export const useEquipe = create((set) => ({
   // Card do técnico e painel do quadro nunca ficam abertos juntos.
   selecionar: (id) => set({ selecionado: id, painel: null }),
   abrirQuadro: () => set({ painel: 'quadro', selecionado: null, hover: null }),
+  abrirCategoria: (categoria) => set({ painel: 'categoria', categoria, selecionado: null, hover: null }),
   fecharPainel: () => set({ painel: null }),
   setHover: (id) => set({ hover: id }),
   // Vai para o técnico vizinho do selecionado, dando a volta na lista.

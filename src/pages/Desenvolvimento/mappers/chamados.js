@@ -14,6 +14,7 @@
  * @property {string} categoria  sistema do chamado ("Siscam 9", "Site"…)
  * @property {string} tipo       tipo da solicitação ("Bug/Erro"…)
  * @property {string} [local]    cidade do cliente que abriu o chamado
+ * @property {string} [fechadoEm] dia em que foi fechado, "AAAA-MM-DD" (só nos fechados)
  *
  * @typedef {object} ChamadosDesenvolvedor
  * @property {boolean} [ficticio] dados de demonstração, ainda sem backend

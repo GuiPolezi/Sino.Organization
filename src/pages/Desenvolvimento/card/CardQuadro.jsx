@@ -1,7 +1,7 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { MEDIA } from '../../../utils/media.js';
 import quadro from '../../Suporte/card/CardQuadro.module.css';
 import card from '../../Suporte/card/CardTecnico.module.css';
@@ -11,6 +11,7 @@ import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
 import { CATEGORIAS } from '../mappers/chamados.js';
 import { visaoGeral } from '../mappers/visaoGeral.js';
+import CardCategoria from './CardCategoria.jsx';
 import { fatiasPorCategoria, fatiasPorDesenvolvedor } from './cores.js';
 import GraficoLocais from './GraficoLocais.jsx';
 import GraficoPizza from './GraficoPizza.jsx';
@@ -19,9 +20,6 @@ import PeriodoEmPilulas from './PeriodoEmPilulas.jsx';
 import styles from './CardQuadro.module.css';
 
 gsap.registerPlugin(useGSAP, DrawSVGPlugin);
-
-// Por quanto tempo o botão de uma categoria avisa que o card dela ainda não existe.
-const AVISO_MS = 1800;
 
 // Números compridos encolhem para caber na largura (ver [data-digitos] no CSS).
 const digitos = (valor) => Math.min(String(valor).length, 6);
@@ -49,21 +47,11 @@ function TotalDeTickets({ total }) {
   );
 }
 
-/*
- * Um botão por categoria. Cada um vai abrir o card daquela categoria; enquanto
- * esses cards não existem, o botão avisa "Em breve" por um instante. Quando
- * existirem, é em abrirCategoria que eles abrem.
- */
+// Um botão por categoria: cada um troca o painel pelo card da categoria (CardCategoria.jsx).
 function Desempenho() {
   const raiz = useRef(null);
   const visto = useRevelar(raiz);
-  const [avisando, setAvisando] = useState(null);
-
-  useEffect(() => {
-    if (!avisando) return undefined;
-    const espera = setTimeout(() => setAvisando(null), AVISO_MS);
-    return () => clearTimeout(espera);
-  }, [avisando]);
+  const abrirCategoria = useEquipe((s) => s.abrirCategoria);
 
   useGSAP(
     () => {
@@ -78,26 +66,18 @@ function Desempenho() {
     { dependencies: [visto], scope: raiz },
   );
 
-  const abrirCategoria = (nome) => setAvisando(nome);
-
   return (
     <section ref={raiz} className={styles.desempenho} data-esperando={!visto || undefined}>
       <h3 className={styles.chamada}>Desempenho</h3>
       <ul className={styles.categorias}>
         {CATEGORIAS.map((nome) => (
           <li key={nome}>
-            <button type="button" data-avisando={avisando === nome || undefined} onClick={() => abrirCategoria(nome)}>
-              <span className={styles.nomeCategoria}>{nome}</span>
-              <span className={styles.emBreve} aria-hidden="true">
-                Em breve
-              </span>
+            <button type="button" onClick={() => abrirCategoria(nome)}>
+              {nome}
             </button>
           </li>
         ))}
       </ul>
-      <p className="sr-only" aria-live="polite">
-        {avisando && `O card de ${avisando} ainda está em construção.`}
-      </p>
     </section>
   );
 }
@@ -194,12 +174,16 @@ function Painel({ fechar }) {
  * abre pelo quadro da cena. O período vale para o painel todo: o total de
  * tickets e as cargas por desenvolvedor, por categoria e por local (as contas
  * estão em mappers/visaoGeral.js). Os números saem dos chamados dos cards; hoje
- * são de demonstração.
+ * são de demonstração. Os botões do Desempenho trocam o painel pelo card da
+ * categoria, que também é aberto daqui.
  */
 export default function CardQuadro() {
-  const aberto = useEquipe((s) => s.painel === 'quadro');
+  const painel = useEquipe((s) => s.painel);
+  const categoria = useEquipe((s) => s.categoria);
   const fechar = useEquipe((s) => s.fecharPainel);
-  useFecharComEsc(aberto, fechar);
+  useFecharComEsc(painel !== null, fechar);
 
-  return aberto ? <Painel fechar={fechar} /> : null;
+  // A key refaz a entrada ao trocar de categoria.
+  if (painel === 'categoria') return <CardCategoria key={categoria} categoria={categoria} fechar={fechar} />;
+  return painel === 'quadro' ? <Painel fechar={fechar} /> : null;
 }

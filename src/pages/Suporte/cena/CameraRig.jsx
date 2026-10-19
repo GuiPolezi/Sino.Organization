@@ -24,7 +24,8 @@ export default function CameraRig() {
     const { selecionado, painel } = useEquipe.getState();
     const pos = selecionado ? posicoes.get(selecionado) : null;
 
-    if (painel === 'quadro') {
+    // O card de uma categoria (/desenvolvimento) sai do quadro: a câmera continua nele.
+    if (painel) {
       // No desktop o quadro fica à esquerda do painel. No mobile a câmera recua, para o
       // quadro caber na largura, e olha para baixo dele, para ele subir acima do bottom sheet.
       const dx = estreito ? 0 : 0.45;

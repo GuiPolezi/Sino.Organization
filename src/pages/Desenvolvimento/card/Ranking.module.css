@@ -1,0 +1,463 @@
+/*
+ * Ranking do card da categoria. O gráfico é um painel oliva com uma aba
+ * "Ranking" no canto de cima (a curva de dentro, entre a aba e o painel, é um
+ * gradiente radial), eixos x e y em creme e linhas de grade. As barras e os
+ * rostos só se movem por transform (scaleY e translateY na mesma --fracao), e
+ * as entradas são animações CSS: nada muda o layout a cada quadro.
+ */
+.ranking {
+  --fundo: var(--color-olive);
+  --creme: var(--color-cream);
+  --barra: #8a8a84;
+  /* Turquesa do design para o primeiro lugar. */
+  --barra-melhor: #7fe0d6;
+  --estrela: #f4a236;
+  --curva: 28px;
+  --altura-barra: clamp(5.5rem, 30cqi, 8.5rem);
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  display: grid;
+}
+
+/* ── Cabeçalho: legenda à esquerda e a aba à direita ── */
+.topo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.legenda {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+
+.legenda small {
+  font-size: 0.6875rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-ink) 50%, transparent);
+}
+
+.legenda h3 {
+  font-size: clamp(0.875rem, 3.9cqi, 1rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: var(--color-ink);
+  text-wrap: balance;
+}
+
+.aba {
+  position: relative;
+  padding: 10px clamp(14px, 5cqi, 22px) 4px;
+  border-radius: var(--curva) var(--curva) 0 0;
+  background: var(--fundo);
+  color: var(--creme);
+  font-size: clamp(1.75rem, 9.6cqi, 2.5rem);
+  font-style: italic;
+  font-weight: var(--weight-black);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+/* A curva de dentro, onde a aba encontra o painel. */
+.aba::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  bottom: 0;
+  width: var(--curva);
+  height: var(--curva);
+  background: radial-gradient(circle at 0 0, transparent calc(var(--curva) - 0.5px), var(--fundo) var(--curva));
+}
+
+/* ── O gráfico ── */
+.plano {
+  --margem-y: 2.1rem;
+  --margem-x: 2.6rem;
+
+  position: relative;
+  display: grid;
+  padding: 1.1rem 1rem var(--margem-x) var(--margem-y);
+  border-radius: var(--curva) 0 var(--curva) var(--curva);
+  background: var(--fundo);
+  color: var(--creme);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.grade {
+  position: absolute;
+  inset: 1.4rem 1.25rem var(--margem-x) var(--margem-y);
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0 calc(1rem - 1px),
+    color-mix(in srgb, var(--creme) 16%, transparent) calc(1rem - 1px) 1rem
+  );
+}
+
+/* Os eixos: uma linha com a ponta em seta e a letra ao lado. */
+.eixoY,
+.eixoX {
+  position: absolute;
+  background: color-mix(in srgb, var(--creme) 85%, transparent);
+}
+
+.eixoY {
+  top: 0.9rem;
+  bottom: calc(var(--margem-x) - 0.6rem);
+  left: calc(var(--margem-y) - 0.55rem);
+  width: 1.5px;
+}
+
+.eixoX {
+  right: 0.9rem;
+  bottom: calc(var(--margem-x) - 0.6rem);
+  left: calc(var(--margem-y) - 0.55rem);
+  height: 1.5px;
+}
+
+.eixoY::before,
+.eixoX::before {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: solid color-mix(in srgb, var(--creme) 85%, transparent);
+}
+
+.eixoY::before {
+  top: 0;
+  left: 50%;
+  border-width: 1.5px 0 0 1.5px;
+  transform: translate(-50%, 1px) rotate(45deg);
+}
+
+.eixoX::before {
+  top: 50%;
+  right: 0;
+  border-width: 1.5px 1.5px 0 0;
+  transform: translate(-1px, -50%) rotate(45deg);
+}
+
+.eixoY i,
+.eixoX i {
+  position: absolute;
+  font-size: 0.6875rem;
+  font-style: normal;
+  line-height: 1;
+  color: color-mix(in srgb, var(--creme) 75%, transparent);
+}
+
+.eixoY i {
+  top: -2px;
+  right: 7px;
+}
+
+.eixoX i {
+  top: 8px;
+  right: -2px;
+}
+
+/* O slide que sai e o que entra ocupam a mesma célula. */
+.slides {
+  display: grid;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  /* Com mais gente, o vão entre as colunas diminui (--colunas vem do slide). */
+  gap: clamp(0.375rem, calc(32cqi / var(--colunas)), 2.75rem);
+  margin: 0;
+  padding: 0 0.25rem;
+  list-style: none;
+}
+
+/* A trilha de largura zero deixa a coluna estreitar mais que o valor ("6 Dias"), que transborda centrado. */
+.coluna {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  flex: 0 1 4.75rem;
+  min-width: 0;
+}
+
+/* Altura da barra mais a do rosto, para o primeiro lugar não passar do painel. */
+.trilho {
+  position: relative;
+  width: 100%;
+  height: calc(var(--altura-barra) + 6.4rem);
+}
+
+.barra {
+  position: absolute;
+  right: 4%;
+  bottom: 0;
+  left: 4%;
+  height: var(--altura-barra);
+  background: var(--barra);
+  box-shadow: 0 6px 10px rgb(0 0 0 / 0.18);
+  transform: scaleY(var(--fracao));
+  transform-origin: bottom;
+  transition:
+    transform 0.8s var(--facil),
+    background-color 0.4s ease;
+}
+
+.coluna[data-melhor] .barra {
+  background: var(--barra-melhor);
+}
+
+.cabeca {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  transform: translateY(calc(var(--fracao) * var(--altura-barra) * -1));
+  transition: transform 0.8s var(--facil);
+}
+
+.nome {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.625rem;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--creme) 88%, transparent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A moldura do rosto: uma pílula larga com contorno claro, sobre o oliva da cena. */
+.retrato {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1.7;
+  overflow: hidden;
+  border: 2px solid var(--color-white);
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 30%, #8fae68, #4d6b33 75%);
+  box-shadow: 0 6px 12px rgb(0 0 0 / 0.22);
+  color: var(--color-ink);
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+}
+
+.retrato img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* O retrato tem cabeça, ombros e a mão erguida; na pílula, o rosto ocupa a moldura. */
+  transform: scale(1.55);
+  transform-origin: 50% 36%;
+}
+
+.estrela {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 2px;
+}
+
+.pulo,
+.estrela svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.estrela svg {
+  overflow: visible;
+  fill: var(--estrela);
+  stroke: var(--estrela);
+  stroke-width: 9;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.25));
+}
+
+.valor {
+  margin-top: 10px;
+  font-size: clamp(0.8125rem, 3.8cqi, 0.9375rem);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  color: var(--color-white);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Paginação: setas e um ponto por slide ── */
+.paginas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 14px;
+}
+
+.seta,
+.ponto {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.seta {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.seta svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.seta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-olive) 14%, transparent);
+}
+
+.seta:disabled {
+  color: color-mix(in srgb, var(--color-ink) 30%, transparent);
+  cursor: default;
+}
+
+.ponto {
+  width: 1.25rem;
+  height: 1.5rem;
+}
+
+.ponto::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-ink);
+  transition:
+    background-color 0.3s ease,
+    transform 0.4s var(--facil);
+}
+
+/* Como no design: o ponto do slide à vista fica cinza. */
+.ponto[aria-current]::before {
+  background: color-mix(in srgb, var(--color-ink) 38%, transparent);
+  transform: scale(1.2);
+}
+
+/* ── Movimento ── */
+@media (prefers-reduced-motion: no-preference) {
+  .legenda h3 {
+    animation: legenda 0.5s var(--facil) both;
+  }
+
+  .slide {
+    animation: entra 0.6s var(--facil) both;
+  }
+
+  .slide[data-saindo] {
+    animation: sai 0.45s ease both;
+    pointer-events: none;
+  }
+
+  /* As barras crescem uma a uma; o rosto sobe junto com a ponta da barra. */
+  .barra,
+  .cabeca {
+    animation: 0.9s var(--facil) backwards;
+    animation-delay: calc(var(--i) * 90ms + 120ms);
+  }
+
+  .barra {
+    animation-name: crescer;
+  }
+
+  .cabeca {
+    animation-name: subir;
+  }
+
+  .valor {
+    animation: aparecer 0.5s ease backwards;
+    animation-delay: calc(var(--i) * 90ms + 420ms);
+  }
+
+  /* A estrela pousa depois de as barras crescerem. */
+  .estrela {
+    animation: pousar 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+    animation-delay: calc(var(--i) * 90ms + 750ms);
+  }
+
+  .coluna[data-melhor] {
+    cursor: default;
+  }
+}
+
+@keyframes legenda {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes entra {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--direcao) * 2.5rem));
+  }
+}
+
+@keyframes sai {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--direcao) * -2.5rem));
+  }
+}
+
+@keyframes crescer {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pousar {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-140deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra,
+  .cabeca,
+  .seta,
+  .ponto::before {
+    transition: none;
+  }
+}

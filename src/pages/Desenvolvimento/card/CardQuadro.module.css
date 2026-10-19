@@ -55,6 +55,24 @@
   gap: 10px;
 }
 
+/* No card da categoria: o rótulo à esquerda e as pílulas logo depois, como no design dele. */
+.periodo[data-em-linha] {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.periodo[data-em-linha] .periodoRotulo {
+  font-size: 0.875rem;
+  font-weight: var(--weight-regular);
+  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+}
+
+.periodo[data-em-linha] .pilulas,
+.periodo[data-em-linha] .copia {
+  justify-content: flex-start;
+}
+
 .periodoRotulo {
   font-size: 0.75rem;
   font-weight: var(--weight-bold);
@@ -244,37 +262,6 @@
   transform: scale(0.96);
 }
 
-/* O nome e o aviso ocupam a mesma célula; um sai enquanto o outro entra. */
-.nomeCategoria,
-.emBreve {
-  grid-area: 1 / 1;
-  transition:
-    opacity 0.3s ease,
-    transform 0.4s var(--facil);
-}
-
-.emBreve {
-  font-size: 0.8125rem;
-  letter-spacing: 0.02em;
-  color: var(--color-cream);
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.categorias button[data-avisando] {
-  background: var(--color-olive-dark);
-}
-
-.categorias button[data-avisando] .nomeCategoria {
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.categorias button[data-avisando] .emBreve {
-  opacity: 1;
-  transform: none;
-}
-
 @media (hover: hover) and (pointer: fine) {
   .categorias button:hover {
     box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
@@ -291,9 +278,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pilula,
-  .categorias button,
-  .nomeCategoria,
-  .emBreve {
+  .categorias button {
     transition: none;
   }
 }
