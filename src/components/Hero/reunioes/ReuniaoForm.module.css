@@ -1,0 +1,283 @@
+/* Formulário de nova reunião (também estiliza o MembrosInput). */
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.corpo {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 1.25rem;
+  min-height: 0;
+  margin-right: -0.75rem;
+  padding: 0.25rem 0.75rem 0.5rem 0.125rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 45%, transparent) transparent;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: var(--weight-bold);
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1.25rem;
+}
+
+.campo {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rotulo {
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  color: var(--reunioes-tinta, #0b0c08);
+}
+
+.entrada {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 35%, transparent);
+  border-radius: 12px;
+  background: var(--color-white);
+  color: var(--reunioes-tinta, #0b0c08);
+  font: inherit;
+  font-size: 1rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.entrada::placeholder {
+  color: #8b8b7e;
+}
+
+.entrada:focus-visible {
+  outline: none;
+  border-color: var(--reunioes-oliva, #5f6b37);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 30%, transparent);
+}
+
+.entrada[aria-invalid='true'] {
+  border-color: #a23b2a;
+}
+
+.entrada[aria-invalid='true']:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, #a23b2a 25%, transparent);
+}
+
+.erro {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  color: #a23b2a;
+}
+
+.ajuda {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #66665a;
+}
+
+/* Controle segmentado: rádios nativos escondidos, rótulos como botões. */
+.segmentado {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  min-height: 2.75rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 12%, transparent);
+}
+
+.segmento {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: var(--weight-bold);
+  color: var(--reunioes-oliva, #5f6b37);
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.segmento input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmento:has(input:checked) {
+  background: var(--reunioes-oliva, #5f6b37);
+  color: var(--color-white);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
+}
+
+.segmento:has(input:focus-visible) {
+  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline-offset: 2px;
+}
+
+/* Membros */
+.membrosLinha {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.membrosLinha .entrada {
+  flex: 1;
+}
+
+.adicionar,
+.cancelar,
+.salvar {
+  min-height: 2.75rem;
+  padding: 0.6rem 1.4rem;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.adicionar {
+  flex: none;
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 14%, transparent);
+  color: var(--reunioes-oliva, #5f6b37);
+}
+
+.adicionar:hover {
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 24%, transparent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--reunioes-oliva, #5f6b37);
+  color: var(--color-white);
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+}
+
+.chipRemover {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-white) 18%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chipRemover:hover {
+  background: color-mix(in srgb, var(--color-white) 32%, transparent);
+}
+
+.chipRemover:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 1px;
+}
+
+/* Rodapé fixo com as ações do formulário. */
+.botoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 16%, transparent);
+}
+
+.cancelar {
+  background: transparent;
+  color: var(--reunioes-tinta, #0b0c08);
+}
+
+.cancelar:hover {
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 12%, transparent);
+}
+
+.salvar {
+  padding-inline: 2.25rem;
+  background: var(--reunioes-oliva, #5f6b37);
+  color: var(--color-white);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-olive-dark) 35%, transparent);
+}
+
+.salvar:hover {
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 85%, black);
+}
+
+.adicionar:focus-visible,
+.cancelar:focus-visible,
+.salvar:focus-visible {
+  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .membrosLinha {
+    flex-wrap: wrap;
+  }
+
+  .adicionar {
+    flex: 1;
+  }
+
+  .botoes > button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada,
+  .segmento,
+  .adicionar,
+  .cancelar,
+  .salvar {
+    transition: none;
+  }
+}

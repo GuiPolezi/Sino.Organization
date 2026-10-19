@@ -14,8 +14,10 @@ const blockScroll = (event) => {
  * Modal de vidro sobre a página borrada. O <dialog> ocupa a tela inteira e faz
  * o papel de fundo: clicar nele (fora do cartão) ou apertar Esc fecha.
  * Filhos com `data-modal="item"` entram em sequência na abertura.
+ * Opcionais: `className` soma uma classe ao cartão; `actions` vai ao lado do
+ * título (o botão Fechar entra na mesma linha); sem `tag`, o selo some.
  */
-export default function GlassModal({ tag, title, onClose, children }) {
+export default function GlassModal({ tag, title, onClose, children, className, actions }) {
   const dialog = useRef(null);
   const card = useRef(null);
   const closing = useRef(false);
@@ -83,6 +85,20 @@ export default function GlassModal({ tag, title, onClose, children }) {
     if (event.target === event.currentTarget) requestClose();
   };
 
+  const closeButton = (className) => (
+    <button type="button" className={className} aria-label="Fechar" onClick={requestClose}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+  );
+
+  const heading = (
+    <h3 id={titleId} className={styles.title} data-modal="item">
+      {title}
+    </h3>
+  );
+
   return createPortal(
     <dialog
       ref={dialog}
@@ -93,24 +109,26 @@ export default function GlassModal({ tag, title, onClose, children }) {
       onClose={onClose}
       onClick={onBackdropClick}
     >
-      <article ref={card} className={styles.card}>
-        <button
-          type="button"
-          className={styles.close}
-          aria-label="Fechar"
-          onClick={requestClose}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
-
-        <p className={styles.tag} data-modal="item">
-          {tag}
-        </p>
-        <h3 id={titleId} className={styles.title} data-modal="item">
-          {title}
-        </h3>
+      <article ref={card} className={className ? `${styles.card} ${className}` : styles.card}>
+        {actions ? (
+          <header className={styles.header}>
+            {heading}
+            <div className={styles.actions} data-modal="item">
+              {actions}
+              {closeButton(styles.closeInline)}
+            </div>
+          </header>
+        ) : (
+          <>
+            {closeButton(styles.close)}
+            {tag && (
+              <p className={styles.tag} data-modal="item">
+                {tag}
+              </p>
+            )}
+            {heading}
+          </>
+        )}
 
         {children}
       </article>
