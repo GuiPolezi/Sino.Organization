@@ -1,8 +1,8 @@
 // Configuração única dos setores: troque `image` aqui quando tiver as imagens finais.
 
-import imgDesenvolvimento from '../../assets/images/1.png';
-import imgSuporte from '../../assets/images/2.png';
-import imgLicencas from '../../assets/images/3.png';
+import imgDesenvolvimento from '../../assets/images/dev.png';
+import imgSuporte from '../../assets/images/suporte.png';
+import imgLicencas from '../../assets/images/license.png';
 
 export const sectors = [
   {
