@@ -7,14 +7,17 @@
  * frente, como um cantinho de trabalho. O quadro da equipe fica no fundo à
  * direita, e a frente à direita fica livre para a equipe circular. A direita é
  * evitada de propósito: com o painel aberto, o quadro abre um "corredor" ali
- * (quadro/posicao.js) que empurraria quem fosse sentar.
+ * (quadro/posicao.js) que empurraria quem fosse sentar; o corredor desta
+ * página (CORREDOR_DEV) é mais curto que o padrão, para não cair sobre o bloco.
  *
  * O ponto de aproximação (1,5 m na frente da cadeira) tem de cair dentro da
  * área de caminhada, senão ninguém senta: por isso a mesa solta do fundo tem a
  * cadeira voltada para a câmera (o dev trabalha de costas, com a tela à vista)
  * e a da frente tem a cadeira voltada para o fundo (o dev trabalha de frente
- * para a câmera). As posições foram conferidas contra a pegada e o corredor do
- * quadro e contra a elipse, nas duas formas do tapete (estacoes.test.mjs).
+ * para a câmera), um pouco mais virada para fora, para o ponto de chegada sair
+ * do vão entre ela e o bloco. As posições foram conferidas contra a pegada e o
+ * corredor do quadro e contra a elipse, nas duas formas do tapete
+ * (estacoes.test.mjs).
  */
 
 /** @import { BaseEstacao } from '../../Suporte/boneco/estacoes.js' */
@@ -27,10 +30,21 @@ const bloco = (cx, cz) => [
   { id: 'dev-b4', x: cx + 0.8, z: cz + 0.4, rot: 0 },
 ];
 
+// O bloco em x 0,5 (e não 0,8) afasta o canto traseiro-direito dele do pé do quadro.
 const PAISAGEM = [
   { id: 'dev-fundo', x: -3.6, z: -2.4, rot: 0.45 },
-  { id: 'dev-frente', x: -3.4, z: 1.5, rot: Math.PI - 0.45 },
-  ...bloco(0.8, 0),
+  { id: 'dev-frente', x: -3.4, z: 1.5, rot: Math.PI - 0.25 },
+  ...bloco(0.5, 0),
+];
+
+/**
+ * Corredor do quadro em paisagem (quadro/posicao.js, espaço local do quadro):
+ * mais curto que o padrão de /suporte, para a borda dele não cair sobre a mesa
+ * e a cadeira da direita do bloco.
+ */
+export const CORREDOR_DEV = [
+  { x: 0, z: 0.5, rMax: 2.0 },
+  { x: 0, z: 4.6, rMax: 0.85 },
 ];
 
 // Em retrato o tapete é estreito e alto, e o quadro fica no fundo, no centro.

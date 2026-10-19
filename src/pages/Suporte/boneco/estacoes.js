@@ -104,8 +104,9 @@ function montarBlocos(estacoes) {
       }
     }
   }
-  return grupos.map((bloco) => ({
+  return grupos.map((bloco, indice) => ({
     ...bloco,
+    indice,
     cantos: [
       { x: bloco.minX - FOLGA_CONTORNO, z: bloco.minZ - FOLGA_CONTORNO },
       { x: bloco.maxX + FOLGA_CONTORNO, z: bloco.minZ - FOLGA_CONTORNO },
@@ -154,6 +155,33 @@ export const longeDosObstaculos = (ponto, margem = 0.3) =>
 
 const dentroDoBloco = (bloco, p) => p.x > bloco.minX && p.x < bloco.maxX && p.z > bloco.minZ && p.z < bloco.maxZ;
 
+// O ponto está fora do retângulo de todos os blocos de mesas?
+export const foraDosBlocos = (p) => BLOCOS.every((bloco) => !dentroDoBloco(bloco, p));
+
+/**
+ * Tira o ponto de dentro do retângulo de cada bloco, pela borda mais perto: fecha o
+ * vão entre as cadeiras de mesas encostadas, onde os círculos deixam um bolso em que
+ * o técnico fica preso. Quem vai sentar numa estação do bloco (idDestino) pode entrar.
+ * @param {{ x: number, z: number }} p mutado
+ * @param {string | null} idDestino
+ * @param {number} [maximo] quanto sai por chamada (por frame), em metros
+ */
+export function expulsarDosBlocos(p, idDestino, maximo = Infinity) {
+  for (const bloco of BLOCOS) {
+    if (!dentroDoBloco(bloco, p) || (idDestino && bloco.ids.includes(idDestino))) continue;
+    const aEsquerda = p.x - bloco.minX;
+    const aDireita = bloco.maxX - p.x;
+    const atras = p.z - bloco.minZ;
+    const aFrente = bloco.maxZ - p.z;
+    const menor = Math.min(aEsquerda, aDireita, atras, aFrente);
+    const passo = Math.min(menor, maximo);
+    if (menor === aEsquerda) p.x -= passo;
+    else if (menor === aDireita) p.x += passo;
+    else if (menor === atras) p.z -= passo;
+    else p.z += passo;
+  }
+}
+
 // Trecho [t0, t1] do segmento a→b que fica dentro da faixa [min, max] de um eixo; null se nenhum.
 function recortar(origem, delta, min, max, t0, t1) {
   if (Math.abs(delta) < 1e-9) return origem > min && origem < max ? [t0, t1] : null;
@@ -201,16 +229,57 @@ function cantoNaArea(canto, area) {
   return { x: canto.x / e, z: canto.z / e };
 }
 
+// Folga mínima de um canto a um obstáculo de outro grupo (quadro incluso); mais perto, o canto não serve.
+const FOLGA_CANTO_OBSTACULO = 0.3;
+// Até onde um canto perto de um obstáculo duro de outro grupo é afastado dele.
+const AFASTAR_CANTO = 0.4;
+// Um canto já mirado continua valendo enquanto custar no máximo isto a mais que o melhor.
+const HISTERESE_CANTO = 0.5;
+
+const deOutroGrupo = (bloco, o) => o.r > 0 && !bloco.ids.includes(o.estacao);
+
+// Afasta o canto dos obstáculos duros de outros grupos (o pé do quadro, outra mesa) até a folga.
+function afastarDeObstaculos(canto, bloco) {
+  let p = canto;
+  for (const o of OBSTACULOS) {
+    if (o.suave || !deOutroGrupo(bloco, o)) continue;
+    const dist = distancia(p, o);
+    const minimo = o.r + AFASTAR_CANTO;
+    if (dist >= minimo) continue;
+    p = dist < 1e-6 ? { x: o.x + minimo, z: o.z } : { x: o.x + ((p.x - o.x) / dist) * minimo, z: o.z + ((p.z - o.z) / dist) * minimo };
+  }
+  return p;
+}
+
+// Um canto recortado para dentro do próprio bloco ou em cima de outro obstáculo não leva a lugar nenhum.
+const cantoValido = (canto, bloco) =>
+  !dentroDoBloco(bloco, canto) &&
+  OBSTACULOS.every((o) => !deOutroGrupo(bloco, o) || distancia(canto, o) >= o.r + FOLGA_CANTO_OBSTACULO);
+
+// O canto i do bloco como ponto de rota, ou null se não serve. Calculado aqui, e não em
+// definirEstacoes, porque os obstáculos do quadro entram na lista depois.
+function cantoDeRota(bloco, i, area, offset) {
+  const base = bloco.cantos[i];
+  // Cada boneco mira um ponto um pouco diferente ao longo do lado, para dez não disputarem o mesmo.
+  let canto = offset ? { x: base.x + offset, z: base.z } : base;
+  canto = cantoNaArea(afastarDeObstaculos(cantoNaArea(canto, area), bloco), area);
+  return cantoValido(canto, bloco) ? canto : null;
+}
+
 /*
  * Caminho até o alvo: para onde mirar agora e quanto falta andar. Mira o próprio
  * alvo ou, com um bloco de estações no meio, o próximo canto do caminho mais
  * curto em volta dele (o primeiro bloco que a reta cruza, se houver mais de um).
  * Sem isso, quem vai para o outro lado de uma mesa fica empurrando a mesa e
  * nunca chega. Com a área, os cantos de uma mesa encostada na borda ficam
- * dentro dela.
+ * dentro dela. Quando mira um canto, devolve também o identificador dele
+ * (`canto`): passado de volta em `preferido`, o canto é mantido enquanto valer e
+ * não custar muito mais que o melhor, para a escolha não oscilar a cada frame.
  * @param {{ rx: number, rz: number }} [area]
+ * @param {number | null} [preferido] canto mirado no frame anterior
+ * @param {number} [offset] deslocamento do canto ao longo do lado do bloco, por boneco
  */
-export function rotaAte(pos, alvo, area) {
+export function rotaAte(pos, alvo, area, preferido = null, offset = 0) {
   const reto = { ponto: alvo, comprimento: distancia(pos, alvo) };
   let bloco = null;
   let maisPerto = Infinity;
@@ -227,18 +296,26 @@ export function rotaAte(pos, alvo, area) {
   const ateAlvo = distanciasAteAlvo(bloco, alvo);
   let melhor = reto;
   let menorCusto = Infinity;
-  bloco.cantos.forEach((cantoDoBloco, i) => {
-    const canto = cantoNaArea(cantoDoBloco, area);
+  let mantido = null;
+  let custoMantido = Infinity;
+  bloco.cantos.forEach((_, i) => {
+    const canto = cantoDeRota(bloco, i, area, offset);
+    if (!canto) return;
     const ateCanto = distancia(pos, canto);
     if (ateCanto < CANTO_ALCANCADO) return;
     // Cantos escondidos atrás do bloco só servem se não houver outro.
     const custo = ateCanto + ateAlvo[i] + (cruzaBloco(bloco, pos, canto) ? 100 : 0);
+    const rota = { ponto: canto, comprimento: ateCanto + ateAlvo[i], canto: bloco.indice * 4 + i };
     if (custo < menorCusto) {
       menorCusto = custo;
-      melhor = { ponto: canto, comprimento: ateCanto + ateAlvo[i] };
+      melhor = rota;
+    }
+    if (rota.canto === preferido) {
+      mantido = rota;
+      custoMantido = custo;
     }
   });
-  return melhor;
+  return mantido && custoMantido <= menorCusto + HISTERESE_CANTO ? mantido : melhor;
 }
 
 /*
