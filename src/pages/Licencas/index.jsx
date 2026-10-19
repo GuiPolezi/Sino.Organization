@@ -47,6 +47,13 @@ export default function Licencas() {
       <title>Licenças · sino.org</title>
 
       <header ref={topo} className={styles.topo}>
+        <a className={styles.voltar} href="/" data-anim="sobe">
+          <span className={styles.voltarSeta} aria-hidden="true">
+            ←
+          </span>
+          Voltar para o início
+        </a>
+
         <div className={styles.topoLinha}>
           <h1 className={styles.titulo}>
             {['Sino', 'Licenças'].map((palavra) => (

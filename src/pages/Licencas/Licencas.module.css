@@ -35,6 +35,40 @@
 
 /* ---------- Topo ---------- */
 
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(20px, 2.4vw, 36px);
+  font-size: clamp(0.9375rem, 1vw, 1.0625rem);
+  font-weight: var(--weight-bold);
+  color: var(--color-cream);
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+
+.voltarSeta {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.voltar:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.voltar:hover .voltarSeta {
+  transform: translateX(-4px);
+}
+
+.voltar:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
 .topoLinha {
   display: flex;
   align-items: center;
