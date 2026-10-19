@@ -75,10 +75,12 @@ export function animarSecao(q, gatilho, badgeNumeroEl, total) {
       duration: 0.6,
       stagger: 0.06,
     }, 0.3)
-    .from(q('[data-anim="card"]'), {
-      autoAlpha: 0,
-      y: 48,
-      scale: 0.98,
+    // fromTo com destino explícito: o card tem transição CSS em transform, e um
+    // .from() poderia ler um valor no meio dessa transição como destino.
+    .fromTo(q('[data-anim="card"]'), { autoAlpha: 0, y: 48, scale: 0.98 }, {
+      autoAlpha: 1,
+      y: 0,
+      scale: 1,
       duration: 0.9,
       stagger: 0.1,
       // Devolve o transform ao CSS, para o hover funcionar.

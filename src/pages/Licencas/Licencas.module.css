@@ -42,10 +42,11 @@
   margin-bottom: clamp(20px, 2.4vw, 36px);
   font-size: clamp(0.9375rem, 1vw, 1.0625rem);
   font-weight: var(--weight-bold);
-  color: var(--color-cream);
+  /* O hover muda a cor, não a opacidade: a opacidade é animada pelo GSAP na
+     entrada, e uma transição CSS nela fazia o link terminar invisível. */
+  color: color-mix(in srgb, var(--color-cream) 85%, var(--color-olive));
   text-decoration: none;
-  opacity: 0.85;
-  transition: opacity 0.25s ease;
+  transition: color 0.25s ease;
 }
 
 .voltarSeta {
@@ -54,7 +55,7 @@
 }
 
 .voltar:hover {
-  opacity: 1;
+  color: var(--color-cream);
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
