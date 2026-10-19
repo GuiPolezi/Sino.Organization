@@ -85,9 +85,9 @@ const pontoLivre = (p, margem) => longeDosObstaculos(p, margem) && foraDosBlocos
 function pontoAleatorio(vetor, reserva) {
   for (let tentativa = 0; tentativa < 25; tentativa++) {
     const angulo = Math.random() * Math.PI * 2;
-    const raio = Math.sqrt(Math.random()) * 0.92;
+    const raio = Math.sqrt(Math.random());
     vetor.set(Math.cos(angulo) * AREA.rx * raio, 0, Math.sin(angulo) * AREA.rz * raio);
-    if (dentroDaArea(AREA, vetor, 0.5) && pontoLivre(vetor, 0.3) && !pertoDeAprox(vetor)) {
+    if (dentroDaArea(AREA, vetor, 0.15) && pontoLivre(vetor, 0.3) && !pertoDeAprox(vetor)) {
       if (reserva) reserva.copy(vetor);
       return vetor;
     }
@@ -240,9 +240,12 @@ function desistir(s) {
   return { yawAlvo: s.yaw, andando: false };
 }
 
+// Prazo do passeio: o bastante para cruzar a distância com folga (num tapete grande, 9 s não chegam à borda).
+const PRAZO_PASSEIO = 9;
+
 function novoPasseio(s) {
   pontoAleatorio(s.alvo, s.ultimoLivre);
-  s.timer = 9;
+  s.timer = Math.max(PRAZO_PASSEIO, (1.6 * rotaAte(s.pos, s.alvo, AREA).comprimento) / velocidade(s));
   iniciarCaminhada(s);
 }
 

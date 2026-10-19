@@ -43,13 +43,15 @@ export const useEquipe = create((set) => ({
 export const posicoes = new Map();
 
 /*
- * Tamanho do tapete (as duas formas da elipse por onde os bonecos andam) e
+ * Tamanho da área de caminhada (as duas formas da elipse por onde os bonecos
+ * andam), quanto o tapete desenhado passa dela (margemTapete, em metros) e
  * quanto a câmera recua na vista geral. Valem para /suporte; outra página muda
  * com configurarCena antes de a cena montar.
  */
 export const CENA = {
   areaPaisagem: { rx: 6.2, rz: 3.4 },
   areaRetrato: { rx: 3.3, rz: 4.4 },
+  margemTapete: 1.7,
   recuo: 1,
 };
 
@@ -57,7 +59,7 @@ export const CENA = {
 export const AREA = { ...CENA.areaPaisagem };
 
 /**
- * Troca o tamanho do tapete e o recuo da câmera da página.
+ * Troca o tamanho da área, a margem do tapete e o recuo da câmera da página.
  * @param {Partial<typeof CENA>} config
  */
 export function configurarCena(config) {

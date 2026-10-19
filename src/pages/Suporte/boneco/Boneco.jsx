@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
+import { MathUtils, Vector3 } from 'three';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe, temBochechas } from './aparencia.js';
@@ -12,6 +13,42 @@ const OPACIDADE_BARBA_RALA = 0.55;
 const GRAUS = Math.PI / 180;
 // Giro do braço erguido no aceno do retrato: quase para cima, um pouco aberto.
 const ACENO = 2.55;
+
+// Folga mínima, em px, entre a etiqueta do nome e a borda da tela.
+const FOLGA_ETIQUETA = 8;
+// Abaixo desta largura o card é um bottom sheet (CardTecnico.module.css).
+const LARGURA_ESTREITA = 760;
+const pontoEtiqueta = new Vector3();
+
+/*
+ * Posição da etiqueta na tela, a mesma que o Html calcula (o ponto projetado),
+ * mas presa dentro da tela: um boneco na borda, ou fora dela com a câmera perto
+ * de outro (hover pelo elenco), continua com o nome inteiro à vista. No desktop,
+ * com um card aberto (o <aside> da página, à direita), a etiqueta para antes
+ * dele em vez de ficar escondida por baixo. Só muda o translate do Html, nada de
+ * layout por frame.
+ */
+const posicaoDentroDaTela = (etiqueta) => (objeto, camera, size) => {
+  pontoEtiqueta.setFromMatrixPosition(objeto.matrixWorld).project(camera);
+  const x = ((pontoEtiqueta.x + 1) * size.width) / 2;
+  const y = ((1 - pontoEtiqueta.y) * size.height) / 2;
+  // Medida uma vez por etiqueta montada (o Html só remonta a cada hover).
+  const el = etiqueta.current;
+  if (el && etiqueta.medida?.el !== el && el.offsetWidth) {
+    etiqueta.medida = { el, largura: el.offsetWidth, altura: el.offsetHeight };
+  }
+  const medida = etiqueta.medida;
+  if (!el || medida?.el !== el) return [x, y];
+
+  const card = size.width > LARGURA_ESTREITA ? el.closest('main')?.querySelector(':scope > aside') : null;
+  const direita = card ? Math.min(size.width, card.getBoundingClientRect().left) : size.width;
+  const meiaLargura = Math.min(medida.largura / 2 + FOLGA_ETIQUETA, direita / 2);
+  const meiaAltura = Math.min(medida.altura / 2 + FOLGA_ETIQUETA, size.height / 2);
+  return [
+    MathUtils.clamp(x, meiaLargura, direita - meiaLargura),
+    MathUtils.clamp(y, meiaAltura, size.height - meiaAltura),
+  ];
+};
 
 // Cachos espalhados pela cabeça em anéis, sem cobrir o rosto. Cada anel:
 // [ângulo a partir do topo, primeiro e último giro a partir da frente, quantidade].
@@ -341,6 +378,8 @@ export default function Boneco({ tecnico }) {
   const setHover = useEquipe((s) => s.setHover);
 
   const partes = useComportamento({ id, altura: aparencia.altura });
+  const etiqueta = useRef(null);
+  const posicaoEtiqueta = useMemo(() => posicaoDentroDaTela(etiqueta), []);
 
   const sairDoHover = () => {
     if (useEquipe.getState().hover !== id) return;
@@ -378,10 +417,20 @@ export default function Boneco({ tecnico }) {
 
       <Figura aparencia={aparencia} materiais={materiais} partes={partes} />
 
-      {/* Selecionado, o nome já está no card. */}
+      {/* Selecionado, o nome já está no card. Sem distanceFactor: com a câmera perto de
+          um boneco, a etiqueta dos vizinhos crescia até passar de 400 px e sair da tela.
+          Acima do título e do elenco (z-index 10), abaixo do card (20). */}
       {emHover && !selecionado && (
-        <Html position={[0, 2.35, 0]} center distanceFactor={9} zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
-          <div className={styles.etiqueta}>{tecnico.nome}</div>
+        <Html
+          position={[0, 2.35, 0]}
+          center
+          calculatePosition={posicaoEtiqueta}
+          zIndexRange={[15, 11]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div ref={etiqueta} className={styles.etiqueta}>
+            {tecnico.nome}
+          </div>
         </Html>
       )}
     </group>

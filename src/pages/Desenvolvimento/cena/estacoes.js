@@ -23,14 +23,17 @@
 /** @import { BaseEstacao } from '../../Suporte/boneco/estacoes.js' */
 
 /*
- * O tapete desta página é maior que o de /suporte (6,2 × 3,4 e 3,3 × 4,4): são
- * dez desenvolvedores e seis mesas. A câmera recua na mesma proporção, para o
- * tapete inteiro continuar à vista (store.js, configurarCena).
+ * O tapete desta página é maior que o de /suporte: são dez desenvolvedores e
+ * seis mesas. O tapete creme tem 9,3 × 5,9 m (5,6 × 7,0 em retrato) e a equipe
+ * anda até 0,55 m da borda dele (no /suporte, a área para 1,7 m antes). A
+ * câmera recua 1,32×, para o tapete inteiro, com a borda escura, caber numa
+ * tela 16:9 como 1536 × 864 (store.js, configurarCena).
  */
 export const CENA_DEV = {
-  areaPaisagem: { rx: 7.6, rz: 4.2 },
-  areaRetrato: { rx: 3.9, rz: 5.3 },
-  recuo: 1.2,
+  areaPaisagem: { rx: 8.75, rz: 5.35 },
+  areaRetrato: { rx: 5.05, rz: 6.45 },
+  margemTapete: 0.55,
+  recuo: 1.32,
 };
 
 // Giro em Y: 0 = cadeira para a câmera (+z); π = cadeira para o fundo.

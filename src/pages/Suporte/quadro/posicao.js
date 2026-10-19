@@ -4,12 +4,11 @@
  * legíveis, e muda de lugar em tela retrato (celular).
  */
 import { ESTACOES, OBSTACULOS } from '../boneco/estacoes.js';
-import { AREA } from '../store.js';
+import { AREA, CENA } from '../store.js';
 
 const GRAUS = Math.PI / 180;
 
 // Quanto o tapete passa da área de caminhada (o disco creme de Cenario.jsx).
-const MARGEM_TAPETE = 1.7;
 
 // Posição aproximada da câmera na visão geral: o quadro "olha" para ela.
 const CAMERA = { x: 0, z: 14 };
@@ -118,8 +117,9 @@ export function atualizarObstaculos(dt, aberto) {
 export function posicionarQuadro(area, retrato) {
   const antes = { ...QUADRO };
   const angulo = GRAUS * (retrato ? CONFIG_QUADRO.anguloRetrato : CONFIG_QUADRO.anguloPaisagem);
-  const rx = area.rx + MARGEM_TAPETE;
-  const rz = area.rz + MARGEM_TAPETE;
+  // A borda do tapete desenhado (cena/Cenario.jsx).
+  const rx = area.rx + CENA.margemTapete;
+  const rz = area.rz + CENA.margemTapete;
 
   // Ponto da borda da elipse e a normal dela ali, apontando para fora.
   const bordaX = rx * Math.cos(angulo);

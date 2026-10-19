@@ -104,11 +104,14 @@ test('um canto da mesa solta recortado para dentro da própria pegada não é mi
   definirEstacoes(basesDasMesas(false));
   posicionarQuadro(PAISAGEM, false);
   const fundo = porId('dev-fundo');
-  // Sem a área, o canto de trás-esquerda (fora da elipse) serve; com ela, o recorte o joga em cima da mesa.
+  // No tapete da página o canto de trás-esquerda cabe na área; num tapete mais apertado ele cai fora
+  // da elipse, e o recorte para dentro dela o joga em cima da mesa: aí ele não pode ser mirado.
+  const APERTADO = { rx: 7.6, rz: 4.2 };
   const semArea = rotaAte({ x: fundo.x, z: fundo.z - 2 }, { x: fundo.x, z: fundo.z + 2.6 });
-  const comArea = rotaAte({ x: fundo.x, z: fundo.z - 2 }, { x: fundo.x, z: fundo.z + 2.6 }, PAISAGEM);
+  assert.ok(rotaAte({ x: fundo.x, z: fundo.z - 2 }, { x: fundo.x, z: fundo.z + 2.6 }, PAISAGEM).ponto.x < fundo.x, 'no tapete da página, pela esquerda');
+  const comArea = rotaAte({ x: fundo.x, z: fundo.z - 2 }, { x: fundo.x, z: fundo.z + 2.6 }, APERTADO);
   assert.ok(semArea.ponto.x < fundo.x, 'sem área, dá a volta pela esquerda (mais curto)');
-  assert.ok(comArea.ponto.x > fundo.x, 'com área, o canto da esquerda cai na mesa e a volta é pela direita');
+  assert.ok(comArea.ponto.x > fundo.x, 'no tapete apertado, o canto da esquerda cai na mesa e a volta é pela direita');
   for (const o of OBSTACULOS) {
     if (o.estacao === 'dev-fundo' || o.r <= 0) continue;
     assert.ok(distancia(comArea.ponto, o) >= o.r + 0.3, `canto em cima de ${o.estacao}`);
