@@ -115,8 +115,54 @@
   margin-left: auto;
 }
 
-.closeInline {
-  composes: close;
-  position: static;
-  flex: none;
+/* O cartão só recebe foco por código (foco inicial); não precisa de contorno. */
+.card[tabindex='-1']:focus {
+  outline: none;
+}
+
+/* Link "← Voltar" do cabeçalho com ações, no estilo do de /licencas.
+   O hover muda a cor, não a opacidade: a opacidade é animada pelo GSAP. */
+.voltar {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 clamp(0.5rem, 1.2vw, 1rem);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: clamp(0.9375rem, 1vw, 1.0625rem);
+  font-weight: var(--weight-bold);
+  color: color-mix(in srgb, var(--color-olive) 80%, var(--color-cream));
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.voltarSeta {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.voltar:hover {
+  color: var(--color-olive-dark);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.voltar:hover .voltarSeta {
+  transform: translateX(-4px);
+}
+
+.voltar:focus-visible {
+  outline: 2px solid var(--color-olive);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voltar,
+  .voltarSeta {
+    transition: none;
+  }
 }

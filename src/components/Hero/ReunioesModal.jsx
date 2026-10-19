@@ -48,7 +48,14 @@ export default function ReunioesModal({ onClose }) {
   );
 
   return (
-    <GlassModal title="Reuniões" onClose={onClose} className={styles.card} actions={actions}>
+    <GlassModal
+      title="Reuniões"
+      onClose={onClose}
+      className={styles.card}
+      actions={actions}
+      // No formulário, "Voltar" retorna à lista; na lista, fecha o modal.
+      onVoltar={visao === 'form' ? voltarParaLista : undefined}
+    >
       <div key={visao} className={styles.visao} data-modal="item">
         {visao === 'lista' ? (
           <ReunioesLista reunioes={reunioes} onRemover={remover} />

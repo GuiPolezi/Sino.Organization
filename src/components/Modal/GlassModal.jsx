@@ -15,9 +15,18 @@ const blockScroll = (event) => {
  * o papel de fundo: clicar nele (fora do cartão) ou apertar Esc fecha.
  * Filhos com `data-modal="item"` entram em sequência na abertura.
  * Opcionais: `className` soma uma classe ao cartão; `actions` vai ao lado do
- * título (o botão Fechar entra na mesma linha); sem `tag`, o selo some.
+ * título e troca o botão Fechar por um link "← Voltar" acima dele, que chama
+ * `onVoltar` (ou fecha o modal, se não vier); sem `tag`, o selo some.
  */
-export default function GlassModal({ tag, title, onClose, children, className, actions }) {
+export default function GlassModal({
+  tag,
+  title,
+  onClose,
+  children,
+  className,
+  actions,
+  onVoltar,
+}) {
   const dialog = useRef(null);
   const card = useRef(null);
   const closing = useRef(false);
@@ -26,6 +35,9 @@ export default function GlassModal({ tag, title, onClose, children, className, a
   const { contextSafe } = useGSAP(
     () => {
       if (!dialog.current.open) dialog.current.showModal();
+      // Com `actions`, o foco inicial vai ao cartão: o link Voltar não abre já
+      // com o contorno de foco.
+      if (actions) card.current.focus({ preventScroll: true });
       if (matches(MEDIA.reducedMotion)) return;
 
       gsap.from(dialog.current, { opacity: 0, duration: 0.35, ease: 'power2.out' });
@@ -85,13 +97,6 @@ export default function GlassModal({ tag, title, onClose, children, className, a
     if (event.target === event.currentTarget) requestClose();
   };
 
-  const closeButton = (className) => (
-    <button type="button" className={className} aria-label="Fechar" onClick={requestClose}>
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M6 6l12 12M18 6L6 18" />
-      </svg>
-    </button>
-  );
 
   const heading = (
     <h3 id={titleId} className={styles.title} data-modal="item">
@@ -109,18 +114,38 @@ export default function GlassModal({ tag, title, onClose, children, className, a
       onClose={onClose}
       onClick={onBackdropClick}
     >
-      <article ref={card} className={className ? `${styles.card} ${className}` : styles.card}>
+      <article
+        ref={card}
+        className={className ? `${styles.card} ${className}` : styles.card}
+        tabIndex={actions ? -1 : undefined}
+      >
         {actions ? (
-          <header className={styles.header}>
-            {heading}
-            <div className={styles.actions} data-modal="item">
-              {actions}
-              {closeButton(styles.closeInline)}
-            </div>
-          </header>
+          <>
+            <button
+              type="button"
+              className={styles.voltar}
+              onClick={onVoltar ?? requestClose}
+              data-modal="item"
+            >
+              <span className={styles.voltarSeta} aria-hidden="true">
+                ←
+              </span>
+              Voltar
+            </button>
+            <header className={styles.header}>
+              {heading}
+              <div className={styles.actions} data-modal="item">
+                {actions}
+              </div>
+            </header>
+          </>
         ) : (
           <>
-            {closeButton(styles.close)}
+            <button type="button" className={styles.close} aria-label="Fechar" onClick={requestClose}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
             {tag && (
               <p className={styles.tag} data-modal="item">
                 {tag}
