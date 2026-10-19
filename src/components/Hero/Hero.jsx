@@ -56,12 +56,11 @@ export default function Hero({ children }) {
           <DecorShape />
 
           <div className={styles.content}>
-            <SectorsList />
             <div className={styles.top}>
               <CompanyCard titleId={TITLE_ID} />
               <YearsCounter />
             </div>
-          {/*   <SectorsList /> */}
+           <SectorsList /> 
           </div>
         </section>
 
