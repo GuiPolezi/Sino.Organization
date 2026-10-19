@@ -2,9 +2,7 @@
   --tom: var(--color-cream);
 
   min-height: 100svh;
-  max-width: 1440px;
-  margin-inline: auto;
-  padding: clamp(28px, 4vw, 48px) clamp(16px, 3.6vw, 52px) 96px;
+  padding: clamp(28px, 4vw, 48px) clamp(16px, 3.6vw, 96px) 96px;
 }
 
 .page[data-tom='vencida'] {
