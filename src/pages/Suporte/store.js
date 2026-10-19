@@ -42,8 +42,28 @@ export const useEquipe = create((set) => ({
 // id -> THREE.Vector3, mutado dentro de useFrame.
 export const posicoes = new Map();
 
-// Área por onde os bonecos andam (elipse). Ajustada em telas estreitas.
-export const AREA = { rx: 6.2, rz: 3.4 };
+/*
+ * Tamanho do tapete (as duas formas da elipse por onde os bonecos andam) e
+ * quanto a câmera recua na vista geral. Valem para /suporte; outra página muda
+ * com configurarCena antes de a cena montar.
+ */
+export const CENA = {
+  areaPaisagem: { rx: 6.2, rz: 3.4 },
+  areaRetrato: { rx: 3.3, rz: 4.4 },
+  recuo: 1,
+};
+
+// Área por onde os bonecos andam (elipse): a de CENA na forma da tela (cena/Cena.jsx).
+export const AREA = { ...CENA.areaPaisagem };
+
+/**
+ * Troca o tamanho do tapete e o recuo da câmera da página.
+ * @param {Partial<typeof CENA>} config
+ */
+export function configurarCena(config) {
+  Object.assign(CENA, config);
+  Object.assign(AREA, CENA.areaPaisagem);
+}
 
 // Espelho de prefers-reduced-motion, lido a cada frame sem consultar o matchMedia.
 export const MOVIMENTO = { reduzido: false };

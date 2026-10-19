@@ -4,10 +4,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ESTACOES, OBSTACULOS, definirEstacoes, dentroDaArea, reservarEstacao, rotaAte, tirarEstacoes } from '../../Suporte/boneco/estacoes.js';
 import { configurarQuadro, corredorAberto, posicionarQuadro } from '../../Suporte/quadro/posicao.js';
-import { CORREDOR_DEV, IDS_DO_BLOCO, basesDasMesas } from './estacoes.js';
+import { CENA_DEV, CORREDOR_DEV, IDS_DO_BLOCO, basesDasMesas } from './estacoes.js';
 
-const PAISAGEM = { rx: 6.2, rz: 3.4 };
-const RETRATO = { rx: 3.3, rz: 4.4 };
+// O tapete maior desta página.
+const PAISAGEM = CENA_DEV.areaPaisagem;
+const RETRATO = CENA_DEV.areaRetrato;
 const porId = (id) => ESTACOES.find((estacao) => estacao.id === id);
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 // Os obstáculos do quadro (quadro/posicao.js) e os das mesas, que ele acrescenta à mesma lista.

@@ -22,6 +22,17 @@
 
 /** @import { BaseEstacao } from '../../Suporte/boneco/estacoes.js' */
 
+/*
+ * O tapete desta página é maior que o de /suporte (6,2 × 3,4 e 3,3 × 4,4): são
+ * dez desenvolvedores e seis mesas. A câmera recua na mesma proporção, para o
+ * tapete inteiro continuar à vista (store.js, configurarCena).
+ */
+export const CENA_DEV = {
+  areaPaisagem: { rx: 7.6, rz: 4.2 },
+  areaRetrato: { rx: 3.9, rz: 5.3 },
+  recuo: 1.2,
+};
+
 // Giro em Y: 0 = cadeira para a câmera (+z); π = cadeira para o fundo.
 const bloco = (cx, cz) => [
   { id: 'dev-b1', x: cx - 0.8, z: cz - 0.4, rot: Math.PI },
@@ -30,11 +41,11 @@ const bloco = (cx, cz) => [
   { id: 'dev-b4', x: cx + 0.8, z: cz + 0.4, rot: 0 },
 ];
 
-// O bloco em x 0,5 (e não 0,8) afasta o canto traseiro-direito dele do pé do quadro.
+// O bloco em x 0,6 deixa o canto traseiro-direito dele longe do pé do quadro.
 const PAISAGEM = [
-  { id: 'dev-fundo', x: -3.6, z: -2.4, rot: 0.45 },
-  { id: 'dev-frente', x: -3.4, z: 1.5, rot: Math.PI - 0.25 },
-  ...bloco(0.5, 0),
+  { id: 'dev-fundo', x: -4.4, z: -2.9, rot: 0.45 },
+  { id: 'dev-frente', x: -4.2, z: 1.85, rot: Math.PI - 0.25 },
+  ...bloco(0.6, 0),
 ];
 
 /**
@@ -49,8 +60,8 @@ export const CORREDOR_DEV = [
 
 // Em retrato o tapete é estreito e alto, e o quadro fica no fundo, no centro.
 const RETRATO = [
-  { id: 'dev-fundo', x: -2.2, z: -2.9, rot: 0.3 },
-  { id: 'dev-frente', x: 2.2, z: 2.9, rot: Math.PI - 0.3 },
+  { id: 'dev-fundo', x: -2.6, z: -3.5, rot: 0.3 },
+  { id: 'dev-frente', x: 2.6, z: 3.5, rot: Math.PI - 0.3 },
   ...bloco(0, 0),
 ];
 

@@ -4,13 +4,10 @@ import * as THREE from 'three';
 import { MEDIA } from '../../../utils/media.js';
 import Boneco from '../boneco/Boneco.jsx';
 import Retratista from '../boneco/Retratos.jsx';
-import { AREA, MOVIMENTO, useEquipe } from '../store.js';
+import { AREA, CENA, MOVIMENTO, useEquipe } from '../store.js';
 import CameraRig from './CameraRig.jsx';
 import Cenario from './Cenario.jsx';
 import styles from './Cena.module.css';
-
-const AREA_PAISAGEM = { rx: 6.2, rz: 3.4 };
-const AREA_RETRATO = { rx: 3.3, rz: 4.4 };
 
 // Ajusta a área de caminhada ao formato da tela.
 function AreaResponsiva({ onChange }) {
@@ -18,7 +15,7 @@ function AreaResponsiva({ onChange }) {
   const retrato = size.width / size.height < 1;
 
   useEffect(() => {
-    Object.assign(AREA, retrato ? AREA_RETRATO : AREA_PAISAGEM);
+    Object.assign(AREA, retrato ? CENA.areaRetrato : CENA.areaPaisagem);
     onChange({ ...AREA });
   }, [retrato, onChange]);
 
@@ -58,7 +55,7 @@ function Cena({ Estacoes, Quadro }) {
     <Canvas
       className={styles.cena}
       dpr={[1, 2]}
-      camera={{ position: [0, 6.2, 14], fov: 32, near: 0.1, far: 100 }}
+      camera={{ position: [0, 6.2 * CENA.recuo, 14 * CENA.recuo], fov: 32, near: 0.1, far: 100 }}
       gl={{ antialias: true, alpha: true, toneMapping: THREE.NeutralToneMapping }}
       onPointerMissed={() => selecionar(null)}
     >
