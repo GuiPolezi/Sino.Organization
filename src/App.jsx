@@ -11,8 +11,13 @@ import { useLenis } from './hooks/useLenis.js';
 const routes = {
   '/suporte': lazy(() => import('./pages/Suporte/index.jsx')),
   '/desenvolvimento': lazy(() => import('./pages/Desenvolvimento/index.jsx')),
+  '/licencas': lazy(() => import('./pages/Licencas/index.jsx')),
 };
 const NotFound = lazy(() => import('./pages/NotFound/index.jsx'));
+
+// Página da licença de cada cliente: /licencas/<slug>.
+const CLIENTE_LICENCA = /^\/licencas\/([a-z0-9-]+)$/;
+const ClienteLicenca = lazy(() => import('./pages/Licencas/Cliente.jsx'));
 
 const HOME_PATHS = ['', '/index.html'];
 
@@ -35,6 +40,15 @@ function Home() {
 export default function App() {
   const path = currentPath();
   if (HOME_PATHS.includes(path)) return <Home />;
+
+  const cliente = path.match(CLIENTE_LICENCA);
+  if (cliente) {
+    return (
+      <Suspense fallback={<p className="sr-only">Carregando…</p>}>
+        <ClienteLicenca slug={cliente[1]} />
+      </Suspense>
+    );
+  }
 
   // Object.hasOwn: "/constructor" e afins não podem cair numa chave herdada.
   const Page = Object.hasOwn(routes, path) ? routes[path] : NotFound;

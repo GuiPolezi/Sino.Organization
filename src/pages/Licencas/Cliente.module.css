@@ -1,0 +1,93 @@
+.page {
+  --tom: var(--color-cream);
+
+  min-height: 100svh;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(28px, 4vw, 48px) clamp(16px, 3.6vw, 52px) 96px;
+}
+
+.page[data-tom='vencida'] {
+  --tom: #ffb3a3;
+}
+
+.page[data-tom='proxima'] {
+  --tom: #72f0dd;
+}
+
+.voltar {
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: var(--weight-bold);
+  color: var(--color-cream);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.voltar:hover {
+  color: var(--color-white);
+}
+
+.voltar:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.situacao {
+  margin-top: clamp(48px, 7vw, 96px);
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tom);
+}
+
+.nome {
+  margin-top: 12px;
+  max-width: 18ch;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--color-cream);
+}
+
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px clamp(32px, 6vw, 96px);
+  margin: clamp(32px, 4vw, 56px) 0 0;
+}
+
+.dados dt {
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  color: var(--color-cream);
+  opacity: 0.6;
+}
+
+.dados dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: var(--weight-bold);
+  color: var(--color-white);
+}
+
+.prazo {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tom);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+}
+
+.sistemas {
+  display: grid;
+  gap: 4px;
+}

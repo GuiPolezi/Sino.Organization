@@ -1,0 +1,478 @@
+/*
+ * Cores da página de licenças. Ajustadas a partir do design para o texto
+ * branco dos cards passar de 4.5:1 de contraste e os títulos (texto grande)
+ * de 3:1 sobre o oliva do fundo.
+ */
+.page {
+  --vencida-titulo: #ffb3a3;
+  --vencida-card: #a54a3a;
+  --vencida-card-hover: #b35443;
+  --vencida-link: #ffe4dc;
+  --proxima-titulo: #72f0dd;
+  --proxima-card: #15766a;
+  --proxima-card-hover: #198476;
+  --proxima-link: #c4fff3;
+
+  --gutter: clamp(16px, 3.6vw, 52px);
+
+  min-height: 100svh;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: clamp(28px, 4vw, 48px) var(--gutter) clamp(64px, 8vw, 120px);
+}
+
+/* Máscara para as palavras subirem "de dentro" da linha. A folga vertical
+   evita cortar acentos e o "ç". */
+.mascara {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.06em 0.02em 0.16em;
+  margin: -0.06em -0.02em -0.16em;
+  vertical-align: bottom;
+}
+
+.palavra {
+  display: inline-block;
+}
+
+/* ---------- Topo ---------- */
+
+.topoLinha {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 32px);
+}
+
+.titulo {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.22em;
+  flex-shrink: 0;
+  font-size: clamp(3rem, 7.2vw, 6.5rem);
+  font-weight: var(--weight-black);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--color-cream);
+}
+
+.linhas {
+  flex: 1;
+  display: grid;
+  gap: 10px;
+  min-width: 40px;
+}
+
+.linhas span {
+  height: 1px;
+  transform-origin: left center;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-cream-muted) 0 10px,
+    transparent 10px 18px
+  );
+  opacity: 0.45;
+}
+
+.contador {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.contadorNumero {
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-cream);
+}
+
+.contadorTexto {
+  margin-top: 4px;
+  font-size: clamp(0.95rem, 1.3vw, 1.125rem);
+  color: var(--color-cream);
+  opacity: 0.85;
+}
+
+.subtitulo {
+  margin-top: clamp(10px, 1.2vw, 16px);
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  color: var(--color-cream);
+  opacity: 0.85;
+}
+
+.acesso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: clamp(20px, 2.4vw, 32px);
+  font-size: 1rem;
+  color: var(--color-cream);
+  opacity: 0.8;
+}
+
+.botaoSite {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+  box-shadow: 0 6px 18px var(--color-shadow);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.25s ease;
+}
+
+.botaoSeta {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.botaoSite:hover {
+  background: var(--color-white);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px var(--color-shadow);
+}
+
+.botaoSite:hover .botaoSeta {
+  transform: translate(2px, -2px);
+}
+
+.botaoSite:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 4px;
+}
+
+/* ---------- Seções ---------- */
+
+.secao {
+  margin-top: clamp(72px, 9vw, 128px);
+}
+
+.secao[data-tom='vencida'] {
+  --tom-titulo: var(--vencida-titulo);
+  --tom-card: var(--vencida-card);
+  --tom-card-hover: var(--vencida-card-hover);
+  --tom-link: var(--vencida-link);
+}
+
+.secao[data-tom='proxima'] {
+  --tom-titulo: var(--proxima-titulo);
+  --tom-card: var(--proxima-card);
+  --tom-card-hover: var(--proxima-card-hover);
+  --tom-link: var(--proxima-link);
+}
+
+.secaoTopo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.secaoTitulo {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.25em;
+  font-size: clamp(2.5rem, 5.6vw, 5rem);
+  font-weight: var(--weight-regular);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--tom-titulo);
+}
+
+.selo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: clamp(52px, 4.6vw, 66px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--tom-titulo);
+  color: var(--color-ink);
+  font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+  font-weight: var(--weight-black);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 8px 20px var(--color-shadow);
+}
+
+/* Anel que "respira" em volta do selo das vencidas: chama atenção sem gritar. */
+@media (prefers-reduced-motion: no-preference) {
+  .secao[data-tom='vencida'] .selo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--tom-titulo);
+    animation: respirar 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+}
+
+@keyframes respirar {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+.colunas,
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 4.4fr) minmax(0, 3fr) minmax(0, 2.2fr);
+  column-gap: 24px;
+}
+
+.colunas {
+  margin-top: clamp(24px, 2.6vw, 36px);
+  padding: 0 clamp(16px, 1.8vw, 26px) 12px;
+  font-size: 0.9375rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.01em;
+  color: var(--color-cream);
+  opacity: 0.75;
+}
+
+.lista {
+  display: grid;
+  gap: 14px;
+}
+
+.vazio {
+  margin-top: 24px;
+  font-size: 1.125rem;
+  color: var(--color-cream-muted);
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  position: relative;
+  row-gap: 14px;
+  padding: clamp(18px, 1.8vw, 26px);
+  border-radius: 12px;
+  background: var(--tom-card);
+  color: var(--color-white);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--color-white) 12%, transparent) inset,
+    0 6px 16px color-mix(in srgb, var(--color-olive-dark) 35%, transparent);
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s ease;
+}
+
+.card:hover {
+  background: var(--tom-card-hover);
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--color-white) 14%, transparent) inset,
+    0 16px 32px color-mix(in srgb, var(--color-olive-dark) 55%, transparent);
+}
+
+.card:has(.link:focus-visible) {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 3px;
+}
+
+.nome {
+  margin: 0;
+  max-width: 22ch;
+  font-size: clamp(1.125rem, 1.6vw, 1.4rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  color: var(--tom-link);
+  text-decoration: none;
+  outline: none;
+}
+
+/* O link cobre o card inteiro. */
+.link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.seta {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card:hover .link {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.card:hover .seta {
+  transform: translateX(4px);
+}
+
+.rotulo {
+  display: none;
+}
+
+.sistemas {
+  display: grid;
+  gap: 4px;
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  font-weight: var(--weight-bold);
+}
+
+.sistemas li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sistemas li::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.colData {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.data {
+  font-size: clamp(1.25rem, 1.8vw, 1.6rem);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.prazo {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-ink) 22%, transparent);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+}
+
+/* ---------- Mostrar mais ---------- */
+
+.maisArea {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(24px, 2.8vw, 40px);
+}
+
+.mais {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-cream);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: var(--weight-bold);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+}
+
+.mais:hover {
+  opacity: 0.8;
+}
+
+.mais:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.maisSeta {
+  display: inline-block;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.maisSeta[data-aberto='true'] {
+  transform: rotate(180deg);
+}
+
+/* ---------- Telas menores ---------- */
+
+@media (max-width: 899.98px) {
+  .linhas {
+    display: none;
+  }
+
+  .topoLinha {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .contador {
+    order: 3;
+  }
+}
+
+@media (max-width: 719.98px) {
+  .colunas {
+    display: none;
+  }
+
+  .card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: 0;
+  }
+
+  .colCliente {
+    grid-column: 1 / -1;
+  }
+
+  .rotulo {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .colData {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .colData .rotulo {
+    margin-bottom: 0;
+  }
+
+  .prazo {
+    align-self: flex-end;
+  }
+}
