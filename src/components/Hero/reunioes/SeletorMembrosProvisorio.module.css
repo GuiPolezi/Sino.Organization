@@ -1,0 +1,173 @@
+/* Seletor provisório de membros: um painel de vidro sobre o "+". */
+.painel {
+  position: absolute;
+  /* Abre à direita do "+", alinhado por baixo: não cobre o calendário. */
+  bottom: -0.5rem;
+  left: calc(100% + 0.9rem);
+  z-index: 30;
+  display: grid;
+  gap: 0.5rem;
+  width: min(19rem, 80vw);
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-white) 80%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-white) 92%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 18px 40px -16px color-mix(in srgb, var(--color-olive-dark) 60%, transparent);
+  transform-origin: 0 100%;
+  animation: abrir 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.titulo {
+  margin: 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7d7d72;
+}
+
+.lista {
+  display: grid;
+  gap: 2px;
+  max-height: min(14rem, 38vh);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.pessoa {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--reunioes-tinta, #0b0c08);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pessoa:hover {
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 10%, transparent);
+}
+
+.pessoa:focus-visible {
+  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline-offset: -2px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: hsl(var(--matiz) 30% 86%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: hsl(var(--matiz) 25% 30%);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.texto {
+  display: grid;
+  min-width: 0;
+}
+
+.nome {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.cargo {
+  overflow: hidden;
+  font-size: 0.6875rem;
+  color: #7d7d72;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.marca {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 40%, transparent);
+  border-radius: 50%;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.marca svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: none;
+  stroke: var(--color-white);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset 0.3s ease 0.05s;
+}
+
+.pessoa[aria-pressed='true'] .marca {
+  border-color: var(--reunioes-oliva, #5f6b37);
+  background: var(--reunioes-oliva, #5f6b37);
+}
+
+.pessoa[aria-pressed='true'] .marca svg {
+  stroke-dashoffset: 0;
+}
+
+.pronto {
+  justify-self: end;
+  padding: 0.35rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--reunioes-oliva, #5f6b37);
+  color: var(--color-white);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pronto:focus-visible {
+  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline-offset: 2px;
+}
+
+@keyframes abrir {
+  from {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .painel {
+    animation: none;
+  }
+
+  .marca svg {
+    transition: none;
+  }
+}

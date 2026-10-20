@@ -16,7 +16,8 @@ const blockScroll = (event) => {
  * Filhos com `data-modal="item"` entram em sequência na abertura.
  * Opcionais: `className` soma uma classe ao cartão; `actions` vai ao lado do
  * título e troca o botão Fechar por um link "← Voltar" acima dele, que chama
- * `onVoltar` (ou fecha o modal, se não vier); sem `tag`, o selo some.
+ * `onVoltar` (ou fecha o modal, se não vier); `voltar={false}` esconde esse
+ * link (quem usa põe a própria volta nas ações); sem `tag`, o selo some.
  */
 export default function GlassModal({
   tag,
@@ -26,6 +27,7 @@ export default function GlassModal({
   className,
   actions,
   onVoltar,
+  voltar = true,
 }) {
   const dialog = useRef(null);
   const card = useRef(null);
@@ -121,17 +123,19 @@ export default function GlassModal({
       >
         {actions ? (
           <>
-            <button
-              type="button"
-              className={styles.voltar}
-              onClick={onVoltar ?? requestClose}
-              data-modal="item"
-            >
-              <span className={styles.voltarSeta} aria-hidden="true">
-                ←
-              </span>
-              Voltar
-            </button>
+            {voltar && (
+              <button
+                type="button"
+                className={styles.voltar}
+                onClick={onVoltar ?? requestClose}
+                data-modal="item"
+              >
+                <span className={styles.voltarSeta} aria-hidden="true">
+                  ←
+                </span>
+                Voltar
+              </button>
+            )}
             <header className={styles.header}>
               {heading}
               <div className={styles.actions} data-modal="item">

@@ -1,0 +1,89 @@
+/* Resumo da data/hora (design: texto cinza sobre linhas finas). */
+.resumo {
+  min-width: 0;
+  color: #9d9d8f;
+}
+
+.linha {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.35em;
+  width: fit-content;
+  min-width: min(100%, 17.5rem);
+  margin: 0 0 clamp(0.6rem, calc(var(--u) * 1), 0.9rem);
+  padding-bottom: 0.3rem;
+  font-size: clamp(1rem, calc(var(--u) * 1.45), 1.375rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+
+/* Linha fina que se desenha da esquerda ao abrir. */
+.linha::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: color-mix(in srgb, var(--reunioes-tinta, #0b0c08) 70%, transparent);
+  transform-origin: left center;
+  animation: tracar 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.linha:nth-child(2)::after {
+  animation-delay: 0.08s;
+}
+
+.linha:nth-child(3)::after {
+  animation-delay: 0.16s;
+}
+
+/* O ano tem a linha curta, só embaixo dele. */
+.ano {
+  min-width: 0;
+}
+
+.barra {
+  margin-inline: 0.35em;
+  color: color-mix(in srgb, var(--reunioes-tinta, #0b0c08) 60%, transparent);
+}
+
+.vazio {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Valor novo sobe de baixo, com um leve desfoque, e o antigo some. */
+.troca {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.trocaTexto {
+  display: inline-block;
+  animation: rolar 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes rolar {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(70%);
+  }
+}
+
+@keyframes tracar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linha::after,
+  .trocaTexto {
+    animation: none;
+  }
+}

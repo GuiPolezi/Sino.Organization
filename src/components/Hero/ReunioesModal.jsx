@@ -91,29 +91,45 @@ export default function ReunioesModal({ onClose }) {
   }, []);
 
   // Fragmento sempre presente: o cabeçalho não muda de layout entre as visões.
-  const actions = (
-    <>
-      {visao === 'lista' && (
-        <button
-          ref={criarBotao}
-          type="button"
-          className={styles.criar}
-          onClick={() => setVisao('form')}
-        >
-          Criar
-        </button>
-      )}
-    </>
+  // Lista: "Criar". Formulário: botão de voltar à lista (design "Criar Reunião").
+  const actions =
+    visao === 'lista' ? (
+      <button
+        ref={criarBotao}
+        type="button"
+        className={styles.criar}
+        onClick={() => setVisao('form')}
+      >
+        Criar
+      </button>
+    ) : (
+      <button
+        type="button"
+        className={styles.voltarForm}
+        aria-label="Voltar para as reuniões"
+        onClick={voltarParaLista}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M20 12H6M11 6.5L5.5 12l5.5 5.5" />
+        </svg>
+      </button>
+    );
+
+  // O título troca com um leve deslize entre as visões.
+  const titulo = (
+    <span key={visao} className={styles.tituloTroca}>
+      {visao === 'lista' ? 'Reuniões' : 'Criar Reunião'}
+    </span>
   );
 
   return (
     <GlassModal
-      title="Reuniões"
+      title={titulo}
       onClose={onClose}
       className={styles.card}
       actions={actions}
-      // No formulário, "Voltar" retorna à lista; na lista, fecha o modal.
-      onVoltar={visao === 'form' ? voltarParaLista : undefined}
+      // O link "← Voltar" (fecha o modal) só aparece na lista.
+      voltar={visao === 'lista'}
     >
       <div key={visao} ref={visaoRef} className={styles.visao} data-modal="item">
         {visao === 'lista' ? (
@@ -131,7 +147,7 @@ export default function ReunioesModal({ onClose }) {
             onRemover={remover}
           />
         ) : (
-          <ReuniaoForm onSalvar={salvar} onCancelar={voltarParaLista} />
+          <ReuniaoForm onSalvar={salvar} />
         )}
       </div>
     </GlassModal>

@@ -1,5 +1,9 @@
-/* Formulário de nova reunião (também estiliza o MembrosInput). */
+/* Formulário "Criar Reunião" (design: rótulos cinza pequenos, campos limpos). */
 .form {
+  --cinza: #9d9d8f;
+  --oliva: var(--reunioes-oliva, #5f6b37);
+  --suave: cubic-bezier(0.22, 1, 0.36, 1);
+
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -10,46 +14,52 @@
   display: grid;
   flex: 1;
   align-content: start;
-  gap: 1.25rem;
+  gap: clamp(1rem, calc(var(--u) * 2.2), 2rem);
   min-height: 0;
   margin-right: -0.75rem;
-  padding: 0.25rem 0.75rem 0.5rem 0.125rem;
+  padding: 0.25rem 0.75rem 0.5rem clamp(0rem, calc(var(--u) * 1), 1rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 45%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--oliva) 45%, transparent) transparent;
 }
 
-.subtitulo {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: var(--weight-bold);
+/* Cada bloco entra em sequência, subindo de leve. */
+.surge {
+  animation: surgir 0.6s var(--suave) both;
 }
 
-.linha {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
-  gap: 1.25rem;
+.corpo > .surge:nth-child(1) {
+  animation-delay: 0.05s;
 }
 
-/* Data e hora + Término lado a lado. */
-.quando {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 9rem);
-  gap: 0.75rem;
-  min-width: 0;
+.quando > .surge:nth-child(1) {
+  animation-delay: 0.12s;
 }
 
-@media (max-width: 380px) {
-  .quando {
-    grid-template-columns: 1fr;
+.quando > .surge:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.quando > .surge:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.corpo > .surge:last-child {
+  animation-delay: 0.3s;
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 }
 
 .campo {
   display: grid;
   align-content: start;
-  gap: 0.4rem;
+  gap: 0.55rem;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -57,241 +67,203 @@
 }
 
 .rotulo {
-  padding: 0;
-  font-size: 0.875rem;
-  font-weight: var(--weight-bold);
-  color: var(--reunioes-tinta, #0b0c08);
+  font-size: clamp(0.8125rem, calc(var(--u) * 1), 0.9375rem);
+  color: var(--cinza);
 }
 
 .entrada {
   width: 100%;
-  min-height: 2.75rem;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 35%, transparent);
-  border-radius: 12px;
-  background: var(--color-white);
+  height: clamp(2.75rem, calc(var(--u) * 4.4), 3.6rem);
+  padding: 0 1rem;
+  border: 1px solid var(--reunioes-tinta, #0b0c08);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-white) 55%, transparent);
   color: var(--reunioes-tinta, #0b0c08);
   font: inherit;
-  font-size: 1rem;
+  font-size: clamp(1rem, calc(var(--u) * 1.45), 1.25rem);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.2s ease;
 }
 
 .entrada::placeholder {
-  color: #8b8b7e;
+  color: #8b8b80;
+}
+
+.entrada:hover {
+  background: color-mix(in srgb, var(--color-white) 75%, transparent);
 }
 
 .entrada:focus-visible {
   outline: none;
-  border-color: var(--reunioes-oliva, #5f6b37);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 30%, transparent);
+  border-color: var(--oliva);
+  background: var(--color-white);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--oliva) 18%, transparent);
 }
 
 .entrada[aria-invalid='true'] {
-  border-color: #a23b2a;
+  border-color: #b3261e;
 }
 
 .entrada[aria-invalid='true']:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, #a23b2a 25%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, #b3261e 18%, transparent);
 }
 
 .erro {
   margin: 0;
   font-size: 0.8125rem;
-  font-weight: var(--weight-bold);
-  color: #a23b2a;
+  font-weight: 600;
+  color: #b3261e;
+  animation: surgir 0.3s var(--suave);
 }
 
-.ajuda {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: #66665a;
-}
-
-/* Controle segmentado: rádios nativos escondidos, rótulos como botões. */
-.segmentado {
+/* Data | Hora | resumo, como no design. */
+.quando {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
-  min-height: 2.75rem;
-  padding: 0.25rem;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.25rem, calc(var(--u) * 3.6), 3.5rem);
+}
+
+.horas {
+  display: grid;
+  gap: 0.55rem;
+}
+
+/* Resumo alinhado com o topo do calendário (abaixo dos rótulos). */
+.quando > :last-child {
+  padding-top: 1.5rem;
+}
+
+/* Modalidade: discreta, abaixo das horas. */
+.modalidade {
+  margin: 0.6rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.segmentado {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 2px;
+  padding: 2px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 12%, transparent);
+  background: color-mix(in srgb, var(--oliva) 12%, transparent);
 }
 
 .segmento {
   position: relative;
-  display: grid;
-  place-items: center;
+  padding: 0.3rem 0.75rem;
   border-radius: 999px;
-  font-size: 0.9375rem;
-  font-weight: var(--weight-bold);
-  color: var(--reunioes-oliva, #5f6b37);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6f6f64;
   cursor: pointer;
   transition:
     background-color 0.25s ease,
-    color 0.25s ease;
+    color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .segmento input {
   position: absolute;
-  inset: 0;
-  margin: 0;
   opacity: 0;
-  cursor: pointer;
+  pointer-events: none;
 }
 
-.segmento:has(input:checked) {
-  background: var(--reunioes-oliva, #5f6b37);
-  color: var(--color-white);
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
-}
-
-.segmento:has(input:focus-visible) {
-  outline: 2px solid var(--reunioes-oliva, #5f6b37);
-  outline-offset: 2px;
-}
-
-/* Membros */
-.membrosLinha {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.membrosLinha .entrada {
-  flex: 1;
-}
-
-.adicionar,
-.cancelar,
-.salvar {
-  min-height: 2.75rem;
-  padding: 0.6rem 1.4rem;
-  border: 0;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: var(--weight-bold);
-  cursor: pointer;
-  transition:
-    background-color 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.adicionar {
-  flex: none;
-  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 14%, transparent);
-  color: var(--reunioes-oliva, #5f6b37);
-}
-
-.adicionar:hover {
-  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 24%, transparent);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0.25rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
-  border-radius: 999px;
-  background: var(--reunioes-oliva, #5f6b37);
-  color: var(--color-white);
-  font-size: 0.875rem;
-  font-weight: var(--weight-bold);
-}
-
-.chipRemover {
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--color-white) 18%, transparent);
-  color: inherit;
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.chipRemover:hover {
-  background: color-mix(in srgb, var(--color-white) 32%, transparent);
-}
-
-.chipRemover:focus-visible {
-  outline: 2px solid var(--color-white);
-  outline-offset: 1px;
-}
-
-/* Rodapé fixo com as ações do formulário. */
-.botoes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 16%, transparent);
-}
-
-.cancelar {
-  background: transparent;
+.segmento:hover {
   color: var(--reunioes-tinta, #0b0c08);
 }
 
-.cancelar:hover {
-  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 12%, transparent);
+.segmento:has(input:checked) {
+  background: var(--color-white);
+  color: var(--reunioes-tinta, #0b0c08);
+  box-shadow: 0 2px 6px -2px rgb(40 44 22 / 0.35);
+}
+
+.segmento:has(input:focus-visible) {
+  outline: 2px solid var(--oliva);
+  outline-offset: 1px;
+}
+
+.botoes {
+  display: flex;
+  justify-content: center;
+  padding-top: clamp(0.5rem, calc(var(--u) * 1.2), 1rem);
 }
 
 .salvar {
-  padding-inline: 2.25rem;
-  background: var(--reunioes-oliva, #5f6b37);
+  min-width: clamp(8.5rem, calc(var(--u) * 11), 10rem);
+  min-height: clamp(2.6rem, calc(var(--u) * 3.6), 3.25rem);
+  padding: 0 2rem;
+  border: 0;
+  border-radius: 14px;
+  background: var(--oliva);
   color: var(--color-white);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-olive-dark) 35%, transparent);
+  font: inherit;
+  font-size: clamp(1rem, calc(var(--u) * 1.4), 1.25rem);
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 6px 12px -4px color-mix(in srgb, var(--color-olive-dark) 60%, transparent);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease,
+    background-color 0.25s ease;
 }
 
 .salvar:hover {
-  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 85%, black);
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--oliva) 88%, black);
+  box-shadow: 0 12px 20px -8px color-mix(in srgb, var(--color-olive-dark) 70%, transparent);
 }
 
-.adicionar:focus-visible,
-.cancelar:focus-visible,
+.salvar:active {
+  transform: translateY(0) scale(0.97);
+}
+
 .salvar:focus-visible {
-  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline: 3px solid var(--oliva);
   outline-offset: 3px;
 }
 
-@media (max-width: 480px) {
-  .membrosLinha {
-    flex-wrap: wrap;
+/* Tablet: o resumo desce para baixo de data e hora. */
+@media (max-width: 900px) {
+  .quando {
+    grid-template-columns: auto 1fr;
   }
 
-  .adicionar {
-    flex: 1;
+  .quando > :last-child {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+}
+
+/* Celular: tudo empilhado. */
+@media (max-width: 520px) {
+  .quando {
+    grid-template-columns: 1fr;
   }
 
-  .botoes > button {
-    flex: 1;
+  .salvar {
+    width: 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .surge,
+  .erro {
+    animation: none;
+  }
+
   .entrada,
   .segmento,
-  .adicionar,
-  .cancelar,
   .salvar {
     transition: none;
+  }
+
+  .salvar:hover,
+  .salvar:active {
+    transform: none;
   }
 }

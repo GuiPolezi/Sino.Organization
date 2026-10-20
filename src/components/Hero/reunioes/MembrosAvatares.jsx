@@ -11,7 +11,7 @@ export const tamanhos = Object.freeze({ padrao: 50, compacto: 36 });
 const COLUNAS = 3;
 
 // Quem é da equipe (suporte ou desenvolvimento), pela chave do nome.
-const EQUIPE = new Map(
+export const EQUIPE = new Map(
   [...team.team, ...devTeam.team].map((pessoa) => [chaveMembro(pessoa.name), pessoa]),
 );
 
@@ -22,13 +22,13 @@ function hash(texto) {
 }
 
 // Membro da reunião → id do boneco (o da equipe, se o nome bater) e cargo.
-function identificar(membro) {
+export function identificar(membro) {
   const pessoa = EQUIPE.get(chaveMembro(membro.nome));
   return pessoa ? { id: pessoa.id, cargo: pessoa.role } : { id: membro.id, cargo: null };
 }
 
 // "Ana Maria Souza" → "AS"; "Bia" → "B".
-function iniciais(nome) {
+export function iniciais(nome) {
   const partes = String(nome ?? '').trim().split(/\s+/).filter(Boolean);
   if (!partes.length) return '?';
   const primeira = partes[0][0];
@@ -37,7 +37,7 @@ function iniciais(nome) {
 }
 
 // Tom discreto de fundo, sempre o mesmo para cada id.
-const matiz = (id) => hash(String(id)) % 360;
+export const matiz = (id) => hash(String(id)) % 360;
 
 // Esc esconde o tooltip até o ponteiro ou o foco saírem (WCAG 1.4.13).
 function useDispensavel() {

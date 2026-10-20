@@ -1,0 +1,224 @@
+/* Calendário compacto (design "Criar Reunião"): cartão branco, letras pequenas. */
+.calendario {
+  --dia: clamp(1.45rem, calc(var(--u) * 2.05), 1.85rem);
+  --oliva: var(--reunioes-oliva, #5f6b37);
+
+  width: calc(var(--dia) * 7 + 1.5rem);
+  padding: 0.7rem 0.75rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--color-white) 80%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-white) 82%, transparent);
+  box-shadow: 0 6px 18px -12px color-mix(in srgb, var(--color-olive-dark) 55%, transparent);
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.calendario:focus-within {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--oliva) 18%, transparent),
+    0 10px 24px -14px color-mix(in srgb, var(--color-olive-dark) 60%, transparent);
+}
+
+.calendario[data-invalido] {
+  border-color: #b3261e;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mes {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  margin: 0;
+  padding-inline: 0.2rem;
+  overflow: hidden;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--reunioes-tinta, #0b0c08);
+}
+
+.mesTexto {
+  display: inline-block;
+  animation: aparecer 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ano {
+  font-variant-numeric: tabular-nums;
+}
+
+.navegar {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--reunioes-tinta, #0b0c08);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navegar svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.navegar:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--oliva) 12%, transparent);
+}
+
+.navegar:first-child:hover:not(:disabled) {
+  transform: translateX(-2px);
+}
+
+.navegar:last-child:hover:not(:disabled) {
+  transform: translateX(2px);
+}
+
+.navegar:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.navegar:focus-visible,
+.dia:focus-visible {
+  outline: 2px solid var(--oliva);
+  outline-offset: 1px;
+}
+
+.semana,
+.dias {
+  display: grid;
+  grid-template-columns: repeat(7, var(--dia));
+  justify-content: center;
+}
+
+.semana {
+  margin: 0.45rem 0 0.3rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--reunioes-tinta, #0b0c08) 14%, transparent);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  text-align: center;
+  color: #9a9a90;
+}
+
+.dias {
+  grid-auto-rows: var(--dia);
+  animation: aparecer 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dias[data-direcao='seguinte'] {
+  animation-name: daDireita;
+}
+
+.dias[data-direcao='anterior'] {
+  animation-name: daEsquerda;
+}
+
+.dia {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 1px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--reunioes-tinta, #0b0c08);
+  font: inherit;
+  font-size: 0.625rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dia:hover:not(:disabled):not([aria-pressed='true']) {
+  background: color-mix(in srgb, var(--oliva) 14%, transparent);
+  transform: scale(1.12);
+}
+
+/* Hoje: um anel fino. */
+.dia[data-hoje]::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border: 1px solid color-mix(in srgb, var(--oliva) 55%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.dia[aria-pressed='true'] {
+  background: var(--oliva);
+  color: var(--color-white);
+  box-shadow: 0 3px 8px -2px color-mix(in srgb, var(--oliva) 70%, transparent);
+  animation: escolher 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dia:disabled {
+  color: color-mix(in srgb, var(--reunioes-tinta, #0b0c08) 25%, transparent);
+  cursor: default;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes daDireita {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes daEsquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+
+@keyframes escolher {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesTexto,
+  .dias,
+  .dia[aria-pressed='true'] {
+    animation: none;
+  }
+
+  .dia,
+  .navegar {
+    transition: none;
+  }
+
+  .dia:hover:not(:disabled):not([aria-pressed='true']) {
+    transform: none;
+  }
+}
