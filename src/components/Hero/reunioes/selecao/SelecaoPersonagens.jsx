@@ -343,12 +343,14 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
     });
     setRecemId(escolhida.id);
     if (reduzido() || !botao.current) return;
-    // Sem a transition de transform do CSS durante o tween (ela atrasava cada tick).
-    gsap.set(botao.current, { transition: 'none' });
+    // Sem a transition de transform do CSS durante o tween (ela atrasava cada
+    // tick); as de cor e sombra continuam (mesma ordem do CSS, mesmas durações).
+    const alvo = botao.current;
+    alvo.style.transitionProperty = 'background-color, box-shadow';
     gsap
-      .timeline()
-      .to(botao.current, { scale: 0.96, duration: 0.12, ease: 'power2.out' })
-      .to(botao.current, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)', clearProps: 'transform,transition' });
+      .timeline({ onComplete: () => alvo.style.removeProperty('transition-property') })
+      .to(alvo, { scale: 0.96, duration: 0.12, ease: 'power2.out' })
+      .to(alvo, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)', clearProps: 'transform' });
     // A badge comemora: um pulinho de cor.
     const badge = badges.current[indiceEscolhida]?.firstElementChild;
     if (badge) {

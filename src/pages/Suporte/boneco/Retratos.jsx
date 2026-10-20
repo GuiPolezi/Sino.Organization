@@ -17,8 +17,32 @@ export const useRetratos = create((set) => ({
   fila: [],
   // Devolve o mesmo estado quando não muda nada: assim o zustand não notifica ninguém.
   pedir: (id) => set((s) => (id in s.urls || s.fila.includes(id) ? s : { fila: [...s.fila, id] })),
-  entregar: (id, url) => set(({ urls, fila }) => ({ urls: { ...urls, [id]: url }, fila: fila.filter((outro) => outro !== id) })),
+  entregar: (id, url) =>
+    set(({ urls, fila }) => {
+      const semId = fila.filter((outro) => outro !== id);
+      // Dois fotógrafos (home e Suporte) podem tirar a mesma foto: fica a primeira.
+      if (urls[id]) {
+        if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        return { fila: semId };
+      }
+      return { urls: { ...urls, [id]: url }, fila: semId };
+    }),
 }));
+
+// Falhas por pessoa: tenta de novo algumas vezes antes de desistir (fica com as iniciais).
+const TENTATIVAS = 3;
+const falhas = new Map();
+function falhou(id) {
+  const vezes = (falhas.get(id) ?? 0) + 1;
+  falhas.set(id, vezes);
+  if (vezes >= TENTATIVAS) {
+    useRetratos.getState().entregar(id, null);
+    return;
+  }
+  // Sai da fila (a Pose desmonta) e volta um pouco depois, com uma Pose nova.
+  useRetratos.setState(({ fila }) => ({ fila: fila.filter((outro) => outro !== id) }));
+  setTimeout(() => useRetratos.getState().pedir(id), 500 * vezes);
+}
 
 /**
  * O retrato da pessoa: o rosto do boneco dela, acenando, em fundo transparente.
@@ -102,7 +126,7 @@ function Pose({ id, cena, camera, alvo }) {
     lerPixels(gl, alvo)
       .then(paraImagem)
       .then((url) => useRetratos.getState().entregar(id, url))
-      .catch(() => useRetratos.getState().entregar(id, null));
+      .catch(() => falhou(id));
   });
 
   return createPortal(

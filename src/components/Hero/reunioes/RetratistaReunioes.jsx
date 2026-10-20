@@ -45,6 +45,9 @@ function usePonte() {
       if (atuais === pendentes) return;
       pendentes = atuais;
       pedir();
+      // Quem já tem foto (tirada em outra página) não gera notificação no pedir:
+      // entrega direto daqui.
+      devolver(useRetratos.getState());
     });
     // E só devolve quando chegou retrato novo (urls mudou).
     const sairRetratos = useRetratos.subscribe((estado, anterior) => {

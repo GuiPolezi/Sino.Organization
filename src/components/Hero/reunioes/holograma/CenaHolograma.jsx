@@ -49,7 +49,7 @@ function Enquadramento() {
  * Entra materializando de baixo para cima; com `saindo`, desmaterializa de cima
  * para baixo e avisa `onSaiu`.
  */
-function BonecoHolografico({ chave, id, saindo, atraso, onSaiu, tempo, energia, reduzido }) {
+function BonecoHolografico({ chave, id, saindo, atraso, onSaiu, onVisivel, tempo, energia, reduzido }) {
   const aparencia = useMemo(() => aparenciaDe(id), [id]);
   const materiais = useMateriais(aparencia);
   const uniformes = useMemo(criarUniformes, []);
@@ -98,6 +98,7 @@ function BonecoHolografico({ chave, id, saindo, atraso, onSaiu, tempo, energia, 
       if (cancelado) return;
       estado.current.compilado = true;
       if (grupo.current) grupo.current.visible = true;
+      onVisivel?.();
       invalidate();
     };
     if (gl.compileAsync) {
@@ -117,7 +118,7 @@ function BonecoHolografico({ chave, id, saindo, atraso, onSaiu, tempo, energia, 
       copias.forEach((copia) => copia.dispose());
       profundidade.dispose();
     };
-  }, [materiais, uniformes, gl, camera, cena, invalidate]);
+  }, [materiais, uniformes, gl, camera, cena, invalidate, onVisivel]);
 
   // Em frameloop sob demanda (movimento reduzido), a troca precisa pedir quadro.
   useEffect(() => invalidate(), [saindo, invalidate]);
@@ -225,6 +226,15 @@ function Palco({ pessoaId, reduzido, onPronto }) {
   const flutuante = useRef(null);
   const pronto = useRef(false);
   const vazio = !elenco.some((item) => !item.saindo);
+  const avisoPronto = useRef(onPronto);
+  avisoPronto.current = onPronto;
+  // Pronto = algo para ver: o primeiro boneco já compilado e visível (ou o
+  // projetor vazio). Antes disso a reserva continua por cima.
+  const avisar = useCallback(() => {
+    if (pronto.current) return;
+    pronto.current = true;
+    requestAnimationFrame(() => avisoPronto.current?.());
+  }, []);
 
   useFrame((_, delta) => {
     const passo = Math.min(delta, 1 / 20);
@@ -244,10 +254,7 @@ function Palco({ pessoaId, reduzido, onPronto }) {
     energia.current += (alvo - energia.current) * Math.min(1, passo * 4);
     if (reduzido) energia.current = vazio ? 0.55 : 1;
 
-    if (!pronto.current) {
-      pronto.current = true;
-      requestAnimationFrame(() => onPronto?.());
-    }
+    if (vazio) avisar();
   });
 
   return (
@@ -267,6 +274,7 @@ function Palco({ pessoaId, reduzido, onPronto }) {
               saindo={item.saindo}
               atraso={item.atraso}
               onSaiu={remover}
+              onVisivel={avisar}
               tempo={tempo}
               energia={pulso}
               reduzido={reduzido}
