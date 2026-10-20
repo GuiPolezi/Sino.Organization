@@ -3,6 +3,7 @@
 import imgDesenvolvimento from '../../assets/images/dev.png';
 import imgSuporte from '../../assets/images/suporte.png';
 import imgLicencas from '../../assets/images/license.png';
+import imgReuniao from '../../assets/images/meeting.png'
 
 export const sectors = [
   {
@@ -28,6 +29,6 @@ export const sectors = [
     // Sem `href`: abre um modal (ver `modal` em SectorsList.jsx).
     modal: 'reunioes',
     // Imagem provisória (aleatória, fixa pela seed). Trocar pela final em 4:3.
-    image: 'https://picsum.photos/seed/sino-reunioes/640/480',
+    image: imgReuniao,
   },
 ];
