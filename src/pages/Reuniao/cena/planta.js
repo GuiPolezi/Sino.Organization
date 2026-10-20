@@ -115,14 +115,44 @@ const noQuadro = ({ x, z, r }) => {
 };
 
 // ── Pufes, na ordem em que aparecem. forma: 'baixo' (redondo) ou 'alto' (com encosto) ──
+// Todos de frente para a mesa (rot), com o encosto do 'alto' atrás de quem senta: com o
+// giro solto do esboço, o boneco (que olha para a mesa) enfiava a perna no encosto.
+const pufe = (id, x, z, cor, forma) => ({ id, x, z, cor, forma, rot: Math.atan2(MESA.x - x, MESA.z - z) });
 export const POLTRONAS = [
-  { id: 'p1', x: -4.4, z: -1.5, cor: '#1E88B8', forma: 'baixo', rot: 0.5 },
-  { id: 'p2', x: 4.2, z: -0.4, cor: '#E25656', forma: 'baixo', rot: -0.3 },
-  { id: 'p3', x: 5.15, z: -1.55, cor: '#E25656', forma: 'alto', rot: -0.7 },
-  { id: 'p4', x: -4.2, z: 0.55, cor: '#F2B632', forma: 'baixo', rot: 0.9 },
-  { id: 'p5', x: 4.3, z: 1.45, cor: '#5DAA4F', forma: 'baixo', rot: -1.0 },
-  { id: 'p6', x: -5.25, z: -0.55, cor: '#1E88B8', forma: 'alto', rot: 1.1 },
+  pufe('p1', -4.4, -1.5, '#1E88B8', 'baixo'),
+  pufe('p2', 4.2, -0.4, '#E25656', 'baixo'),
+  pufe('p3', 5.15, -1.55, '#E25656', 'alto'),
+  pufe('p4', -4.2, 0.55, '#F2B632', 'baixo'),
+  pufe('p5', 4.3, 1.45, '#5DAA4F', 'baixo'),
+  pufe('p6', -5.25, -0.55, '#1E88B8', 'alto'),
 ];
+
+/*
+ * Medidas do pufe no espaço dele (+z para a mesa), em metros: elipsoides com centro
+ * (y, z) e raios (rx, ry, rz). Mobilia.jsx desenha com elas; o teste confere com elas
+ * que a perna de quem senta fica por cima do estofado.
+ */
+export const FORMA_PUFE = {
+  baixo: {
+    estofado: { y: 0.36, z: 0, rx: 0.575, ry: 0.36, rz: 0.525 },
+    dobra: { y: 0.68, z: 0, rx: 0.3, ry: 0.06, rz: 0.275 },
+  },
+  alto: {
+    estofado: { y: 0.42, z: 0.12, rx: 0.525, ry: 0.35, rz: 0.45 },
+    dobra: { y: 0.74, z: 0.12, rx: 0.275, ry: 0.06, rz: 0.225 },
+  },
+};
+
+/*
+ * Onde o boneco senta no pufe: em cima do estofado, com as pernas por cima e não dentro.
+ * quadril: altura (m, no mundo) do quadril sentado, para a coxa (0,115 m de raio) encostar
+ * no topo afundando só uns centímetros. frente: quanto o assento fica à frente do centro,
+ * na direção da mesa (no 'alto', longe do encosto, que fica em z −0,2).
+ */
+export const ASSENTO_PUFE = {
+  baixo: { frente: -0.05, quadril: 0.8 },
+  alto: { frente: 0.28, quadril: 0.85 },
+};
 
 /*
  * Quantos lugares mostrar para N membros:

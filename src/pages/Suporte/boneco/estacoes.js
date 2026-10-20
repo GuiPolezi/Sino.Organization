@@ -31,6 +31,8 @@
  * @property {{ x: number, z: number }} aprox   onde ele chega andando antes de sentar
  * @property {number} yaw                       direção em que ele olha sentado (para o monitor)
  * @property {number} [elevacao]                quanto o corpo sobe sentado (padrão: 0,17 da cadeira)
+ * @property {number} [alturaQuadril]           ou a altura do quadril sentado no mundo (m), igual para
+ *   bonecos baixos e altos (um pufe fofo, onde a perna afundaria)
  * @property {boolean} [trajetoDireto]          senta indo reto da chegada ao assento (pufe, sem encosto)
  * @property {{ x: number, z: number, r: number }[]} [obstaculos] pegada própria (padrão: mesa e cadeira)
  * @property {boolean} [semBloco]                peça redonda e solta (pufe): os bonecos desviam dela

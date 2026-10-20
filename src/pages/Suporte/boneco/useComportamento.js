@@ -54,6 +54,8 @@ export function configurarRitmo(config) {
 
 // Altura do corpo sentado numa cadeira, quando a estação não diz a dela (estacoes.js).
 const ELEVACAO_CADEIRA = 0.17;
+// Altura do quadril (pivô das pernas) do boneco em pé, antes da escala (Boneco.jsx).
+const QUADRIL = 0.42;
 // Segundos para chegar ao computador reservado antes de desistir dele.
 const PRAZO_ATE_ESTACAO = 14;
 // Até onde, além do raio do obstáculo, o boneco já começa a desviar.
@@ -708,7 +710,12 @@ export function useComportamento({ id, altura = 1 }) {
     // Respiração (leve escala em Y), pulo e a subida do quadril até o assento.
     s.pulo = damp(s.pulo, pose.pulo, 18, dt);
     const corpo = partes.corpo.current;
-    if (s.estacao) s.elevacao = s.estacao.elevacao ?? ELEVACAO_CADEIRA;
+    if (s.estacao) {
+      const { alturaQuadril, elevacao } = s.estacao;
+      // A escala (altura) também multiplica a subida: com a altura do quadril no mundo,
+      // baixos e altos sentam no mesmo lugar do estofado.
+      s.elevacao = alturaQuadril != null ? alturaQuadril / altura - QUADRIL : (elevacao ?? ELEVACAO_CADEIRA);
+    }
     corpo.position.y = s.pulo + s.sentado * s.elevacao;
     corpo.scale.y = 1 + Math.sin(t * 2.2 + s.passo) * 0.018 * (1 - s.sentado * 0.5);
 

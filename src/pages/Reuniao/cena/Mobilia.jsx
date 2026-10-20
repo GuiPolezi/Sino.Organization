@@ -9,7 +9,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { pontoLocal } from '../../Suporte/boneco/estacoes.js';
 import { G, fosco, useDescartar } from './comum.js';
-import { LUGARES_MESA, LUMINARIA, MESA, POLTRONAS } from './planta.js';
+import { FORMA_PUFE, LUGARES_MESA, LUMINARIA, MESA, POLTRONAS } from './planta.js';
 
 const CORES_PUFE = [...new Set(POLTRONAS.map(({ cor }) => cor))];
 
@@ -95,22 +95,22 @@ function Mesa({ M }) {
   );
 }
 
+// Um elipsoide de FORMA_PUFE (G.esfera tem raio 0,5: a escala é o dobro do raio).
+function Elipsoide({ e, material }) {
+  return <mesh geometry={G.esfera} material={material} position={[0, e.y, e.z]} scale={[e.rx * 2, e.ry * 2, e.rz * 2]} />;
+}
+
+// Virado para a mesa (rot); no 'alto', o encosto fica atrás de quem senta.
 function Pufe({ p, M }) {
   const mat = M.pufe[p.cor];
+  const { estofado, dobra } = FORMA_PUFE[p.forma];
   return (
     <group position={[p.x, 0, p.z]} rotation-y={p.rot}>
-      {p.forma === 'alto' ? (
-        <>
-          <mesh geometry={G.esfera} material={mat.base} position={[0, 0.42, 0.12]} scale={[1.05, 0.7, 0.9]} />
-          <mesh geometry={G.esfera} material={mat.base} position={[0, 0.78, -0.2]} rotation-x={-0.35} scale={[0.95, 1.05, 0.55]} />
-          <mesh geometry={G.esfera} material={mat.dobra} position={[0, 0.74, 0.12]} scale={[0.55, 0.12, 0.45]} />
-        </>
-      ) : (
-        <>
-          <mesh geometry={G.esfera} material={mat.base} position-y={0.36} scale={[1.15, 0.72, 1.05]} />
-          <mesh geometry={G.esfera} material={mat.dobra} position-y={0.68} scale={[0.6, 0.12, 0.55]} />
-        </>
+      <Elipsoide e={estofado} material={mat.base} />
+      {p.forma === 'alto' && (
+        <mesh geometry={G.esfera} material={mat.base} position={[0, 0.78, -0.2]} rotation-x={-0.35} scale={[0.95, 1.05, 0.55]} />
       )}
+      <Elipsoide e={dobra} material={mat.dobra} />
     </group>
   );
 }

@@ -6,12 +6,12 @@
  * sumiu levanta sozinho, e quem está num que continua fica sentado.
  */
 import { OBSTACULOS, definirEstacoes, pontoLocal } from '../../Suporte/boneco/estacoes.js';
-import { LUGARES_MESA, MESA, OBSTACULOS_FIXOS, POLTRONAS, montarLugares } from './planta.js';
+import { ASSENTO_PUFE, LUGARES_MESA, MESA, OBSTACULOS_FIXOS, POLTRONAS, montarLugares } from './planta.js';
 
 /** @import { BaseEstacao } from '../../Suporte/boneco/estacoes.js' */
 
-// Altura do corpo sentado: na cadeira sobe; no pufe afunda um pouco.
-const ELEVACAO = { cadeira: 0.17, poltrona: 0.1 };
+// Altura do corpo sentado na cadeira (a do pufe, por forma, em ASSENTO_PUFE).
+const ELEVACAO_CADEIRA = 0.17;
 // Do centro do pufe até onde o boneco chega andando, do lado da mesa.
 const CHEGADA_PUFE = 1.15;
 const RAIO_PUFE = 0.75;
@@ -19,7 +19,7 @@ const RAIO_PUFE = 0.75;
 const cadeira = (lugar) => ({
   ...lugar,
   tipo: 'cadeira',
-  elevacao: ELEVACAO.cadeira,
+  elevacao: ELEVACAO_CADEIRA,
   // Borda da mesa (as duas metades) e a cadeira.
   obstaculos: [
     { ...pontoLocal(lugar, -0.3, 0), r: 0.7 },
@@ -35,17 +35,18 @@ const pufe = (p) => {
   const d = Math.hypot(dx, dz);
   const ux = dx / d;
   const uz = dz / d;
+  const { frente, quadril } = ASSENTO_PUFE[p.forma];
   return {
     id: p.id,
     x: p.x,
     z: p.z,
     rot: p.rot,
     tipo: 'poltrona',
-    elevacao: ELEVACAO.poltrona,
+    alturaQuadril: quadril,
     trajetoDireto: true,
     // Redondo e solto: desviam dele como do quadro, sem retângulo de contorno.
     semBloco: true,
-    assento: { x: p.x, z: p.z },
+    assento: { x: p.x + ux * frente, z: p.z + uz * frente },
     aprox: { x: p.x + ux * CHEGADA_PUFE, z: p.z + uz * CHEGADA_PUFE },
     yaw: Math.atan2(ux, uz),
     // Raio do pufe (0,58 m) mais metade do corpo.

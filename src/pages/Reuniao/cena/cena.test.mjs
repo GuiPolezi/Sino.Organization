@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ESTACOES, OBSTACULOS, aindaEDono, definirEstacoes, dentroDaArea, foraDosBlocos, reservarEstacao, resetarEstacoes, rotaAte } from '../../Suporte/boneco/estacoes.js';
 import { BASES, configurarLugares } from './lugares.js';
-import { montarLugares } from './planta.js';
+import { ASSENTO_PUFE, FORMA_PUFE, POLTRONAS, montarLugares } from './planta.js';
 import { TEMAS, horaDe, temaDaHora, temaDaReuniao } from './temaHorario.js';
 import { AREA_REUNIAO } from './config.js';
 
@@ -91,12 +91,41 @@ test('reserva exclusiva: um membro por lugar', () => {
   configurarLugares(0);
 });
 
-test('pufe: senta reto, mais baixo, olhando para a mesa', () => {
+test('pufe: senta reto, olhando para a mesa', () => {
   const p1 = BASES.get('p1');
   assert.equal(p1.trajetoDireto, true);
-  assert.ok(p1.elevacao < BASES.get('r1').elevacao);
   // A chegada fica entre o pufe e a mesa.
   assert.ok(Math.hypot(p1.aprox.x, p1.aprox.z + 0.5) < Math.hypot(p1.x, p1.z + 0.5));
+});
+
+// Topo do pufe (m) a z metros do centro, para a mesa: o mais alto dos elipsoides ali.
+function topoDoPufe(forma, z) {
+  let topo = 0;
+  for (const e of Object.values(FORMA_PUFE[forma])) {
+    const k = 1 - ((z - e.z) / e.rz) ** 2;
+    if (k > 0) topo = Math.max(topo, e.y + e.ry * Math.sqrt(k));
+  }
+  return topo;
+}
+
+test('no pufe a perna fica por cima do estofado, não dentro (bonecos baixos e altos)', () => {
+  const RAIO_COXA = 0.115;
+  const COMPRIMENTO_PERNA = 0.43;
+  for (const p of POLTRONAS) {
+    const base = BASES.get(p.id);
+    const { frente } = ASSENTO_PUFE[p.forma];
+    // O pufe e quem senta nele olham para o mesmo lado (o encosto fica atrás).
+    assert.ok(Math.abs(Math.sin(p.rot - base.yaw)) < 1e-9 && Math.cos(p.rot - base.yaw) > 0, `${p.id} virado para outro lado`);
+    for (const altura of [0.93, 1, 1.08]) {
+      const coxa = base.alturaQuadril - RAIO_COXA * altura;
+      for (let z = frente - 0.05; z <= frente + COMPRIMENTO_PERNA * altura; z += 0.02) {
+        const afunda = topoDoPufe(p.forma, z) - coxa;
+        assert.ok(afunda <= 0.07, `${p.id}, altura ${altura}: a perna entra ${afunda.toFixed(2)} m no pufe em z ${z.toFixed(2)}`);
+      }
+      // Encostada no estofado junto ao quadril, sem flutuar.
+      assert.ok(topoDoPufe(p.forma, frente) - coxa > -0.03, `${p.id}, altura ${altura}: flutua acima do pufe`);
+    }
+  }
 });
 
 // Segue a rota (rotaAte, a mesma dos bonecos) de um ponto até a chegada do lugar e
