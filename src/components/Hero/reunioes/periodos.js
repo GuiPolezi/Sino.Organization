@@ -57,15 +57,13 @@ export const statusDe = (reuniao, agora = new Date()) => {
   return diaDe(inicio) === diaDe(agora) ? 'hoje' : 'em-breve';
 };
 
-// Regras de cada filtro (podem se sobrepor).
+// Cada filtro mostra só as reuniões com o selo correspondente (statusDe):
+// não se sobrepõem, e Em Breve + Hoje + Encerradas = Todas.
 const REGRAS = {
   todas: () => true,
-  'em-breve': (r, agora) => ms(inicioDe(r)) > agora.getTime(),
-  hoje: (r, agora) => {
-    const inicio = inicioDe(r);
-    return inicio != null && diaDe(inicio) === diaDe(agora);
-  },
-  encerradas: (r, agora) => ms(fimDe(r)) <= agora.getTime(),
+  'em-breve': (r, agora) => statusDe(r, agora) === 'em-breve',
+  hoje: (r, agora) => statusDe(r, agora) === 'hoje',
+  encerradas: (r, agora) => statusDe(r, agora) === 'encerrada',
 };
 
 const CRESCENTE = new Set(['em-breve', 'hoje']);

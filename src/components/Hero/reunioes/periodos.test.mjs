@@ -87,14 +87,18 @@ const LISTA = Object.freeze([
   R('longe', '2027-01-05T09:00', '09:30'),
 ]);
 
-test('filtrarReunioes: definições, sobreposição e ordem', () => {
+test('filtrarReunioes: cada filtro = um selo, e ordem', () => {
   const copia = [...LISTA];
   assert.deepEqual(ids(filtrarReunioes(LISTA, 'todas', AGORA)), [
     'longe', 'amanha', 'hoje-tarde', 'agora', 'hoje-cedo', 'ontem', 'antiga',
   ]);
-  assert.deepEqual(ids(filtrarReunioes(LISTA, 'em-breve', AGORA)), ['hoje-tarde', 'amanha', 'longe']);
-  assert.deepEqual(ids(filtrarReunioes(LISTA, 'hoje', AGORA)), ['hoje-cedo', 'agora', 'hoje-tarde']);
+  // Mais tarde hoje é "Hoje" (não "Em Breve"); encerrada hoje é só "Encerradas".
+  assert.deepEqual(ids(filtrarReunioes(LISTA, 'em-breve', AGORA)), ['amanha', 'longe']);
+  assert.deepEqual(ids(filtrarReunioes(LISTA, 'hoje', AGORA)), ['agora', 'hoje-tarde']);
   assert.deepEqual(ids(filtrarReunioes(LISTA, 'encerradas', AGORA)), ['hoje-cedo', 'ontem', 'antiga']);
+  // Sem sobreposição: cada reunião aparece em exatamente um filtro.
+  const filtradas = ['em-breve', 'hoje', 'encerradas'].flatMap((f) => ids(filtrarReunioes(LISTA, f, AGORA)));
+  assert.deepEqual([...filtradas].sort(), ids(LISTA).sort());
   // filtro desconhecido = todas
   assert.deepEqual(filtrarReunioes(LISTA, 'xyz', AGORA), filtrarReunioes(LISTA, 'todas', AGORA));
   assert.deepEqual(filtrarReunioes(LISTA, undefined, AGORA), filtrarReunioes(LISTA, 'todas', AGORA));
@@ -118,18 +122,22 @@ test('filtrarReunioes: definições, sobreposição e ordem', () => {
 
 test('filtrarReunioes: fronteira do início exato', () => {
   const r = R('a', '2026-10-19T10:00', '11:00');
-  assert.deepEqual(ids(filtrarReunioes([r], 'em-breve', BR('2026-10-19T09:59'))), ['a']);
-  assert.deepEqual(ids(filtrarReunioes([r], 'em-breve', AGORA)), []); // início == agora
+  // Véspera: em breve; à meia-noite de Brasília vira hoje.
+  assert.deepEqual(ids(filtrarReunioes([r], 'em-breve', BR('2026-10-18T23:59'))), ['a']);
+  assert.deepEqual(ids(filtrarReunioes([r], 'em-breve', BR('2026-10-19T00:00'))), []);
+  assert.deepEqual(ids(filtrarReunioes([r], 'hoje', BR('2026-10-19T00:00'))), ['a']);
+  // Hoje até o fim (em andamento incluído); no fim exato, só Encerradas.
+  assert.deepEqual(ids(filtrarReunioes([r], 'hoje', BR('2026-10-19T10:30'))), ['a']);
+  assert.deepEqual(ids(filtrarReunioes([r], 'hoje', BR('2026-10-19T11:00'))), []);
   assert.deepEqual(ids(filtrarReunioes([r], 'encerradas', BR('2026-10-19T11:00'))), ['a']);
-  assert.deepEqual(ids(filtrarReunioes([r], 'hoje', BR('2026-10-19T23:59'))), ['a']);
-  assert.deepEqual(ids(filtrarReunioes([r], 'hoje', BR('2026-10-20T00:00'))), []);
+  assert.deepEqual(ids(filtrarReunioes([r], 'encerradas', BR('2026-10-19T10:59'))), []);
 });
 
 test('contarPorFiltro', () => {
   assert.deepEqual(contarPorFiltro(LISTA, AGORA), {
     todas: 7,
-    'em-breve': 3,
-    hoje: 3,
+    'em-breve': 2,
+    hoje: 2,
     encerradas: 3,
   });
   assert.deepEqual(contarPorFiltro([], AGORA), { todas: 0, 'em-breve': 0, hoje: 0, encerradas: 0 });
