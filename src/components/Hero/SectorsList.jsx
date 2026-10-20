@@ -21,10 +21,28 @@ const getParts = (link) => ({
   text: link.querySelector('[data-sector="text"]'),
 });
 
+// Desfaz o destaque. Fora do componente para o pageshow e o fechar do modal usarem sem ref.
+const relaxLink = (link) => {
+  const { line, text } = getParts(link);
+  gsap.to(line, { scaleX: 1, ...HOVER_TWEEN });
+  gsap.to(text, { x: 0, ...HOVER_TWEEN });
+};
+
+// Foco vindo do teclado? Safari < 15.4 não conhece :focus-visible: aí vale qualquer foco.
+const isKeyboardFocus = (element) => {
+  try {
+    return element.matches(':focus-visible');
+  } catch {
+    return true;
+  }
+};
+
 export default function SectorsList() {
   const root = useRef(null);
   const reveal = useRef(null);
   const [openModal, setOpenModal] = useState(null);
+  // Botão que abriu o modal com mouse/toque: ao fechar, o <dialog> devolve o foco a ele.
+  const pointerOpener = useRef(null);
   const { contextSafe } = useGSAP({ scope: root });
   const Modal = openModal ? MODALS[openModal] : null;
 
@@ -43,40 +61,38 @@ export default function SectorsList() {
     gsap.to(text, { x: line.offsetWidth * LINE_GROWTH, ...HOVER_TWEEN });
   });
 
-  const relax = contextSafe((link) => {
-    const { line, text } = getParts(link);
-    gsap.to(line, { scaleX: 1, ...HOVER_TWEEN });
-    gsap.to(text, { x: 0, ...HOVER_TWEEN });
-  });
+  const relax = contextSafe(relaxLink);
 
   // Foco por teclado destaca; o foco do clique (ou o que o <dialog> devolve ao
   // fechar) não, senão o item fica deslocado sem o mouse em cima.
   const handleFocus = (event) => {
-    if (event.currentTarget.matches(':focus-visible')) emphasize(event.currentTarget);
+    if (isKeyboardFocus(event.currentTarget)) emphasize(event.currentTarget);
   };
-
-  // O contextSafe dá uma função nova a cada render; o listener lê a atual daqui.
-  const relaxRef = useRef(relax);
-  relaxRef.current = relax;
 
   useEffect(() => {
     // Ao voltar de outra página pelo histórico (bfcache), a home volta congelada
     // no destaque do clique, sem o mouseleave: desfaz em quem não está em uso.
     const restore = (event) => {
       if (!event.persisted || !root.current) return;
+      // No toque o :hover fica grudado no último item tocado: lá ele não conta.
+      const canHover = matches(MEDIA.hover);
+      let hovered = false;
       root.current.querySelectorAll('[data-intro="sector"]').forEach((link) => {
-        if (!link.matches(':hover, :focus-visible')) relaxRef.current(link);
+        const isHovered = canHover && link.matches(':hover');
+        hovered ||= isHovered;
+        if (!isHovered && !isKeyboardFocus(link)) relaxLink(link);
       });
+      if (!hovered) reveal.current?.hide();
     };
     window.addEventListener('pageshow', restore);
     return () => window.removeEventListener('pageshow', restore);
   }, []);
 
   const handleEnter = (event, image) => {
+    // No toque, o mouseenter emulado deixaria o item destacado depois do toque.
+    if (!matches(MEDIA.hover)) return;
     emphasize(event.currentTarget);
-    if (matches(MEDIA.hover)) {
-      reveal.current?.show(image, event.clientX, event.clientY);
-    }
+    reveal.current?.show(image, event.clientX, event.clientY);
   };
 
   const handleMove = (event) => {
@@ -93,7 +109,18 @@ export default function SectorsList() {
   const handleOpenModal = (event, modal) => {
     relax(event.currentTarget);
     reveal.current?.hide();
+    // detail 0 = clique gerado por Enter/Espaço (teclado).
+    pointerOpener.current = event.detail > 0 ? event.currentTarget : null;
     setOpenModal(modal);
+  };
+
+  const handleCloseModal = () => {
+    // Aberto com mouse/toque: o foco devolvido (até por Esc) não deixa o item destacado,
+    // a menos que o mouse esteja em cima dele.
+    const opener = pointerOpener.current;
+    pointerOpener.current = null;
+    if (opener && !(matches(MEDIA.hover) && opener.matches(':hover'))) relaxLink(opener);
+    setOpenModal(null);
   };
 
   return (
@@ -144,7 +171,7 @@ export default function SectorsList() {
       </ul>
 
       <ImageReveal ref={reveal} />
-      {Modal && <Modal onClose={() => setOpenModal(null)} />}
+      {Modal && <Modal onClose={handleCloseModal} />}
     </nav>
   );
 }
