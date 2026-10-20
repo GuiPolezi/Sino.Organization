@@ -1,0 +1,414 @@
+/* Modal "Adicionando membro": painel de vidro sobre o cartão "Criar Reunião". */
+.fundo {
+  --oliva: #5f6b37;
+  --oliva-escuro: #3c4423;
+  --ouro: #f2c94c;
+  --verde: #4caf50;
+  --verde-escuro: #357a38;
+  --tinta: #0b0c08;
+  --mola: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --suave: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: fixed;
+  inset: 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* Um véu leve: o que importa é o vidro do painel. */
+  background: color-mix(in srgb, var(--color-olive-dark, #2e3518) 12%, transparent);
+  color: var(--tinta);
+  overflow: hidden;
+}
+
+.fundo::backdrop {
+  background: transparent;
+}
+
+.painel {
+  position: fixed;
+  display: grid;
+  grid-template-columns: minmax(0, 0.38fr) minmax(0, 1fr);
+  gap: clamp(1.25rem, calc(var(--u) * 3), 3rem);
+  padding: clamp(1rem, calc(var(--u) * 2.2), 2rem);
+  border: 1px solid color-mix(in srgb, var(--color-white) 55%, transparent);
+  border-radius: clamp(18px, calc(var(--u) * 2.2), 30px);
+  /* Vidro: cinza quente translúcido que desfoca o formulário atrás. */
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-white) 22%, transparent),
+      transparent 55%
+    ),
+    color-mix(in srgb, #bdb9a3 70%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-white) 70%, transparent),
+    0 24px 60px -24px color-mix(in srgb, var(--oliva-escuro) 70%, transparent);
+  transform-origin: 50% 60%;
+}
+
+/* ---------- Favo de personagens ---------- */
+
+.favo {
+  position: relative;
+  min-height: 0;
+}
+
+.badge {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.rosto {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 3px solid var(--oliva);
+  border-radius: 50%;
+  background: hsl(var(--matiz) 22% 78%);
+  box-shadow: 0 6px 14px -6px rgb(30 34 14 / 0.55);
+  /* Cinza até ser escolhido (ou já estar na reunião). */
+  filter: grayscale(1) brightness(1.04) contrast(0.95);
+  transition:
+    filter 0.55s ease,
+    transform 0.45s var(--mola),
+    border-color 0.35s ease,
+    box-shadow 0.4s ease;
+}
+
+.rosto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.rosto[data-pronto] img {
+  opacity: 1;
+}
+
+.iniciais {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: hsl(var(--matiz) 25% 28%);
+  transition: opacity 0.4s ease;
+}
+
+.rosto[data-pronto] .iniciais {
+  opacity: 0;
+}
+
+.badge[data-colorida] .rosto {
+  filter: none;
+}
+
+/* Hover: a cor começa a voltar e o rosto se aproxima. */
+.badge:hover:not([data-escolhida]) .rosto {
+  filter: grayscale(0.35);
+  transform: scale(1.07);
+  box-shadow: 0 10px 18px -8px rgb(30 34 14 / 0.6);
+}
+
+.badge[data-colorida]:hover:not([data-escolhida]) .rosto {
+  filter: none;
+}
+
+/* Escolhida: anel dourado com brilho, como no design. */
+.badge[data-escolhida] .rosto {
+  border-color: var(--ouro);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--ouro) 35%, transparent),
+    0 14px 28px -10px rgb(30 34 14 / 0.65);
+}
+
+.badge:focus-visible {
+  outline: none;
+}
+
+.badge:focus-visible .rosto {
+  box-shadow:
+    0 0 0 3px var(--color-white),
+    0 0 0 6px var(--oliva);
+}
+
+/* Já na reunião: um selinho oliva no canto. */
+.marca {
+  position: absolute;
+  right: 2%;
+  bottom: 2%;
+  display: grid;
+  place-items: center;
+  width: 28%;
+  height: 28%;
+  border: 2px solid var(--color-white);
+  border-radius: 50%;
+  background: var(--oliva);
+  box-shadow: 0 2px 6px rgb(30 34 14 / 0.4);
+  animation: selo 0.5s var(--mola);
+}
+
+.marca svg {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke: var(--color-white);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes selo {
+  from {
+    transform: scale(0);
+  }
+}
+
+/* ---------- Detalhe do escolhido ---------- */
+
+.detalhe {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: clamp(0.75rem, calc(var(--u) * 1.6), 1.5rem);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Palco do holograma (o componente preenche). */
+.palco {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: clamp(14px, calc(var(--u) * 2), 22px);
+  background: linear-gradient(180deg, #c3d6de 0%, #a9c1cb 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-white) 60%, transparent),
+    0 10px 24px -14px rgb(30 34 14 / 0.6);
+}
+
+.info {
+  padding-left: 0.6rem;
+}
+
+.nome {
+  margin: 0;
+  font-size: clamp(1.5rem, calc(var(--u) * 2.6), 2.4rem);
+  font-weight: var(--weight-black, 900);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.cargo {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.8125rem, calc(var(--u) * 1.05), 1rem);
+  font-weight: 600;
+  color: color-mix(in srgb, var(--tinta) 62%, transparent);
+}
+
+/* ---------- Botão Adicionar ---------- */
+
+.adicionar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(100% - 1.2rem);
+  margin-left: 0.6rem;
+  height: clamp(2.9rem, calc(var(--u) * 4.6), 4rem);
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  background: var(--verde);
+  color: var(--color-white);
+  font: inherit;
+  font-size: clamp(1.15rem, calc(var(--u) * 2.1), 1.85rem);
+  font-weight: 400;
+  cursor: pointer;
+  box-shadow: 0 8px 16px -8px color-mix(in srgb, var(--verde-escuro) 80%, transparent);
+  transition:
+    background-color 0.5s ease,
+    box-shadow 0.4s ease,
+    transform 0.35s var(--mola);
+}
+
+/* Brilho que atravessa o botão no hover. */
+.adicionar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, var(--color-white) 35%, transparent) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.adicionar[data-estado='livre']:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px -10px color-mix(in srgb, var(--verde-escuro) 85%, transparent);
+}
+
+.adicionar[data-estado='livre']:hover::before {
+  transform: translateX(120%);
+  transition: transform 0.8s var(--suave);
+}
+
+/* Adicionado: o verde escurece. */
+.adicionar[data-estado='adicionado'] {
+  background: var(--verde-escuro);
+  cursor: default;
+}
+
+/* Já estava na reunião: cinza-azulado, sem ação. */
+.adicionar[data-estado='ja'] {
+  background: #8a9ba5;
+  box-shadow: 0 8px 16px -10px rgb(40 52 60 / 0.6);
+  font-size: clamp(0.95rem, calc(var(--u) * 1.5), 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+.adicionar[data-estado='vazio'] {
+  background: #a3a395;
+  cursor: default;
+}
+
+.adicionar:focus-visible {
+  outline: 3px solid var(--color-white);
+  outline-offset: 3px;
+}
+
+.adicionarTexto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  animation: texto 0.45s var(--suave);
+}
+
+.adicionarTexto svg {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 24;
+  animation: tique 0.5s var(--suave) 0.1s both;
+}
+
+@keyframes texto {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+}
+
+@keyframes tique {
+  from {
+    stroke-dashoffset: 24;
+  }
+}
+
+/* ---------- Fechar (nítido só com o mouse perto) ---------- */
+
+.fechar {
+  position: absolute;
+  top: clamp(0.6rem, calc(var(--u) * 1.2), 1rem);
+  right: clamp(0.6rem, calc(var(--u) * 1.2), 1rem);
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: clamp(2.6rem, calc(var(--u) * 4.4), 3.6rem);
+  height: clamp(1.9rem, calc(var(--u) * 2.9), 2.4rem);
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-white) 70%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #e3e3df 88%, transparent);
+  color: #5d5d55;
+  cursor: pointer;
+  box-shadow: 0 6px 14px -6px rgb(30 34 14 / 0.5);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.fechar svg {
+  width: 45%;
+  height: 60%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  transition: transform 0.4s var(--mola);
+}
+
+.fechar:hover {
+  background: var(--color-white);
+  color: var(--tinta);
+}
+
+.fechar:hover svg {
+  transform: rotate(90deg);
+}
+
+.fechar:focus-visible {
+  opacity: 1 !important;
+  outline: 3px solid var(--oliva);
+  outline-offset: 3px;
+}
+
+/* Sem mouse (toque), não há "perto": fica visível. */
+@media (hover: none) {
+  .fechar {
+    opacity: 0.9;
+  }
+}
+
+/* ---------- Telas estreitas: favo em cima, detalhe embaixo ---------- */
+
+@media (max-width: 760px) {
+  .painel {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 0.42fr) minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rosto,
+  .rosto img,
+  .adicionar,
+  .fechar,
+  .fechar svg {
+    transition: none;
+  }
+
+  .marca,
+  .adicionarTexto,
+  .adicionarTexto svg {
+    animation: none;
+  }
+
+  .badge:hover:not([data-escolhida]) .rosto {
+    transform: none;
+  }
+}

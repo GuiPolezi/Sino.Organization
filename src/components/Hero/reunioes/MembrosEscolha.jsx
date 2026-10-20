@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { identificar, iniciais, matiz } from './MembrosAvatares.jsx';
 import { useRetratoReuniao } from './RetratosReunioes.jsx';
-import SeletorMembrosProvisorio from './SeletorMembrosProvisorio.jsx';
+import SelecaoPersonagens from './selecao/SelecaoPersonagens.jsx';
 import styles from './MembrosEscolha.module.css';
 
 // Tempo da animação de saída antes de tirar o membro da lista.
@@ -59,9 +59,7 @@ function Membro({ membro, onRemover }) {
 /**
  * Membros da nova reunião: botão "+" e os avatares escolhidos.
  *
- * TODO(seleção de personagens): o "+" deve abrir o modal com todos os
- * personagens para escolher. Até ele existir, abre um seletor provisório
- * (SeletorMembrosProvisorio) com as pessoas das equipes.
+ * O "+" abre o modal de seleção de personagens (selecao/SelecaoPersonagens).
  *
  * @param {object} props
  * @param {{ id: string, nome: string }[]} props.membros
@@ -103,7 +101,7 @@ export default function MembrosEscolha({ membros, onChange, erro, erroId }) {
             </svg>
           </button>
           {aberto && (
-            <SeletorMembrosProvisorio
+            <SelecaoPersonagens
               membros={membros}
               onChange={onChange}
               onFechar={() => {
