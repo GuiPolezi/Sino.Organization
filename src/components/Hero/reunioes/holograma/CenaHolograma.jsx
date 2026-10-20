@@ -1,10 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { APARENCIAS_DEV } from '../../../../pages/Desenvolvimento/aparencias.js';
 import { aparenciaDe, registrarAparencias } from '../../../../pages/Suporte/boneco/aparencia.js';
 import { Figura, useMateriais } from '../../../../pages/Suporte/boneco/Boneco.jsx';
-import { criarUniformes, holografar } from './holoMaterial.js';
+import { criarUniformes, holografar, materialProfundidade } from './holoMaterial.js';
 import Projetor, { TOPO_DISCO } from './Projetor.jsx';
 
 // Na home cabem as duas equipes: suporte (já registrada) e desenvolvimento.
@@ -49,13 +49,23 @@ function Enquadramento() {
  * Entra materializando de baixo para cima; com `saindo`, desmaterializa de cima
  * para baixo e avisa `onSaiu`.
  */
-function BonecoHolografico({ id, saindo, atraso, onSaiu, tempo, energia, reduzido }) {
+function BonecoHolografico({ chave, id, saindo, atraso, onSaiu, tempo, energia, reduzido }) {
   const aparencia = useMemo(() => aparenciaDe(id), [id]);
   const materiais = useMateriais(aparencia);
   const uniformes = useMemo(criarUniformes, []);
   const grupo = useRef(null);
   const invalidate = useThree((s) => s.invalidate);
-  const estado = useRef({ progresso: 0, espera: atraso, avisou: false, glitchAte: 0, proximoGlitch: 4 + Math.random() * 6 });
+  const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
+  const cena = useThree((s) => s.scene);
+  const estado = useRef({
+    progresso: 0,
+    espera: atraso,
+    avisou: false,
+    glitchAte: 0,
+    proximoGlitch: 4 + Math.random() * 6,
+    compilado: false,
+  });
   const escala = aparencia.altura ?? 1;
 
   useLayoutEffect(() => {
@@ -63,11 +73,7 @@ function BonecoHolografico({ id, saindo, atraso, onSaiu, tempo, energia, reduzid
     const malhas = [];
     // Passe só de profundidade (opaco, antes dos transparentes): o holograma
     // fica translúcido para o fundo sem mostrar a nuca através do rosto.
-    const profundidade = holografar(new THREE.MeshBasicMaterial(), uniformes);
-    profundidade.transparent = false;
-    profundidade.colorWrite = false;
-    // Um fio atrás da superfície: a cor da mesma peça passa no teste sem z-fighting.
-    Object.assign(profundidade, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
+    const profundidade = materialProfundidade(uniformes);
     const sombras = [];
     grupo.current.traverse((objeto) => {
       if (!objeto.isMesh || objeto.userData.holoSombra) return;
@@ -83,7 +89,26 @@ function BonecoHolografico({ id, saindo, atraso, onSaiu, tempo, energia, reduzid
       sombras.push([objeto, sombra]);
     });
     sombras.forEach(([objeto, sombra]) => objeto.add(sombra));
+
+    // Compila os shaders em paralelo (sem travar a página no clique) e só mostra
+    // o boneco quando estiverem prontos. O compile() precisa do grupo visível;
+    // depois ele fica escondido até a promessa resolver.
+    let cancelado = false;
+    const mostrar = () => {
+      if (cancelado) return;
+      estado.current.compilado = true;
+      if (grupo.current) grupo.current.visible = true;
+      invalidate();
+    };
+    if (gl.compileAsync) {
+      gl.compileAsync(grupo.current, camera, cena).then(mostrar, mostrar);
+      grupo.current.visible = false;
+    } else {
+      mostrar();
+    }
+
     return () => {
+      cancelado = true;
       malhas.forEach((malha) => {
         malha.material = malha.userData.holoOriginal;
         delete malha.userData.holoOriginal;
@@ -92,7 +117,7 @@ function BonecoHolografico({ id, saindo, atraso, onSaiu, tempo, energia, reduzid
       copias.forEach((copia) => copia.dispose());
       profundidade.dispose();
     };
-  }, [materiais, uniformes]);
+  }, [materiais, uniformes, gl, camera, cena, invalidate]);
 
   // Em frameloop sob demanda (movimento reduzido), a troca precisa pedir quadro.
   useEffect(() => invalidate(), [saindo, invalidate]);
@@ -108,8 +133,11 @@ function BonecoHolografico({ id, saindo, atraso, onSaiu, tempo, energia, reduzid
       animando = true;
       if (e.progresso === 0 && !e.avisou) {
         e.avisou = true;
-        onSaiu();
+        onSaiu(chave);
       }
+    } else if (!e.compilado) {
+      // Shaders ainda compilando: espera sem gastar o atraso nem a entrada.
+      return;
     } else if (e.espera > 0) {
       e.espera -= passo;
       animando = true;
@@ -162,6 +190,9 @@ function BonecoHolografico({ id, saindo, atraso, onSaiu, tempo, energia, reduzid
   return <group ref={grupo}>{figura}</group>;
 }
 
+// Memo: trocar de pessoa re-renderiza o Palco, mas não os bonecos que já estão em cena.
+const BonecoMemo = memo(BonecoHolografico);
+
 // Fila de bonecos em cena: o atual e os que ainda estão desmaterializando.
 function useElenco(pessoaId) {
   const contador = useRef(0);
@@ -179,7 +210,8 @@ function useElenco(pessoaId) {
     });
   }, [pessoaId]);
 
-  const remover = (chave) => setElenco((atual) => atual.filter((item) => item.chave !== chave));
+  // Estável: os bonecos não re-renderizam quando o elenco muda.
+  const remover = useCallback((chave) => setElenco((atual) => atual.filter((item) => item.chave !== chave)), []);
   return [elenco, remover];
 }
 
@@ -228,12 +260,13 @@ function Palco({ pessoaId, reduzido, onPronto }) {
       <group ref={flutuante}>
         <group ref={giratorio} rotation-y={TRES_QUARTOS}>
           {elenco.map((item) => (
-            <BonecoHolografico
+            <BonecoMemo
               key={item.chave}
+              chave={item.chave}
               id={item.id}
               saindo={item.saindo}
               atraso={item.atraso}
-              onSaiu={() => remover(item.chave)}
+              onSaiu={remover}
               tempo={tempo}
               energia={pulso}
               reduzido={reduzido}
@@ -249,20 +282,22 @@ function Palco({ pessoaId, reduzido, onPronto }) {
  * O Canvas do holograma (chunk à parte, com o three). Vive enquanto montado;
  * trocar `pessoaId` só troca o boneco lá dentro.
  */
-export default function CenaHolograma({ pessoaId, ativo, reduzido, onPronto, className }) {
+function CenaHolograma({ pessoaId, ativo, reduzido, onPronto, className }) {
   const frameloop = !ativo ? 'never' : reduzido ? 'demand' : 'always';
+  // Sem tabIndex nem aria-hidden: o wrapper do Canvas ficava focável e escondido
+  // ao mesmo tempo (aviso "Blocked aria-hidden"). O pai já é role="img" com rótulo.
   return (
     <Canvas
       className={className}
-      aria-hidden="true"
       dpr={[1, 1.5]}
       gl={GL}
       frameloop={frameloop}
       camera={{ fov: 28, near: 0.1, far: 40, position: [0, 1.55, 7] }}
       style={{ position: 'absolute', inset: 0 }}
-      tabIndex={-1}
     >
       <Palco pessoaId={pessoaId} reduzido={reduzido} onPronto={onPronto} />
     </Canvas>
   );
 }
+
+export default memo(CenaHolograma);

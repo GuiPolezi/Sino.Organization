@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -35,13 +35,27 @@ function retanguloDoPainel(ancora) {
 }
 
 // Uma badge do favo: o rosto do boneco, cinza até ser escolhido ou adicionado.
-function Badge({ pessoa, posicao, diametro, escolhida, adicionada, onEscolher, refBadge, tabIndex, onKeyDown }) {
+// Memo + callbacks estáveis (recebem o índice): trocar a escolhida só
+// re-renderiza as badges que mudaram, não as 14.
+const Badge = memo(function Badge({
+  indice,
+  pessoa,
+  posicao,
+  diametro,
+  escolhida,
+  adicionada,
+  onEscolher,
+  refBadge,
+  tabIndex,
+  onKeyDown,
+}) {
   const url = useRetratoReuniao(pessoa.id);
   const [pronto, setPronto] = useState(false);
+  const guardar = useCallback((el) => refBadge(indice, el), [refBadge, indice]);
 
   return (
     <button
-      ref={refBadge}
+      ref={guardar}
       type="button"
       className={styles.badge}
       style={{
@@ -55,8 +69,8 @@ function Badge({ pessoa, posicao, diametro, escolhida, adicionada, onEscolher, r
       aria-pressed={escolhida}
       aria-label={`${pessoa.name}, ${pessoa.role}${adicionada ? ', já adicionado' : ''}`}
       tabIndex={tabIndex}
-      onClick={onEscolher}
-      onKeyDown={onKeyDown}
+      onClick={() => onEscolher(indice)}
+      onKeyDown={(event) => onKeyDown(event, indice)}
     >
       <span className={styles.rosto} style={{ '--matiz': matiz(pessoa.id) }} data-pronto={pronto || undefined}>
         <span className={styles.iniciais} aria-hidden="true">
@@ -75,7 +89,7 @@ function Badge({ pessoa, posicao, diametro, escolhida, adicionada, onEscolher, r
       )}
     </button>
   );
-}
+});
 
 /**
  * Modal de seleção de personagens para a reunião (design "Adicionando membro").
@@ -118,7 +132,7 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
 
   const layout = useMemo(
     () => calcularFavo(PESSOAS.length, area.largura, area.altura, { maximo: 112, folga: 1.25 }),
-    [area],
+    [area.largura, area.altura],
   );
 
   // 3D pronto antes da primeira escolha.
@@ -143,7 +157,13 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
   useLayoutEffect(() => {
     const el = favo.current;
     if (!el) return undefined;
-    const medir = () => setArea({ largura: el.clientWidth, altura: el.clientHeight });
+    // Mesmo tamanho = mesmo objeto: não recalcula o favo nem refaz os 14 tweens.
+    const medir = () =>
+      setArea((atual) =>
+        atual.largura === el.clientWidth && atual.altura === el.clientHeight
+          ? atual
+          : { largura: el.clientWidth, altura: el.clientHeight },
+      );
     medir();
     const observador = new ResizeObserver(medir);
     observador.observe(el);
@@ -174,20 +194,23 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
       badges.current[Math.max(0, indiceEscolhida)]?.focus({ preventScroll: true });
       const lista = badges.current.filter(Boolean);
       if (reduzido()) return;
+      const rostos = lista.map((b) => b.firstElementChild);
+      // A transition de transform do CSS (hover) brigaria com o GSAP a cada tick.
+      gsap.set(rostos, { transition: 'none' });
       gsap
         .timeline({ defaults: { ease: 'power3.out' } })
         .from(dialogo.current, { opacity: 0, duration: 0.35 }, 0)
         .from(painel.current, { opacity: 0, scale: 0.96, y: 18, duration: 0.6 }, 0)
         .from(
-          lista.map((b) => b.firstElementChild),
+          rostos,
           {
             scale: 0,
             opacity: 0,
             duration: 0.7,
             ease: 'back.out(1.8)',
             stagger: { each: 0.035, from: 'start', grid: 'auto' },
-            // Devolve o transform ao CSS (hover do rosto).
-            clearProps: 'transform,opacity',
+            // Devolve o transform e a transition ao CSS (hover do rosto).
+            clearProps: 'transform,opacity,transition',
           },
           0.12,
         )
@@ -209,15 +232,16 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
         const badge = badges.current[i];
         if (!badge) return;
         const escolhidaAgora = i === indiceEscolhida;
+        // z-index de uma vez (interpolado, reordenava as camadas a cada tick).
+        gsap.set(badge, { zIndex: escolhidaAgora ? 3 : 1 });
         if (reduzido()) {
-          gsap.set(badge, { x: m.x, y: m.y, scale: m.escala, zIndex: escolhidaAgora ? 3 : 1 });
+          gsap.set(badge, { x: m.x, y: m.y, scale: m.escala });
           return;
         }
         gsap.to(badge, {
           x: m.x,
           y: m.y,
           scale: m.escala,
-          zIndex: escolhidaAgora ? 3 : 1,
           duration: escolhidaAgora ? 0.7 : 0.9,
           ease: escolhidaAgora ? 'back.out(1.7)' : 'elastic.out(1, 0.7)',
           delay: escolhidaAgora ? 0 : 0.03,
@@ -232,10 +256,11 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
   useGSAP(
     () => {
       if (!info.current || reduzido() || !entrou.current) return;
+      // Só opacity e y (o blur animado repintava o texto a cada quadro).
       gsap.fromTo(
         info.current.children,
-        { opacity: 0, y: 10, filter: 'blur(4px)' },
-        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power3.out', stagger: 0.06, clearProps: 'filter' },
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.06 },
       );
     },
     { scope: dialogo, dependencies: [escolhidaId] },
@@ -246,18 +271,41 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
     const x = fechar.current;
     if (!x || !matches(MEDIA.hover)) return undefined;
     gsap.set(x, { opacity: 0.22 });
-    const opacidade = gsap.quickTo(x, 'opacity', { duration: 0.35, ease: 'power2.out' });
-    const escala = gsap.quickTo(x, 'scale', { duration: 0.35, ease: 'power2.out' });
+    const config = { duration: 0.35, ease: 'power2.out' };
+    const opacidade = gsap.quickTo(x, 'opacity', config);
+    // "scale" é atalho de scaleX + scaleY: o quickTo dele recriava o tween e
+    // avisava "scale not eligible for reset" a cada movimento do mouse.
+    const escalaX = gsap.quickTo(x, 'scaleX', config);
+    const escalaY = gsap.quickTo(x, 'scaleY', config);
+    // O centro do X é medido uma vez (e de novo ao redimensionar), não a cada
+    // movimento: ler o layout no meio dos tweens forçava recálculo.
+    let centro = null;
+    const esquecer = () => {
+      centro = null;
+    };
+    // A entrada do painel ainda o desloca: mede de novo quando ela termina.
+    const remedir = setTimeout(esquecer, 900);
     const onMove = (event) => {
-      const r = x.getBoundingClientRect();
-      const d = Math.hypot(event.clientX - (r.left + r.width / 2), event.clientY - (r.top + r.height / 2));
+      if (!centro) {
+        const r = x.getBoundingClientRect();
+        centro = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+      const d = Math.hypot(event.clientX - centro.x, event.clientY - centro.y);
       // 1 encostado (≤ 36 px), some até 0,22 a partir de 220 px.
       const t = Math.min(1, Math.max(0, (d - 36) / (220 - 36)));
+      const escala = 1.08 - t * 0.08;
       opacidade(1 - t * 0.78);
-      escala(1.08 - t * 0.08);
+      escalaX(escala);
+      escalaY(escala);
     };
-    window.addEventListener('pointermove', onMove);
-    return () => window.removeEventListener('pointermove', onMove);
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('resize', esquecer);
+    return () => {
+      clearTimeout(remedir);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('resize', esquecer);
+      gsap.killTweensOf(x);
+    };
   }, []);
 
   // Fecha animando e devolve o controle ao formulário.
@@ -295,17 +343,20 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
     });
     setRecemId(escolhida.id);
     if (reduzido() || !botao.current) return;
+    // Sem a transition de transform do CSS durante o tween (ela atrasava cada tick).
+    gsap.set(botao.current, { transition: 'none' });
     gsap
       .timeline()
       .to(botao.current, { scale: 0.96, duration: 0.12, ease: 'power2.out' })
-      .to(botao.current, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)', clearProps: 'transform' });
+      .to(botao.current, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)', clearProps: 'transform,transition' });
     // A badge comemora: um pulinho de cor.
     const badge = badges.current[indiceEscolhida]?.firstElementChild;
     if (badge) {
+      gsap.set(badge, { transition: 'none' });
       gsap.fromTo(
         badge,
         { scale: 1 },
-        { scale: 1.1, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'transform' },
+        { scale: 1.1, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out', clearProps: 'transform,transition' },
       );
     }
   });
@@ -319,6 +370,15 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
     badges.current[proximo]?.focus();
     escolher(PESSOAS[proximo]);
   };
+
+  // Versões estáveis para as badges (memo): sempre chamam a função mais recente.
+  const atuais = useRef(null);
+  atuais.current = { escolher, onKeyBadge };
+  const escolherIndice = useCallback((i) => atuais.current.escolher(PESSOAS[i]), []);
+  const teclaBadge = useCallback((event, i) => atuais.current.onKeyBadge(event, i), []);
+  const guardarBadge = useCallback((i, el) => {
+    badges.current[i] = el;
+  }, []);
 
   const rotuloBotao = {
     vazio: 'Escolha um personagem',
@@ -360,17 +420,16 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
             PESSOAS.map((pessoa, i) => (
               <Badge
                 key={pessoa.id}
+                indice={i}
                 pessoa={pessoa}
                 posicao={layout.posicoes[i]}
                 diametro={layout.diametro}
                 escolhida={pessoa.id === escolhidaId}
                 adicionada={estaNaReuniao(pessoa)}
-                refBadge={(el) => {
-                  badges.current[i] = el;
-                }}
+                refBadge={guardarBadge}
                 tabIndex={pessoa.id === escolhidaId || (indiceEscolhida < 0 && i === 0) ? 0 : -1}
-                onEscolher={() => escolher(pessoa)}
-                onKeyDown={(event) => onKeyBadge(event, i)}
+                onEscolher={escolherIndice}
+                onKeyDown={teclaBadge}
               />
             ))}
         </div>

@@ -83,10 +83,12 @@ vec3 holoCor = gl_FragColor.rgb;
 holoCor = mix(holoCor, holoCor * vec3(0.88, 1.0, 1.06), 0.6);
 holoCor += uCorHolo * (holoFresnel * 0.7 + holoVarre * 0.2 + holoBorda * 1.6);
 holoCor *= mix(0.86, 1.05, holoLinha) * uBrilho;
-// Aberração cromática leve, só com glitch.
-float holoSplit = (holoRuido(vec2(vHoloPos.y * 30.0, uTempo * 20.0)) - 0.5) * uGlitch;
-holoCor.r *= 1.0 + holoSplit * 0.9;
-holoCor.b *= 1.0 - holoSplit * 0.9;
+// Aberração cromática leve, só com glitch (sem glitch, nem calcula o ruído).
+if (uGlitch > 0.001) {
+  float holoSplit = (holoRuido(vec2(vHoloPos.y * 30.0, uTempo * 20.0)) - 0.5) * uGlitch;
+  holoCor.r *= 1.0 + holoSplit * 0.9;
+  holoCor.b *= 1.0 - holoSplit * 0.9;
+}
 
 float holoAlfa = mix(0.78, 0.95, holoLinha);
 holoAlfa = clamp(max(holoAlfa, holoFresnel * 1.1) + holoBorda, 0.0, 1.0);
@@ -119,5 +121,28 @@ export function holografar(original, uniformes) {
         .replace('#include <opaque_fragment>', FRAGMENTO_FIM);
   };
   material.customProgramCacheKey = () => 'holo-boneco-1';
+  return material;
+}
+
+/**
+ * Passe só de profundidade do boneco: o mesmo corte e o mesmo glitch do
+ * holograma, mas sem luz nem cor (antes usava o shader PBR inteiro só para
+ * gravar profundidade). Quem chama descarta.
+ */
+export function materialProfundidade(uniformes) {
+  const material = new THREE.MeshBasicMaterial({
+    colorWrite: false,
+    polygonOffset: true,
+    // Um fio atrás da superfície: a cor da mesma peça passa no teste sem z-fighting.
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 2,
+  });
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniformes);
+    shader.vertexShader = VERTICE_TOPO + shader.vertexShader.replace('#include <project_vertex>', VERTICE_FIM);
+    shader.fragmentShader =
+      FRAGMENTO_TOPO + shader.fragmentShader.replace('#include <clipping_planes_fragment>', FRAGMENTO_CORTE);
+  };
+  material.customProgramCacheKey = () => 'holo-profundidade-1';
   return material;
 }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { identificar, iniciais, matiz } from './MembrosAvatares.jsx';
 import { useRetratoReuniao } from './RetratosReunioes.jsx';
 import SelecaoPersonagens from './selecao/SelecaoPersonagens.jsx';
@@ -12,11 +12,14 @@ function Membro({ membro, onRemover }) {
   const url = useRetratoReuniao(id);
   const [carregado, setCarregado] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const espera = useRef(null);
+  // Se o formulário fechar no meio da saída, o timer não dispara depois.
+  useEffect(() => () => clearTimeout(espera.current), []);
 
   const remover = () => {
     if (saindo) return;
     setSaindo(true);
-    setTimeout(onRemover, SAIDA_MS);
+    espera.current = setTimeout(onRemover, SAIDA_MS);
   };
 
   return (

@@ -34,12 +34,22 @@ function usePonte() {
   useEffect(() => {
     const pedir = () => filaRetratos.get().pendentes.forEach((id) => useRetratos.getState().pedir(id));
     const devolver = ({ urls }) => {
-      filaRetratos.get().pendentes.forEach((id) => urls[id] && filaRetratos.entregar(id, urls[id]));
+      filaRetratos.get().pendentes.forEach((id) => id in urls && filaRetratos.entregar(id, urls[id]));
     };
     devolver(useRetratos.getState());
     pedir();
-    const sairFila = filaRetratos.assinar(pedir);
-    const sairRetratos = useRetratos.subscribe(devolver);
+    // Só reage quando a fila da home muda de verdade, não a cada retrato entregue.
+    let pendentes = filaRetratos.get().pendentes;
+    const sairFila = filaRetratos.assinar(() => {
+      const atuais = filaRetratos.get().pendentes;
+      if (atuais === pendentes) return;
+      pendentes = atuais;
+      pedir();
+    });
+    // E só devolve quando chegou retrato novo (urls mudou).
+    const sairRetratos = useRetratos.subscribe((estado, anterior) => {
+      if (estado.urls !== anterior.urls) devolver(estado);
+    });
     return () => {
       sairFila();
       sairRetratos();
@@ -48,11 +58,12 @@ function usePonte() {
 }
 
 // Ao desmontar, o R3F descarta o renderizador e perde o contexto WebGL.
+// Sob demanda: só desenha quando há uma pose esperando a foto (antes, 60 fps sem parar).
 export default function RetratistaReunioes() {
   usePonte();
   return (
     <div style={ESTUDIO}>
-      <Canvas dpr={1} frameloop="always" gl={GL}>
+      <Canvas dpr={1} frameloop="demand" gl={GL}>
         <Retratista />
       </Canvas>
     </div>

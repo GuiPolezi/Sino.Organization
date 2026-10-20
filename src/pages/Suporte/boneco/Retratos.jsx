@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { createPortal, useFrame } from '@react-three/fiber';
+import { createPortal, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { create } from 'zustand';
 import { aparenciaDe } from './aparencia.js';
@@ -9,13 +9,14 @@ import { Figura, useMateriais } from './Boneco.jsx';
 const TAMANHO = 256;
 
 /*
- * Retratos já tirados (id → data URL) e a fila de quem espera o seu. Vivem até
+ * Retratos já tirados (id → URL da imagem, ou null se a foto falhou) e a fila de quem espera o seu. Vivem até
  * a página recarregar: a aparência de cada pessoa não muda.
  */
 export const useRetratos = create((set) => ({
   urls: {},
   fila: [],
-  pedir: (id) => set(({ urls, fila }) => (urls[id] || fila.includes(id) ? {} : { fila: [...fila, id] })),
+  // Devolve o mesmo estado quando não muda nada: assim o zustand não notifica ninguém.
+  pedir: (id) => set((s) => (id in s.urls || s.fila.includes(id) ? s : { fila: [...s.fila, id] })),
   entregar: (id, url) => set(({ urls, fila }) => ({ urls: { ...urls, [id]: url }, fila: fila.filter((outro) => outro !== id) })),
 }));
 
@@ -33,7 +34,8 @@ export function useRetrato(id) {
   return url;
 }
 
-// Os pixels do alvo, de baixo para cima e com a cor multiplicada pela opacidade, viram uma imagem PNG.
+// Os pixels do alvo, de baixo para cima e com a cor multiplicada pela opacidade,
+// viram uma imagem PNG. O toBlob codifica fora da thread principal (o toDataURL travava).
 function paraImagem(pixels) {
   const tela = document.createElement('canvas');
   tela.width = TAMANHO;
@@ -52,7 +54,24 @@ function paraImagem(pixels) {
     }
   }
   contexto.putImageData(imagem, 0, 0);
-  return tela.toDataURL('image/png');
+  return new Promise((resolver) => {
+    tela.toBlob((blob) => resolver(blob ? URL.createObjectURL(blob) : tela.toDataURL('image/png')), 'image/png');
+  });
+}
+
+// Lê os pixels sem travar a GPU (leitura assíncrona); sem suporte, cai na síncrona.
+async function lerPixels(gl, alvo) {
+  const pixels = new Uint8Array(TAMANHO * TAMANHO * 4);
+  if (gl.readRenderTargetPixelsAsync) {
+    try {
+      await gl.readRenderTargetPixelsAsync(alvo, 0, 0, TAMANHO, TAMANHO, pixels);
+      return pixels;
+    } catch {
+      // segue para a leitura síncrona
+    }
+  }
+  gl.readRenderTargetPixels(alvo, 0, 0, TAMANHO, TAMANHO, pixels);
+  return pixels;
 }
 
 /*
@@ -64,17 +83,26 @@ function Pose({ id, cena, camera, alvo }) {
   const aparencia = useMemo(() => aparenciaDe(id), [id]);
   const materiais = useMateriais(aparencia);
   const quadros = useRef(0);
+  const invalidate = useThree((s) => s.invalidate);
+
+  // Em frameloop sob demanda, pede os dois quadros de que a foto precisa.
+  useEffect(() => invalidate(), [invalidate]);
 
   useFrame(({ gl }) => {
     quadros.current += 1;
+    if (quadros.current < 2) {
+      invalidate();
+      return;
+    }
     if (quadros.current !== 2) return;
     const anterior = gl.getRenderTarget();
     gl.setRenderTarget(alvo);
     gl.render(cena, camera);
     gl.setRenderTarget(anterior);
-    const pixels = new Uint8Array(TAMANHO * TAMANHO * 4);
-    gl.readRenderTargetPixels(alvo, 0, 0, TAMANHO, TAMANHO, pixels);
-    useRetratos.getState().entregar(id, paraImagem(pixels));
+    lerPixels(gl, alvo)
+      .then(paraImagem)
+      .then((url) => useRetratos.getState().entregar(id, url))
+      .catch(() => useRetratos.getState().entregar(id, null));
   });
 
   return createPortal(

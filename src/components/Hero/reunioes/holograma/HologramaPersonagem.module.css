@@ -235,6 +235,11 @@
   }
 }
 
+/* Fora da tela ou aba oculta: as camadas infinitas param junto com o Canvas. */
+.holograma[data-inativo] * {
+  animation-play-state: paused;
+}
+
 /* Sem movimento: tudo parado, sem flicker nem glitch. */
 .holograma[data-reduzido] .reserva,
 .holograma[data-reduzido] .reservaFigura,

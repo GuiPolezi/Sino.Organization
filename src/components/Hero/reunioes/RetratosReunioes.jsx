@@ -9,9 +9,11 @@ import { createRoot } from 'react-dom/client';
 const RetratistaReunioes = lazy(() => import('./RetratistaReunioes.jsx'));
 
 // Quanto o Canvas espera, com a fila vazia, antes de fechar (novas páginas da lista).
-const ESPERA_FECHAR = 1500;
+// Parado ele não desenha nada (frameloop sob demanda); fechar e reabrir é que custa
+// (contexto WebGL novo e shaders recompilados), por isso a espera é longa.
+const ESPERA_FECHAR = 20000;
 // Quanto a raiz do fotógrafo fica depois que o último avatar sai.
-const ESPERA_SAIR = 1500;
+const ESPERA_SAIR = 20000;
 
 let estado = { urls: {}, pendentes: [], semWebGL: false };
 const ouvintes = new Set();
@@ -41,7 +43,7 @@ export const filaRetratos = {
     return () => ouvintes.delete(ouvinte);
   },
   pedir(id) {
-    if (!id || estado.semWebGL || estado.urls[id] || estado.pendentes.includes(id)) return;
+    if (!id || estado.semWebGL || id in estado.urls || estado.pendentes.includes(id)) return;
     if (!temWebGL()) return mudar({ semWebGL: true });
     mudar({ pendentes: [...estado.pendentes, id] });
   },

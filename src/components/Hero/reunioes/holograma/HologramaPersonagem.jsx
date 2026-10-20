@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Component, Suspense, lazy, memo, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import devTeam from '../../../../data/dev-team.json';
 import team from '../../../../data/team.json';
 import { iniciais } from '../MembrosAvatares.jsx';
@@ -94,7 +94,7 @@ function Reserva({ pessoaId }) {
  * @param {string} [props.rotulo] texto acessível (ex.: "Boneco de Guilherme P.")
  * @param {string} [props.className]
  */
-export default function HologramaPersonagem({ pessoaId = null, rotulo, className }) {
+function HologramaPersonagem({ pessoaId = null, rotulo, className }) {
   const raiz = useRef(null);
   const reduzido = useMovimentoReduzido();
   const abaVisivel = useAbaVisivel();
@@ -103,6 +103,10 @@ export default function HologramaPersonagem({ pessoaId = null, rotulo, className
   const [pronto, setPronto] = useState(false);
   const [falhou, setFalhou] = useState(false);
   const cena3d = suporta && !falhou;
+  const ativo = abaVisivel && naTela;
+  // Estáveis: não re-renderizam o Canvas a cada render daqui.
+  const aoPronto = useCallback(() => setPronto(true), []);
+  const aoFalhar = useCallback(() => setFalhou(true), []);
   // A reserva some com fade e só depois sai da árvore.
   const [reservaFora, setReservaFora] = useState(false);
   useEffect(() => {
@@ -118,6 +122,7 @@ export default function HologramaPersonagem({ pessoaId = null, rotulo, className
       data-pronto={(cena3d && pronto) || undefined}
       data-reduzido={reduzido || undefined}
       data-vazio={!pessoaId || undefined}
+      data-inativo={!ativo || undefined}
       {...(rotulo ? { role: 'img', 'aria-label': rotulo } : { 'aria-hidden': true })}
     >
       <div className={styles.fundo} aria-hidden="true" />
@@ -131,14 +136,14 @@ export default function HologramaPersonagem({ pessoaId = null, rotulo, className
       )}
 
       {cena3d && (
-        <ErroCena onErro={() => setFalhou(true)}>
+        <ErroCena onErro={aoFalhar}>
           <Suspense fallback={null}>
             <CenaHolograma
               className={styles.canvas}
               pessoaId={pessoaId}
-              ativo={abaVisivel && naTela}
+              ativo={ativo}
               reduzido={reduzido}
-              onPronto={() => setPronto(true)}
+              onPronto={aoPronto}
             />
           </Suspense>
         </ErroCena>
@@ -152,6 +157,8 @@ export default function HologramaPersonagem({ pessoaId = null, rotulo, className
     </div>
   );
 }
+
+export default memo(HologramaPersonagem);
 
 // Erro no chunk ou no WebGL: avisa o pai e o fallback volta, sem quebrar o modal.
 class ErroCena extends Component {
