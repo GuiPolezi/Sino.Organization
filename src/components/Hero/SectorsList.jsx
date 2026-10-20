@@ -49,6 +49,29 @@ export default function SectorsList() {
     gsap.to(text, { x: 0, ...HOVER_TWEEN });
   });
 
+  // Foco por teclado destaca; o foco do clique (ou o que o <dialog> devolve ao
+  // fechar) não, senão o item fica deslocado sem o mouse em cima.
+  const handleFocus = (event) => {
+    if (event.currentTarget.matches(':focus-visible')) emphasize(event.currentTarget);
+  };
+
+  // O contextSafe dá uma função nova a cada render; o listener lê a atual daqui.
+  const relaxRef = useRef(relax);
+  relaxRef.current = relax;
+
+  useEffect(() => {
+    // Ao voltar de outra página pelo histórico (bfcache), a home volta congelada
+    // no destaque do clique, sem o mouseleave: desfaz em quem não está em uso.
+    const restore = (event) => {
+      if (!event.persisted || !root.current) return;
+      root.current.querySelectorAll('[data-intro="sector"]').forEach((link) => {
+        if (!link.matches(':hover, :focus-visible')) relaxRef.current(link);
+      });
+    };
+    window.addEventListener('pageshow', restore);
+    return () => window.removeEventListener('pageshow', restore);
+  }, []);
+
   const handleEnter = (event, image) => {
     emphasize(event.currentTarget);
     if (matches(MEDIA.hover)) {
@@ -85,7 +108,7 @@ export default function SectorsList() {
             onMouseEnter: (event) => handleEnter(event, image),
             onMouseMove: handleMove,
             onMouseLeave: handleLeave,
-            onFocus: (event) => emphasize(event.currentTarget),
+            onFocus: handleFocus,
             onBlur: (event) => relax(event.currentTarget),
           };
           const content = (
