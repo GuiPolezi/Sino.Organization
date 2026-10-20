@@ -18,6 +18,8 @@ export default function ReunioesModal({ onClose }) {
   // Filtro e página ficam aqui para sobreviver à ida ao formulário.
   const [filtro, setFiltro] = useState('todas');
   const [pagina, setPagina] = useState(1);
+  // Quantos cards cabem na tela; a lista mede e avisa (sem rolagem).
+  const [porPagina, setPorPagina] = useState(POR_PAGINA);
   const [destaqueId, setDestaqueId] = useState(null);
   const criarBotao = useRef(null);
   const visaoRef = useRef(null);
@@ -59,12 +61,22 @@ export default function ReunioesModal({ onClose }) {
       const lista = filtrarReunioes([...reunioes, resultado.reuniao], 'todas', new Date());
       const indice = lista.findIndex((r) => r.id === resultado.reuniao.id);
       setFiltro('todas');
-      setPagina(indice < 0 ? 1 : Math.floor(indice / POR_PAGINA) + 1);
+      setPagina(indice < 0 ? 1 : Math.floor(indice / porPagina) + 1);
       setDestaqueId(resultado.reuniao.id);
       voltarParaLista();
     }
     return resultado;
   };
+
+  // Mudou quantos cabem: continua mostrando o primeiro card que estava no topo.
+  const porPaginaAtual = useRef(POR_PAGINA);
+  const ajustarPorPagina = useCallback((novo) => {
+    const antigo = porPaginaAtual.current;
+    if (novo === antigo) return;
+    porPaginaAtual.current = novo;
+    setPorPagina(novo);
+    setPagina((atual) => Math.floor(((atual - 1) * antigo) / novo) + 1);
+  }, []);
 
   const escolherFiltro = useCallback((id) => {
     setFiltro(id);
@@ -110,6 +122,8 @@ export default function ReunioesModal({ onClose }) {
             agora={agora}
             filtro={filtro}
             pagina={pagina}
+            porPagina={porPagina}
+            onPorPagina={ajustarPorPagina}
             destaqueId={destaqueId}
             onFiltro={escolherFiltro}
             onPagina={mudarPagina}

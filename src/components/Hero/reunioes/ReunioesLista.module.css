@@ -52,6 +52,16 @@
   scrollbar-color: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 45%, transparent) transparent;
 }
 
+/* A página mostra só os cards que cabem: sem barra de rolagem (a rolagem
+   fica de reserva para quando nem um card cabe, em telas muito baixas).
+   Sem rolar, nada precisa ser cortado: o balão do avatar sai por cima e a
+   folga do topo volta a ser só o espaço entre a barra e a lista. */
+.semRolagem {
+  padding-top: clamp(1rem, calc(var(--u) * 1.8), 1.5rem);
+  padding-bottom: 0;
+  overflow: visible;
+}
+
 .rolagem:focus-visible {
   outline: 2px solid var(--reunioes-oliva, #5f6b37);
   outline-offset: 2px;

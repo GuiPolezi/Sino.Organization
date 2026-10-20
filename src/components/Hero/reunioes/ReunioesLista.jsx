@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MEDIA, matches } from '../../../utils/media.js';
-import { POR_PAGINA, contarPorFiltro, filtrarReunioes, paginar } from './periodos.js';
+import { contarPorFiltro, filtrarReunioes, paginar } from './periodos.js';
 import FiltrosPeriodo from './FiltrosPeriodo.jsx';
 import Paginacao from './Paginacao.jsx';
 import ReuniaoCard from './ReuniaoCard.jsx';
@@ -21,6 +21,20 @@ const SAIDA = { seguinte: { x: -28 }, anterior: { x: 28 }, filtro: { y: -10 } };
 const ENTRADA = { seguinte: { x: 36 }, anterior: { x: -36 }, filtro: { y: 18 } };
 
 /*
+ * Quantos cards cabem na área da lista sem rolagem. A altura do card é a
+ * maior já vista nesta largura (os cards têm altura fixa por layout); assim
+ * o número não oscila entre páginas.
+ */
+function medirPorPagina(caixa, maiorCard) {
+  const estilo = getComputedStyle(caixa);
+  const util = caixa.clientHeight - parseFloat(estilo.paddingTop) - parseFloat(estilo.paddingBottom);
+  const lista = caixa.querySelector('ul');
+  const vao = lista ? parseFloat(getComputedStyle(lista).rowGap) || 0 : 0;
+  if (!maiorCard || util <= 0) return null;
+  return Math.max(1, Math.floor((util + vao) / (maiorCard + vao)));
+}
+
+/*
  * Histórico: barra fixa (filtros + paginação) e os cards rolando por dentro.
  * Filtro e página vivem no modal; aqui só se anima a troca: os cards atuais
  * saem, o estado muda e os novos entram em sequência.
@@ -30,10 +44,12 @@ export default function ReunioesLista({
   agora,
   filtro,
   pagina,
+  porPagina,
   destaqueId,
   onFiltro,
   onPagina,
   onAjustarPagina,
+  onPorPagina,
   onRemover,
 }) {
   const raiz = useRef(null);
@@ -48,9 +64,32 @@ export default function ReunioesLista({
   useEffect(() => setPressionado(filtro), [filtro]);
 
   const lista = useMemo(() => filtrarReunioes(reunioes, filtro, agora), [reunioes, filtro, agora]);
-  const pag = useMemo(() => paginar(lista, pagina, POR_PAGINA), [lista, pagina]);
+  const pag = useMemo(() => paginar(lista, pagina, porPagina), [lista, pagina, porPagina]);
   const contagens = useMemo(() => contarPorFiltro(reunioes, agora), [reunioes, agora]);
   const chave = `${filtro}:${pag.pagina}`;
+
+  // Mede de novo quando a área muda de tamanho ou entram cards novos.
+  const maiorCard = useRef({ largura: 0, altura: 0 });
+  useEffect(() => {
+    const caixa = rolagem.current;
+    if (!caixa) return undefined;
+
+    const medir = () => {
+      const largura = caixa.clientWidth;
+      // Outra largura, outro layout de card: esquece a medida antiga.
+      if (largura !== maiorCard.current.largura) maiorCard.current = { largura, altura: 0 };
+      caixa.querySelectorAll('[data-card] > *').forEach((card) => {
+        maiorCard.current.altura = Math.max(maiorCard.current.altura, card.offsetHeight);
+      });
+      const n = medirPorPagina(caixa, maiorCard.current.altura);
+      if (n && n !== porPagina) onPorPagina(n);
+    };
+
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(caixa);
+    return () => observador.disconnect();
+  }, [chave, porPagina, onPorPagina]);
 
   // Página fora do intervalo (ex.: removeu o último card dela): volta uma.
   useEffect(() => {
@@ -164,7 +203,7 @@ export default function ReunioesLista({
 
       <div
         ref={rolagem}
-        className={styles.rolagem}
+        className={porPagina > 1 ? `${styles.rolagem} ${styles.semRolagem}` : styles.rolagem}
         data-modal-scroll
         tabIndex={0}
         aria-labelledby={historicoId}

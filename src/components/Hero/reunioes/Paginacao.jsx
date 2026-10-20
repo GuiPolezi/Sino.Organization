@@ -34,7 +34,7 @@ export default function Paginacao({ inicio, fim, total, pagina, totalPaginas, on
     <nav className={styles.paginacao} aria-label="Paginação das reuniões" hidden={vazia}>
       <p className={styles.texto} aria-live="polite" aria-atomic="true">
         <span className="sr-only">Mostrando </span>
-        {inicio}–{fim} de {total}
+        {inicio === fim ? inicio : `${inicio}–${fim}`} de {total}
       </p>
       <button
         ref={anterior}

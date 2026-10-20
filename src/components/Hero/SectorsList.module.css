@@ -78,9 +78,10 @@
     --label-size: clamp(0.875rem, calc(var(--u) * 1.72), 2.25rem);
     --label-gap: calc(var(--u) * 3.13);
     /* Menores que no design (3.33u / 3.4u) para os 4 setores caberem na
-       altura da tela. */
-    --item-size: clamp(1.5rem, calc(var(--u) * 2.7), 4rem);
-    --item-gap: calc(var(--u) * 2.6);
+       altura da tela e a imagem do hover do último (Reuniões) não sair
+       por baixo em notebooks (ex.: 1536×788). */
+    --item-size: clamp(1.375rem, calc(var(--u) * 2.35), 4rem);
+    --item-gap: calc(var(--u) * 2.15);
     --line-width: calc(var(--u) * 17.5);
     --line-gap: calc(var(--u) * 1.87);
   }
