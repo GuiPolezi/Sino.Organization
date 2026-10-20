@@ -66,7 +66,10 @@ export const PAINEIS = Array.from({ length: PAREDE.trechos }, (_, i) => {
 export const NATUREZA = { afastamento: 2.4, altura: 5.5 };
 
 // ── Mesa de reunião ──
-export const MESA = { x: 0, z: -0.5, comp: 2.4, larg: 1.2, altura: 0.76 };
+// 0,4 m mais à frente que no esboço (z −0,5): atrás dela fica um corredor largo até o
+// vidro, inclusive ao lado do cavalete. Com −0,5 o canto de trás do bloco das cadeiras
+// caía em cima do pé do cavalete, e quem ia para a cadeira do fundo pela direita travava ali.
+export const MESA = { x: 0, z: -0.1, comp: 2.4, larg: 1.2, altura: 0.76 };
 
 /*
  * Lugares à mesa, no formato das estações (Suporte/boneco/estacoes.js):

@@ -5,6 +5,7 @@ import { SENTADO, atualizarEstado, aplicarLimites, configurarRitmo, criarEstado 
 import { removerQuadro } from '../../Suporte/quadro/posicao.js';
 import { CENA_REUNIAO, RITMO_REUNIAO } from './config.js';
 import { configurarLugares } from './lugares.js';
+import { ESTACOES } from '../../Suporte/boneco/estacoes.js';
 
 // A sala de reunião como a página prepara (Reuniao/index.jsx), simulada sem tela.
 configurarCena(CENA_REUNIAO);
@@ -46,4 +47,46 @@ test('na reunião ninguém digita: não há computador', () => {
   assert.ok(!micros.has('digitar'), 'digitou sentado');
   assert.ok(!acoes.has('trabalhar'), 'digitou em pé');
   assert.ok(micros.has('ouvir'), 'sentado, deveria ficar ouvindo');
+});
+
+// Um boneco sozinho, com o lugar já reservado, andando de (x, z) até ele: chega e senta?
+function chegaAoLugar(membros, lugar, x, z, segundos = 25) {
+  configurarLugares(membros);
+  const s = criarEstado('antonio');
+  posicoes.set(s.id, s.pos);
+  s.pos.set(x, 0, z);
+  const estacao = ESTACOES.find(({ id }) => id === lugar);
+  estacao.ocupante = s.id;
+  Object.assign(s, { estacao, indo: true, estado: 'andando', timer: 30 });
+  s.alvo.set(estacao.aprox.x, 0, estacao.aprox.z);
+  let sentou = false;
+  for (let quadro = 0; quadro < segundos * 60 && !sentou; quadro++) {
+    atualizarEstado(s, false, CAMERA, 1 / 60);
+    if (!SENTADO.has(s.estado)) aplicarLimites(s, null, 1 / 60);
+    sentou = s.estado === 'sentando';
+    if (!s.indo && !sentou) break;
+  }
+  posicoes.delete(s.id);
+  estacao.ocupante = null;
+  configurarLugares(0);
+  return sentou;
+}
+
+test('chega às cadeiras do fundo vindo de qualquer lado (inclusive pelo quadro, à direita)', () => {
+  const partidas = [
+    [3.5, 1.5],
+    [3.6, -2.2],
+    [2.0, -2.8],
+    [4.5, -1.0],
+    [-3.5, -2.6],
+    [-3.5, 1.5],
+    [0, 3],
+  ];
+  for (const membros of [4, 8, 12]) {
+    for (const lugar of ['r1', 'r2', 'r3', 'r4']) {
+      for (const [x, z] of partidas) {
+        assert.ok(chegaAoLugar(membros, lugar, x, z), `${membros} membros: não sentou em ${lugar} saindo de (${x}, ${z})`);
+      }
+    }
+  }
 });

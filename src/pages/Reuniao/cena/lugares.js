@@ -20,11 +20,13 @@ const cadeira = (lugar) => ({
   ...lugar,
   tipo: 'cadeira',
   elevacao: ELEVACAO_CADEIRA,
-  // Borda da mesa (as duas metades) e a cadeira.
+  // Borda da mesa (as duas metades) e a cadeira: desenhada a 0,72 m da borda, com o
+  // encosto 0,2 m atrás; o círculo cobre até ~1,2 m (encosto mais o corpo). Com 0,6 m de
+  // raio ia a 1,38 m e apertava o corredor entre a mesa e o cavalete do quadro.
   obstaculos: [
     { ...pontoLocal(lugar, -0.3, 0), r: 0.7 },
     { ...pontoLocal(lugar, 0.3, 0), r: 0.7 },
-    { ...pontoLocal(lugar, 0, 0.78), r: 0.6 },
+    { ...pontoLocal(lugar, 0, 0.75), r: 0.45 },
   ],
 });
 

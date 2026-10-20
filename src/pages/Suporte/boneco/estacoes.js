@@ -236,12 +236,18 @@ const VIZINHOS = [[1, 2], [0, 3], [0, 3], [1, 2]];
 const CANTO_ALCANCADO = 0.35;
 
 // Distância de cada canto do bloco até o alvo, dando a volta pelos cantos vizinhos quando preciso.
-function distanciasAteAlvo(bloco, alvo) {
-  const { cantos } = bloco;
-  const ate = cantos.map((canto) => (cruzaBloco(bloco, canto, alvo) ? Infinity : distancia(canto, alvo)));
+// `cantos` são os pontos de rota de verdade (cantoDeRota): um canto tapado por outro móvel
+// (null) não serve de passagem. Contando com ele, a volta por ali parecia a mais curta, o
+// boneco chegava no canto anterior, via que não dava, virava, e no passo seguinte a conta o
+// mandava de volta: tremia no lugar até desistir.
+function distanciasAteAlvo(bloco, alvo, cantos) {
+  const ate = cantos.map((canto) => (!canto || cruzaBloco(bloco, canto, alvo) ? Infinity : distancia(canto, alvo)));
   for (let volta = 0; volta < 2; volta++) {
     cantos.forEach((canto, i) => {
-      for (const j of VIZINHOS[i]) ate[i] = Math.min(ate[i], distancia(canto, cantos[j]) + ate[j]);
+      if (!canto) return;
+      for (const j of VIZINHOS[i]) {
+        if (cantos[j]) ate[i] = Math.min(ate[i], distancia(canto, cantos[j]) + ate[j]);
+      }
     });
   }
   return ate;
@@ -321,13 +327,13 @@ export function rotaAte(pos, alvo, area, preferido = null, offset = 0) {
   }
   if (!bloco) return reto;
 
-  const ateAlvo = distanciasAteAlvo(bloco, alvo);
+  const cantos = bloco.cantos.map((_, i) => cantoDeRota(bloco, i, area, offset));
+  const ateAlvo = distanciasAteAlvo(bloco, alvo, cantos);
   let melhor = reto;
   let menorCusto = Infinity;
   let mantido = null;
   let custoMantido = Infinity;
-  bloco.cantos.forEach((_, i) => {
-    const canto = cantoDeRota(bloco, i, area, offset);
+  cantos.forEach((canto, i) => {
     if (!canto) return;
     const ateCanto = distancia(pos, canto);
     if (ateCanto < CANTO_ALCANCADO) return;
