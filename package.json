@@ -16,7 +16,7 @@
     "test:team": "node --test scripts/build-team.test.mjs",
     "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs src/pages/Suporte/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/mappers/visaoGeral.test.mjs src/pages/Desenvolvimento/mappers/categoria.test.mjs src/pages/Desenvolvimento/card/geometriaPizza.test.mjs",
     "test:card": "node --test src/pages/Suporte/mappers/atendimentos.test.mjs",
-    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/cena/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs src/pages/Reuniao/cena/cena.test.mjs",
+    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/cena/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs src/pages/Reuniao/cena/cena.test.mjs src/pages/Reuniao/cena/ritmo.test.mjs",
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs",
     "test:licencas": "node --test src/pages/Licencas/mappers/licencas.test.mjs",
     "test:reunioes": "node --test src/components/Hero/reunioes/reunioes.test.mjs src/components/Hero/reunioes/periodos.test.mjs src/components/Hero/reunioes/reunioesSeed.test.mjs src/components/Hero/reunioes/selecao/favo.test.mjs"

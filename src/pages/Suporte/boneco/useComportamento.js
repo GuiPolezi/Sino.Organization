@@ -17,6 +17,8 @@ import {
 } from './estacoes.js';
 
 const ACOES = ['acenar', 'pular', 'olhar', 'trabalhar', 'olhar', 'acenar'];
+// Sem computador por perto (RITMO.semComputador), ninguém digita no ar.
+const ACOES_SEM_COMPUTADOR = ACOES.filter((acao) => acao !== 'trabalhar');
 const RAIO_SEPARACAO = 0.95;
 // Bolha em volta do selecionado: menor que o maior vão do layout (1,2 m), senão fecha a passagem.
 const RAIO_SEPARACAO_SELECIONADO = 1.3;
@@ -30,7 +32,7 @@ const TANGENTE_SEPARACAO = 0.6;
 // Raio com que o selecionado entra no desvio de quem anda (contornam em vez de parar na bolha).
 const RAIO_CONTORNO_SELECIONADO = 1.0;
 // Estados em que o boneco está preso à cadeira de uma estação.
-const SENTADO = new Set(['sentando', 'trabalhando', 'levantando']);
+export const SENTADO = new Set(['sentando', 'trabalhando', 'levantando']);
 /*
  * Ritmo de sentar: chance de ir a uma estação quando decide o que fazer, quanto
  * tempo fica sentado, a pausa até querer sentar de novo e a do começo (em s).
@@ -45,6 +47,9 @@ export const RITMO = {
   // Passeio: não para a menos disto (m) do ponto de chegada de uma estação, para não
   // atrapalhar quem vem sentar. Numa sala com muitos lugares juntos, menos.
   longeDaChegada: 1.0,
+  // Sala sem computador (a reunião): sentado, não digita; fica com os braços em repouso,
+  // olhando os colegas, e a ação de "trabalhar" em pé sai do sorteio.
+  semComputador: false,
 };
 
 /** @param {Partial<typeof RITMO>} config */
@@ -133,7 +138,7 @@ function hash(texto) {
 }
 
 // Velocidade e fase variam por boneco, para dar personalidade.
-function criarEstado(id) {
+export function criarEstado(id) {
   const pos = pontoAleatorio(new THREE.Vector3());
   return {
     id,
@@ -391,7 +396,8 @@ function decidir(s) {
     iniciarCaminhada(s);
   } else if (Math.random() < 0.4) {
     s.estado = 'acao';
-    s.acao = ACOES[Math.floor(Math.random() * ACOES.length)];
+    const acoes = RITMO.semComputador ? ACOES_SEM_COMPUTADOR : ACOES;
+    s.acao = acoes[Math.floor(Math.random() * acoes.length)];
     if (MOVIMENTO.reduzido && s.acao === 'pular') s.acao = 'olhar';
     s.timer = s.acao === 'trabalhar' ? rand(2.5, 4) : rand(1.6, 2.6);
     s.tAcao = 0;
@@ -401,11 +407,20 @@ function decidir(s) {
   }
 }
 
+// O que faz na maior parte do tempo sentado: digita, ou (sem computador) ouve a conversa.
+const microPadrao = () => (RITMO.semComputador ? 'ouvir' : 'digitar');
+
 // Sorteia o que o técnico faz na cadeira pelos próximos segundos.
 function sortearMicro(s) {
   const sorteio = Math.random();
-  s.micro = sorteio < 0.55 ? 'digitar' : sorteio < 0.7 ? 'esticar' : sorteio < 0.85 ? 'pensar' : 'olharCamera';
-  s.tMicro = s.micro === 'digitar' ? rand(2.5, 5) : rand(1.2, 2.2);
+  const padrao = microPadrao();
+  if (RITMO.semComputador) {
+    // Numa reunião se espreguiça menos e passa mais tempo só ouvindo.
+    s.micro = sorteio < 0.65 ? padrao : sorteio < 0.72 ? 'esticar' : sorteio < 0.88 ? 'pensar' : 'olharCamera';
+  } else {
+    s.micro = sorteio < 0.55 ? padrao : sorteio < 0.7 ? 'esticar' : sorteio < 0.85 ? 'pensar' : 'olharCamera';
+  }
+  s.tMicro = s.micro === padrao ? rand(2.5, 5) : rand(1.2, 2.2);
 }
 
 // Sentar, trabalhar e levantar: o boneco fica preso à estação que reservou.
@@ -442,7 +457,7 @@ function atualizarSentado(s, selecionado, dt) {
   if (s.estado === 'sentando' && s.tSent >= 1) {
     s.estado = 'trabalhando';
     s.timer = rand(...RITMO.duracao);
-    s.micro = 'digitar';
+    s.micro = microPadrao();
     s.tMicro = rand(2, 4);
   } else if (s.estado === 'levantando' && s.tSent <= 0) {
     liberarEstacao(s);
@@ -455,7 +470,7 @@ function atualizarSentado(s, selecionado, dt) {
 }
 
 // Avança a máquina de estados e devolve para onde o boneco deve virar e se está andando.
-function atualizarEstado(s, selecionado, camera, dt) {
+export function atualizarEstado(s, selecionado, camera, dt) {
   const { pos } = s;
 
   // Em pé, o selecionado para e acena (e solta o computador para onde ia); sentado, fica na cadeira.
@@ -508,7 +523,7 @@ function empurrarParaFora(pos, o, maximo) {
 
 // Empurra para longe de quem está perto demais, para fora de mesas e cadeiras e
 // mantém dentro da elipse.
-function aplicarLimites(s, idSelecionado, dt) {
+export function aplicarLimites(s, idSelecionado, dt) {
   const { id, pos } = s;
   const andando = s.estado === 'andando';
 
@@ -557,16 +572,27 @@ function aplicarLimites(s, idSelecionado, dt) {
   }
 }
 
-// Pose na cadeira: digitando, com micro-ações; selecionado, acena para a câmera.
+// Pose na cadeira: digitando (ou ouvindo, sem computador), com micro-ações; selecionado, acena para a câmera.
 function poseTrabalhando(pose, s, selecionado, camera, t) {
   const olharCamera = clamp(anguloMaisCurto(s.yaw, anguloPara(s.pos, camera.position)), -1.1, 1.1);
 
-  pose.bracoEx = -1.0 + Math.sin(t * 17) * 0.1;
-  pose.bracoDx = -1.0 + Math.sin(t * 17 + 1.7) * 0.1;
-  pose.bracoEz = 0.22;
-  pose.bracoDz = -0.22;
-  pose.cabecaX = 0.2;
-  pose.cabecaY = Math.sin(t * 0.7 + s.passo) * 0.12;
+  if (RITMO.semComputador) {
+    // Sem teclado: braços parados no colo (base também do "pensar", que só ergue o direito)
+    // e a cabeça virando devagar para quem fala.
+    pose.bracoEx = -0.6;
+    pose.bracoDx = -0.6;
+    pose.bracoEz = 0.12;
+    pose.bracoDz = -0.12;
+    pose.cabecaX = 0;
+    pose.cabecaY = Math.sin(t * 0.45 + s.passo) * 0.45;
+  } else {
+    pose.bracoEx = -1.0 + Math.sin(t * 17) * 0.1;
+    pose.bracoDx = -1.0 + Math.sin(t * 17 + 1.7) * 0.1;
+    pose.bracoEz = 0.22;
+    pose.bracoDz = -0.22;
+    pose.cabecaX = 0.2;
+    pose.cabecaY = Math.sin(t * 0.7 + s.passo) * 0.12;
+  }
 
   if (s.micro === 'esticar') {
     Object.assign(pose, { bracoEx: 0, bracoDx: 0, bracoEz: -2.75, bracoDz: 2.75, cabecaX: -0.25, cabecaY: 0 });

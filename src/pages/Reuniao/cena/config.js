@@ -19,12 +19,15 @@ export const CENA_REUNIAO = {
   recuoMaxRetrato: 3,
 };
 
-// Numa reunião quase todo mundo senta logo e fica bastante tempo (segundos).
+// Numa reunião quase todo mundo senta logo e fica sentado quase o tempo todo (segundos):
+// de vez em quando levanta, dá uma volta ou faz alguma coisa e volta a sentar.
 export const RITMO_REUNIAO = {
-  chance: 0.85,
-  duracao: [30, 70],
-  descanso: [3, 8],
-  inicial: [0.3, 4],
+  chance: 0.95,
+  duracao: [90, 180],
+  descanso: [7, 14],
+  inicial: [0.3, 3],
+  // Não há computador na sala: sentado ninguém digita.
+  semComputador: true,
   // Até 12 lugares em volta da mesa: com 1 m, quase todo o chão perto dela ficava proibido.
   longeDaChegada: 0.55,
 };
