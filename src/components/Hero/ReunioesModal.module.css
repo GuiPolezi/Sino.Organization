@@ -7,17 +7,19 @@
 
   display: flex;
   flex-direction: column;
-  width: min(100%, 82rem);
-  height: min(100%, 78dvh);
-  padding: clamp(1.25rem, 3.4vw, 3rem);
-  padding-top: clamp(1rem, 2.6vw, 2.25rem);
+  width: min(100%, 86rem);
+  /* Cabe inteiro na tela (ex.: 1536×864); a lista rola por dentro. */
+  /* Sem %: numa linha de grid "auto" o 100% faria a linha crescer com a lista. */
+  height: min(calc(100dvh - 2 * var(--gutter-mobile)), 90dvh, 62rem);
+  padding: clamp(1.25rem, calc(var(--u) * 3.2), 3rem);
+  padding-top: clamp(1rem, calc(var(--u) * 2.4), 2.25rem);
   border-color: color-mix(in srgb, var(--color-white) 80%, transparent);
   background: color-mix(in srgb, var(--reunioes-creme) 96%, transparent);
   color: var(--reunioes-tinta);
 }
 
 .card.card h3 {
-  font-size: clamp(2.25rem, 5.6vw, 5.25rem);
+  font-size: clamp(2.25rem, calc(var(--u) * 6.6), 5.5rem);
   font-weight: var(--weight-black);
   letter-spacing: -0.03em;
   color: var(--reunioes-tinta);
@@ -61,22 +63,12 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  margin-top: clamp(0.75rem, 1.8vw, 1.5rem);
-  animation: entrar 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes entrar {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
+  margin-top: clamp(0.75rem, calc(var(--u) * 2), 1.75rem);
+  /* Sem animação CSS: o GlassModal anima este item com gsap.from (opacity) e
+     uma keyframe aqui faria o GSAP ler opacity 0 como valor final. */
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .visao {
-    animation: none;
-  }
-
   .criar {
     transition: none;
   }
@@ -91,6 +83,6 @@
 /* Celular: o cartão usa a altura toda para a lista e o formulário caberem. */
 @media (max-width: 600px) {
   .card.card {
-    height: 100%;
+    height: calc(100dvh - 2 * var(--gutter-mobile));
   }
 }

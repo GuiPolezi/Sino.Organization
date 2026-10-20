@@ -29,6 +29,7 @@ function Erro({ id, children }) {
 export default function ReuniaoForm({ onSalvar, onCancelar }) {
   const [titulo, setTitulo] = useState('');
   const [dataHora, setDataHora] = useState('');
+  const [horaFim, setHoraFim] = useState('');
   const [modalidade, setModalidade] = useState(MODALIDADES.PRESENCIAL);
   const [membros, setMembros] = useState([]);
   const [erros, setErros] = useState({});
@@ -37,9 +38,11 @@ export default function ReuniaoForm({ onSalvar, onCancelar }) {
   const ids = {
     titulo: useId(),
     dataHora: useId(),
+    horaFim: useId(),
     membros: useId(),
     erroTitulo: useId(),
     erroDataHora: useId(),
+    erroHoraFim: useId(),
     erroModalidade: useId(),
     modalidade: useId(),
   };
@@ -60,7 +63,7 @@ export default function ReuniaoForm({ onSalvar, onCancelar }) {
 
   const onSubmit = (event) => {
     event.preventDefault();
-    const resultado = onSalvar({ titulo, dataHora, modalidade, membros });
+    const resultado = onSalvar({ titulo, dataHora, horaFim, modalidade, membros });
     if (resultado.ok) return;
 
     setErros(resultado.erros);
@@ -99,24 +102,45 @@ export default function ReuniaoForm({ onSalvar, onCancelar }) {
         </div>
 
         <div className={styles.linha}>
-          <div className={styles.campo}>
-            <label htmlFor={ids.dataHora} className={styles.rotulo}>
-              Data e hora
-            </label>
-            <input
-              id={ids.dataHora}
-              type="datetime-local"
-              className={styles.entrada}
-              value={dataHora}
-              min={minDataHoraLocal()}
-              aria-invalid={erros.dataHora ? true : undefined}
-              aria-describedby={erros.dataHora ? ids.erroDataHora : undefined}
-              onChange={(event) => {
-                setDataHora(event.target.value);
-                limparErro('dataHora');
-              }}
-            />
-            <Erro id={ids.erroDataHora}>{erros.dataHora}</Erro>
+          <div className={styles.quando}>
+            <div className={styles.campo}>
+              <label htmlFor={ids.dataHora} className={styles.rotulo}>
+                Data e hora
+              </label>
+              <input
+                id={ids.dataHora}
+                type="datetime-local"
+                className={styles.entrada}
+                value={dataHora}
+                min={minDataHoraLocal()}
+                aria-invalid={erros.dataHora ? true : undefined}
+                aria-describedby={erros.dataHora ? ids.erroDataHora : undefined}
+                onChange={(event) => {
+                  setDataHora(event.target.value);
+                  limparErro('dataHora');
+                }}
+              />
+              <Erro id={ids.erroDataHora}>{erros.dataHora}</Erro>
+            </div>
+
+            <div className={styles.campo}>
+              <label htmlFor={ids.horaFim} className={styles.rotulo}>
+                Término
+              </label>
+              <input
+                id={ids.horaFim}
+                type="time"
+                className={styles.entrada}
+                value={horaFim}
+                aria-invalid={erros.horaFim ? true : undefined}
+                aria-describedby={erros.horaFim ? ids.erroHoraFim : undefined}
+                onChange={(event) => {
+                  setHoraFim(event.target.value.slice(0, 5));
+                  limparErro('horaFim');
+                }}
+              />
+              <Erro id={ids.erroHoraFim}>{erros.horaFim}</Erro>
+            </div>
           </div>
 
           <fieldset

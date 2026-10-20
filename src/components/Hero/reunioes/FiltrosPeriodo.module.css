@@ -1,0 +1,80 @@
+/* Rola na horizontal em telas estreitas; o respiro evita cortar o foco. */
+.rolagem {
+  min-width: 0;
+  margin: -0.375rem;
+  padding: 0.375rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.rolagem::-webkit-scrollbar {
+  display: none;
+}
+
+.trilho {
+  position: relative;
+  display: flex;
+  gap: clamp(0.5rem, calc(var(--u) * 1.5), 1.4rem);
+  width: max-content;
+  isolation: isolate;
+}
+
+/* Indicador único que desliza entre as pílulas (x e largura via GSAP). */
+.indicador {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--reunioes-oliva, #5f6b37);
+  box-shadow: 0 3px 6px color-mix(in srgb, var(--color-olive-dark) 38%, transparent);
+  pointer-events: none;
+}
+
+.pilula {
+  min-width: clamp(5rem, calc(var(--u) * 7.3), 7rem);
+  min-height: clamp(1.625rem, calc(var(--u) * 1.85), 1.875rem);
+  padding: 0.25rem clamp(0.9rem, calc(var(--u) * 1.6), 1.6rem);
+  border: 0;
+  border-radius: 999px;
+  background: #dcdbd4;
+  color: #1d1e17;
+  font: inherit;
+  font-size: clamp(0.75rem, calc(var(--u) * 1.05), 0.875rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    color 0.3s ease;
+}
+
+.pilula:hover:not(.ativa) {
+  background: #cfcec6;
+}
+
+.ativa {
+  color: var(--reunioes-creme, #fdf9e1);
+  cursor: default;
+}
+
+/* O texto fica acima do indicador. */
+.rotulo {
+  position: relative;
+  z-index: 2;
+}
+
+.pilula:focus-visible {
+  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pilula {
+    transition: none;
+  }
+}

@@ -1,6 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { MEDIA, matches } from '../../utils/media.js';
 import GlassModal from '../Modal/GlassModal.jsx';
 import { useReunioes } from './reunioes/useReunioes.js';
+import { useAgora } from './reunioes/useAgora.js';
+import { POR_PAGINA, filtrarReunioes } from './reunioes/periodos.js';
 import ReunioesLista from './reunioes/ReunioesLista.jsx';
 import ReuniaoForm from './reunioes/ReuniaoForm.jsx';
 import styles from './ReunioesModal.module.css';
@@ -8,8 +13,15 @@ import styles from './ReunioesModal.module.css';
 // Modal do setor "Reuniões": histórico das reuniões e formulário para agendar.
 export default function ReunioesModal({ onClose }) {
   const { reunioes, criar, remover } = useReunioes();
+  const agora = useAgora(reunioes);
   const [visao, setVisao] = useState('lista');
+  // Filtro e página ficam aqui para sobreviver à ida ao formulário.
+  const [filtro, setFiltro] = useState('todas');
+  const [pagina, setPagina] = useState(1);
+  const [destaqueId, setDestaqueId] = useState(null);
   const criarBotao = useRef(null);
+  const visaoRef = useRef(null);
+  const visaoInicial = useRef(visao);
   const voltouDoForm = useRef(false);
 
   // Ao voltar do formulário, o foco retorna ao botão Criar.
@@ -20,6 +32,21 @@ export default function ReunioesModal({ onClose }) {
     }
   }, [visao]);
 
+  // Troca lista ↔ formulário: a nova visão entra (a abertura fica com o GlassModal).
+  useGSAP(
+    () => {
+      if (visaoInicial.current === visao) return;
+      visaoInicial.current = null;
+      if (matches(MEDIA.reducedMotion)) return;
+      gsap.fromTo(
+        visaoRef.current,
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.35, ease: 'power3.out', clearProps: 'opacity,transform' },
+      );
+    },
+    { dependencies: [visao] },
+  );
+
   const voltarParaLista = () => {
     voltouDoForm.current = true;
     setVisao('lista');
@@ -27,9 +54,29 @@ export default function ReunioesModal({ onClose }) {
 
   const salvar = (dados) => {
     const resultado = criar(dados);
-    if (resultado.ok) voltarParaLista();
+    if (resultado.ok) {
+      // Mostra a nova reunião: filtro "Todas", na página em que ela caiu.
+      const lista = filtrarReunioes([...reunioes, resultado.reuniao], 'todas', new Date());
+      const indice = lista.findIndex((r) => r.id === resultado.reuniao.id);
+      setFiltro('todas');
+      setPagina(indice < 0 ? 1 : Math.floor(indice / POR_PAGINA) + 1);
+      setDestaqueId(resultado.reuniao.id);
+      voltarParaLista();
+    }
     return resultado;
   };
+
+  const escolherFiltro = useCallback((id) => {
+    setFiltro(id);
+    setPagina(1);
+    setDestaqueId(null);
+  }, []);
+
+  // delta: +1 / -1. A lista limita a página ao intervalo válido.
+  const mudarPagina = useCallback((delta) => {
+    setPagina((atual) => Math.max(1, atual + delta));
+    setDestaqueId(null);
+  }, []);
 
   // Fragmento sempre presente: o cabeçalho não muda de layout entre as visões.
   const actions = (
@@ -56,9 +103,19 @@ export default function ReunioesModal({ onClose }) {
       // No formulário, "Voltar" retorna à lista; na lista, fecha o modal.
       onVoltar={visao === 'form' ? voltarParaLista : undefined}
     >
-      <div key={visao} className={styles.visao} data-modal="item">
+      <div key={visao} ref={visaoRef} className={styles.visao} data-modal="item">
         {visao === 'lista' ? (
-          <ReunioesLista reunioes={reunioes} onRemover={remover} />
+          <ReunioesLista
+            reunioes={reunioes}
+            agora={agora}
+            filtro={filtro}
+            pagina={pagina}
+            destaqueId={destaqueId}
+            onFiltro={escolherFiltro}
+            onPagina={mudarPagina}
+            onAjustarPagina={setPagina}
+            onRemover={remover}
+          />
         ) : (
           <ReuniaoForm onSalvar={salvar} onCancelar={voltarParaLista} />
         )}

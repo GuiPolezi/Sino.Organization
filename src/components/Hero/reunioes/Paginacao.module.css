@@ -1,0 +1,75 @@
+.paginacao {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.paginacao[hidden] {
+  display: none;
+}
+
+.texto {
+  margin: 0 0.5rem 0 0;
+  font-size: clamp(0.6875rem, calc(var(--u) * 0.8), 0.75rem);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #9a9a90;
+}
+
+.seta {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #4a4b40;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.seta svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.seta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--reunioes-oliva, #5f6b37) 12%, transparent);
+  color: var(--reunioes-tinta, #0b0c08);
+}
+
+.seta:first-of-type:hover:not(:disabled) svg {
+  transform: translateX(-2px);
+}
+
+.seta:last-of-type:hover:not(:disabled) svg {
+  transform: translateX(2px);
+}
+
+.seta:disabled {
+  color: #c9c9c0;
+  cursor: default;
+}
+
+.seta:focus-visible {
+  outline: 2px solid var(--reunioes-oliva, #5f6b37);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seta,
+  .seta svg {
+    transition: none;
+  }
+}

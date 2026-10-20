@@ -1,202 +1,193 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import { MODALIDADES, formatarDataHora, separarReunioes } from './reunioes.js';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { MEDIA, matches } from '../../../utils/media.js';
+import { POR_PAGINA, contarPorFiltro, filtrarReunioes, paginar } from './periodos.js';
+import FiltrosPeriodo from './FiltrosPeriodo.jsx';
+import Paginacao from './Paginacao.jsx';
+import ReuniaoCard from './ReuniaoCard.jsx';
 import styles from './ReunioesLista.module.css';
 
-const MEMBROS_VISIVEIS = 6;
+const VAZIO = {
+  todas: 'Nenhuma Reunião no histórico',
+  'em-breve': 'Nenhuma reunião em breve',
+  hoje: 'Nenhuma reunião hoje',
+  encerradas: 'Nenhuma reunião encerrada',
+};
 
-// Iniciais para o avatar: primeira letra das duas primeiras palavras.
-const iniciais = (nome) =>
-  nome
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((parte) => parte[0])
-    .join('')
-    .toUpperCase();
+// Deslocamento de saída/entrada conforme a origem da troca.
+const SAIDA = { seguinte: { x: -28 }, anterior: { x: 28 }, filtro: { y: -10 } };
+const ENTRADA = { seguinte: { x: 36 }, anterior: { x: -36 }, filtro: { y: 18 } };
 
-function IconeModalidade({ modalidade }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      {modalidade === MODALIDADES.DIGITAL ? (
-        <>
-          <rect x="3" y="6" width="12" height="12" rx="2" />
-          <path d="M15 10.5l6-3.5v10l-6-3.5" />
-        </>
-      ) : (
-        <>
-          <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
-          <circle cx="12" cy="10" r="2.3" />
-        </>
-      )}
-    </svg>
-  );
-}
+/*
+ * Histórico: barra fixa (filtros + paginação) e os cards rolando por dentro.
+ * Filtro e página vivem no modal; aqui só se anima a troca: os cards atuais
+ * saem, o estado muda e os novos entram em sequência.
+ */
+export default function ReunioesLista({
+  reunioes,
+  agora,
+  filtro,
+  pagina,
+  destaqueId,
+  onFiltro,
+  onPagina,
+  onAjustarPagina,
+  onRemover,
+}) {
+  const raiz = useRef(null);
+  const rolagem = useRef(null);
+  const saida = useRef(null);
+  const direcao = useRef('filtro');
+  const primeira = useRef(true);
+  const historicoId = useId();
+  // A pílula responde ao clique na hora, antes de os cards trocarem.
+  const [pressionado, setPressionado] = useState(filtro);
 
-function ReuniaoItem({ reuniao, passada, onRemover }) {
-  const [confirmando, setConfirmando] = useState(false);
-  const naoBotao = useRef(null);
-  const removerBotao = useRef(null);
-  const abriuConfirmacao = useRef(false);
+  useEffect(() => setPressionado(filtro), [filtro]);
 
-  // Foco acompanha a troca entre "Remover" e a confirmação.
+  const lista = useMemo(() => filtrarReunioes(reunioes, filtro, agora), [reunioes, filtro, agora]);
+  const pag = useMemo(() => paginar(lista, pagina, POR_PAGINA), [lista, pagina]);
+  const contagens = useMemo(() => contarPorFiltro(reunioes, agora), [reunioes, agora]);
+  const chave = `${filtro}:${pag.pagina}`;
+
+  // Página fora do intervalo (ex.: removeu o último card dela): volta uma.
   useEffect(() => {
-    if (confirmando) naoBotao.current?.focus();
-    else if (abriuConfirmacao.current) removerBotao.current?.focus();
-  }, [confirmando]);
+    if (pag.pagina !== pagina) onAjustarPagina(pag.pagina);
+  }, [pag.pagina, pagina, onAjustarPagina]);
 
-  const abrir = () => {
-    abriuConfirmacao.current = true;
-    setConfirmando(true);
+  // Entrada dos cards a cada filtro/página (e na abertura).
+  useGSAP(
+    () => {
+      const caixa = rolagem.current;
+      const novo = destaqueId && caixa.querySelector(`[data-id="${CSS.escape(destaqueId)}"]`);
+      if (novo) {
+        caixa.scrollTop = Math.max(0, novo.offsetTop - caixa.clientHeight / 2 + novo.offsetHeight / 2);
+      } else {
+        caixa.scrollTop = 0;
+      }
+
+      const eraPrimeira = primeira.current;
+      primeira.current = false;
+      if (matches(MEDIA.reducedMotion)) return;
+
+      gsap.fromTo(
+        caixa.querySelectorAll('[data-card]'),
+        { opacity: 0, ...ENTRADA[direcao.current] },
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          duration: 0.5,
+          ease: 'power3.out',
+          stagger: 0.06,
+          delay: eraPrimeira ? 0.18 : 0,
+          clearProps: 'opacity,transform',
+        },
+      );
+    },
+    { scope: raiz, dependencies: [chave] },
+  );
+
+  const { contextSafe } = useGSAP({ scope: raiz });
+
+  // Anima a saída dos cards atuais e só então aplica a troca.
+  const trocar = contextSafe((acao, dir) => {
+    const aplicar = () => {
+      direcao.current = dir;
+      flushSync(acao);
+    };
+
+    // Troca no meio de outra saída: conclui a anterior e aplica já.
+    if (saida.current) {
+      const pendente = saida.current;
+      saida.current = null;
+      pendente.progress(1);
+      aplicar();
+      return;
+    }
+
+    const cards = rolagem.current?.querySelectorAll('[data-card]') ?? [];
+    if (!cards.length || matches(MEDIA.reducedMotion)) {
+      aplicar();
+      return;
+    }
+
+    saida.current = gsap.to(cards, {
+      opacity: 0,
+      ...SAIDA[dir],
+      duration: 0.2,
+      ease: 'power2.in',
+      stagger: 0.025,
+      overwrite: true,
+      onComplete: () => {
+        saida.current = null;
+        aplicar();
+        // Se nada mudou, os cards não podem ficar invisíveis.
+        const restantes = [...cards].filter((card) => card.isConnected);
+        if (restantes.length) gsap.set(restantes, { clearProps: 'opacity,transform' });
+      },
+    });
+  });
+
+  const escolherFiltro = (id) => {
+    setPressionado(id);
+    trocar(() => onFiltro(id), 'filtro');
   };
 
-  // Esc cancela só a confirmação, sem fechar o modal.
-  const onKeyDown = (event) => {
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
-    event.stopPropagation();
-    setConfirmando(false);
+  const mudarPagina = (delta) => {
+    trocar(() => onPagina(delta), delta > 0 ? 'seguinte' : 'anterior');
   };
-
-  const digital = reuniao.modalidade === MODALIDADES.DIGITAL;
-  const extras = reuniao.membros.length - MEMBROS_VISIVEIS;
 
   return (
-    <li className={passada ? `${styles.item} ${styles.passada}` : styles.item}>
-      <div className={styles.topo}>
-        <h4 className={styles.titulo}>{reuniao.titulo}</h4>
-        <span className={`${styles.selo} ${digital ? styles.digital : ''}`}>
-          <IconeModalidade modalidade={reuniao.modalidade} />
-          {digital ? 'Digital' : 'Presencial'}
-        </span>
+    <div ref={raiz} className={styles.raiz}>
+      <div className={styles.barra}>
+        <h4 id={historicoId} className={styles.historico}>
+          Histórico
+        </h4>
+        <span className={styles.traco} aria-hidden="true" />
+        <div className={styles.filtros}>
+          <FiltrosPeriodo ativo={pressionado} contagens={contagens} onEscolher={escolherFiltro} />
+        </div>
+        <div className={styles.paginacao}>
+          <Paginacao
+            inicio={pag.inicio}
+            fim={pag.fim}
+            total={pag.total}
+            pagina={pag.pagina}
+            totalPaginas={pag.totalPaginas}
+            onMudar={mudarPagina}
+          />
+        </div>
       </div>
 
-      <time className={styles.data} dateTime={reuniao.dataHora}>
-        {formatarDataHora(reuniao.dataHora)}
-      </time>
-
-      <div className={styles.rodape}>
-        {reuniao.membros.length > 0 ? (
-          <ul className={styles.membros} aria-label="Membros">
-            {reuniao.membros.slice(0, MEMBROS_VISIVEIS).map((membro) => (
-              <li key={membro.id} className={styles.membro}>
-                <span className={styles.avatar} aria-hidden="true">
-                  {iniciais(membro.nome)}
-                </span>
-                {membro.nome}
+      <div
+        ref={rolagem}
+        className={styles.rolagem}
+        data-modal-scroll
+        tabIndex={0}
+        aria-labelledby={historicoId}
+      >
+        {pag.itens.length === 0 ? (
+          <p key={chave} className={styles.vazio} data-card>
+            {reunioes.length === 0 ? VAZIO.todas : VAZIO[filtro] ?? VAZIO.todas}
+          </p>
+        ) : (
+          <ul key={chave} className={styles.lista}>
+            {pag.itens.map((reuniao) => (
+              <li key={reuniao.id} className={styles.item} data-card data-id={reuniao.id}>
+                <ReuniaoCard
+                  reuniao={reuniao}
+                  agora={agora}
+                  destaque={reuniao.id === destaqueId}
+                  onRemover={onRemover}
+                />
               </li>
             ))}
-            {extras > 0 && (
-              <li
-                className={styles.mais}
-                title={reuniao.membros
-                  .slice(MEMBROS_VISIVEIS)
-                  .map((membro) => membro.nome)
-                  .join(', ')}
-              >
-                +{extras}
-                <span className="sr-only"> membros</span>
-              </li>
-            )}
           </ul>
-        ) : (
-          <span className={styles.semMembros}>Sem membros</span>
-        )}
-
-        {confirmando ? (
-          <div
-            className={styles.confirmacao}
-            role="group"
-            aria-label={`Remover a reunião ${reuniao.titulo}?`}
-            onKeyDown={onKeyDown}
-          >
-            <span className={styles.pergunta} aria-hidden="true">
-              Remover?
-            </span>
-            <button
-              type="button"
-              className={styles.sim}
-              onClick={() => onRemover(reuniao.id)}
-            >
-              Sim, remover
-            </button>
-            <button
-              ref={naoBotao}
-              type="button"
-              className={styles.nao}
-              onClick={() => setConfirmando(false)}
-            >
-              Não
-            </button>
-          </div>
-        ) : (
-          <button
-            ref={removerBotao}
-            type="button"
-            className={styles.remover}
-            aria-label={`Remover a reunião ${reuniao.titulo}`}
-            onClick={abrir}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-            </svg>
-            <span className={styles.removerTexto}>Remover</span>
-          </button>
         )}
       </div>
-    </li>
-  );
-}
-
-function Grupo({ titulo, reunioes, passada = false, onRemover }) {
-  const tituloId = useId();
-
-  return (
-    <section className={styles.grupo} aria-labelledby={tituloId}>
-      <h4 id={tituloId} className={styles.grupoTitulo}>
-        {titulo} <span className={styles.contagem}>{reunioes.length}</span>
-      </h4>
-      <ul className={styles.lista}>
-        {reunioes.map((reuniao) => (
-          <ReuniaoItem
-            key={reuniao.id}
-            reuniao={reuniao}
-            passada={passada}
-            onRemover={onRemover}
-          />
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-// Histórico de reuniões: próximas e anteriores, ou o estado vazio.
-export default function ReunioesLista({ reunioes, onRemover }) {
-  if (reunioes.length === 0) {
-    return <p className={styles.vazio}>Nenhuma Reunião no histórico</p>;
-  }
-
-  const { proximas, passadas } = separarReunioes(reunioes, new Date());
-  const ambas = proximas.length > 0 && passadas.length > 0;
-
-  return (
-    <div className={styles.rolagem} data-modal-scroll tabIndex={0} aria-label="Histórico de reuniões">
-      {ambas ? (
-        <>
-          <Grupo titulo="Próximas" reunioes={proximas} onRemover={onRemover} />
-          <Grupo titulo="Anteriores" reunioes={passadas} passada onRemover={onRemover} />
-        </>
-      ) : (
-        <ul className={styles.lista}>
-          {reunioes.map((reuniao) => (
-            <ReuniaoItem
-              key={reuniao.id}
-              reuniao={reuniao}
-              passada={proximas.length === 0}
-              onRemover={onRemover}
-            />
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
