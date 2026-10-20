@@ -1,0 +1,203 @@
+/* Grade de avatares dos membros (3 colunas; a última linha incompleta à direita). */
+.grade {
+  --_tamanho: var(--avatar-tamanho, 50px);
+  --_creme: #fdf9e1;
+  --_oliva: #5f6b37;
+
+  display: grid;
+  grid-template-columns: repeat(var(--colunas, 3), var(--_tamanho));
+  column-gap: calc(var(--_tamanho) * 0.46);
+  row-gap: calc(var(--_tamanho) * 0.22);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 480px) {
+  .grade {
+    --_tamanho: var(--avatar-tamanho-compacto, 36px);
+  }
+}
+
+.item {
+  position: relative;
+  width: var(--_tamanho);
+  height: var(--_tamanho);
+}
+
+/* Alvo do hover e do foco: o círculo e o tooltip. */
+.alvo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  outline: none;
+  cursor: default;
+}
+
+.avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  /* Fundo suave com o tom do id, puxado para o creme. */
+  background:
+    radial-gradient(circle at 50% 30%, hsl(var(--matiz, 80) 30% 90%), hsl(var(--matiz, 80) 22% 76%));
+  box-shadow:
+    0 0 0 2px var(--_creme),
+    0 3px 8px rgb(38 42 20 / 0.22),
+    0 1px 2px rgb(38 42 20 / 0.18);
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 260ms ease;
+}
+
+.iniciais {
+  font-size: calc(var(--_tamanho) * 0.34);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--_oliva);
+  user-select: none;
+  transition: opacity 320ms ease;
+}
+
+/* O retrato traz cabeça, ombros e a mão erguida: um leve zoom enche o círculo. */
+.retrato {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.22);
+  transform-origin: 50% 28%;
+  opacity: 0;
+  transition: opacity 420ms ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.avatar[data-pronto] .retrato {
+  opacity: 1;
+}
+
+.avatar[data-pronto] .iniciais {
+  opacity: 0;
+}
+
+.mais {
+  background: var(--_oliva);
+  color: var(--_creme);
+  font-size: calc(var(--_tamanho) * 0.3);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.alvo:hover .avatar,
+.alvo:focus-visible .avatar {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow:
+    0 0 0 2px var(--_creme),
+    0 8px 16px rgb(38 42 20 / 0.24),
+    0 2px 4px rgb(38 42 20 / 0.16);
+}
+
+.alvo:focus-visible .avatar {
+  box-shadow:
+    0 0 0 2px var(--_creme),
+    0 0 0 4px var(--_oliva),
+    0 8px 16px rgb(38 42 20 / 0.24);
+}
+
+/* Tooltip: acima do avatar, centrado; aparece no hover e no foco por teclado. */
+.dica {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: max-content;
+  max-width: 220px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  background: #2f351c;
+  color: var(--_creme);
+  font-size: 12.5px;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgb(25 28 12 / 0.28);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    visibility 0s linear 180ms;
+  pointer-events: none;
+}
+
+/* Setinha. */
+.dica::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border: 5px solid transparent;
+  border-top-color: #2f351c;
+  transform: translateX(-50%);
+}
+
+.alvo:hover .dica,
+.alvo:focus-visible .dica {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition:
+    opacity 180ms ease 60ms,
+    transform 180ms ease 60ms,
+    visibility 0s;
+}
+
+.alvo[data-oculto] .dica {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.dicaNome {
+  font-weight: 700;
+}
+
+.dicaCargo {
+  font-size: 11.5px;
+  opacity: 0.78;
+}
+
+.dicaLinha {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar,
+  .iniciais,
+  .retrato,
+  .dica {
+    transition-duration: 1ms;
+    transition-delay: 0s;
+  }
+
+  .alvo:hover .avatar,
+  .alvo:focus-visible .avatar {
+    transform: none;
+  }
+
+  .dica,
+  .alvo:hover .dica,
+  .alvo:focus-visible .dica {
+    transform: translate(-50%, 0);
+  }
+}
