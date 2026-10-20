@@ -77,7 +77,7 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  *
  * @param {object} props
  * @param {string} props.titulo
- * @param {boolean} [props.tituloCompacto] título menor, para frases (o de uma reunião)
+ * @param {boolean} [props.tituloCompacto] título e subtítulo menores, para frases (o de uma reunião)
  * @param {string} props.subtitulo
  * @param {string} props.rotuloElenco nome da lista de pessoas para leitores de tela
  * @param {() => Promise<import('./tipos.js').Tecnico[]>} props.buscarEquipe
@@ -148,7 +148,7 @@ export default function PaginaEquipe({
           ← sino.org
         </a>
         <h1 className={tituloCompacto ? `${styles.titulo} ${styles.tituloCompacto}` : styles.titulo}>{titulo}</h1>
-        <p className={styles.subtitulo}>{subtitulo}</p>
+        <p className={tituloCompacto ? `${styles.subtitulo} ${styles.subtituloCompacto}` : styles.subtitulo}>{subtitulo}</p>
         {erro && (
           <p className={styles.aviso} role="alert">
             Não foi possível carregar a equipe. Tente de novo em instantes.
