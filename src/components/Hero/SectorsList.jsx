@@ -33,7 +33,7 @@ const isKeyboardFocus = (element) => {
   try {
     return element.matches(':focus-visible');
   } catch {
-    return true;
+    return element === document.activeElement;
   }
 };
 
