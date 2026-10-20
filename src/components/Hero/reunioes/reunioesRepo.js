@@ -15,7 +15,14 @@
 //  - Isolar por empresa/usuário logado (hoje é tudo deste navegador).
 //  - Migrar o que estiver em CHAVE_STORAGE na primeira carga e apagar a chave.
 
+import { gerarReunioesExemplo } from './reunioesSeed.js';
+
 export const CHAVE_STORAGE = 'sino.reunioes.v1';
+
+// TODO(banco de dados): demonstração. Marca que os exemplos de
+// reunioesSeed.js já foram semeados neste navegador; remover junto com o
+// seed quando as reuniões vierem do servidor.
+export const CHAVE_EXEMPLOS = 'sino.reunioes.exemplos.v1';
 
 // localStorage pode não existir (SSR/testes) ou lançar (modo privado/bloqueado).
 const obterStorage = () => {
@@ -36,12 +43,41 @@ const ehReuniaoValida = (r) =>
   ehTexto(r.titulo) &&
   ehTexto(r.dataHora) &&
   ehTexto(r.modalidade) &&
+  (r.horaFim == null || ehTexto(r.horaFim)) && // opcional (reuniões antigas)
   Array.isArray(r.membros) &&
   r.membros.every((m) => m != null && ehTexto(m.id) && ehTexto(m.nome));
 
-export const carregarReunioes = (storage = obterStorage()) => {
+// TODO(banco de dados): demonstração — remover com reunioesSeed.js.
+// Semeia os exemplos UMA vez por navegador: se CHAVE_EXEMPLOS não existe,
+// ADICIONA os exemplos ao que já está salvo e grava a marca. Se o usuário
+// apagar os exemplos, eles não voltam. Não mexe em dado corrompido nem
+// marca nada se o storage falhar. Devolve true se semeou.
+export const semearExemplos = (storage = obterStorage(), agora = new Date()) => {
   try {
-    const bruto = storage?.getItem(CHAVE_STORAGE);
+    if (!storage || storage.getItem(CHAVE_EXEMPLOS) != null) return false;
+    const bruto = storage.getItem(CHAVE_STORAGE);
+    const atuais = bruto ? JSON.parse(bruto) : [];
+    if (!Array.isArray(atuais)) return false;
+    // Marca antes: se a lista não gravar, nunca duplica os exemplos.
+    storage.setItem(CHAVE_EXEMPLOS, agora.toISOString());
+    storage.setItem(
+      CHAVE_STORAGE,
+      JSON.stringify([...atuais, ...gerarReunioesExemplo(agora)]),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Sem `storage` (uso normal da tela) usa o localStorage e semeia os
+// exemplos; com `storage` explícito (testes) não semeia, salvo
+// `{ semear: true }`.
+export const carregarReunioes = (storage, { semear = storage === undefined } = {}) => {
+  const alvo = storage === undefined ? obterStorage() : storage;
+  if (semear) semearExemplos(alvo);
+  try {
+    const bruto = alvo?.getItem(CHAVE_STORAGE);
     if (!bruto) return [];
     const dados = JSON.parse(bruto);
     return Array.isArray(dados) ? dados.filter(ehReuniaoValida) : [];
