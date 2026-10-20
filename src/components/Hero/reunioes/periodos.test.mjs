@@ -89,8 +89,10 @@ const LISTA = Object.freeze([
 
 test('filtrarReunioes: cada filtro = um selo, e ordem', () => {
   const copia = [...LISTA];
+  // Todas: hoje (mais cedo primeiro), em breve (a próxima primeiro),
+  // encerradas (a mais recente primeiro).
   assert.deepEqual(ids(filtrarReunioes(LISTA, 'todas', AGORA)), [
-    'longe', 'amanha', 'hoje-tarde', 'agora', 'hoje-cedo', 'ontem', 'antiga',
+    'agora', 'hoje-tarde', 'amanha', 'longe', 'hoje-cedo', 'ontem', 'antiga',
   ]);
   // Mais tarde hoje é "Hoje" (não "Em Breve"); encerrada hoje é só "Encerradas".
   assert.deepEqual(ids(filtrarReunioes(LISTA, 'em-breve', AGORA)), ['amanha', 'longe']);

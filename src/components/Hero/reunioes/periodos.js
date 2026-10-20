@@ -66,19 +66,31 @@ const REGRAS = {
   encerradas: (r, agora) => statusDe(r, agora) === 'encerrada',
 };
 
-const CRESCENTE = new Set(['em-breve', 'hoje']);
-
 const filtroValido = (id) => (Object.hasOwn(REGRAS, id) ? id : 'todas');
 
-// Lista filtrada e ordenada (nova; não muta a entrada).
-// 'todas'/'encerradas': início decrescente; 'em-breve'/'hoje': crescente.
+// Ordem dos grupos em "Todas": hoje, depois em breve, por fim encerradas.
+const GRUPO = { hoje: 0, 'em-breve': 1, encerrada: 2 };
+
+/*
+ * Dentro de cada grupo, a mais perto de agora vem primeiro:
+ * - hoje e em breve: início crescente (a em andamento / a próxima no topo);
+ * - encerradas: início decrescente (a que acabou de acontecer no topo).
+ */
+const comparar = ([, ga, ia], [, gb, ib]) => {
+  if (ga !== gb) return ga - gb;
+  if (ia === ib) return 0;
+  const sinal = ga === GRUPO.encerrada ? -1 : 1;
+  return ia < ib ? -sinal : sinal;
+};
+
+// Lista filtrada e ordenada (nova; não muta a entrada). A ordem é a mesma em
+// todos os filtros: cada filtro é só um recorte de "Todas".
 export const filtrarReunioes = (reunioes, filtroId, agora = new Date()) => {
   const id = filtroValido(filtroId);
-  const sinal = CRESCENTE.has(id) ? 1 : -1;
   return (Array.isArray(reunioes) ? reunioes : [])
     .filter((r) => REGRAS[id](r, agora))
-    .map((r) => [r, ms(inicioDe(r))])
-    .sort(([, a], [, b]) => (a === b ? 0 : a < b ? -sinal : sinal))
+    .map((r) => [r, GRUPO[statusDe(r, agora)], ms(inicioDe(r))])
+    .sort(comparar)
     .map(([r]) => r);
 };
 
