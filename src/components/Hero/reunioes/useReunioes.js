@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { criarReuniao, ordenarReunioes, removerReuniao } from './reunioes.js';
+import { criarReuniao, editarReuniao, ordenarReunioes, removerReuniao } from './reunioes.js';
 import { carregarReunioes, salvarReunioes } from './reunioesRepo.js';
 
 // Estado das reuniões + persistência. Para novas ações (editar, cancelar...),
@@ -25,6 +25,16 @@ export function useReunioes() {
     [aplicar],
   );
 
+  // Valida contra a lista atual; se ok, troca a reunião e grava.
+  const editar = useCallback(
+    (id, dados) => {
+      const resultado = editarReuniao(lista, id, dados);
+      if (resultado.ok) aplicar((atual) => editarReuniao(atual, id, dados).reunioes ?? atual);
+      return resultado;
+    },
+    [lista, aplicar],
+  );
+
   const remover = useCallback(
     (id) => aplicar((atual) => removerReuniao(atual, id)),
     [aplicar],
@@ -32,5 +42,5 @@ export function useReunioes() {
 
   const reunioes = useMemo(() => ordenarReunioes(lista), [lista]);
 
-  return { reunioes, criar, remover };
+  return { reunioes, criar, editar, remover };
 }

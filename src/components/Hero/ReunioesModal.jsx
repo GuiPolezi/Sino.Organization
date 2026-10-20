@@ -12,7 +12,7 @@ import styles from './ReunioesModal.module.css';
 
 // Modal do setor "Reuniões": histórico das reuniões e formulário para agendar.
 export default function ReunioesModal({ onClose }) {
-  const { reunioes, criar, remover } = useReunioes();
+  const { reunioes, criar, editar, remover } = useReunioes();
   const agora = useAgora(reunioes);
   const [visao, setVisao] = useState('lista');
   // Filtro e página ficam aqui para sobreviver à ida ao formulário.
@@ -21,6 +21,8 @@ export default function ReunioesModal({ onClose }) {
   // Quantos cards cabem na tela; a lista mede e avisa (sem rolagem).
   const [porPagina, setPorPagina] = useState(POR_PAGINA);
   const [destaqueId, setDestaqueId] = useState(null);
+  // Reunião aberta no formulário para edição (null = criando uma nova).
+  const [editando, setEditando] = useState(null);
   const criarBotao = useRef(null);
   const visaoRef = useRef(null);
   const visaoInicial = useRef(visao);
@@ -52,19 +54,44 @@ export default function ReunioesModal({ onClose }) {
   const voltarParaLista = () => {
     voltouDoForm.current = true;
     setVisao('lista');
+    setEditando(null);
+  };
+
+  const abrirCriacao = () => {
+    setEditando(null);
+    setVisao('form');
+  };
+
+  const abrirEdicao = useCallback((reuniao) => {
+    setEditando(reuniao);
+    setVisao('form');
+  }, []);
+
+  // Volta à lista mostrando a reunião salva, destacada, na página dela.
+  // Nova: filtro "Todas". Editada: fica no filtro atual se ainda couber nele.
+  const mostrarSalva = (salva, listaNova) => {
+    const agoraSalvo = new Date();
+    let alvo = editando ? filtro : 'todas';
+    let lista = filtrarReunioes(listaNova, alvo, agoraSalvo);
+    if (!lista.some((r) => r.id === salva.id)) {
+      alvo = 'todas';
+      lista = filtrarReunioes(listaNova, alvo, agoraSalvo);
+    }
+    const indice = lista.findIndex((r) => r.id === salva.id);
+    setFiltro(alvo);
+    setPagina(indice < 0 ? 1 : Math.floor(indice / porPagina) + 1);
+    setDestaqueId(salva.id);
+    voltarParaLista();
   };
 
   const salvar = (dados) => {
-    const resultado = criar(dados);
-    if (resultado.ok) {
-      // Mostra a nova reunião: filtro "Todas", na página em que ela caiu.
-      const lista = filtrarReunioes([...reunioes, resultado.reuniao], 'todas', new Date());
-      const indice = lista.findIndex((r) => r.id === resultado.reuniao.id);
-      setFiltro('todas');
-      setPagina(indice < 0 ? 1 : Math.floor(indice / porPagina) + 1);
-      setDestaqueId(resultado.reuniao.id);
-      voltarParaLista();
+    if (editando) {
+      const resultado = editar(editando.id, dados);
+      if (resultado.ok) mostrarSalva(resultado.reuniao, resultado.reunioes);
+      return resultado;
     }
+    const resultado = criar(dados);
+    if (resultado.ok) mostrarSalva(resultado.reuniao, [...reunioes, resultado.reuniao]);
     return resultado;
   };
 
@@ -98,7 +125,7 @@ export default function ReunioesModal({ onClose }) {
         ref={criarBotao}
         type="button"
         className={styles.criar}
-        onClick={() => setVisao('form')}
+        onClick={abrirCriacao}
       >
         Criar
       </button>
@@ -118,7 +145,7 @@ export default function ReunioesModal({ onClose }) {
   // O título troca com um leve deslize entre as visões.
   const titulo = (
     <span key={visao} className={styles.tituloTroca}>
-      {visao === 'lista' ? 'Reuniões' : 'Criar Reunião'}
+      {visao === 'lista' ? 'Reuniões' : editando ? 'Editar Reunião' : 'Criar Reunião'}
     </span>
   );
 
@@ -144,10 +171,11 @@ export default function ReunioesModal({ onClose }) {
             onFiltro={escolherFiltro}
             onPagina={mudarPagina}
             onAjustarPagina={setPagina}
+            onEditar={abrirEdicao}
             onRemover={remover}
           />
         ) : (
-          <ReuniaoForm onSalvar={salvar} />
+          <ReuniaoForm key={editando?.id ?? 'nova'} inicial={editando} onSalvar={salvar} />
         )}
       </div>
     </GlassModal>

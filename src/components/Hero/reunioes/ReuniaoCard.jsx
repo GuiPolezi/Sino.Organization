@@ -26,8 +26,9 @@ function IconeModalidade({ digital }) {
   );
 }
 
-// Remoção discreta com confirmação inline (nunca window.confirm).
-function Remover({ titulo, onConfirmar }) {
+// Ações do card (aparecem no hover/foco): editar e remover. A remoção tem
+// confirmação inline (nunca window.confirm).
+function Acoes({ titulo, onEditar, onConfirmar }) {
   const [confirmando, setConfirmando] = useState(false);
   const naoBotao = useRef(null);
   const removerBotao = useRef(null);
@@ -76,6 +77,18 @@ function Remover({ titulo, onConfirmar }) {
   return (
     <div className={styles.acoes}>
       <button
+        type="button"
+        className={styles.editar}
+        aria-label={`Editar a reunião ${titulo}`}
+        onClick={onEditar}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16v4z" />
+          <path d="M13.5 6.5l4 4" />
+        </svg>
+        <span className={styles.acaoTexto}>Editar</span>
+      </button>
+      <button
         ref={removerBotao}
         type="button"
         className={styles.remover}
@@ -88,14 +101,14 @@ function Remover({ titulo, onConfirmar }) {
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
         </svg>
-        <span className={styles.removerTexto}>Remover</span>
+        <span className={styles.acaoTexto}>Remover</span>
       </button>
     </div>
   );
 }
 
 // Card de uma reunião do histórico (layout do design: info, membros, avatares, selo).
-export default function ReuniaoCard({ reuniao, agora, destaque = false, onRemover }) {
+export default function ReuniaoCard({ reuniao, agora, destaque = false, onEditar, onRemover }) {
   const tituloId = useId();
   const status = STATUS[statusDe(reuniao, agora)] ?? STATUS.encerrada;
   const { diaSemana, data, horario } = partesDataHora(reuniao);
@@ -160,7 +173,11 @@ export default function ReuniaoCard({ reuniao, agora, destaque = false, onRemove
         {status.rotulo}
       </span>
 
-      <Remover titulo={reuniao.titulo} onConfirmar={() => onRemover(reuniao.id)} />
+      <Acoes
+        titulo={reuniao.titulo}
+        onEditar={() => onEditar(reuniao)}
+        onConfirmar={() => onRemover(reuniao.id)}
+      />
     </article>
   );
 }

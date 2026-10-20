@@ -6,6 +6,7 @@ import {
   adicionarMembro,
   chaveMembro,
   criarReuniao,
+  editarReuniao,
   formatarDataHora,
   minDataHoraLocal,
   normalizarNome,
@@ -193,6 +194,44 @@ test('ordenarReunioes: próximas (mais perto no topo) e depois passadas (recente
   assert.deepEqual(proximas.map((r) => r.id), ['futura-perto', 'futura-longe']);
   assert.deepEqual(passadas.map((r) => r.id), ['passada-recente', 'passada-antiga']);
   assert.deepEqual(ordenarReunioes([], AGORA), []);
+});
+
+test('editarReuniao: troca campos, mantém id e criadaEm, não muta', () => {
+  const { reuniao } = criarReuniao(valido(), AGORA);
+  const lista = Object.freeze([reuniao]);
+  const depois = new Date(AGORA.getTime() + 60_000);
+  const r = editarReuniao(lista, reuniao.id, { ...valido(), titulo: ' Novo  título ', horaFim: '16:00' }, depois);
+  assert.equal(r.ok, true);
+  assert.equal(r.reuniao.id, reuniao.id);
+  assert.equal(r.reuniao.criadaEm, reuniao.criadaEm);
+  assert.equal(r.reuniao.titulo, 'Novo título');
+  assert.equal(r.reuniao.horaFim, '16:00');
+  assert.equal(r.reuniao.editadaEm, depois.toISOString());
+  assert.deepEqual(r.reunioes.map((x) => x.id), [reuniao.id]);
+  assert.equal(lista[0].titulo, 'Alinhamento semanal');
+});
+
+test('editarReuniao: reunião passada pode manter a data, mas não ir para outra passada', () => {
+  const { reuniao } = criarReuniao(valido(), AGORA); // 20/10 14:30
+  const muitoDepois = new Date('2026-10-25T10:00:00-03:00');
+  const mesmaData = editarReuniao([reuniao], reuniao.id, { ...valido(), titulo: 'Ata corrigida' }, muitoDepois);
+  assert.equal(mesmaData.ok, true);
+  const outraPassada = editarReuniao(
+    [reuniao],
+    reuniao.id,
+    { ...valido(), dataHora: '2026-10-21T14:30' },
+    muitoDepois,
+  );
+  assert.equal(outraPassada.ok, false);
+  assert.ok(outraPassada.erros.dataHora);
+});
+
+test('editarReuniao: id desconhecido e dados inválidos', () => {
+  const { reuniao } = criarReuniao(valido(), AGORA);
+  assert.equal(editarReuniao([reuniao], 'nao-existe', valido(), AGORA).ok, false);
+  const r = editarReuniao([reuniao], reuniao.id, { ...valido(), titulo: '  ', membros: [] }, AGORA);
+  assert.equal(r.ok, false);
+  assert.ok(r.erros.titulo && r.erros.membros);
 });
 
 test('removerReuniao não muta e remove só o id pedido', () => {

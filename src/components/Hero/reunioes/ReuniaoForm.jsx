@@ -25,6 +25,15 @@ function horarioPadrao(agora = new Date()) {
   return { data: amanha, inicio: '09:00', fim: '10:00' };
 }
 
+// Valores de uma reunião existente (edição); sem horaFim, 1 h depois.
+function valoresDe(reuniao) {
+  const [data, hora] = reuniao.dataHora.split('T');
+  const inicio = hora.slice(0, 5);
+  const [h, m] = inicio.split(':').map(Number);
+  const fimPadrao = h < 23 ? `${doisDigitos(h + 1)}:${doisDigitos(m)}` : '23:59';
+  return { data, inicio, fim: reuniao.horaFim || fimPadrao };
+}
+
 // Mensagem de erro ligada ao campo por aria-describedby.
 function Erro({ id, children }) {
   if (!children) return null;
@@ -35,16 +44,19 @@ function Erro({ id, children }) {
   );
 }
 
-// Formulário "Criar Reunião". `onSalvar(dados)` devolve o resultado de criar().
-export default function ReuniaoForm({ onSalvar }) {
-  const [padrao] = useState(horarioPadrao);
+// Formulário "Criar Reunião" / "Editar Reunião". Com `inicial` (uma reunião),
+// vem preenchido com ela. `onSalvar(dados)` devolve o resultado de criar/editar.
+export default function ReuniaoForm({ inicial = null, onSalvar }) {
+  const [padrao] = useState(() => (inicial ? valoresDe(inicial) : horarioPadrao()));
   const [hoje] = useState(() => paraDataHoraLocal(new Date()).slice(0, 10));
-  const [titulo, setTitulo] = useState('');
+  // Editando uma reunião passada: o calendário também aceita a data dela.
+  const minimo = inicial && padrao.data < hoje ? padrao.data : hoje;
+  const [titulo, setTitulo] = useState(inicial?.titulo ?? '');
   const [data, setData] = useState(padrao.data);
   const [inicio, setInicio] = useState(padrao.inicio);
   const [fim, setFim] = useState(padrao.fim);
-  const [modalidade, setModalidade] = useState(MODALIDADES.PRESENCIAL);
-  const [membros, setMembros] = useState([]);
+  const [modalidade, setModalidade] = useState(inicial?.modalidade ?? MODALIDADES.PRESENCIAL);
+  const [membros, setMembros] = useState(() => (inicial?.membros ?? []).map((m) => ({ ...m })));
   const [erros, setErros] = useState({});
   const tituloRef = useRef(null);
   const formRef = useRef(null);
@@ -137,7 +149,8 @@ export default function ReuniaoForm({ onSalvar }) {
             </span>
             <CalendarioMini
               valor={data}
-              min={hoje}
+              min={minimo}
+              hoje={hoje}
               rotuloId={ids.data}
               invalido={Boolean(erros.dataHora)}
               descricao={erros.dataHora ? ids.erroData : undefined}

@@ -50,6 +50,7 @@ export default function ReunioesLista({
   onPagina,
   onAjustarPagina,
   onPorPagina,
+  onEditar,
   onRemover,
 }) {
   const raiz = useRef(null);
@@ -321,6 +322,7 @@ export default function ReunioesLista({
                   reuniao={reuniao}
                   agora={agora}
                   destaque={reuniao.id === destaqueId}
+                  onEditar={onEditar}
                   onRemover={onRemover}
                 />
               </li>

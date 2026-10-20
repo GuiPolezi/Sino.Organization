@@ -35,12 +35,13 @@ function somarDias(iso, n) {
  *
  * @param {object} props
  * @param {string} props.valor 'YYYY-MM-DD' ou ''
- * @param {string} props.min 'YYYY-MM-DD' (hoje, em Brasília)
+ * @param {string} props.min 'YYYY-MM-DD' (primeiro dia escolhível)
+ * @param {string} [props.hoje] 'YYYY-MM-DD' marcado com o anel (padrão: min)
  * @param {(iso: string) => void} props.onChange
  * @param {boolean} [props.invalido]
  * @param {string} [props.descricao] id da mensagem de erro
  */
-export default function CalendarioMini({ valor, min, onChange, invalido, descricao, rotuloId }) {
+export default function CalendarioMini({ valor, min, hoje = min, onChange, invalido, descricao, rotuloId }) {
   const inicial = partes(valor || min);
   const [visto, setVisto] = useState({ ano: inicial.ano, mes: inicial.mes });
   const [focado, setFocado] = useState(valor || min);
@@ -182,9 +183,9 @@ export default function CalendarioMini({ valor, min, onChange, invalido, descric
               type="button"
               className={styles.dia}
               data-dia={iso}
-              data-hoje={iso === min || undefined}
+              data-hoje={iso === hoje || undefined}
               aria-pressed={escolhido}
-              aria-label={`${SEMANA_EXTENSO[diaDaSemana(ano, mes, dia)]}, ${dia} de ${MESES_EXTENSO[mes]} de ${ano}${iso === min ? ' (hoje)' : ''}`}
+              aria-label={`${SEMANA_EXTENSO[diaDaSemana(ano, mes, dia)]}, ${dia} de ${MESES_EXTENSO[mes]} de ${ano}${iso === hoje ? ' (hoje)' : ''}`}
               disabled={passado}
               tabIndex={iso === tabulavel ? 0 : -1}
               onClick={() => {

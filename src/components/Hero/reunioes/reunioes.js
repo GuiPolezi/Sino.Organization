@@ -144,7 +144,9 @@ const normalizarMembros = (membros) =>
       : { id: m?.id ?? gerarId(), nome: normalizarNome(m?.nome) },
   );
 
-export const validarReuniao = (dados, agora = new Date()) => {
+// `original` (edição): se a data/hora não mudou, ela pode estar no passado
+// (dá para corrigir título ou membros de uma reunião que já aconteceu).
+export const validarReuniao = (dados, agora = new Date(), { original } = {}) => {
   const erros = {};
   const { titulo, dataHora, horaFim, modalidade, membros } = dados ?? {};
 
@@ -158,7 +160,8 @@ export const validarReuniao = (dados, agora = new Date()) => {
   if (!dataHora) erros.dataHora = 'Informe a data e a hora.';
   else if (!inicio) erros.dataHora = 'Data ou hora inválida.';
   else if (inicio.getTime() <= agora.getTime()) {
-    erros.dataHora = 'Escolha uma data e hora no futuro.';
+    const manteve = original && paraDate(original.dataHora)?.getTime() === inicio.getTime();
+    if (!manteve) erros.dataHora = 'Escolha uma data e hora no futuro.';
   }
 
   // Término no mesmo dia, depois do início.
@@ -205,6 +208,28 @@ export const criarReuniao = (dados, agora = new Date()) => {
       criadaEm: agora.toISOString(),
     },
   };
+};
+
+// Edita a reunião `id`: mesmas regras da criação (com `original`), mantém
+// id e criadaEm e marca editadaEm. Devolve a lista nova junto.
+export const editarReuniao = (reunioes, id, dados, agora = new Date()) => {
+  const lista = Array.isArray(reunioes) ? reunioes : [];
+  const original = lista.find((r) => r.id === id);
+  if (!original) return { ok: false, erros: { geral: 'Reunião não encontrada.' } };
+
+  const erros = validarReuniao(dados, agora, { original });
+  if (Object.keys(erros).length > 0) return { ok: false, erros };
+
+  const reuniao = {
+    ...original,
+    titulo: normalizarNome(dados.titulo),
+    dataHora: paraDataHoraLocal(paraDate(dados.dataHora)),
+    horaFim: String(dados.horaFim).slice(0, 5),
+    modalidade: dados.modalidade,
+    membros: normalizarMembros(dados.membros),
+    editadaEm: agora.toISOString(),
+  };
+  return { ok: true, reuniao, reunioes: lista.map((r) => (r.id === id ? reuniao : r)) };
 };
 
 export const removerReuniao = (reunioes, id) =>
