@@ -179,6 +179,107 @@ export default function ReunioesLista({
     trocar(() => onPagina(delta), delta > 0 ? 'seguinte' : 'anterior');
   };
 
+  // O que o gesto de rolar precisa ler sem recriar os ouvintes.
+  const gesto = useRef({});
+  gesto.current.pagina = pag.pagina;
+  gesto.current.totalPaginas = pag.totalPaginas;
+  gesto.current.mudarPagina = mudarPagina;
+
+  /*
+   * Rolar (roda do mouse, touchpad ou dedo) troca de página. Um gesto troca
+   * uma página só: depois de trocar, espera o gesto parar (inércia do
+   * touchpad incluída) antes de aceitar outro. Se a lista estiver rolando por
+   * dentro (reserva de telas muito baixas), só troca ao chegar na ponta.
+   */
+  useEffect(() => {
+    const area = raiz.current;
+    const caixa = rolagem.current;
+    if (!area || !caixa) return undefined;
+
+    const LIMIAR_RODA = 40; // px acumulados para valer como intenção
+    const LIMIAR_DEDO = 50; // px de arrasto vertical
+    const PAUSA = 220; // ms sem eventos = fim do gesto
+    const MINIMO = 650; // ms entre trocas (duração da animação)
+    let acumulado = 0;
+    let travadoAte = 0;
+    let fimDoGesto = null;
+    // Depois de uma troca, só libera quando o gesto atual parar.
+    let esperandoFim = false;
+    let dedo = null;
+
+    const naPonta = (direcao) => {
+      const sobra = caixa.scrollHeight - caixa.clientHeight;
+      if (sobra <= 1 || getComputedStyle(caixa).overflowY === 'visible') return true;
+      return direcao > 0 ? caixa.scrollTop >= sobra - 1 : caixa.scrollTop <= 0;
+    };
+
+    // Troca se houver página nessa direção; devolve se trocou.
+    const virar = (direcao) => {
+      const { pagina, totalPaginas, mudarPagina: mudar } = gesto.current;
+      if (direcao > 0 ? pagina >= totalPaginas : pagina <= 1) return false;
+      mudar(direcao);
+      return true;
+    };
+
+    const travar = () => {
+      travadoAte = performance.now() + MINIMO;
+      acumulado = 0;
+      esperandoFim = true;
+    };
+
+    const onWheel = (event) => {
+      // Ctrl + roda é zoom do navegador; rolagem lateral não conta.
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+      const direcao = Math.sign(delta);
+      if (!direcao || !naPonta(direcao)) return;
+      event.preventDefault();
+
+      // Enquanto o gesto continua (ou a animação roda), nada de nova troca.
+      clearTimeout(fimDoGesto);
+      fimDoGesto = setTimeout(() => {
+        esperandoFim = false;
+        acumulado = 0;
+      }, PAUSA);
+      if (esperandoFim || performance.now() < travadoAte) return;
+
+      if (Math.sign(acumulado) !== direcao) acumulado = 0;
+      acumulado += delta;
+      if (Math.abs(acumulado) < LIMIAR_RODA) return;
+
+      if (virar(direcao)) travar();
+      else acumulado = 0;
+    };
+
+    const onTouchStart = (event) => {
+      const toque = event.touches[0];
+      dedo = event.touches.length === 1 ? { x: toque.clientX, y: toque.clientY } : null;
+    };
+
+    const onTouchEnd = (event) => {
+      if (!dedo) return;
+      const toque = event.changedTouches[0];
+      const dy = dedo.y - toque.clientY;
+      const dx = dedo.x - toque.clientX;
+      dedo = null;
+      // Só arrasto vertical; a barra de filtros rola na horizontal.
+      if (Math.abs(dy) < LIMIAR_DEDO || Math.abs(dx) > Math.abs(dy)) return;
+      const direcao = Math.sign(dy);
+      if (!naPonta(direcao) || performance.now() < travadoAte) return;
+      if (virar(direcao)) travar();
+    };
+
+    area.addEventListener('wheel', onWheel, { passive: false });
+    area.addEventListener('touchstart', onTouchStart, { passive: true });
+    area.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      clearTimeout(fimDoGesto);
+      area.removeEventListener('wheel', onWheel);
+      area.removeEventListener('touchstart', onTouchStart);
+      area.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []);
+
   return (
     <div ref={raiz} className={styles.raiz}>
       <div className={styles.barra}>
