@@ -1,0 +1,30 @@
+/* Selo do status da reunião, logo abaixo do subtítulo (mesmas cores do card da lista). */
+.selo {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.22rem 0.75rem;
+  border-radius: 999px;
+  font-size: clamp(0.75rem, 1.2vw, 0.85rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-white) 45%, transparent),
+    0 4px 10px -3px rgb(40 44 22 / 0.3);
+}
+
+.em-breve {
+  background: #f4a3a0;
+  color: #3a1d1b;
+}
+
+.hoje {
+  background: #5f6b37;
+  color: var(--color-white);
+}
+
+.encerrada {
+  background: #9e9e9a;
+  color: var(--color-white);
+}

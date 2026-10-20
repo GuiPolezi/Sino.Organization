@@ -1,5 +1,7 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { STATUS, statusDe } from '../../components/Hero/reunioes/periodos.js';
 import { CHAVE_STORAGE, carregarReunioes } from '../../components/Hero/reunioes/reunioesRepo.js';
+import { useAgora } from '../../components/Hero/reunioes/useAgora.js';
 import { APARENCIAS_DEV } from '../Desenvolvimento/aparencias.js';
 import NotFound from '../NotFound/index.jsx';
 import { registrarAparencias } from '../Suporte/boneco/aparencia.js';
@@ -12,6 +14,7 @@ import CenarioReuniao, { LuzesReuniao } from './cena/CenarioReuniao.jsx';
 import { CENA_REUNIAO, RITMO_REUNIAO } from './cena/config.js';
 import QuadroReuniao from './cena/QuadroReuniao.jsx';
 import { bonecosDa, chaveDosMembros } from './membros.js';
+import styles from './Reuniao.module.css';
 import { subtituloDa, useReuniao } from './store.js';
 
 /*
@@ -72,6 +75,9 @@ function useReuniaoSalva(id) {
 export default function Reuniao({ id }) {
   const reuniao = useReuniaoSalva(id);
   const membros = chaveDosMembros(reuniao);
+  // Hoje, em breve ou encerrada; muda sozinho no início, no fim e à meia-noite.
+  const lista = useMemo(() => (reuniao ? [reuniao] : []), [reuniao]);
+  const agora = useAgora(lista);
 
   // Antes do primeiro frame: o quadro e o céu já nascem com a reunião.
   useLayoutEffect(() => {
@@ -92,11 +98,19 @@ export default function Reuniao({ id }) {
 
   if (!reuniao) return <NotFound />;
 
+  const status = STATUS[statusDe(reuniao, agora)] ?? STATUS.encerrada;
+
   return (
     <PaginaEquipe
       titulo={reuniao.titulo}
       tituloCompacto
       subtitulo={subtituloDa(reuniao)}
+      selo={
+        <p className={`${styles.selo} ${styles[status.id]}`}>
+          <span className="sr-only">Status: </span>
+          {status.rotulo}
+        </p>
+      }
       rotuloElenco="Membros da reunião"
       buscarEquipe={buscarMembros}
       Estacoes={null}
