@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MEDIA } from '../../../utils/media.js';
@@ -67,6 +67,7 @@ function Cena({ Estacoes, Quadro, Cenario = CenarioPadrao, Luzes = LuzesPadrao, 
   const tecnicos = useEquipe((s) => s.tecnicos);
   const selecionar = useEquipe((s) => s.selecionar);
   const [area, setArea] = useState(() => ({ ...AREA }));
+  const opcoesGl = useMemo(() => (gl ? { ...GL, ...gl } : GL), [gl]);
   useMovimentoReduzido();
 
   return (
@@ -74,7 +75,7 @@ function Cena({ Estacoes, Quadro, Cenario = CenarioPadrao, Luzes = LuzesPadrao, 
       className={styles.cena}
       dpr={[1, 2]}
       camera={{ position: [0, 6.2 * CENA.recuo, 14 * CENA.recuo], fov: 32, near: 0.1, far: 100 }}
-      gl={gl ? { ...GL, ...gl } : GL}
+      gl={opcoesGl}
       onPointerMissed={() => selecionar(null)}
     >
       <AreaResponsiva onChange={setArea} />

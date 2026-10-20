@@ -348,8 +348,8 @@ function andar(s, dt) {
 
   const parou = encurralado(s, dt);
   if (s.indo) {
-    // Prazo vencido, encurralado ou chegada coberta: desiste da reserva.
-    if (s.timer <= 0 || parou || !chegadaAlcancavel(s.estacao)) return desistir(s);
+    // Prazo vencido, encurralado, chegada coberta ou a estação saiu do cenário: desiste da reserva.
+    if (s.timer <= 0 || parou || !aindaEDono(s) || !chegadaAlcancavel(s.estacao)) return desistir(s);
   } else if (s.timer <= 0) {
     s.estado = 'parado';
     s.timer = rand(0.8, 3.2);

@@ -20,7 +20,9 @@ export default function CameraRig() {
     const aspecto = size.width / size.height;
     const estreito = size.width < LARGURA_ESTREITA;
     // Afasta a câmera em telas altas, para a área inteira continuar visível; um tapete maior (CENA.recuo) afasta mais.
-    const recuo = CENA.recuo * (aspecto < 1 ? clamp(0.95 / aspecto, 1, 2) : clamp(1.55 / aspecto, 1, 2.1));
+    const recuo =
+      CENA.recuo *
+      (aspecto < 1 ? clamp(CENA.encaixeRetrato / aspecto, 1, CENA.recuoMaxRetrato) : clamp(1.55 / aspecto, 1, 2.1));
     const { selecionado, painel } = useEquipe.getState();
     const pos = selecionado ? posicoes.get(selecionado) : null;
 

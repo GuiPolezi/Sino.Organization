@@ -53,6 +53,9 @@ export const CENA = {
   areaRetrato: { rx: 3.3, rz: 4.4 },
   margemTapete: 1.7,
   recuo: 1,
+  // Em tela retrato a câmera recua encaixeRetrato / aspecto, até recuoMaxRetrato (cena/CameraRig.jsx).
+  encaixeRetrato: 0.95,
+  recuoMaxRetrato: 2,
 };
 
 // Área por onde os bonecos andam (elipse): a de CENA na forma da tela (cena/Cena.jsx).

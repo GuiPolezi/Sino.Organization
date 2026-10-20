@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ESTACOES, OBSTACULOS, dentroDaArea, reservarEstacao, resetarEstacoes } from '../../Suporte/boneco/estacoes.js';
+import { ESTACOES, OBSTACULOS, dentroDaArea, reservarEstacao, resetarEstacoes, rotaAte } from '../../Suporte/boneco/estacoes.js';
 import { BASES, configurarLugares } from './lugares.js';
 import { montarLugares } from './planta.js';
 import { TEMAS, horaDe, temaDaHora, temaDaReuniao } from './temaHorario.js';
@@ -97,4 +97,41 @@ test('pufe: senta reto, mais baixo, olhando para a mesa', () => {
   assert.ok(p1.elevacao < BASES.get('r1').elevacao);
   // A chegada fica entre o pufe e a mesa.
   assert.ok(Math.hypot(p1.aprox.x, p1.aprox.z + 0.5) < Math.hypot(p1.x, p1.z + 0.5));
+});
+
+// Segue a rota (rotaAte, a mesma dos bonecos) de um ponto até a chegada do lugar e
+// confere que nenhum trecho sai da área ou atravessa a mobília fixa (mesa, cavalete,
+// luminária, vidro). Cadeiras e pufes no caminho, os bonecos contornam desviando.
+function rotaLivre(inicio, estacao) {
+  const alvo = estacao.aprox;
+  let pos = inicio;
+  for (let passo = 0; passo < 6; passo++) {
+    const { ponto } = rotaAte(pos, alvo, AREA_REUNIAO);
+    for (let k = 1; k <= 40; k++) {
+      const p = { x: pos.x + ((ponto.x - pos.x) * k) / 40, z: pos.z + ((ponto.z - pos.z) * k) / 40 };
+      if (!dentroDaArea(AREA_REUNIAO, p, -0.05)) return `saiu da área em (${p.x.toFixed(2)}, ${p.z.toFixed(2)})`;
+      for (const o of OBSTACULOS) {
+        if (o.r <= 0 || o.estacao !== 'cenario-reuniao') continue;
+        if (Math.hypot(p.x - o.x, p.z - o.z) < o.r - 0.05) {
+          return `passa por dentro de ${o.estacao} em (${p.x.toFixed(2)}, ${p.z.toFixed(2)})`;
+        }
+      }
+    }
+    if (ponto === alvo) return null;
+    pos = ponto;
+  }
+  return 'não chegou em 6 trechos';
+}
+
+test('dá para chegar a todo lugar ativo vindo da frente da sala', () => {
+  for (const n of [2, 4, 6, 12]) {
+    configurarLugares(n);
+    for (const estacao of ESTACOES) {
+      for (const inicio of [{ x: -3, z: 2.5 }, { x: 0, z: 3 }, { x: 3, z: 2.5 }]) {
+        const erro = rotaLivre(inicio, estacao);
+        assert.equal(erro, null, `${n} membros, ${estacao.id} vindo de (${inicio.x}, ${inicio.z}): ${erro}`);
+      }
+    }
+  }
+  configurarLugares(0);
 });

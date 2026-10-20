@@ -82,11 +82,32 @@ export const LUGARES_MESA = {
   r6: { id: 'r6', x: MX + 0.6, z: MZ + ML / 2, rot: 0 }, // frente, direita
 };
 
-// ── Quadro com o título (cavalete), de frente para a câmera da visão geral ──
-export const QUADRO_REUNIAO = { x: 2.5, z: -3.0, rot: Math.atan2(0 - 2.5, 14 - -3.0) };
+/*
+ * Quadro (cavalete) e luminária: no fundo, perto do vidro. Ficam ~0,5 m mais
+ * para trás que no esboço (z −3,0 e −3,25): ali eles fechavam o corredor atrás da
+ * mesa, e ninguém chegava às cadeiras do fundo (r1 e r2) com as cabeceiras
+ * ocupadas (simulação dos bonecos: 0 vezes em 10 min com 4 membros).
+ */
+const xQuadro = 2.5;
+const zQuadro = -3.55;
+// De frente para a câmera da visão geral (em z = 14).
+export const QUADRO_REUNIAO = { x: xQuadro, z: zQuadro, rot: Math.atan2(0 - xQuadro, 14 - zQuadro) };
 
 // ── Luminária de pé (acende no entardecer e à noite) ──
-export const LUMINARIA = { x: -2.6, z: -3.25 };
+export const LUMINARIA = { x: -2.6, z: -3.75 };
+
+// Pegada do cavalete no espaço dele (+z à frente): as três pernas e o meio, sob a lousa.
+const PEGADA_QUADRO = [
+  { x: -0.9, z: 0.45, r: 0.4 },
+  { x: 0.9, z: 0.45, r: 0.4 },
+  { x: 0, z: -0.85, r: 0.4 },
+  { x: 0, z: 0, r: 0.7 },
+];
+const noQuadro = ({ x, z, r }) => {
+  const c = Math.cos(QUADRO_REUNIAO.rot);
+  const s = Math.sin(QUADRO_REUNIAO.rot);
+  return { x: QUADRO_REUNIAO.x + x * c + z * s, z: QUADRO_REUNIAO.z - x * s + z * c, r };
+};
 
 // ── Pufes, na ordem em que aparecem. forma: 'baixo' (redondo) ou 'alto' (com encosto) ──
 export const POLTRONAS = [
@@ -134,9 +155,9 @@ export const OBSTACULOS_FIXOS = [
   // tampo da mesa
   { x: MX - 0.6, z: MZ, r: 1.0 },
   { x: MX + 0.6, z: MZ, r: 1.0 },
-  // cavalete e luminária
-  { x: QUADRO_REUNIAO.x, z: QUADRO_REUNIAO.z, r: 1.15 },
-  { x: LUMINARIA.x, z: LUMINARIA.z, r: 0.75 },
+  // cavalete e luminária (a base tem 0,25 m de raio; r soma o corpo)
+  ...PEGADA_QUADRO.map(noQuadro),
+  { x: LUMINARIA.x, z: LUMINARIA.z, r: 0.55 },
   // parede de vidro: círculos ao longo de cada trecho, para ninguém encostar nele
   ...PAINEIS.flatMap((p) =>
     [-0.35, 0, 0.35].map((f) => ({

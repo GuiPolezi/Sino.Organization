@@ -7,9 +7,9 @@ import { configurarRitmo } from '../Suporte/boneco/useComportamento.js';
 import PaginaEquipe from '../Suporte/PaginaEquipe.jsx';
 import { removerQuadro } from '../Suporte/quadro/posicao.js';
 import { configurarCena, useEquipe } from '../Suporte/store.js';
+import { configurarLugares } from './cena/lugares.js';
 import CenarioReuniao, { LuzesReuniao } from './cena/CenarioReuniao.jsx';
 import { CENA_REUNIAO, RITMO_REUNIAO } from './cena/config.js';
-import './cena/lugares.js';
 import QuadroReuniao from './cena/QuadroReuniao.jsx';
 import { bonecosDa, chaveDosMembros } from './membros.js';
 import { subtituloDa, useReuniao } from './store.js';
@@ -31,10 +31,18 @@ registrarAparencias(APARENCIAS_DEV);
 // Estável (fora do componente): a cena é memoizada. A paisagem precisa do stencil.
 const CENA = { Cenario: CenarioReuniao, Luzes: LuzesReuniao, gl: { stencil: true } };
 
-const buscarReuniao = (id) => carregarReunioes().find((reuniao) => reuniao.id === id) ?? null;
+// O caminho chega em minúsculas (App.jsx): o id salvo é comparado do mesmo jeito.
+const buscarReuniao = (id) => carregarReunioes().find((reuniao) => reuniao.id.toLowerCase() === id) ?? null;
 
-// Os bonecos de quem está na reunião aberta.
-const buscarMembros = async () => bonecosDa(useReuniao.getState().reuniao);
+// Os bonecos de quem está na reunião. Os lugares são ativados antes de eles nascerem:
+// cada boneco sorteia onde aparece longe das cadeiras e pufes que já estão lá.
+function bonecosComLugares(reuniao) {
+  const bonecos = bonecosDa(reuniao);
+  configurarLugares(bonecos.length);
+  return bonecos;
+}
+
+const buscarMembros = async () => bonecosComLugares(useReuniao.getState().reuniao);
 
 /*
  * A reunião salva neste navegador. Editada em outra aba (a home, com a tela de
@@ -42,7 +50,12 @@ const buscarMembros = async () => bonecosDa(useReuniao.getState().reuniao);
  * saem, o título e o horário mudam na hora.
  */
 function useReuniaoSalva(id) {
-  const [reuniao, setReuniao] = useState(() => buscarReuniao(id));
+  // Já na primeira leitura vai para a store: o céu nasce no período certo, sem pintar o de dia antes.
+  const [reuniao, setReuniao] = useState(() => {
+    const salva = buscarReuniao(id);
+    useReuniao.getState().setReuniao(salva);
+    return salva;
+  });
 
   useEffect(() => {
     const aoMudar = (evento) => {
@@ -65,9 +78,14 @@ export default function Reuniao({ id }) {
     useReuniao.getState().setReuniao(reuniao);
   }, [reuniao]);
 
-  // Mudou quem está na reunião: os bonecos novos entram e os que saíram somem.
+  // Mudou quem está na reunião: os bonecos novos entram e os que saíram somem
+  // (e o card de quem saiu fecha, para não reabrir sozinho se ele voltar).
   useEffect(() => {
-    if (reuniao) useEquipe.getState().setTecnicos(bonecosDa(reuniao));
+    if (!reuniao) return;
+    const bonecos = bonecosComLugares(reuniao);
+    const { selecionado, selecionar, setTecnicos } = useEquipe.getState();
+    if (selecionado && !bonecos.some(({ id: outro }) => outro === selecionado)) selecionar(null);
+    setTecnicos(bonecos);
     // Só a lista de membros importa aqui (não o título nem o horário).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membros]);
