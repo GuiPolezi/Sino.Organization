@@ -4,9 +4,9 @@ import { STATUS, partesDataHora, statusDe } from './periodos.js';
 import MembrosAvatares from './MembrosAvatares.jsx';
 import styles from './ReuniaoCard.module.css';
 
-// TODO: apontar para a página da reunião quando ela existir. Sem destino
-// (null), o link fica visível mas não navega.
-const linkDaReuniao = () => null;
+// Página do cenário da reunião (pages/Reuniao). Sem destino (null), o link
+// fica visível mas não navega.
+const linkDaReuniao = (reuniao) => (reuniao?.id ? `/reunioes/${encodeURIComponent(reuniao.id)}` : null);
 
 function IconeModalidade({ digital }) {
   return (

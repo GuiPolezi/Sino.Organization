@@ -1,39 +1,19 @@
 import { useState } from 'react';
-import devTeam from '../../../data/dev-team.json';
-import team from '../../../data/team.json';
 import { useRetratoReuniao } from './RetratosReunioes.jsx';
-import { chaveMembro } from './reunioes.js';
+import { identificar, iniciais } from './membrosEquipe.js';
 import styles from './MembrosAvatares.module.css';
+
+export { EQUIPE, identificar, iniciais } from './membrosEquipe.js';
 
 // Lado do avatar em px (o CSS usa --avatar-tamanho; ≤ 480 px, --avatar-tamanho-compacto).
 export const tamanhos = Object.freeze({ padrao: 50, compacto: 36 });
 
 const COLUNAS = 3;
 
-// Quem é da equipe (suporte ou desenvolvimento), pela chave do nome.
-export const EQUIPE = new Map(
-  [...team.team, ...devTeam.team].map((pessoa) => [chaveMembro(pessoa.name), pessoa]),
-);
-
 function hash(texto) {
   let h = 2166136261;
   for (let i = 0; i < texto.length; i++) h = Math.imul(h ^ texto.charCodeAt(i), 16777619);
   return h >>> 0;
-}
-
-// Membro da reunião → id do boneco (o da equipe, se o nome bater) e cargo.
-export function identificar(membro) {
-  const pessoa = EQUIPE.get(chaveMembro(membro.nome));
-  return pessoa ? { id: pessoa.id, cargo: pessoa.role } : { id: membro.id, cargo: null };
-}
-
-// "Ana Maria Souza" → "AS"; "Bia" → "B".
-export function iniciais(nome) {
-  const partes = String(nome ?? '').trim().split(/\s+/).filter(Boolean);
-  if (!partes.length) return '?';
-  const primeira = partes[0][0];
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
-  return (primeira + ultima).toUpperCase();
 }
 
 // Tom discreto de fundo, sempre o mesmo para cada id.

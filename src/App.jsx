@@ -19,6 +19,10 @@ const NotFound = lazy(() => import('./pages/NotFound/index.jsx'));
 const CLIENTE_LICENCA = /^\/licencas\/([a-z0-9-]+)$/;
 const ClienteLicenca = lazy(() => import('./pages/Licencas/Cliente.jsx'));
 
+// Cenário de uma reunião (a tela de Reuniões da home): /reunioes/<id>.
+const REUNIAO = /^\/reunioes\/([a-z0-9-]+)$/;
+const Reuniao = lazy(() => import('./pages/Reuniao/index.jsx'));
+
 const HOME_PATHS = ['', '/index.html'];
 
 // "/suporte/" e "/Suporte" valem como "/suporte"; "/" vira "".
@@ -40,6 +44,15 @@ function Home() {
 export default function App() {
   const path = currentPath();
   if (HOME_PATHS.includes(path)) return <Home />;
+
+  const reuniao = path.match(REUNIAO);
+  if (reuniao) {
+    return (
+      <Suspense fallback={<p className="sr-only">Carregando…</p>}>
+        <Reuniao id={reuniao[1]} />
+      </Suspense>
+    );
+  }
 
   const cliente = path.match(CLIENTE_LICENCA);
   if (cliente) {
