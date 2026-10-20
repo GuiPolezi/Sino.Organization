@@ -95,6 +95,7 @@ export default function Reuniao({ id }) {
   return (
     <PaginaEquipe
       titulo={reuniao.titulo}
+      tituloCompacto
       subtitulo={subtituloDa(reuniao)}
       rotuloElenco="Membros da reunião"
       buscarEquipe={buscarMembros}

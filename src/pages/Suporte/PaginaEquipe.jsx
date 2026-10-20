@@ -77,6 +77,7 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  *
  * @param {object} props
  * @param {string} props.titulo
+ * @param {boolean} [props.tituloCompacto] título menor, para frases (o de uma reunião)
  * @param {string} props.subtitulo
  * @param {string} props.rotuloElenco nome da lista de pessoas para leitores de tela
  * @param {() => Promise<import('./tipos.js').Tecnico[]>} props.buscarEquipe
@@ -93,6 +94,7 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  */
 export default function PaginaEquipe({
   titulo,
+  tituloCompacto = false,
   subtitulo,
   rotuloElenco,
   buscarEquipe,
@@ -145,7 +147,7 @@ export default function PaginaEquipe({
         <a className={styles.voltar} href="/">
           ← sino.org
         </a>
-        <h1 className={styles.titulo}>{titulo}</h1>
+        <h1 className={tituloCompacto ? `${styles.titulo} ${styles.tituloCompacto}` : styles.titulo}>{titulo}</h1>
         <p className={styles.subtitulo}>{subtitulo}</p>
         {erro && (
           <p className={styles.aviso} role="alert">
