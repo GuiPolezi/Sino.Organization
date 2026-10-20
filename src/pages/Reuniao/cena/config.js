@@ -3,10 +3,10 @@
  * Suporte/boneco/useComportamento.js). Só dados: a página aplica antes de a cena nascer.
  */
 
-// Área por onde os bonecos andam: dentro do tapete de 14 × 10 m, antes da parede de vidro
-// (os círculos dela começam a 4,35 m do centro). Funda o bastante para o corredor atrás da
-// mesa caber uma pessoa. A sala é fixa: em retrato vale a mesma área (a câmera recua).
-export const AREA_REUNIAO = { rx: 6.2, rz: 4.1 };
+// Área por onde os bonecos andam: quase o tapete inteiro (14 × 10 m), a ~0,5 m da borda.
+// No fundo ela passa um pouco do vidro: quem segura ali são os círculos da parede
+// (começam a 4,35 m do centro). A sala é fixa: em retrato vale a mesma área (a câmera recua).
+export const AREA_REUNIAO = { rx: 6.5, rz: 4.5 };
 
 export const CENA_REUNIAO = {
   areaPaisagem: AREA_REUNIAO,
@@ -25,4 +25,6 @@ export const RITMO_REUNIAO = {
   duracao: [30, 70],
   descanso: [3, 8],
   inicial: [0.3, 4],
+  // Até 12 lugares em volta da mesa: com 1 m, quase todo o chão perto dela ficava proibido.
+  longeDaChegada: 0.55,
 };

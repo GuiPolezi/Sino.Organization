@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ESTACOES, OBSTACULOS, dentroDaArea, reservarEstacao, resetarEstacoes, rotaAte } from '../../Suporte/boneco/estacoes.js';
+import { ESTACOES, OBSTACULOS, dentroDaArea, foraDosBlocos, reservarEstacao, resetarEstacoes, rotaAte } from '../../Suporte/boneco/estacoes.js';
 import { BASES, configurarLugares } from './lugares.js';
 import { montarLugares } from './planta.js';
 import { TEMAS, horaDe, temaDaHora, temaDaReuniao } from './temaHorario.js';
@@ -132,6 +132,16 @@ test('dá para chegar a todo lugar ativo vindo da frente da sala', () => {
         assert.equal(erro, null, `${n} membros, ${estacao.id} vindo de (${inicio.x}, ${inicio.z}): ${erro}`);
       }
     }
+  }
+  configurarLugares(0);
+});
+
+test('os pufes não fecham o chão em volta deles (sem retângulo de contorno)', () => {
+  configurarLugares(12);
+  // Entre os pufes de cada lado e entre eles e a mesa: chão de passagem.
+  for (const p of [{ x: -4.3, z: -0.45 }, { x: -3.4, z: -0.5 }, { x: 4.25, z: 0.5 }, { x: 3.4, z: 0.5 }]) {
+    assert.ok(foraDosBlocos(p), `(${p.x}, ${p.z}) virou bloco`);
+    assert.ok(OBSTACULOS.every((o) => o.r <= 0 || Math.hypot(p.x - o.x, p.z - o.z) > o.r), `(${p.x}, ${p.z}) dentro de um móvel`);
   }
   configurarLugares(0);
 });

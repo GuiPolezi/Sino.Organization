@@ -14,6 +14,7 @@ import { LUGARES_MESA, MESA, OBSTACULOS_FIXOS, POLTRONAS, montarLugares } from '
 const ELEVACAO = { cadeira: 0.17, poltrona: 0.1 };
 // Do centro do pufe até onde o boneco chega andando, do lado da mesa.
 const CHEGADA_PUFE = 1.15;
+const RAIO_PUFE = 0.75;
 
 const cadeira = (lugar) => ({
   ...lugar,
@@ -42,11 +43,13 @@ const pufe = (p) => {
     tipo: 'poltrona',
     elevacao: ELEVACAO.poltrona,
     trajetoDireto: true,
+    // Redondo e solto: desviam dele como do quadro, sem retângulo de contorno.
+    semBloco: true,
     assento: { x: p.x, z: p.z },
     aprox: { x: p.x + ux * CHEGADA_PUFE, z: p.z + uz * CHEGADA_PUFE },
     yaw: Math.atan2(ux, uz),
-    // Raio do pufe (0,58 m) mais o corpo. Com 0,95 a chegada do p3 caía dentro do p2.
-    obstaculos: [{ x: p.x, z: p.z, r: 0.85 }],
+    // Raio do pufe (0,58 m) mais metade do corpo.
+    obstaculos: [{ x: p.x, z: p.z, r: RAIO_PUFE }],
   };
 };
 

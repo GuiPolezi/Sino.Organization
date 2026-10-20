@@ -42,6 +42,9 @@ export const RITMO = {
   duracao: [9, 18],
   descanso: [12, 28],
   inicial: [3, 16],
+  // Passeio: não para a menos disto (m) do ponto de chegada de uma estação, para não
+  // atrapalhar quem vem sentar. Numa sala com muitos lugares juntos, menos.
+  longeDaChegada: 1.0,
 };
 
 /** @param {Partial<typeof RITMO>} config */
@@ -68,8 +71,6 @@ const LIMIAR_LADO = 0.25;
 // Janela (s) em que o avanço é medido; abaixo de PROGRESSO_MINIMO ele está encurralado.
 const JANELA_PROGRESSO = 0.6;
 const PROGRESSO_MINIMO = 0.1;
-// Passeio: rejeita pontos a menos disto de um ponto de chegada de estação.
-const LONGE_DO_APROX = 1.0;
 // Velocidade real abaixo da qual a pose é a de parado, mesmo no estado andando.
 const VEL_POSE_PARADA = 0.2;
 // Lado da cadeira (local) por onde entra e sai do assento, para não atravessar o encosto.
@@ -95,7 +96,7 @@ function atualizarBolha(idSelecionado) {
 }
 
 const naBolha = (p, raio = RAIO_SEPARACAO_SELECIONADO) => BOLHA.r > 0 && Math.hypot(p.x - BOLHA.x, p.z - BOLHA.z) < raio;
-const pertoDeAprox = (p) => ESTACOES.some((e) => Math.hypot(p.x - e.aprox.x, p.z - e.aprox.z) < LONGE_DO_APROX);
+const pertoDeAprox = (p) => ESTACOES.some((e) => Math.hypot(p.x - e.aprox.x, p.z - e.aprox.z) < RITMO.longeDaChegada);
 // Um ponto onde dá para ficar: fora de mesas, cadeiras, do corredor do quadro e da bolha do selecionado.
 const pontoLivre = (p, margem) => longeDosObstaculos(p, margem) && foraDosBlocos(p) && !naBolha(p);
 

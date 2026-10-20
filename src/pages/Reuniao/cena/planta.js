@@ -98,12 +98,15 @@ export const QUADRO_REUNIAO = { x: xQuadro, z: zQuadro, rot: Math.atan2(0 - xQua
 // A ~0,66 m do vidro (a cúpula tem 0,3 m de raio). Mais à frente, fecha o corredor atrás da mesa.
 export const LUMINARIA = { x: -2.6, z: -3.75 };
 
-// Pegada do cavalete no espaço dele (+z à frente): as três pernas e o meio, sob a lousa.
+// Pegada do cavalete no espaço dele (+z à frente): as três pernas, o meio sob a lousa e o
+// vão entre o meio e as pernas da frente (sem ele, quem passava ali ficava preso no recorte).
 const PEGADA_QUADRO = [
   { x: -0.9, z: 0.45, r: 0.4 },
   { x: 0.9, z: 0.45, r: 0.4 },
   { x: 0, z: -0.7, r: 0.4 },
   { x: 0, z: 0, r: 0.7 },
+  { x: -0.55, z: 0.3, r: 0.5 },
+  { x: 0.55, z: 0.3, r: 0.5 },
 ];
 const noQuadro = ({ x, z, r }) => {
   const c = Math.cos(QUADRO_REUNIAO.rot);

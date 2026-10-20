@@ -33,6 +33,8 @@
  * @property {number} [elevacao]                quanto o corpo sobe sentado (padrão: 0,17 da cadeira)
  * @property {boolean} [trajetoDireto]          senta indo reto da chegada ao assento (pufe, sem encosto)
  * @property {{ x: number, z: number, r: number }[]} [obstaculos] pegada própria (padrão: mesa e cadeira)
+ * @property {boolean} [semBloco]                peça redonda e solta (pufe): os bonecos desviam dela
+ *   como de um obstáculo, sem o retângulo de contorno das mesas
  */
 
 /** O bloco 2×2 de /suporte. */
@@ -97,8 +99,10 @@ const retanguloDe = (obstaculos) => ({
 const seTocam = (a, b) => a.minX <= b.maxX && b.minX <= a.maxX && a.minZ <= b.maxZ && b.minZ <= a.maxZ;
 
 // Junta as pegadas que se tocam até não sobrar par encostado; cada grupo vira um bloco.
+// Peças soltas (semBloco) ficam de fora: perto umas das outras, os retângulos delas se
+// juntariam num bloco enorme, fechando um pedaço do chão que na verdade é livre.
 function montarBlocos(estacoes) {
-  let grupos = estacoes.map((estacao) => ({ ids: [estacao.id], ...retanguloDe(obstaculosDa(estacao)) }));
+  let grupos = estacoes.filter((estacao) => !estacao.semBloco).map((estacao) => ({ ids: [estacao.id], ...retanguloDe(obstaculosDa(estacao)) }));
   let juntou = true;
   while (juntou) {
     juntou = false;
