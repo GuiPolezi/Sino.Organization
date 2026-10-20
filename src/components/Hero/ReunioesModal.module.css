@@ -8,9 +8,9 @@
   display: flex;
   flex-direction: column;
   width: min(100%, 86rem);
-  /* Cabe inteiro na tela (ex.: 1536×864); a lista rola por dentro. */
-  /* Sem %: numa linha de grid "auto" o 100% faria a linha crescer com a lista. */
-  height: min(calc(100dvh - 2 * var(--gutter-mobile)), 90dvh, 62rem);
+  /* % da área útil do modal (a janela menos o respiro): sempre sobra margem
+     em cima e embaixo, qualquer que seja a altura do navegador. */
+  height: min(calc(100% - clamp(1.5rem, 4%, 3rem)), 62rem);
   padding: clamp(1.25rem, calc(var(--u) * 3.2), 3rem);
   padding-top: clamp(1rem, calc(var(--u) * 2.4), 2.25rem);
   border-color: color-mix(in srgb, var(--color-white) 80%, transparent);
@@ -83,6 +83,6 @@
 /* Celular: o cartão usa a altura toda para a lista e o formulário caberem. */
 @media (max-width: 600px) {
   .card.card {
-    height: calc(100dvh - 2 * var(--gutter-mobile));
+    height: 100%;
   }
 }

@@ -1,9 +1,12 @@
 .overlay {
   --modal-padding: clamp(1.5rem, 4vw, 2.75rem);
 
-  width: 100vw;
+  /* Preso às bordas da janela, sem vw/dvh: essas unidades podem não bater
+     com a área visível (ex.: Chrome no notebook, barra de rolagem). */
+  inset: 0;
+  width: auto;
   max-width: none;
-  height: 100dvh;
+  height: auto;
   max-height: none;
   margin: 0;
   padding: var(--gutter-mobile);
@@ -22,6 +25,8 @@
 
 .overlay[open] {
   display: grid;
+  /* Uma célula do tamanho exato da área útil: o cartão pode usar % dela. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
 }
 
