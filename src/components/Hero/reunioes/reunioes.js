@@ -73,35 +73,54 @@ export const removerMembro = (membros, id) =>
 const RE_DATA_HORA = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
 const pad = (n) => String(n).padStart(2, '0');
 
-// "YYYY-MM-DDTHH:mm" (hora local) -> Date, ou null se inválida (ex.: 30/02).
+// Todas as datas/horas são de Brasília, independente do fuso da máquina.
+// Offset fixo UTC−03:00: o Brasil não tem horário de verão desde 2019.
+export const OFFSET_BRASILIA_MIN = -180;
+const OFFSET_MS = OFFSET_BRASILIA_MIN * 60_000;
+const RE_HORA = /^(\d{2}):(\d{2})(?::\d{2})?$/; // aceita segundos do <input type="time">
+
+// Date -> "relógio de Brasília" lido via getUTC*.
+const emBrasilia = (data) => new Date(data.getTime() + OFFSET_MS);
+
+// "YYYY-MM-DDTHH:mm" (Brasília) -> Date, ou null se inválida (ex.: 30/02).
 export const paraDate = (dataHora) => {
   const m = RE_DATA_HORA.exec(String(dataHora ?? '').slice(0, 16));
   if (!m) return null;
   const [ano, mes, dia, hora, min] = m.slice(1).map(Number);
-  const d = new Date(ano, mes - 1, dia, hora, min);
+  const b = new Date(Date.UTC(ano, mes - 1, dia, hora, min));
   const confere =
-    d.getFullYear() === ano &&
-    d.getMonth() === mes - 1 &&
-    d.getDate() === dia &&
-    d.getHours() === hora &&
-    d.getMinutes() === min;
-  return confere ? d : null;
+    b.getUTCFullYear() === ano &&
+    b.getUTCMonth() === mes - 1 &&
+    b.getUTCDate() === dia &&
+    b.getUTCHours() === hora &&
+    b.getUTCMinutes() === min;
+  return confere ? new Date(b.getTime() - OFFSET_MS) : null;
 };
 
-// Date -> "YYYY-MM-DDTHH:mm" em hora local.
-export const paraDataHoraLocal = (data) =>
-  `${data.getFullYear()}-${pad(data.getMonth() + 1)}-${pad(data.getDate())}` +
-  `T${pad(data.getHours())}:${pad(data.getMinutes())}`;
+// Date -> "YYYY-MM-DDTHH:mm" no horário de Brasília.
+export const paraDataHoraLocal = (data) => {
+  const b = emBrasilia(data);
+  return (
+    `${b.getUTCFullYear()}-${pad(b.getUTCMonth() + 1)}-${pad(b.getUTCDate())}` +
+    `T${pad(b.getUTCHours())}:${pad(b.getUTCMinutes())}`
+  );
+};
 
-// Atributo `min` do <input type="datetime-local">: o próximo minuto cheio.
+// Atributo `min` do <input type="datetime-local">: o próximo minuto cheio (Brasília).
 export const minDataHoraLocal = (agora = new Date()) => {
-  const d = new Date(agora.getTime());
-  d.setSeconds(0, 0);
-  d.setMinutes(d.getMinutes() + 1);
-  return paraDataHoraLocal(d);
+  const proximo = Math.floor(agora.getTime() / 60_000) * 60_000 + 60_000;
+  return paraDataHoraLocal(new Date(proximo));
 };
 
-// "seg., 20 de out. de 2026 · 14:30"
+// "HH:mm" -> minutos desde 00:00, ou null se inválida.
+export const paraMinutos = (hora) => {
+  const m = RE_HORA.exec(String(hora ?? ''));
+  if (!m) return null;
+  const [h, min] = [Number(m[1]), Number(m[2])];
+  return h < 24 && min < 60 ? h * 60 + min : null;
+};
+
+// "seg., 20 de out. de 2026 · 14:30" (Brasília)
 export const formatarDataHora = (dataHora) => {
   const d = paraDate(dataHora);
   if (!d) return '';
@@ -110,8 +129,9 @@ export const formatarDataHora = (dataHora) => {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'America/Sao_Paulo',
   });
-  return `${dia} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${dia} · ${paraDataHoraLocal(d).slice(11)}`;
 };
 
 // --- Reunião ---------------------------------------------------------------
@@ -126,7 +146,7 @@ const normalizarMembros = (membros) =>
 
 export const validarReuniao = (dados, agora = new Date()) => {
   const erros = {};
-  const { titulo, dataHora, modalidade, membros } = dados ?? {};
+  const { titulo, dataHora, horaFim, modalidade, membros } = dados ?? {};
 
   const tituloLimpo = normalizarNome(titulo);
   if (!tituloLimpo) erros.titulo = 'Informe o título da reunião.';
@@ -134,13 +154,19 @@ export const validarReuniao = (dados, agora = new Date()) => {
     erros.titulo = `O título deve ter no máximo ${LIMITES.tituloMax} caracteres.`;
   }
 
+  const inicio = dataHora ? paraDate(dataHora) : null;
   if (!dataHora) erros.dataHora = 'Informe a data e a hora.';
-  else {
-    const d = paraDate(dataHora);
-    if (!d) erros.dataHora = 'Data ou hora inválida.';
-    else if (d.getTime() <= agora.getTime()) {
-      erros.dataHora = 'Escolha uma data e hora no futuro.';
-    }
+  else if (!inicio) erros.dataHora = 'Data ou hora inválida.';
+  else if (inicio.getTime() <= agora.getTime()) {
+    erros.dataHora = 'Escolha uma data e hora no futuro.';
+  }
+
+  // Término no mesmo dia, depois do início.
+  const fimMin = paraMinutos(horaFim);
+  if (!horaFim) erros.horaFim = 'Informe o horário de término.';
+  else if (fimMin == null) erros.horaFim = 'Horário de término inválido.';
+  else if (inicio && fimMin <= paraMinutos(paraDataHoraLocal(inicio).slice(11))) {
+    erros.horaFim = 'O término deve ser depois do horário de início.';
   }
 
   if (!MODALIDADES_VALIDAS.has(modalidade)) {
@@ -173,6 +199,7 @@ export const criarReuniao = (dados, agora = new Date()) => {
       id: gerarId(),
       titulo: normalizarNome(dados.titulo),
       dataHora: paraDataHoraLocal(paraDate(dados.dataHora)),
+      horaFim: String(dados.horaFim).slice(0, 5),
       modalidade: dados.modalidade,
       membros: normalizarMembros(dados.membros),
       criadaEm: agora.toISOString(),

@@ -17,7 +17,8 @@ import {
 } from './reunioes.js';
 import { CHAVE_STORAGE, carregarReunioes, salvarReunioes } from './reunioesRepo.js';
 
-const AGORA = new Date(2026, 9, 19, 10, 0); // 19/10/2026 10:00 local
+// Instantes explícitos em Brasília (-03:00): os testes valem em qualquer TZ.
+const AGORA = new Date('2026-10-19T10:00:00-03:00'); // 19/10/2026 10:00 Brasília
 
 const membrosDe = (...nomes) =>
   nomes.reduce((lista, nome) => adicionarMembro(lista, nome).membros, []);
@@ -25,6 +26,7 @@ const membrosDe = (...nomes) =>
 const valido = () => ({
   titulo: '  Alinhamento   semanal ',
   dataHora: '2026-10-20T14:30',
+  horaFim: '15:30',
   modalidade: MODALIDADES.DIGITAL,
   membros: membrosDe('Ana', 'João'),
 });
@@ -106,6 +108,30 @@ test('validarReuniao: data ausente, inválida e passada', () => {
   assert.equal(validarReuniao({ ...valido(), dataHora: '2026-10-19T10:01' }, AGORA).dataHora, undefined);
 });
 
+test('validarReuniao: horaFim ausente, inválida e não posterior ao início', () => {
+  assert.match(validarReuniao({ ...valido(), horaFim: '' }, AGORA).horaFim, /término/);
+  assert.match(validarReuniao({ ...valido(), horaFim: undefined }, AGORA).horaFim, /término/);
+  assert.match(validarReuniao({ ...valido(), horaFim: '25:00' }, AGORA).horaFim, /inválido/);
+  assert.match(validarReuniao({ ...valido(), horaFim: '9:00' }, AGORA).horaFim, /inválido/);
+  assert.match(validarReuniao({ ...valido(), horaFim: '14:30' }, AGORA).horaFim, /depois/);
+  assert.match(validarReuniao({ ...valido(), horaFim: '14:29' }, AGORA).horaFim, /depois/);
+  assert.equal(validarReuniao({ ...valido(), horaFim: '14:31' }, AGORA).horaFim, undefined);
+  assert.equal(validarReuniao({ ...valido(), horaFim: '15:30:00' }, AGORA).horaFim, undefined);
+  // início inválido: só acusa o horaFim se ele mesmo for ruim
+  assert.equal(validarReuniao({ ...valido(), dataHora: 'x', horaFim: '01:00' }, AGORA).horaFim, undefined);
+  assert.equal(criarReuniao({ ...valido(), horaFim: '15:30:00' }, AGORA).reuniao.horaFim, '15:30');
+});
+
+test('fuso: Brasília independe do fuso da máquina', () => {
+  // 01:30Z do dia 20 ainda é 22:30 do dia 19 em Brasília
+  const agora = new Date('2026-10-20T01:30:00Z');
+  assert.equal(minDataHoraLocal(agora), '2026-10-19T22:31');
+  assert.match(validarReuniao({ ...valido(), dataHora: '2026-10-19T22:30' }, agora).dataHora, /futuro/);
+  assert.equal(validarReuniao({ ...valido(), dataHora: '2026-10-19T22:31', horaFim: '23:00' }, agora).dataHora, undefined);
+  assert.ok(formatarDataHora('2026-10-19T23:30').endsWith(' · 23:30'));
+  assert.match(formatarDataHora('2026-10-19T23:30'), /19/);
+});
+
 test('validarReuniao: modalidade inválida', () => {
   assert.ok(validarReuniao({ ...valido(), modalidade: 'hibrida' }, AGORA).modalidade);
   assert.ok(validarReuniao({ ...valido(), modalidade: undefined }, AGORA).modalidade);
@@ -134,6 +160,7 @@ test('criarReuniao normaliza e monta a reunião', () => {
   assert.ok(reuniao.id);
   assert.equal(reuniao.titulo, 'Alinhamento semanal');
   assert.equal(reuniao.dataHora, '2026-10-20T14:30');
+  assert.equal(reuniao.horaFim, '15:30');
   assert.equal(reuniao.modalidade, 'digital');
   assert.deepEqual(reuniao.membros, dados.membros);
   assert.equal(reuniao.criadaEm, AGORA.toISOString());
@@ -143,7 +170,7 @@ test('criarReuniao normaliza e monta a reunião', () => {
 test('criarReuniao devolve erros quando inválida', () => {
   const r = criarReuniao({ titulo: '', dataHora: '', modalidade: 'x', membros: [] }, AGORA);
   assert.equal(r.ok, false);
-  assert.deepEqual(Object.keys(r.erros).sort(), ['dataHora', 'membros', 'modalidade', 'titulo']);
+  assert.deepEqual(Object.keys(r.erros).sort(), ['dataHora', 'horaFim', 'membros', 'modalidade', 'titulo']);
 });
 
 const R = (id, dataHora) => ({ id, titulo: id, dataHora, modalidade: 'digital', membros: [] });
@@ -183,8 +210,8 @@ test('formatarDataHora e minDataHoraLocal', () => {
   assert.ok(txt.endsWith(' · 14:30'));
   assert.equal(formatarDataHora('lixo'), '');
 
-  assert.equal(minDataHoraLocal(new Date(2026, 9, 19, 10, 0, 30)), '2026-10-19T10:01');
-  assert.equal(minDataHoraLocal(new Date(2026, 11, 31, 23, 59)), '2027-01-01T00:00');
+  assert.equal(minDataHoraLocal(new Date('2026-10-19T10:00:30-03:00')), '2026-10-19T10:01');
+  assert.equal(minDataHoraLocal(new Date('2026-12-31T23:59:00-03:00')), '2027-01-01T00:00');
 });
 
 // Storage falso para testar o repositório sem navegador.
