@@ -31,7 +31,26 @@ const TANGENTE_SEPARACAO = 0.6;
 const RAIO_CONTORNO_SELECIONADO = 1.0;
 // Estados em que o boneco está preso à cadeira de uma estação.
 const SENTADO = new Set(['sentando', 'trabalhando', 'levantando']);
-const CHANCE_DE_TRABALHAR = 0.35;
+/*
+ * Ritmo de sentar: chance de ir a uma estação quando decide o que fazer, quanto
+ * tempo fica sentado, a pausa até querer sentar de novo e a do começo (em s).
+ * Vale para /suporte e /desenvolvimento; a sala de reunião troca por um ritmo
+ * em que quase todos sentam logo e ficam (configurarRitmo, antes de a cena nascer).
+ */
+export const RITMO = {
+  chance: 0.35,
+  duracao: [9, 18],
+  descanso: [12, 28],
+  inicial: [3, 16],
+};
+
+/** @param {Partial<typeof RITMO>} config */
+export function configurarRitmo(config) {
+  Object.assign(RITMO, config);
+}
+
+// Altura do corpo sentado numa cadeira, quando a estação não diz a dela (estacoes.js).
+const ELEVACAO_CADEIRA = 0.17;
 // Segundos para chegar ao computador reservado antes de desistir dele.
 const PRAZO_ATE_ESTACAO = 14;
 // Até onde, além do raio do obstáculo, o boneco já começa a desviar.
@@ -142,7 +161,9 @@ function criarEstado(id) {
     indo: false,
     tSent: 0,
     sentado: 0,
-    descanso: rand(3, 16), // tempo mínimo até querer sentar de novo
+    // Altura do assento atual; guardada para não dar um tranco se o lugar sumir com ele sentado.
+    elevacao: ELEVACAO_CADEIRA,
+    descanso: rand(...RITMO.inicial), // tempo mínimo até querer sentar de novo
     micro: 'digitar',
     tMicro: 0,
     // Caminho da chegada até o assento (pelo lado da cadeira) e de volta.
@@ -256,16 +277,16 @@ function novoPasseio(s) {
  */
 function prepararTrajeto(s) {
   const { pos, estacao, trajeto, trechos } = s;
-  const c = Math.cos(estacao.rot);
-  const sen = Math.sin(estacao.rot);
-  // x local da origem: de que lado da cadeira ele chegou.
-  const lx = (pos.x - estacao.x) * c - (pos.z - estacao.z) * sen;
-  const lado = lx < 0 ? -1 : 1;
   s.origem.copy(pos);
   trajeto[0].x = pos.x;
   trajeto[0].z = pos.z;
-  Object.assign(trajeto[1], pontoLocal(estacao, lado * LADO_CADEIRA.x, LADO_CADEIRA.zAtras));
-  Object.assign(trajeto[2], pontoLocal(estacao, lado * LADO_CADEIRA.x, LADO_CADEIRA.zFrente));
+  if (estacao.trajetoDireto) {
+    // Sem encosto (um pufe): da chegada direto ao assento, já dobrando as pernas.
+    Object.assign(trajeto[1], trajeto[0]);
+    Object.assign(trajeto[2], trajeto[0]);
+  } else {
+    pelaLateralDaCadeira(s);
+  }
   trajeto[3].x = estacao.assento.x;
   trajeto[3].z = estacao.assento.z;
   let total = 0;
@@ -276,6 +297,18 @@ function prepararTrajeto(s) {
   s.trajetoTotal = total;
   s.duracaoSentar = Math.max(0.7, total / VEL_SENTAR);
   s.duracaoLevantar = Math.max(0.6, total / VEL_LEVANTAR);
+}
+
+// Os dois pontos ao lado da cadeira (atrás e ao lado do assento) do lado por onde ele chegou.
+function pelaLateralDaCadeira(s) {
+  const { pos, estacao, trajeto } = s;
+  const c = Math.cos(estacao.rot);
+  const sen = Math.sin(estacao.rot);
+  // x local da origem: de que lado da cadeira ele chegou.
+  const lx = (pos.x - estacao.x) * c - (pos.z - estacao.z) * sen;
+  const lado = lx < 0 ? -1 : 1;
+  Object.assign(trajeto[1], pontoLocal(estacao, lado * LADO_CADEIRA.x, LADO_CADEIRA.zAtras));
+  Object.assign(trajeto[2], pontoLocal(estacao, lado * LADO_CADEIRA.x, LADO_CADEIRA.zFrente));
 }
 
 // Põe o boneco na fração k (0 = chegada, 1 = assento) do caminho até o assento.
@@ -342,7 +375,7 @@ function andar(s, dt) {
 // Parado, escolhe o que fazer em seguida: trabalhar num computador, uma ação ou andar.
 function decidir(s) {
   // A reserva é feita agora, antes de andar: 1 técnico por computador.
-  const querTrabalhar = s.descanso <= 0 && Math.random() < CHANCE_DE_TRABALHAR;
+  const querTrabalhar = s.descanso <= 0 && Math.random() < RITMO.chance;
   const estacao = querTrabalhar ? reservarEstacao(s.id, AREA) : null;
 
   if (estacao) {
@@ -405,7 +438,7 @@ function atualizarSentado(s, selecionado, dt) {
 
   if (s.estado === 'sentando' && s.tSent >= 1) {
     s.estado = 'trabalhando';
-    s.timer = rand(9, 18);
+    s.timer = rand(...RITMO.duracao);
     s.micro = 'digitar';
     s.tMicro = rand(2, 4);
   } else if (s.estado === 'levantando' && s.tSent <= 0) {
@@ -413,7 +446,7 @@ function atualizarSentado(s, selecionado, dt) {
     s.sentado = 0;
     s.estado = 'parado';
     s.timer = rand(0.4, 1.2);
-    s.descanso = rand(12, 28);
+    s.descanso = rand(...RITMO.descanso);
   }
   return { yawAlvo: estacao.yaw, andando: false };
 }
@@ -674,7 +707,8 @@ export function useComportamento({ id, altura = 1 }) {
     // Respiração (leve escala em Y), pulo e a subida do quadril até o assento.
     s.pulo = damp(s.pulo, pose.pulo, 18, dt);
     const corpo = partes.corpo.current;
-    corpo.position.y = s.pulo + s.sentado * 0.17;
+    if (s.estacao) s.elevacao = s.estacao.elevacao ?? ELEVACAO_CADEIRA;
+    corpo.position.y = s.pulo + s.sentado * s.elevacao;
     corpo.scale.y = 1 + Math.sin(t * 2.2 + s.passo) * 0.018 * (1 - s.sentado * 0.5);
 
     // Anel de seleção no chão.

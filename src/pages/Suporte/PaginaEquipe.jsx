@@ -89,6 +89,7 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  *   quadro da equipe na cena, com o que a página escreve nele
  * @param {import('react').ComponentType} [props.PainelQuadro] painel que o quadro abre (visão geral)
  * @param {string} [props.larguraCard] largura do card no desktop, quando não é a do card do técnico
+ * @param {object} [props.cena] o que mais vai para a cena (Cenario, Luzes, gl: cena/Cena.jsx); objeto estável
  */
 export default function PaginaEquipe({
   titulo,
@@ -101,6 +102,7 @@ export default function PaginaEquipe({
   Quadro = QuadroSuporte,
   PainelQuadro = CardQuadro,
   larguraCard,
+  cena,
 }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const erro = useEquipe((s) => s.erro);
@@ -137,7 +139,7 @@ export default function PaginaEquipe({
     <main className={classes} style={larguraCard ? { '--largura-card': larguraCard } : undefined}>
       <title>{`${titulo} · sino.org`}</title>
 
-      {temWebgl && <Cena Estacoes={Estacoes} Quadro={Quadro} />}
+      {temWebgl && <Cena Estacoes={Estacoes} Quadro={Quadro} {...cena} />}
 
       <header className={styles.cabecalho}>
         <a className={styles.voltar} href="/">
@@ -156,9 +158,11 @@ export default function PaginaEquipe({
       </header>
 
       {/* O quadro não entra no elenco: este botão só aparece com o foco do teclado. */}
-      <button type="button" className={`sr-only ${styles.atalhoQuadro}`} onClick={abrirQuadro}>
-        Abrir o quadro da equipe (visão geral)
-      </button>
+      {PainelQuadro && (
+        <button type="button" className={`sr-only ${styles.atalhoQuadro}`} onClick={abrirQuadro}>
+          Abrir o quadro da equipe (visão geral)
+        </button>
+      )}
 
       {temWebgl ? (
         <Elenco tecnicos={tecnicos} selecionado={selecionado} rotulo={rotuloElenco} />
@@ -167,7 +171,7 @@ export default function PaginaEquipe({
       )}
 
       <Card />
-      <PainelQuadro />
+      {PainelQuadro && <PainelQuadro />}
     </main>
   );
 }

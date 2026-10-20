@@ -30,6 +30,9 @@
  * @property {{ x: number, z: number }} assento onde o técnico fica sentado
  * @property {{ x: number, z: number }} aprox   onde ele chega andando antes de sentar
  * @property {number} yaw                       direção em que ele olha sentado (para o monitor)
+ * @property {number} [elevacao]                quanto o corpo sobe sentado (padrão: 0,17 da cadeira)
+ * @property {boolean} [trajetoDireto]          senta indo reto da chegada ao assento (pufe, sem encosto)
+ * @property {{ x: number, z: number, r: number }[]} [obstaculos] pegada própria (padrão: mesa e cadeira)
  */
 
 /** O bloco 2×2 de /suporte. */
@@ -57,12 +60,24 @@ export const ESTACOES = [];
 // O quadro da equipe acrescenta os dele a esta lista (quadro/posicao.js).
 export const OBSTACULOS = [];
 
-// Pegada de uma estação no chão: as duas metades da mesa e a cadeira.
-const obstaculosDa = (estacao) => [
-  { ...pontoLocal(estacao, -0.45, 0), r: 0.78, estacao: estacao.id },
-  { ...pontoLocal(estacao, 0.45, 0), r: 0.78, estacao: estacao.id },
-  { ...pontoLocal(estacao, 0, 0.78), r: 0.6, estacao: estacao.id },
-];
+// Pegada de uma estação no chão: as duas metades da mesa e a cadeira (ou a que a base trouxer).
+const obstaculosDa = (estacao) =>
+  estacao.obstaculos
+    ? estacao.obstaculos.map((o) => ({ ...o, estacao: estacao.id }))
+    : [
+        { ...pontoLocal(estacao, -0.45, 0), r: 0.78, estacao: estacao.id },
+        { ...pontoLocal(estacao, 0.45, 0), r: 0.78, estacao: estacao.id },
+        { ...pontoLocal(estacao, 0, 0.78), r: 0.6, estacao: estacao.id },
+      ];
+
+// Assento, chegada e direção calculados pela mesa; a base pode trazer os seus (um pufe).
+const montarEstacao = (base) => ({
+  assento: pontoLocal(base, 0, 0.64),
+  aprox: pontoLocal(base, 0, 1.5),
+  yaw: base.rot + Math.PI,
+  ...base,
+  ocupante: null,
+});
 
 /*
  * Blocos que os técnicos contornam: retângulos em volta das pegadas, um por
@@ -120,24 +135,31 @@ function montarBlocos(estacoes) {
  * Define as estações do cenário: refaz ESTACOES, os obstáculos delas e os
  * blocos de contorno. Os obstáculos de outros módulos (o quadro da equipe)
  * ficam. Chamada antes de a cena nascer e de novo se o tapete mudar de forma.
+ *
+ * Com `manterOcupantes`, uma estação que continua (mesmo id) é a mesma de antes,
+ * com o mesmo ocupante: quem está sentado nela fica. Só quem estava numa que
+ * saiu perde a reserva (e levanta). Sem a opção, todas recomeçam livres.
  * @param {BaseEstacao[]} bases
+ * @param {{ manterOcupantes?: boolean }} [opcoes]
  * @returns {Estacao[]} as estações novas (o próprio ESTACOES)
  */
-export function definirEstacoes(bases) {
+export function definirEstacoes(bases, { manterOcupantes = false } = {}) {
   const antigas = new Set(ESTACOES.map(({ id }) => id));
   const outros = OBSTACULOS.filter(({ estacao }) => !antigas.has(estacao));
+  const porId = new Map(ESTACOES.map((estacao) => [estacao.id, estacao]));
+  const ficam = new Set(bases.map(({ id }) => id));
+  if (manterOcupantes) {
+    porId.forEach((estacao, id) => {
+      if (!ficam.has(id)) estacao.ocupante = null;
+    });
+  }
 
-  ESTACOES.splice(
-    0,
-    ESTACOES.length,
-    ...bases.map((base) => ({
-      ...base,
-      ocupante: null,
-      assento: pontoLocal(base, 0, 0.64),
-      aprox: pontoLocal(base, 0, 1.5),
-      yaw: base.rot + Math.PI,
-    })),
-  );
+  const novas = bases.map((base) => {
+    const antiga = manterOcupantes ? porId.get(base.id) : null;
+    if (!antiga) return montarEstacao(base);
+    return Object.assign(antiga, montarEstacao(base), { ocupante: antiga.ocupante });
+  });
+  ESTACOES.splice(0, ESTACOES.length, ...novas);
   OBSTACULOS.splice(0, OBSTACULOS.length, ...ESTACOES.flatMap(obstaculosDa), ...outros);
   BLOCOS = montarBlocos(ESTACOES);
   return ESTACOES;
