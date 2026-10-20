@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ESTACOES, OBSTACULOS, dentroDaArea, foraDosBlocos, reservarEstacao, resetarEstacoes, rotaAte } from '../../Suporte/boneco/estacoes.js';
+import { ESTACOES, OBSTACULOS, aindaEDono, definirEstacoes, dentroDaArea, foraDosBlocos, reservarEstacao, resetarEstacoes, rotaAte } from '../../Suporte/boneco/estacoes.js';
 import { BASES, configurarLugares } from './lugares.js';
 import { montarLugares } from './planta.js';
 import { TEMAS, horaDe, temaDaHora, temaDaReuniao } from './temaHorario.js';
@@ -143,5 +143,20 @@ test('os pufes não fecham o chão em volta deles (sem retângulo de contorno)',
     assert.ok(foraDosBlocos(p), `(${p.x}, ${p.z}) virou bloco`);
     assert.ok(OBSTACULOS.every((o) => o.r <= 0 || Math.hypot(p.x - o.x, p.z - o.z) > o.r), `(${p.x}, ${p.z}) dentro de um móvel`);
   }
+  configurarLugares(0);
+});
+
+test('quem está sentado num lugar que foi refeito perde o lugar (nunca dois na mesma cadeira)', () => {
+  resetarEstacoes();
+  configurarLugares(4);
+  const ana = { id: 'ana', estacao: reservarEstacao('ana', AREA_REUNIAO), indo: false };
+  assert.ok(aindaEDono(ana));
+  // A lista é refeita do zero (sem manter ocupantes): o lugar da Ana agora é outro objeto, livre.
+  definirEstacoes([...ESTACOES].map(({ id }) => BASES.get(id)));
+  assert.ok(!ESTACOES.includes(ana.estacao));
+  assert.equal(aindaEDono(ana), false, 'a Ana tem de levantar');
+  // Com ela de pé, um lugar livre por pessoa: ninguém divide.
+  const ids = ['bia', 'caio', 'davi', 'eva'].map((id) => reservarEstacao(id, AREA_REUNIAO)?.id);
+  assert.equal(new Set(ids).size, 4);
   configurarLugares(0);
 });

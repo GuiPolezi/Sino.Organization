@@ -368,9 +368,14 @@ export function liberarEstacao(estadoTecnico) {
   estadoTecnico.indo = false;
 }
 
-// O técnico ainda é o dono da estação em que está sentado?
+// O técnico ainda é o dono da estação em que está sentado? A estação também tem de ser
+// uma das atuais: se a lista foi refeita (outras estações, ou o módulo recarregado pelo
+// Vite com a página aberta), a antiga ainda diz que ele é o dono, mas a nova, no mesmo
+// lugar, está livre para outro, e os dois acabariam sentados na mesma cadeira.
 export const aindaEDono = (estadoTecnico) =>
-  !!estadoTecnico.estacao && estadoTecnico.estacao.ocupante === estadoTecnico.id;
+  !!estadoTecnico.estacao &&
+  estadoTecnico.estacao.ocupante === estadoTecnico.id &&
+  ESTACOES.includes(estadoTecnico.estacao);
 
 /*
  * Cenário sem estações: tira as mesas e os obstáculos delas. Os que outros
