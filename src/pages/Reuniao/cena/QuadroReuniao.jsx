@@ -92,7 +92,8 @@ const C = 1.78;
 const PERNAS = [
   perna([-0.55, C - H / 2 + 0.05, 0], [-0.9, 0.02, 0.45]),
   perna([0.55, C - H / 2 + 0.05, 0], [0.9, 0.02, 0.45]),
-  perna([0, C + H / 2 - 0.3, -0.08], [0, 0.02, -0.85]),
+  // A de trás é mais curta: o cavalete fica perto do vidro e o pé não pode encostar nele.
+  perna([0, C + H / 2 - 0.3, -0.08], [0, 0.02, -0.7]),
 ];
 
 const criarMateriais = () => ({

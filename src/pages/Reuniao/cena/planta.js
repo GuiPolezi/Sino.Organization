@@ -89,18 +89,20 @@ export const LUGARES_MESA = {
  * ocupadas (simulação dos bonecos: 0 vezes em 10 min com 4 membros).
  */
 const xQuadro = 2.5;
+// O pé de trás é mais curto (QuadroReuniao.jsx) para não encostar na moldura do vidro.
 const zQuadro = -3.55;
 // De frente para a câmera da visão geral (em z = 14).
 export const QUADRO_REUNIAO = { x: xQuadro, z: zQuadro, rot: Math.atan2(0 - xQuadro, 14 - zQuadro) };
 
 // ── Luminária de pé (acende no entardecer e à noite) ──
+// A ~0,66 m do vidro (a cúpula tem 0,3 m de raio). Mais à frente, fecha o corredor atrás da mesa.
 export const LUMINARIA = { x: -2.6, z: -3.75 };
 
 // Pegada do cavalete no espaço dele (+z à frente): as três pernas e o meio, sob a lousa.
 const PEGADA_QUADRO = [
   { x: -0.9, z: 0.45, r: 0.4 },
   { x: 0.9, z: 0.45, r: 0.4 },
-  { x: 0, z: -0.85, r: 0.4 },
+  { x: 0, z: -0.7, r: 0.4 },
   { x: 0, z: 0, r: 0.7 },
 ];
 const noQuadro = ({ x, z, r }) => {
