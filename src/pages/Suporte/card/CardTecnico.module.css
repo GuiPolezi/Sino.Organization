@@ -289,13 +289,6 @@ section > .secao {
   text-align: center;
 }
 
-/* Aviso discreto enquanto os números do card são de demonstração. */
-.nav small {
-  display: block;
-  margin-top: 3px;
-  font-size: 0.625rem;
-}
-
 .nav button {
   width: 2.75rem;
   height: 2.25rem;

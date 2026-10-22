@@ -60,8 +60,7 @@ function Tickets({ atribuidos }) {
 /*
  * Card com os dados do técnico selecionado. Overlay HTML fora do <Canvas>:
  * lateral no desktop e bottom sheet no mobile. As seções de atendimentos só
- * aparecem para quem tem esses dados (api/atendimentosTecnico.js); hoje são
- * números de demonstração.
+ * aparecem para quem tem esses dados (api/atendimentosTecnico.js).
  */
 export default function CardTecnico() {
   const tecnicos = useEquipe((s) => s.tecnicos);
@@ -124,9 +123,7 @@ export default function CardTecnico() {
           ←
         </button>
         <span>
-          {indice + 1} de {tecnicos.length}
-          {atendimentos?.ficticio && <small>Dados de demonstração</small>}
-        </span>
+          {indice + 1} de {tecnicos.length}        </span>
         <button type="button" aria-label="Próximo" onClick={() => navegar(1)}>
           →
         </button>

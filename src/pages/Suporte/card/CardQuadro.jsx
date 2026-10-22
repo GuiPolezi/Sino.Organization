@@ -138,8 +138,7 @@ function Ranking({ ranking }) {
  * Painel "Quadro da equipe": a visão geral, com a moldura e o cabeçalho do card
  * do técnico (as classes dele são reaproveitadas). Abre pelo quadro da cena e,
  * como no card, cada seção só aparece quando o dado dela existe. Os números
- * saem dos atendimentos de cada técnico (mappers/resumoEquipe.js); hoje são de
- * demonstração.
+ * saem dos atendimentos de cada técnico (mappers/resumoEquipe.js).
  */
 export default function CardQuadro() {
   const aberto = useEquipe((s) => s.painel === 'quadro');
@@ -150,7 +149,7 @@ export default function CardQuadro() {
   if (!aberto) return null;
 
   const { totalTecnicos, ranking, tickets } = resumo;
-  const temRodape = resumo.atualizadoEm !== null || resumo.ficticio;
+  const temRodape = resumo.atualizadoEm !== null;
   // Sem nenhum atendimento no mês, ninguém está em destaque.
   const destaque = ranking[0]?.atendimentosMes > 0 ? ranking[0] : null;
 
@@ -188,7 +187,6 @@ export default function CardQuadro() {
           {resumo.atualizadoEm !== null && (
             <span>Atualizado às {formatoHora.format(new Date(resumo.atualizadoEm))}</span>
           )}
-          {resumo.ficticio && <span>Dados de demonstração</span>}
         </footer>
       )}
     </aside>
