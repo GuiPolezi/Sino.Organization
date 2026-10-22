@@ -1,11 +1,35 @@
 import { aparenciaDe } from '../boneco/aparencia.js';
+import { EXPEDIENTES } from '../expedientes.js';
 import { hojeEmBrasilia, totaisDeAtendimentos } from '../mappers/atendimentos.js';
+import { partesDaDuracao, tempoMedioDiario } from '../mappers/tempoMedio.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
 import GraficoAtendimentos from './GraficoAtendimentos.jsx';
 import styles from './CardTecnico.module.css';
 import useAtalhos from './useAtalhos.js';
 
+// "—" sem média; "33 min" abaixo de 1 hora; "1h 05 min" a partir dela.
+function TempoMedio({ minutos }) {
+  if (minutos === null) return '—';
+  const { horas, minutos: resto } = partesDaDuracao(minutos);
+  if (horas === 0) {
+    return (
+      <>
+        <Contagem valor={resto} />
+        <small>min</small>
+      </>
+    );
+  }
+  return (
+    <>
+      <Contagem valor={horas} />
+      <small>h</small> {String(resto).padStart(2, '0')}
+      <small>min</small>
+    </>
+  );
+}
+
+// tempoMedioMin: undefined esconde o bloco (técnico sem expediente); null mostra "—".
 function Atendimentos({ totais, tempoMedioMin }) {
   return (
     <section className={styles.surge} style={{ '--ordem': 1 }}>
@@ -33,8 +57,7 @@ function Atendimentos({ totais, tempoMedioMin }) {
           <div>
             <dt>Tempo Médio Diário de Atendimentos</dt>
             <dd>
-              <Contagem valor={tempoMedioMin} />
-              <small>Min</small>
+              <TempoMedio minutos={tempoMedioMin} />
             </dd>
           </div>
         )}
@@ -109,7 +132,16 @@ export default function CardTecnico() {
         <>
           <Atendimentos
             totais={totaisDeAtendimentos(atendimentos.porDia, hoje)}
-            tempoMedioMin={atendimentos.tempoMedioMin}
+            tempoMedioMin={
+              EXPEDIENTES[tecnico.id]
+                ? tempoMedioDiario({
+                    expediente: EXPEDIENTES[tecnico.id],
+                    porDia: atendimentos.porDia,
+                    atualizadoEm: atendimentos.atualizadoEm,
+                    hoje,
+                  })
+                : undefined
+            }
           />
           {atendimentos.chamadosAtribuidos !== undefined && <Tickets atribuidos={atendimentos.chamadosAtribuidos} />}
           <div className={styles.surge} style={{ '--ordem': 3 }}>

@@ -9,7 +9,7 @@
  *
  * @typedef {object} AtendimentosTecnico
  * @property {boolean} [ficticio]            dados de demonstração, ainda sem backend
- * @property {number} [tempoMedioMin]        tempo médio diário de atendimento, em minutos
+ * @property {string} [atualizadoEm]         data ISO do último sync, para o tempo médio diário
  * @property {number} [chamadosAtribuidos]   chamados hoje atribuídos ao técnico
  * @property {Record<string, number>} porDia atendimentos por dia ("AAAA-MM-DD" -> total)
  */

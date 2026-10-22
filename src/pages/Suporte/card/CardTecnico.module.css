@@ -224,7 +224,7 @@ section > .secao {
   font-variant-numeric: tabular-nums;
 }
 
-/* Unidade ao lado do número ("Min"). */
+/* Unidade ao lado do número ("min", "h"). */
 .blocos small {
   margin-left: 1px;
   font-size: 1.125rem;
