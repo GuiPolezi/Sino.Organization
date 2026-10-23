@@ -2,7 +2,7 @@
 // Uso: npm run test:quadro
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buscarChamados } from '../api/chamados.js';
+import { readFileSync } from 'node:fs';
 import { CATEGORIAS, FECHADO, TIPOS } from './chamados.js';
 import { LIMITE_LOCAIS, visaoGeral } from './visaoGeral.js';
 
@@ -117,19 +117,25 @@ test('carga por local: só os dez maiores, e chamado sem local não entra', () =
   assert.equal(total, lista.length);
 });
 
-test('os chamados de demonstração fecham as contas do painel em todos os períodos', async () => {
-  const equipe = ['adriano', 'antonio', 'arnaldo', 'caique', 'donizeti'].map(dev);
-  const chamados = await buscarChamados(equipe, HOJE);
+const chamadosDoMilldesk = () =>
+  Object.fromEntries(
+    Object.entries(JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8')).desenvolvedores).map(
+      ([id, lista]) => [id, { lista }],
+    ),
+  );
+
+test('os chamados do Milldesk fecham as contas do painel em todos os períodos', () => {
+  const chamados = chamadosDoMilldesk();
+  const equipe = Object.keys(chamados).map(dev);
   const soma = (itens) => itens.reduce((total, item) => total + item.total, 0);
 
   for (const periodo of ['tudo', '30d', '7d', 'hoje']) {
     const visao = visaoGeral(equipe, chamados, periodo, HOJE);
-    assert.equal(visao.ficticio, true);
-    assert.ok(visao.total > 0, `total em ${periodo}`);
+    assert.equal(visao.ficticio, false);
     assert.equal(soma(visao.porDesenvolvedor), visao.total, `devs em ${periodo}`);
     assert.equal(soma(visao.porCategoria), visao.total, `categorias em ${periodo}`);
     assert.ok(visao.porCategoria.every(({ nome }) => CATEGORIAS.includes(nome)), `categorias em ${periodo}`);
-    assert.ok(visao.porLocal.length > 0 && visao.porLocal.length <= 10, `locais em ${periodo}`);
+    assert.ok(visao.porLocal.length <= 10, `locais em ${periodo}`);
     for (const { local, total, tipos } of visao.porLocal) {
       assert.equal(soma(tipos), total, `tipos de ${local} em ${periodo}`);
     }

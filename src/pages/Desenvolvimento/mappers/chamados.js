@@ -9,16 +9,17 @@
  * Um chamado atribuído ao desenvolvedor (api/chamados.js).
  *
  * @typedef {object} Chamado
- * @property {string} data       dia em que o chamado foi atribuído, "AAAA-MM-DD"
+ * @property {string} data       dia de criação do ticket, "AAAA-MM-DD"
  * @property {string} status     status atual, com o nome do Milldesk
  * @property {string} categoria  sistema do chamado ("Siscam 9", "Site"…)
- * @property {string} tipo       tipo da solicitação ("Bug/Erro"…)
+ * @property {string} assunto    do que trata o chamado: a subcategoria do Milldesk ("Bug / Erro"…)
+ * @property {string} tipo       tipo da solicitação ("Bug/Erro"…), para a "Carga por Local" do quadro
  * @property {string} [local]    cidade do cliente que abriu o chamado
  * @property {string} [fechadoEm] dia em que foi fechado, "AAAA-MM-DD" (só nos fechados)
  *
  * @typedef {object} ChamadosDesenvolvedor
  * @property {boolean} [ficticio] dados de demonstração, ainda sem backend
- * @property {Chamado[]} lista
+ * @property {Chamado[]} lista do mais novo para o mais antigo
  *
  * @typedef {'tudo' | '30d' | '7d' | 'hoje'} Periodo
  */
@@ -61,10 +62,13 @@ export function compararStatus(a, b) {
   return posicao(a) - posicao(b) || porNome(a, b);
 }
 
-/** Tipos de solicitação do gráfico, sempre nesta ordem, mesmo zerados. */
+/** Tipos de solicitação da "Carga por Local" do quadro, sempre nesta ordem, mesmo zerados. */
 export const TIPOS = ['Bug/Erro', 'Melhoria/Função', 'Implantação', 'Dúvidas', 'Migração/Dados'];
 
-/** Categorias (sistemas) dos chamados, na ordem dos botões de Desempenho do quadro. */
+/**
+ * Categorias (sistemas) dos chamados, na ordem dos botões de Desempenho do quadro.
+ * Quais categorias do Milldesk entram em cada uma: scripts/lib/build-chamados.mjs.
+ */
 export const CATEGORIAS = [
   'Cartórios',
   'Siscam 9',
@@ -75,6 +79,10 @@ export const CATEGORIAS = [
   'Sistema (Outros)',
   'Legislação Digital',
 ];
+
+/** Quantos assuntos o gráfico de uma categoria mostra; os demais somam em "Outros". */
+export const LIMITE_ASSUNTOS = 5;
+export const OUTROS_ASSUNTOS = 'Outros';
 
 const paraUtc = (data) => Date.parse(`${data}T00:00:00Z`);
 const somarDias = (data, dias) => new Date(paraUtc(data) + dias * UM_DIA_MS).toISOString().slice(0, 10);
@@ -126,9 +134,26 @@ function percentual(parte, total) {
 }
 
 /*
+ * Os assuntos do gráfico de uma categoria, do mais comum para o menos comum em
+ * todos os chamados dela: a ordem e as colunas não mudam a cada troca de período.
+ * Passando de LIMITE_ASSUNTOS, os menos comuns somam numa coluna "Outros".
+ */
+function assuntosDaCategoria(daCategoria, doPeriodo) {
+  const ordem = [...contarPor(daCategoria, 'assunto')]
+    .sort(([a, totalA], [b, totalB]) => totalB - totalA || porNome(a, b))
+    .map(([assunto]) => assunto);
+  const comColuna = ordem.length > LIMITE_ASSUNTOS + 1 ? ordem.slice(0, LIMITE_ASSUNTOS) : ordem;
+  const noPeriodo = contarPor(doPeriodo, 'assunto');
+  const assuntos = comColuna.map((assunto) => ({ assunto, total: noPeriodo.get(assunto) ?? 0 }));
+  if (comColuna.length === ordem.length) return assuntos;
+  const outros = doPeriodo.length - assuntos.reduce((soma, { total }) => soma + total, 0);
+  return [...assuntos, { assunto: OUTROS_ASSUNTOS, total: outros }];
+}
+
+/*
  * Categorias com chamados no período. A ordem vem do total de todos os
  * chamados, para as pílulas não trocarem de lugar a cada troca de período.
- * Cada uma traz os tipos do gráfico: os fixos e, depois, algum novo que ela tenha.
+ * Cada uma traz os assuntos do gráfico.
  */
 function categoriasDoPeriodo(todos, doPeriodo) {
   const ordem = [...contarPor(todos, 'categoria')].sort(([a, totalA], [b, totalB]) => totalB - totalA || porNome(a, b));
@@ -136,20 +161,14 @@ function categoriasDoPeriodo(todos, doPeriodo) {
 
   return ordem
     .filter(([nome]) => noPeriodo.has(nome))
-    .map(([nome]) => {
-      const tiposDaCategoria = contarPor(
+    .map(([nome]) => ({
+      nome,
+      total: noPeriodo.get(nome),
+      assuntos: assuntosDaCategoria(
+        todos.filter(({ categoria }) => categoria === nome),
         doPeriodo.filter(({ categoria }) => categoria === nome),
-        'tipo',
-      );
-      const novos = [...new Set(todos.filter(({ categoria }) => categoria === nome).map(({ tipo }) => tipo))]
-        .filter((tipo) => !TIPOS.includes(tipo))
-        .sort(porNome);
-      return {
-        nome,
-        total: noPeriodo.get(nome),
-        tipos: [...TIPOS, ...novos].map((tipo) => ({ tipo, total: tiposDaCategoria.get(tipo) ?? 0 })),
-      };
-    });
+      ),
+    }));
 }
 
 /**

@@ -2,19 +2,28 @@
 // Uso: npm run test:chamados
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buscarChamados } from '../api/chamados.js';
-import { CATEGORIAS, FECHADO, PERIODOS, STATUS_DESTAQUE, TIPOS, filtrarPorPeriodo, resumirChamados } from './chamados.js';
+import { readFileSync } from 'node:fs';
+import {
+  CATEGORIAS,
+  FECHADO,
+  LIMITE_ASSUNTOS,
+  OUTROS_ASSUNTOS,
+  PERIODOS,
+  STATUS_DESTAQUE,
+  filtrarPorPeriodo,
+  resumirChamados,
+} from './chamados.js';
 
 const HOJE = '2026-10-16';
-const chamado = (data, status, categoria = 'Siscam Web', tipo = 'Bug/Erro') => ({ data, status, categoria, tipo });
+const chamado = (data, status, categoria = 'Siscam Web', assunto = 'Bug / Erro') => ({ data, status, categoria, assunto });
 
 const LISTA = [
   chamado('2026-10-16', 'Em atendimento'),
-  chamado('2026-10-16', FECHADO, 'Site', 'Dúvidas'),
+  chamado('2026-10-16', FECHADO, 'Site', 'Dúvida Operacional'),
   chamado('2026-10-10', FECHADO),
   chamado('2026-10-10', 'Com o desenvolvedor', 'Site'),
-  chamado('2026-09-17', FECHADO, 'Siscam Web', 'Melhoria/Função'),
-  chamado('2026-09-16', FECHADO, 'Cartórios', 'Migração/Dados'),
+  chamado('2026-09-17', FECHADO, 'Siscam Web', 'Melhoria / Nova Função'),
+  chamado('2026-09-16', FECHADO, 'Cartórios', 'Migração / Dados'),
   chamado('2025-01-02', FECHADO),
   // Futuro: nunca entra em período nenhum além de "Todo o Tempo".
   chamado('2026-10-17', 'Pendente'),
@@ -106,42 +115,58 @@ test('as categorias seguem o período, na ordem do total de todos os chamados', 
   assert.deepEqual(nomes('hoje'), ['Siscam Web', 'Site']);
 });
 
-test('o gráfico da categoria traz os cinco tipos, zerados ou não, e só os chamados do período', () => {
+test('o gráfico da categoria traz os assuntos dela, do mais comum ao menos, contando só o período', () => {
   const siscam = resumirChamados(LISTA, '30d', HOJE).categorias[0];
   assert.equal(siscam.nome, 'Siscam Web');
   assert.equal(siscam.total, 3);
-  assert.deepEqual(
-    siscam.tipos,
-    TIPOS.map((tipo) => ({ tipo, total: { 'Bug/Erro': 2, 'Melhoria/Função': 1 }[tipo] ?? 0 })),
-  );
+  // Em todo o tempo, Bug / Erro (4) vem antes de Melhoria (1); no período, 2 e 1.
+  assert.deepEqual(siscam.assuntos, [
+    { assunto: 'Bug / Erro', total: 2 },
+    { assunto: 'Melhoria / Nova Função', total: 1 },
+  ]);
 
-  const comTipoNovo = [...LISTA, chamado('2025-03-03', FECHADO, 'Site', 'Treinamento')];
-  const site = resumirChamados(comTipoNovo, 'hoje', HOJE).categorias.find(({ nome }) => nome === 'Site');
-  assert.deepEqual(site.tipos.at(-1), { tipo: 'Treinamento', total: 0 });
-  assert.equal(site.tipos.reduce((soma, { total }) => soma + total, 0), site.total);
+  // Um assunto de fora do período continua como coluna, zerado.
+  const site = resumirChamados(LISTA, 'hoje', HOJE).categorias.find(({ nome }) => nome === 'Site');
+  assert.deepEqual(site.assuntos, [{ assunto: 'Bug / Erro', total: 0 }, { assunto: 'Dúvida Operacional', total: 1 }]);
+  assert.equal(site.assuntos.reduce((soma, { total }) => soma + total, 0), site.total);
 });
 
-test('os chamados de demonstração são estáveis e coerentes para toda a equipe', async () => {
-  const equipe = [{ id: 'adriano' }, { id: 'rafael' }, { id: 'ketlyn' }];
-  const primeira = await buscarChamados(equipe, HOJE);
-  const segunda = await buscarChamados(equipe, HOJE);
-  assert.deepEqual(primeira, segunda);
-  assert.notDeepEqual(primeira.adriano.lista, primeira.rafael.lista);
+test('passando do limite de colunas, os assuntos menos comuns somam em "Outros"', () => {
+  const nomes = Array.from({ length: LIMITE_ASSUNTOS + 2 }, (_, i) => `Assunto ${i + 1}`);
+  // O primeiro assunto tem mais chamados, o último, menos.
+  const lista = nomes.flatMap((nome, i) =>
+    Array.from({ length: nomes.length - i }, () => chamado(HOJE, FECHADO, 'Site', nome)),
+  );
+  const [site] = resumirChamados(lista, 'tudo', HOJE).categorias;
+  assert.equal(site.assuntos.length, LIMITE_ASSUNTOS + 1);
+  assert.deepEqual(site.assuntos.slice(0, 2), [
+    { assunto: 'Assunto 1', total: 7 },
+    { assunto: 'Assunto 2', total: 6 },
+  ]);
+  assert.deepEqual(site.assuntos.at(-1), { assunto: OUTROS_ASSUNTOS, total: 2 + 1 });
+  assert.equal(site.assuntos.reduce((soma, { total }) => soma + total, 0), site.total);
 
-  for (const [id, { ficticio, lista }] of Object.entries(primeira)) {
-    assert.equal(ficticio, true);
-    assert.ok(lista.length > 100, `volume de ${id}`);
-    assert.ok(lista.every(({ data }) => /^\d{4}-\d{2}-\d{2}$/.test(data) && data <= HOJE), `datas de ${id}`);
-    assert.ok(lista.every(({ tipo }) => TIPOS.includes(tipo)), `tipos de ${id}`);
+  // Um assunto a mais que o limite ganha a coluna dele, em vez de um "Outros" de um só.
+  const umAMais = lista.filter(({ assunto }) => assunto !== nomes.at(-1));
+  assert.ok(!resumirChamados(umAMais, 'tudo', HOJE).categorias[0].assuntos.some(({ assunto }) => assunto === OUTROS_ASSUNTOS));
+});
+
+test('os chamados do Milldesk (src/data/chamados.json) são coerentes para toda a equipe', () => {
+  const { desenvolvedores } = JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8'));
+  const equipe = JSON.parse(readFileSync(new URL('../../../data/dev-team.json', import.meta.url), 'utf8')).team;
+  assert.deepEqual(Object.keys(desenvolvedores).sort(), equipe.map(({ id }) => id).sort());
+
+  for (const [id, lista] of Object.entries(desenvolvedores)) {
+    assert.ok(lista.every(({ data }) => /^\d{4}-\d{2}-\d{2}$/.test(data)), `datas de ${id}`);
     assert.ok(lista.every(({ categoria }) => CATEGORIAS.includes(categoria)), `categorias de ${id}`);
-    assert.ok(lista.every(({ local }) => typeof local === 'string' && local.length > 0), `locais de ${id}`);
-    assert.ok(lista.some(({ data }) => data === HOJE), `chamados de hoje de ${id}`);
+    assert.ok(lista.every(({ assunto, status }) => assunto && status), `assunto e status de ${id}`);
+    assert.ok(!lista.some(({ status }) => /desenvolvimento/i.test(status)), `"Com o Desenvolvimento" junto de ${id}`);
+    assert.deepEqual(lista.map(({ data }) => data), lista.map(({ data }) => data).toSorted().reverse(), `ordem de ${id}`);
 
     const resumo = resumirChamados(lista, 'tudo', HOJE);
     const somaStatus = resumo.destaque.total + resumo.status.reduce((soma, { total }) => soma + total, 0);
     assert.equal(somaStatus, resumo.total, `status de ${id}`);
     const somaCategorias = resumo.categorias.reduce((soma, { total }) => soma + total, 0);
     assert.equal(somaCategorias, resumo.total, `categorias de ${id}`);
-    assert.ok(resumo.categorias.length >= 2, `categorias de ${id}`);
   }
 });

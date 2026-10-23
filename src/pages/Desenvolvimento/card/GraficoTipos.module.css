@@ -1,4 +1,4 @@
-/* Gráfico de tipos de solicitação do card do desenvolvedor. Usa as variáveis do card. */
+/* Gráfico de assuntos de uma categoria, no card do desenvolvedor. Usa as variáveis do card. */
 .grafico {
   --altura-area: 8.5rem;
   /* O número sobre a coluna: o vão até a barra e a altura da linha dele. */
@@ -105,7 +105,7 @@
   animation-delay: calc(var(--ordem) * 50ms + 700ms);
 }
 
-/* Tipo sem chamado: o zero não aparece, mas o elemento fica para a troca ser suave. */
+/* Assunto sem chamado: o zero não aparece, mas o elemento fica para a troca ser suave. */
 .zerado {
   opacity: 0;
 }
@@ -117,6 +117,8 @@
 
 .tipos span {
   padding: 0 2px;
+  /* Assunto comprido ("Configuração de Parâmetros") quebra na coluna em vez de vazar. */
+  overflow-wrap: anywhere;
 }
 
 @keyframes crescer {

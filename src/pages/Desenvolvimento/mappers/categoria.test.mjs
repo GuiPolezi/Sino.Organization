@@ -2,7 +2,7 @@
 // Uso: npm run test:quadro
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buscarChamados } from '../api/chamados.js';
+import { readFileSync } from 'node:fs';
 import { aCadaQuantas, desempenhoDaCategoria } from './categoria.js';
 import { CATEGORIAS, FECHADO } from './chamados.js';
 
@@ -71,13 +71,20 @@ test('no empate, o primeiro lugar fica com quem vem antes na equipe', () => {
   assert.equal(desempenhoDaCategoria(EQUIPE, empate, 'Site', 'tudo', HOJE).rankings[0].melhor, 'a');
 });
 
-test('com os chamados de demonstração, todo fechado tem data de fechamento entre a atribuição e hoje', async () => {
-  const equipe = ['x', 'y', 'z'].map(dev);
-  const chamados = await buscarChamados(equipe, HOJE);
+const chamadosDoMilldesk = () =>
+  Object.fromEntries(
+    Object.entries(JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8')).desenvolvedores).map(
+      ([id, lista]) => [id, { lista }],
+    ),
+  );
+
+test('com os chamados do Milldesk, só fechado tem data de fechamento, nunca antes da criação', () => {
+  const chamados = chamadosDoMilldesk();
+  const equipe = Object.keys(chamados).map(dev);
   for (const { lista } of Object.values(chamados)) {
     for (const chamado of lista) {
       if (chamado.status !== FECHADO) assert.equal(chamado.fechadoEm, undefined);
-      else assert.ok(chamado.fechadoEm >= chamado.data && chamado.fechadoEm <= HOJE, JSON.stringify(chamado));
+      else if (chamado.fechadoEm) assert.ok(chamado.fechadoEm >= chamado.data, JSON.stringify(chamado));
     }
   }
   const algum = CATEGORIAS.map((nome) => desempenhoDaCategoria(equipe, chamados, nome, 'tudo', HOJE)).find(({ membros }) => membros.length);

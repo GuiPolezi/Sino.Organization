@@ -13,9 +13,9 @@ function escala(maximo) {
   return { topo, marcas: Array.from({ length: topo + 1 }, (_, i) => i) };
 }
 
-// "Melhoria/Função" pode quebrar depois da barra, para caber na coluna.
-const comQuebra = (tipo) =>
-  tipo.split('/').map((parte, i, partes) => (
+// "Migração/Dados" pode quebrar depois da barra, para caber na coluna.
+const comQuebra = (assunto) =>
+  assunto.split('/').map((parte, i, partes) => (
     <Fragment key={i}>
       {parte}
       {i < partes.length - 1 && (
@@ -27,30 +27,30 @@ const comQuebra = (tipo) =>
   ));
 
 /**
- * Colunas com os chamados de uma categoria por tipo de solicitação. Cada coluna
- * leva o valor no topo, então o eixo Y só tem as linhas de grade. As colunas
- * são as mesmas ao trocar de categoria ou de período: a altura delas desliza
- * até o valor novo.
+ * Colunas com os chamados de uma categoria por assunto (a subcategoria do
+ * Milldesk). Cada coluna leva o valor no topo, então o eixo Y só tem as linhas
+ * de grade. Ao trocar de período as colunas são as mesmas e a altura delas
+ * desliza até o valor novo.
  *
  * @param {object} props
- * @param {{ nome: string, tipos: { tipo: string, total: number }[] }} props.categoria
+ * @param {{ nome: string, assuntos: { assunto: string, total: number }[] }} props.categoria
  */
 export default function GraficoTipos({ categoria }) {
-  const { tipos } = categoria;
-  const { topo, marcas } = escala(Math.max(...tipos.map(({ total }) => total)));
-  const descricao = `Chamados de ${categoria.nome} por tipo de solicitação: ${tipos
-    .map(({ tipo, total }) => `${tipo}, ${total}`)
+  const { assuntos } = categoria;
+  const { topo, marcas } = escala(Math.max(...assuntos.map(({ total }) => total)));
+  const descricao = `Chamados de ${categoria.nome} por assunto: ${assuntos
+    .map(({ assunto, total }) => `${assunto}, ${total}`)
     .join('; ')}`;
 
   return (
-    <div className={styles.grafico} role="img" aria-label={descricao} style={{ '--colunas': tipos.length }}>
+    <div className={styles.grafico} role="img" aria-label={descricao} style={{ '--colunas': assuntos.length }}>
       <div className={styles.area}>
         {marcas.slice(1).map((marca) => (
           <i key={marca} style={{ bottom: porcento(marca, topo) }} />
         ))}
         <div className={styles.colunas}>
-          {tipos.map(({ tipo, total }, i) => (
-            <div key={tipo} style={{ '--altura': porcento(total, topo), '--ordem': i }}>
+          {assuntos.map(({ assunto, total }, i) => (
+            <div key={assunto} style={{ '--altura': porcento(total, topo), '--ordem': i }}>
               <span className={total > 0 ? styles.valor : `${styles.valor} ${styles.zerado}`}>
                 <Contagem valor={total} />
               </span>
@@ -61,8 +61,8 @@ export default function GraficoTipos({ categoria }) {
       </div>
 
       <div className={styles.tipos}>
-        {tipos.map(({ tipo }) => (
-          <span key={tipo}>{comQuebra(tipo)}</span>
+        {assuntos.map(({ assunto }) => (
+          <span key={assunto}>{comQuebra(assunto)}</span>
         ))}
       </div>
     </div>
