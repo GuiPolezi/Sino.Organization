@@ -360,6 +360,43 @@
   transform: scale(1.2);
 }
 
+/*
+ * ── Telas pequenas ──
+ * No celular, o painel (o container, ver CardQuadro.module.css) tem menos de
+ * 24rem úteis; o desktop tem mais e não muda. Margens e vãos menores deixam as
+ * colunas mais largas: os nomes cabem e os rostos crescem.
+ */
+@container (max-width: 24rem) {
+  .plano {
+    --margem-y: 1.6rem;
+
+    padding-right: 0.5rem;
+    border-radius: 22px 0 22px 22px;
+  }
+
+  .grade {
+    right: 0.75rem;
+  }
+
+  .eixoX {
+    right: 0.5rem;
+  }
+
+  .slide {
+    gap: max(3px, calc(10cqi / var(--colunas)));
+    padding: 0;
+  }
+
+  .barra {
+    right: 2%;
+    left: 2%;
+  }
+
+  .retrato {
+    border-radius: 12px;
+  }
+}
+
 /* ── Movimento ── */
 @media (prefers-reduced-motion: no-preference) {
   .legenda h3 {

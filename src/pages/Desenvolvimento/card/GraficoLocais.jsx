@@ -1,6 +1,6 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MEDIA } from '../../../utils/media.js';
 import Contagem from '../../Suporte/card/Contagem.jsx';
 import { coresDosTipos } from './cores.js';
@@ -30,8 +30,8 @@ function animarEntrada(raiz) {
 /**
  * "Carga por Local": os locais (campo Local do ticket) com mais tickets no
  * período, numa barra por local, dividida pelas subcategorias mais comuns da
- * equipe; as demais somam em "Outros". A dica do mouse lista todas as
- * subcategorias do local. Ao trocar de período, as barras deslizam até o
+ * equipe; as demais somam em "Outros". A dica (com o mouse em cima, ou com um
+ * toque no celular) lista todas as subcategorias do local. Ao trocar de período, as barras deslizam até o
  * tamanho novo e as linhas trocam de lugar sem saltos.
  *
  * @param {object} props
@@ -57,15 +57,41 @@ export default function GraficoLocais({ locais, tipos: legenda }) {
     { dependencies: [visto], scope: raiz },
   );
 
-  const mover = (local) => (event) => {
+  // Aberta pelo toque, a dica fecha com um toque fora do gráfico.
+  const abertaNoToque = ativo?.toque === true;
+  useEffect(() => {
+    if (!abertaNoToque) return undefined;
+    const fecharFora = (event) => {
+      if (!area.current?.contains(event.target)) setAtivo(null);
+    };
+    document.addEventListener('pointerdown', fecharFora);
+    return () => document.removeEventListener('pointerdown', fecharFora);
+  }, [abertaNoToque]);
+
+  const ondeEsta = (event) => {
     const caixa = area.current.getBoundingClientRect();
-    setAtivo({ local, x: event.clientX - caixa.left, y: event.clientY - caixa.top });
+    return { x: event.clientX - caixa.left, y: event.clientY - caixa.top };
+  };
+  // Mouse (e caneta): a dica acompanha o ponteiro.
+  const mover = (local) => (event) => {
+    if (event.pointerType === 'touch') return;
+    setAtivo({ local, ...ondeEsta(event) });
+  };
+  // Toque: um toque abre a dica do local e outro no mesmo local a fecha. Rolar a tela não abre (o navegador cancela o ponteiro).
+  const tocar = (local) => (event) => {
+    if (event.pointerType !== 'touch') return;
+    const ponto = ondeEsta(event);
+    setAtivo((atual) => (atual?.local === local ? null : { local, ...ponto, toque: true }));
+  };
+  // No toque, o ponteiro "sai" logo depois de soltar: só o mouse fecha a dica ao sair.
+  const sair = (event) => {
+    if (event.pointerType !== 'touch') setAtivo(null);
   };
 
   return (
     <div ref={raiz} className={styles.grafico} data-esperando={!visto || undefined}>
       {locais.length === 0 && <p className={styles.vazio}>Nenhum ticket neste período.</p>}
-      <div ref={area} className={styles.area} aria-hidden="true" onPointerLeave={() => setAtivo(null)}>
+      <div ref={area} className={styles.area} aria-hidden="true" onPointerLeave={sair}>
         <i className={styles.eixoY} />
         <ol className={styles.linhas} style={{ '--linhas': locais.length }} data-destaque={ativo ? true : undefined}>
           {locais.map(({ local, rotulo, total, tipos }, i) => (
@@ -74,6 +100,7 @@ export default function GraficoLocais({ locais, tipos: legenda }) {
               style={{ '--posicao': i }}
               data-ativa={ativo?.local === local || undefined}
               onPointerMove={mover(local)}
+              onPointerUp={tocar(local)}
             >
               <span className={styles.local}>{rotulo}</span>
               <span className={styles.trilho}>
