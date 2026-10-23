@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { useEffect, useRef, useState } from 'react';
 import { MEDIA } from '../../../utils/media.js';
 import Contagem from '../../Suporte/card/Contagem.jsx';
+import { tempoParaMostrar } from '../mappers/categoria.js';
 import { girarAoPassar } from './giroDaEstrela.js';
 import Retrato from './Retrato.jsx';
 import styles from './Ranking.module.css';
@@ -27,14 +28,15 @@ const ESTRELA = `M${Array.from({ length: 10 }, (_, i) => {
 
 const primeiroNome = (nome) => nome.split(' ')[0];
 
+// No tempo, o valor vem em horas: aparece em horas abaixo de 1 dia e em dias a partir dele.
 function Valor({ ranking, valor }) {
   if (valor === null) return '—';
   if (ranking.id !== 'tempo') return <Contagem valor={valor} />;
-  const dias = Math.round(valor);
-  if (dias < 1) return 'Menos de 1 Dia';
+  const { numero, unidade } = tempoParaMostrar(valor);
+  if (numero === null) return unidade;
   return (
     <>
-      <Contagem valor={dias} /> {dias === 1 ? 'Dia' : 'Dias'}
+      <Contagem valor={numero} /> {unidade}
     </>
   );
 }
@@ -130,7 +132,10 @@ function Slide({ ranking, membros, saindo }) {
 function Leitura({ ranking }) {
   const texto = (valor) => {
     if (valor === null) return 'sem tickets fechados';
-    return ranking.id === 'tempo' ? `${Math.round(valor)} dias` : `${valor} tickets`;
+    if (ranking.id !== 'tempo') return `${valor} tickets`;
+    const { numero, unidade } = tempoParaMostrar(valor);
+    if (numero === null) return 'menos de 1 hora';
+    return `${numero} ${unidade === 'h' ? (numero === 1 ? 'hora' : 'horas') : unidade.toLowerCase()}`;
   };
   return (
     <ol className="sr-only">

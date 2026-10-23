@@ -15,6 +15,7 @@
  * @property {string} assunto    do que trata o chamado: a subcategoria do Milldesk ("Bug / Erro"…)
  * @property {string} [local]    local do ticket: o campo Local do Milldesk (o cliente que abriu)
  * @property {string} [fechadoEm] dia em que foi fechado, "AAAA-MM-DD" (só nos fechados)
+ * @property {number} [minutos]  quanto levou da abertura à finalização (só nos fechados com as duas horas)
  *
  * @typedef {object} ChamadosDesenvolvedor
  * @property {boolean} [ficticio] dados de demonstração, ainda sem backend

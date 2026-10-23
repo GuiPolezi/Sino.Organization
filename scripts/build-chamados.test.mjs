@@ -7,6 +7,7 @@ import {
   assuntoDoTicket,
   categoriaDoSite,
   localDoTicket,
+  minutosAteFinalizar,
   montarChamados,
   statusDoSite,
 } from './lib/build-chamados.mjs';
@@ -53,6 +54,37 @@ test('o assunto é a subcategoria e o local é o campo Local, como vieram', () =
   assert.equal(assuntoDoTicket(null), SEM_ASSUNTO);
   assert.equal(localDoTicket('  2º Tabelião de Notas  de Piracicaba '), '2º Tabelião de Notas de Piracicaba');
   for (const vazio of [null, undefined, '', ' ', 'null']) assert.equal(localDoTicket(vazio), null, String(vazio));
+});
+
+test('o tempo até finalizar sai da hora de abertura e da de finalização', () => {
+  assert.equal(minutosAteFinalizar('31/10/2017 13:07', '31/10/2017 15:37'), 150);
+  // Virando o mês e o ano.
+  assert.equal(minutosAteFinalizar('31/12/2025 23:30', '01/01/2026 00:10'), 40);
+  assert.equal(minutosAteFinalizar('28/02/2024 10:00', '01/03/2024 10:00'), 2 * 24 * 60);
+  for (const [inicio, fim] of [[null, '01/01/2026 10:00'], ['01/01/2026 10:00', null], ['01/01/2026', '02/01/2026'], ['02/01/2026 10:00', '01/01/2026 10:00']]) {
+    assert.equal(minutosAteFinalizar(inicio, fim), null, `${inicio} -> ${fim}`);
+  }
+});
+
+test('montarChamados conta os tickets abertos por dia, de qualquer técnico, no total e por categoria', () => {
+  const ticket = (id, campos) => ({ id, agent: 'Outra Pessoa', category: 'Site', status: 'Fechado', start: '01/10/2026', ...campos });
+  const { solicitacoes, desenvolvedores } = montarChamados(
+    [
+      ticket(1),
+      ticket(1),
+      ticket(2, { category: 'Siscam 9 WEB' }),
+      ticket(3, { category: 'zEscrituras', start: '02/10/2026' }),
+      ticket(4, { category: null, start: '02/10/2026' }),
+      ticket(5, { start: null }),
+      ticket(6, { agent: 'Ana Souza', start: '02/10/2026', starttime: '02/10/2026 09:00', end: '02/10/2026', endtime: '02/10/2026 11:30' }),
+    ],
+    [{ id: 'ana', agent: 'Ana Souza' }],
+  );
+  assert.deepEqual(solicitacoes, {
+    todas: { '2026-10-01': 2, '2026-10-02': 3 },
+    categorias: { Site: { '2026-10-01': 1, '2026-10-02': 1 }, 'Siscam 9': { '2026-10-01': 1 } },
+  });
+  assert.equal(desenvolvedores.ana[0].minutos, 150);
 });
 
 test('montarChamados separa pelo campo Técnico e guarda só campos de classificação', () => {

@@ -3,10 +3,17 @@
 //
 // De cada ticket saem só campos de classificação: data de criação, status,
 // categoria, assunto (a subcategoria do Milldesk), local (o campo Local do
-// ticket) e data de fechamento. Título, descrição e solicitante nunca saem daqui.
+// ticket), data de fechamento e quantos minutos o ticket levou até ser
+// finalizado. Título, descrição e solicitante nunca saem daqui.
 //
-// Só entram tickets cuja categoria está em CATEGORIAS_MILLDESK. Os demais ficam
-// fora de tudo (status, total e categorias) e aparecem só no relatório do sync.
+// Além dos chamados de cada desenvolvedor, sai a contagem de tickets abertos
+// por dia, de qualquer técnico: no Milldesk todo e em cada categoria do site.
+// Ela alimenta os "Tickets criados" do card de uma categoria.
+//
+// Nos chamados dos desenvolvedores, só entram tickets cuja categoria está em
+// CATEGORIAS_MILLDESK; os demais ficam fora dos cards (status, total e
+// categorias) e aparecem só no relatório do sync. Na contagem do Milldesk todo
+// (solicitacoes.todas), entram todos os tickets.
 import { dataIso } from './build-atendimentos.mjs';
 
 export const FECHADO = 'Fechado';
@@ -96,6 +103,27 @@ export function assuntoDoTicket(subcategoria) {
   return nome && nome !== 'null' ? nome : SEM_ASSUNTO;
 }
 
+// "31/10/2017 13:07", como vêm starttime e endtime do Milldesk (horário de Brasília).
+// A conta ignora o antigo horário de verão (até 2019): no máximo 1 hora a mais ou a menos.
+const DATA_HORA = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/;
+const emMinutos = (texto) => {
+  const partes = DATA_HORA.exec(String(texto ?? ''));
+  if (!partes) return null;
+  const [, dia, mes, ano, hora, minuto] = partes.map(Number);
+  return Date.UTC(ano, mes - 1, dia, hora, minuto) / 6e4;
+};
+
+/**
+ * Quantos minutos o ticket levou da abertura à finalização (starttime e
+ * endtime do Milldesk). null quando falta uma das duas ou a conta dá negativa.
+ */
+export function minutosAteFinalizar(inicio, fim) {
+  const de = emMinutos(inicio);
+  const ate = emMinutos(fim);
+  if (de === null || ate === null || ate < de) return null;
+  return ate - de;
+}
+
 /** O local do ticket (o campo Local do Milldesk), ou null quando ele não tem. */
 export function localDoTicket(local) {
   const nome = String(local ?? '').replace(/\s+/g, ' ').trim();
@@ -105,10 +133,15 @@ export function localDoTicket(local) {
 /**
  * @param {object[]} tickets  showTicketsPerPeriod, de todas as janelas
  * @param {{ id: string, agent: string }[]} equipe  scripts/data/dev-team.json
+ * @returns {{ desenvolvedores: Record<string, object[]>,
+ *   solicitacoes: { todas: Record<string, number>, categorias: Record<string, Record<string, number>> },
+ *   categoriasIgnoradas: Record<string, number>, semData: number }}
  */
 export function montarChamados(tickets, equipe) {
   const porAgente = new Map(equipe.map(({ id, agent }) => [normalizar(agent), id]));
   const desenvolvedores = Object.fromEntries(equipe.map(({ id }) => [id, []]));
+  // Tickets abertos por dia, de qualquer técnico: no Milldesk todo e por categoria do site.
+  const solicitacoes = { todas: {}, categorias: {} };
   // Só para o relatório do sync.
   const categoriasIgnoradas = {};
   let semData = 0;
@@ -117,6 +150,7 @@ export function montarChamados(tickets, equipe) {
   for (const ticket of tickets) {
     if (vistos.has(ticket.id)) continue;
     vistos.add(ticket.id);
+    contarSolicitacao(solicitacoes, ticket);
     const id = porAgente.get(normalizar(ticket.agent));
     if (!id) continue;
 
@@ -138,10 +172,23 @@ export function montarChamados(tickets, equipe) {
     if (local) chamado.local = local;
     const fechadoEm = status === FECHADO ? dataIso(ticket.end) : null;
     if (fechadoEm) chamado.fechadoEm = fechadoEm;
+    const minutos = fechadoEm ? minutosAteFinalizar(ticket.starttime, ticket.endtime) : null;
+    if (minutos !== null) chamado.minutos = minutos;
     desenvolvedores[id].push(chamado);
   }
 
   // Do mais novo para o mais antigo, como a lista que o card recebe.
   for (const lista of Object.values(desenvolvedores)) lista.sort((a, b) => b.data.localeCompare(a.data));
-  return { desenvolvedores, categoriasIgnoradas, semData };
+  return { desenvolvedores, solicitacoes, categoriasIgnoradas, semData };
+}
+
+// Soma o ticket no dia em que foi aberto: no total e, se for de uma categoria do site, nela.
+function contarSolicitacao({ todas, categorias }, ticket) {
+  const data = dataIso(ticket.start);
+  if (!data) return;
+  todas[data] = (todas[data] ?? 0) + 1;
+  const categoria = categoriaDoSite(ticket.category);
+  if (!categoria) return;
+  const porDia = (categorias[categoria] ??= {});
+  porDia[data] = (porDia[data] ?? 0) + 1;
 }

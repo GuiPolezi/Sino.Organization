@@ -1,6 +1,7 @@
 // Busca no Milldesk todos os tickets desde o início do uso do sistema e gera
 // src/data/chamados.json com a lista de chamados de cada desenvolvedor de
-// scripts/data/dev-team.json (o técnico do ticket é o campo Técnico).
+// scripts/data/dev-team.json (o técnico do ticket é o campo Técnico) e a
+// contagem de tickets abertos por dia, no Milldesk todo e por categoria.
 // As regras de classificação estão em scripts/lib/build-chamados.mjs; título,
 // descrição e solicitante dos tickets nunca saem deste script.
 //
@@ -86,12 +87,12 @@ const resultado = await run().catch((error) => {
   if (error instanceof MilldeskError) fail(`\n${error.message} ${OUTPUT} não foi alterado.`);
   throw error;
 });
-const { total, desenvolvedores, categoriasIgnoradas, semData } = resultado;
+const { total, desenvolvedores, solicitacoes, categoriasIgnoradas, semData } = resultado;
 
 await mkdir('src/data', { recursive: true });
 await writeFile(
   OUTPUT,
-  `${JSON.stringify({ source: 'milldesk', geradoEm: new Date().toISOString(), periodo: { inicio: INICIO, fim: hoje }, desenvolvedores })}\n`,
+  `${JSON.stringify({ source: 'milldesk', geradoEm: new Date().toISOString(), periodo: { inicio: INICIO, fim: hoje }, desenvolvedores, solicitacoes })}\n`,
 );
 
 const ignorados = Object.entries(categoriasIgnoradas)

@@ -7,6 +7,7 @@ import card from '../../Suporte/card/CardTecnico.module.css';
 import Contagem from '../../Suporte/card/Contagem.jsx';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
+import { solicitacoes } from '../api/chamados.js';
 import { desempenhoDaCategoria } from '../mappers/categoria.js';
 import PeriodoEmPilulas from './PeriodoEmPilulas.jsx';
 import Ranking from './Ranking.jsx';
@@ -54,10 +55,11 @@ function Membros({ membros }) {
 
 function Frequencia({ categoria, aCada }) {
   if (aCada === null) return <>Nenhuma solicitação de {categoria} neste período.</>;
-  if (aCada === 1) return <>Neste período, todas as solicitações foram de {categoria}.</>;
+  if (aCada.x === 1) return <>Neste período, todas as solicitações foram de {categoria}.</>;
   return (
     <>
-      Em média, a cada <strong>{aCada}</strong> novas solicitações, pelo menos 1 é de {categoria}
+      Em média, a cada <strong>{aCada.x}</strong> novas solicitações, pelo menos <strong>{aCada.y}</strong>{' '}
+      {aCada.y === 1 ? 'é' : 'são'} de {categoria}
     </>
   );
 }
@@ -118,7 +120,7 @@ export default function CardCategoria({ categoria, fechar }) {
   const hoje = hojeEmBrasilia();
 
   const desempenho = useMemo(
-    () => desempenhoDaCategoria(tecnicos, chamados, categoria, periodo, hoje),
+    () => desempenhoDaCategoria(tecnicos, chamados, categoria, periodo, hoje, solicitacoes()),
     [tecnicos, chamados, categoria, periodo, hoje],
   );
 

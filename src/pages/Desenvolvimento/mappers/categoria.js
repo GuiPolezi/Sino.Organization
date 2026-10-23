@@ -1,13 +1,24 @@
 /*
- * Contas do card de uma categoria (o botão do Desempenho no painel do quadro).
- * Saem dos mesmos chamados dos cards (api/chamados.js): quem da equipe trabalha
- * na categoria, quantos tickets dela foram criados no período, com que
- * frequência ela aparece entre as solicitações e os três rankings do slide.
+ * Contas do card de uma categoria (o botão do Desempenho no painel do quadro):
+ * quem da equipe trabalha na categoria, quantos tickets dela foram criados no
+ * período, com que frequência ela aparece entre as solicitações e os três
+ * rankings do slide. Membros e rankings saem dos chamados dos desenvolvedores;
+ * os tickets criados e a frequência, das solicitações de qualquer técnico
+ * (api/chamados.js). O período é sempre pela data de criação do ticket.
  */
 import { FECHADO, filtrarPorPeriodo } from './chamados.js';
 
 /** @import { Tecnico } from '../../Suporte/tipos.js' */
 /** @import { ChamadosDesenvolvedor, Periodo } from './chamados.js' */
+
+/**
+ * Tickets abertos por dia ("AAAA-MM-DD" -> quantos), de qualquer técnico: no
+ * Milldesk todo e em cada categoria do site.
+ *
+ * @typedef {object} Solicitacoes
+ * @property {Record<string, number>} todas
+ * @property {Record<string, Record<string, number>>} categorias
+ */
 
 /**
  * Um ranking do slide. `melhor` é o id do primeiro lugar (null sem ninguém
@@ -17,12 +28,14 @@ import { FECHADO, filtrarPorPeriodo } from './chamados.js';
  * @property {string} id
  * @property {string} titulo
  * @property {boolean} menorVence
- * @property {{ id: string, nome: string, valor: number | null }[]} itens  na ordem da equipe
+ * @property {{ id: string, nome: string, valor: number | null }[]} itens  na ordem da equipe (no tempo, em horas)
  * @property {string | null} melhor
  */
 
 const UM_DIA_MS = 864e5;
 const paraUtc = (data) => Date.parse(`${data}T00:00:00Z`);
+// Maior "a cada X" que a frase usa com mais de 1 por vez; acima disso, fica "a cada X, pelo menos 1".
+const MAIOR_A_CADA = 10;
 
 /*
  * O primeiro lugar. Valor null (nada a medir) ou zero num ranking em que o maior
@@ -37,56 +50,98 @@ function primeiroLugar(itens, menorVence) {
 const media = (valores) => (valores.length ? valores.reduce((soma, valor) => soma + valor, 0) / valores.length : null);
 
 /**
- * "Em média, a cada N novas solicitações, pelo menos 1 é da categoria." N é o
- * total de solicitações do período dividido pelas da categoria, arredondado para
- * cima (assim a frase vale na média). Null quando a categoria não teve nenhuma.
- *
- * Hoje sai da conta dos chamados da equipe; quando a API trouxer a estimativa
- * por categoria (o tempo médio entre um ticket novo e outro da mesma
- * categoria), é só esta função que muda.
+ * "Em média, a cada X novas solicitações, pelo menos Y são da categoria."
+ * X e Y são a fração com X até MAIOR_A_CADA que mais se aproxima da parte da
+ * categoria sem passar dela (assim o "pelo menos" vale na média); no empate,
+ * a de X menor. Ex.: 45% -> 4 a cada 9; 1/3 -> 1 a cada 3. Abaixo de 1 a cada
+ * MAIOR_A_CADA, Y é 1 e X arredonda para cima (8% -> 1 a cada 13). X 1 é
+ * "todas". Null quando a categoria não teve nenhuma.
  *
  * @param {number} daCategoria
  * @param {number} total
+ * @returns {{ x: number, y: number } | null}
  */
 export function aCadaQuantas(daCategoria, total) {
   if (!daCategoria) return null;
-  return Math.max(1, Math.ceil(total / daCategoria));
+  if (daCategoria >= total) return { x: 1, y: 1 };
+  const parte = daCategoria / total;
+  let melhor = null;
+  for (let x = 2; x <= MAIOR_A_CADA; x += 1) {
+    const y = Math.floor(x * parte);
+    if (y >= 1 && (!melhor || y / x > melhor.y / melhor.x)) melhor = { x, y };
+  }
+  return melhor ?? { x: Math.ceil(total / daCategoria), y: 1 };
 }
+
+/**
+ * O tempo médio do ranking, para mostrar: em horas abaixo de 1 dia, em dias a
+ * partir dele. `numero` null quando é menos de 1 hora.
+ *
+ * @param {number} horas
+ * @returns {{ numero: number | null, unidade: string }}
+ */
+export function tempoParaMostrar(horas) {
+  if (horas < 1) return { numero: null, unidade: 'Menos de 1 h' };
+  if (Math.round(horas) < 24) return { numero: Math.round(horas), unidade: 'h' };
+  const dias = Math.round(horas / 24);
+  return { numero: dias, unidade: dias === 1 ? 'Dia' : 'Dias' };
+}
+
+// Quantas horas o chamado fechado levou: pela hora de abertura e de finalização; sem elas, pelas datas.
+function horasAteFechar({ data, fechadoEm, minutos }) {
+  if (typeof minutos === 'number') return minutos / 60;
+  return fechadoEm ? ((paraUtc(fechadoEm) - paraUtc(data)) / UM_DIA_MS) * 24 : null;
+}
+
+// Soma dos tickets abertos no período, a partir da contagem por dia.
+const somarNoPeriodo = (porDia, periodo, hoje) =>
+  filtrarPorPeriodo(
+    Object.entries(porDia ?? {}).map(([data, total]) => ({ data, total })),
+    periodo,
+    hoje,
+  ).reduce((soma, { total }) => soma + total, 0);
 
 /**
  * Tudo o que o card da categoria mostra, para um período.
  *
- * Membros são os desenvolvedores com algum chamado da categoria, em qualquer
- * data: a fila de rostos não muda a cada troca de período. Os rankings contam só
- * o período: atribuídos pela data de atribuição, fechados e tempo médio pela
- * data de fechamento.
+ * Membros são os desenvolvedores com algum chamado da categoria (campo Técnico),
+ * em qualquer data: a fila de rostos não muda a cada troca de período. Os
+ * rankings contam os chamados da categoria criados no período: atribuídos são
+ * todos eles, fechados os que já estão "Fechado", e o tempo médio é o desses
+ * fechados, da abertura à finalização, em horas.
+ *
+ * Tickets criados e a frequência saem das solicitações de qualquer técnico;
+ * sem elas, dos chamados da equipe.
  *
  * @param {Tecnico[]} tecnicos na ordem da equipe
  * @param {Record<string, ChamadosDesenvolvedor>} chamados por id
  * @param {string} categoria
  * @param {Periodo} periodo
  * @param {string} hoje "AAAA-MM-DD"
+ * @param {Solicitacoes} [solicitacoes]
  */
-export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, periodo, hoje) {
+export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, periodo, hoje, solicitacoes) {
   const comChamados = tecnicos.filter(({ id }) => Array.isArray(chamados[id]?.lista));
   const membros = comChamados
     .map((tecnico) => ({ tecnico, daCategoria: chamados[tecnico.id].lista.filter((c) => c.categoria === categoria) }))
     .filter(({ daCategoria }) => daCategoria.length > 0)
     .map(({ tecnico, daCategoria }) => {
       const atribuidos = filtrarPorPeriodo(daCategoria, periodo, hoje);
-      // Nos fechados, a data que conta é a do fechamento; de cada um, os dias que levou.
-      const fechados = filtrarPorPeriodo(
-        daCategoria
-          .filter(({ status, fechadoEm }) => status === FECHADO && fechadoEm)
-          .map(({ data, fechadoEm }) => ({ data: fechadoEm, dias: (paraUtc(fechadoEm) - paraUtc(data)) / UM_DIA_MS })),
-        periodo,
-        hoje,
-      );
-      return { tecnico, atribuidos: atribuidos.length, fechados: fechados.length, dias: media(fechados.map(({ dias }) => dias)) };
+      const fechados = atribuidos.filter(({ status }) => status === FECHADO);
+      const horas = fechados.map(horasAteFechar).filter((valor) => valor !== null);
+      return { tecnico, atribuidos: atribuidos.length, fechados: fechados.length, horas: media(horas) };
     });
 
-  const todosDoPeriodo = comChamados.flatMap(({ id }) => filtrarPorPeriodo(chamados[id].lista, periodo, hoje));
-  const criados = todosDoPeriodo.filter((c) => c.categoria === categoria).length;
+  let criados;
+  let total;
+  if (solicitacoes) {
+    criados = somarNoPeriodo(solicitacoes.categorias[categoria], periodo, hoje);
+    total = somarNoPeriodo(solicitacoes.todas, periodo, hoje);
+  } else {
+    const todosDoPeriodo = comChamados.flatMap(({ id }) => filtrarPorPeriodo(chamados[id].lista, periodo, hoje));
+    criados = todosDoPeriodo.filter((c) => c.categoria === categoria).length;
+    total = todosDoPeriodo.length;
+  }
 
   const ranking = (id, titulo, valorDe, menorVence = false) => {
     const itens = membros.map((membro) => ({ id: membro.tecnico.id, nome: membro.tecnico.nome, valor: valorDe(membro) }));
@@ -96,12 +151,12 @@ export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, period
   return {
     membros: membros.map(({ tecnico }) => tecnico),
     criados,
-    aCada: aCadaQuantas(criados, todosDoPeriodo.length),
+    aCada: aCadaQuantas(criados, total),
     /** @type {Ranking[]} */
     rankings: [
       ranking('atribuidos', 'Quantidade de Tickets Atribuídos', ({ atribuidos }) => atribuidos),
       ranking('fechados', 'Quantidade de Tickets Fechados', ({ fechados }) => fechados),
-      ranking('tempo', 'Tempo Médio para Finalizar Ticket', ({ dias }) => dias, true),
+      ranking('tempo', 'Tempo Médio para Finalizar Ticket', ({ horas }) => horas, true),
     ],
     ficticio: comChamados.some(({ id }) => chamados[id].ficticio === true),
   };
