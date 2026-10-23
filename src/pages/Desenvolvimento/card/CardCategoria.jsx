@@ -115,6 +115,7 @@ export default function CardCategoria({ categoria, fechar }) {
   const raiz = useRef(null);
   const tecnicos = useEquipe((s) => s.tecnicos);
   const chamados = useEquipe((s) => s.chamados);
+  const voltarAoQuadro = useEquipe((s) => s.abrirQuadro);
   const [periodo, setPeriodo] = useState('tudo');
   const hoje = hojeEmBrasilia();
 
@@ -136,6 +137,14 @@ export default function CardCategoria({ categoria, fechar }) {
       className={`${card.card} ${quadro.quadro} ${geral.painel} ${styles.card}`}
       aria-label={`Desempenho dos desenvolvedores em ${categoria}`}
     >
+      <button type="button" className={`${styles.voltar} ${card.surge}`} style={{ '--ordem': 0 }} onClick={voltarAoQuadro}>
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M10 3L5 8l5 5" />
+        </svg>
+        Voltar
+        <span className="sr-only"> ao quadro geral</span>
+      </button>
+
       <header className={`${card.topo} ${card.surge}`} style={{ '--ordem': 0 }}>
         <div className={`${card.avatar} ${quadro.avatar}`} aria-hidden="true">
           <svg viewBox="0 0 26 26" focusable="false">

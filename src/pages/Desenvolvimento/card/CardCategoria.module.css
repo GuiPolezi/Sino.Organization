@@ -9,6 +9,38 @@
   gap: 1.5rem;
 }
 
+/* ── Voltar ao quadro geral: link no canto esquerdo, acima do cabeçalho ── */
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* O card é uma coluna flex: align-self prende o link à esquerda. */
+  align-self: start;
+  margin-bottom: -0.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--color-olive);
+  cursor: pointer;
+  text-underline-offset: 3px;
+}
+
+.voltar:hover {
+  text-decoration: underline;
+}
+
+.voltar svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ── Membros ── */
 .rotulos {
   display: flex;
