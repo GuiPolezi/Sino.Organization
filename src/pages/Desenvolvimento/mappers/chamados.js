@@ -13,8 +13,7 @@
  * @property {string} status     status atual, com o nome do Milldesk
  * @property {string} categoria  sistema do chamado ("Siscam 9", "Site"…)
  * @property {string} assunto    do que trata o chamado: a subcategoria do Milldesk ("Bug / Erro"…)
- * @property {string} tipo       tipo da solicitação ("Bug/Erro"…), para a "Carga por Local" do quadro
- * @property {string} [local]    cidade do cliente que abriu o chamado
+ * @property {string} [local]    local do ticket: o campo Local do Milldesk (o cliente que abriu)
  * @property {string} [fechadoEm] dia em que foi fechado, "AAAA-MM-DD" (só nos fechados)
  *
  * @typedef {object} ChamadosDesenvolvedor
@@ -61,9 +60,6 @@ export function compararStatus(a, b) {
   const posicao = (status) => (fluxo.includes(status) ? fluxo.indexOf(status) : fluxo.length);
   return posicao(a) - posicao(b) || porNome(a, b);
 }
-
-/** Tipos de solicitação da "Carga por Local" do quadro, sempre nesta ordem, mesmo zerados. */
-export const TIPOS = ['Bug/Erro', 'Melhoria/Função', 'Implantação', 'Dúvidas', 'Migração/Dados'];
 
 /**
  * Categorias (sistemas) dos chamados, na ordem dos botões de Desempenho do quadro.

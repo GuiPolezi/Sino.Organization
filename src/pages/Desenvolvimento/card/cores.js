@@ -13,20 +13,25 @@ import { OUTROS } from '../mappers/visaoGeral.js';
 
 // Pincéis do quadro, na ordem: a cor segue a posição da pessoa na equipe (ou da categoria no Desempenho).
 const PINCEIS = ['#2a78d6', '#eb6834', '#1baf7a', '#c98500', '#e87ba4', '#008300', '#6250d6', '#e34948', '#0090a8', '#9a5b1f'];
-const COR_OUTROS = '#6f6c62';
+export const COR_OUTROS = '#6f6c62';
+
+/*
+ * Cores dos tipos (subcategorias) da "Carga por Local", na ordem da legenda: o
+ * mais comum fica com a primeira. As cores do design, nesta ordem, para as
+ * vizinhas na barra se distinguirem.
+ */
+const CORES_TIPOS = ['#d64848', '#7bc65a', '#1d7fc0', '#99978e', '#e2aa00'];
 
 /**
- * Tipos de solicitação da "Carga por Local". As cores do design, ajustadas para
- * as vizinhas se distinguirem; "Dúvidas" fica neutro de propósito.
+ * A cor de cada tipo da legenda da "Carga por Local" (visaoGeral().tiposDosLocais).
+ * Um tipo fora da legenda fica com a cor de "Outros".
+ * @param {string[]} tipos
+ * @returns {(tipo: string) => string}
  */
-export const CORES_TIPOS = {
-  'Bug/Erro': '#d64848',
-  'Melhoria/Função': '#7bc65a',
-  Implantação: '#1d7fc0',
-  Dúvidas: '#99978e',
-  'Migração/Dados': '#e2aa00',
-  [OUTROS]: COR_OUTROS,
-};
+export function coresDosTipos(tipos) {
+  const cores = new Map(tipos.filter((tipo) => tipo !== OUTROS).map((tipo, i) => [tipo, CORES_TIPOS[i] ?? COR_OUTROS]));
+  return (tipo) => cores.get(tipo) ?? COR_OUTROS;
+}
 
 /*
  * Cada item fica com o pincel da posição dele. Quem passa do número de pincéis

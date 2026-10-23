@@ -8,8 +8,8 @@ import { CATEGORIAS, FECHADO } from './chamados.js';
 
 const HOJE = '2026-10-16';
 const dev = (id) => ({ id, nome: id, funcao: '', ausente: false, avatarIniciais: 'X' });
-const aberto = (data, categoria) => ({ data, status: 'Em atendimento', categoria, tipo: 'Bug/Erro' });
-const fechado = (data, fechadoEm, categoria = 'Cartórios') => ({ data, fechadoEm, status: FECHADO, categoria, tipo: 'Bug/Erro' });
+const aberto = (data, categoria) => ({ data, status: 'Em atendimento', categoria });
+const fechado = (data, fechadoEm, categoria = 'Cartórios') => ({ data, fechadoEm, status: FECHADO, categoria });
 
 const CHAMADOS = {
   a: {

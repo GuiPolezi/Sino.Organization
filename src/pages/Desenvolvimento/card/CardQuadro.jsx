@@ -153,7 +153,7 @@ function Painel({ fechar }) {
           </section>
           <section>
             <h3 className={styles.subtitulo}>Carga por Local</h3>
-            <GraficoLocais locais={visao.porLocal} />
+            <GraficoLocais locais={visao.porLocal} tipos={visao.tiposDosLocais} />
           </section>
         </>
       )}
@@ -173,8 +173,8 @@ function Painel({ fechar }) {
  * Painel "Quadro da equipe" de /desenvolvimento: a visão geral da equipe, que
  * abre pelo quadro da cena. O período vale para o painel todo: o total de
  * tickets e as cargas por desenvolvedor, por categoria e por local (as contas
- * estão em mappers/visaoGeral.js). Os números saem dos chamados dos cards; hoje
- * são de demonstração. Os botões do Desempenho trocam o painel pelo card da
+ * estão em mappers/visaoGeral.js). Os números saem dos chamados dos cards, que
+ * vêm do Milldesk (api/chamados.js). Os botões do Desempenho trocam o painel pelo card da
  * categoria, que também é aberto daqui.
  */
 export default function CardQuadro() {

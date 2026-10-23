@@ -13,7 +13,7 @@
 //   npm run sync:chamados -- --from arq.json    (usa uma lista de tickets já baixada)
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { setTimeout as esperar } from 'node:timers/promises';
-import { cidadesDosClientes, montarChamados } from './lib/build-chamados.mjs';
+import { montarChamados } from './lib/build-chamados.mjs';
 import { MilldeskError, fetchMilldesk, toRecords } from './lib/milldesk.mjs';
 
 const OUTPUT = 'src/data/chamados.json';
@@ -63,12 +63,11 @@ async function buscar(endpoint) {
 
 const run = async () => {
   const equipe = JSON.parse(await readFile(new URL('./data/dev-team.json', import.meta.url), 'utf8')).team;
-  const clientes = JSON.parse(await readFile(new URL('../src/data/clients.json', import.meta.url), 'utf8'));
 
   const origem = process.argv.indexOf('--from');
   if (origem !== -1) {
     const tickets = toRecords(JSON.parse(await readFile(process.argv[origem + 1], 'utf8')));
-    return { total: tickets.length, ...montarChamados(tickets, equipe, cidadesDosClientes(clientes)) };
+    return { total: tickets.length, ...montarChamados(tickets, equipe) };
   }
 
   const tickets = [];
@@ -79,7 +78,7 @@ const run = async () => {
     tickets.push(...(await buscar(`showTicketsPerPeriod?start=${de}&end=${ate}`)));
   }
   process.stdout.write('\n');
-  return { total: tickets.length, ...montarChamados(tickets, equipe, cidadesDosClientes(clientes)) };
+  return { total: tickets.length, ...montarChamados(tickets, equipe) };
 };
 
 // Em qualquer falha o arquivo atual fica como está.

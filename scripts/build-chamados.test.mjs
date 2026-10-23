@@ -3,14 +3,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  OUTROS,
   SEM_ASSUNTO,
   assuntoDoTicket,
   categoriaDoSite,
-  cidadesDosClientes,
+  localDoTicket,
   montarChamados,
   statusDoSite,
-  tipoDoAssunto,
 } from './lib/build-chamados.mjs';
 
 test('as categorias do Milldesk caem nas 8 do site, sem depender de caixa ou acento', () => {
@@ -50,16 +48,11 @@ test('status: "Com o Desenvolvimento" fica separado de "Com o Desenvolvedor"; os
   assert.equal(statusDoSite(null), null);
 });
 
-test('o assunto é a subcategoria, e o tipo do quadro sai dele', () => {
+test('o assunto é a subcategoria e o local é o campo Local, como vieram', () => {
   assert.equal(assuntoDoTicket(' Bug / Erro '), 'Bug / Erro');
   assert.equal(assuntoDoTicket(null), SEM_ASSUNTO);
-  assert.equal(tipoDoAssunto('Bug / Erro - SIC e Ouvidoria'), 'Bug/Erro');
-  assert.equal(tipoDoAssunto('Melhoria / Nova Função'), 'Melhoria/Função');
-  assert.equal(tipoDoAssunto('Nova função'), 'Melhoria/Função');
-  assert.equal(tipoDoAssunto('Implantação'), 'Implantação');
-  assert.equal(tipoDoAssunto('Dúvida Operacional'), 'Dúvidas');
-  assert.equal(tipoDoAssunto('Migração / Dados'), 'Migração/Dados');
-  assert.equal(tipoDoAssunto('Configuração de Parâmetros'), OUTROS);
+  assert.equal(localDoTicket('  2º Tabelião de Notas  de Piracicaba '), '2º Tabelião de Notas de Piracicaba');
+  for (const vazio of [null, undefined, '', ' ', 'null']) assert.equal(localDoTicket(vazio), null, String(vazio));
 });
 
 test('montarChamados separa pelo campo Técnico e guarda só campos de classificação', () => {
@@ -67,7 +60,6 @@ test('montarChamados separa pelo campo Técnico e guarda só campos de classific
     { id: 'ana', agent: 'Ana Souza' },
     { id: 'beto', agent: 'Beto' },
   ];
-  const cidades = cidadesDosClientes({ cities: [{ city: 'Itapevi', clients: ['Itapevi CM'] }] });
   const ticket = (id, campos) => ({
     id,
     agent: 'Ana Souza',
@@ -86,25 +78,23 @@ test('montarChamados separa pelo campo Técnico e guarda só campos de classific
     [
       ticket(1),
       ticket(1),
-      ticket(2, { agent: 'ana souza ', status: 'Com o Desenvolvimento', start: '05/10/2026', location: 'Outro' }),
+      ticket(2, { agent: 'ana souza ', status: 'Com o Desenvolvimento', start: '05/10/2026', location: 'null' }),
       ticket(3, { category: 'zEscrituras' }),
       ticket(4, { agent: 'Marcos' }),
       ticket(5, { start: null }),
     ],
     equipe,
-    cidades,
   );
 
   assert.deepEqual(desenvolvedores, {
     ana: [
-      { data: '2026-10-05', status: 'Com o Desenvolvimento', categoria: 'Site', assunto: 'Bug / Erro', tipo: 'Bug/Erro' },
+      { data: '2026-10-05', status: 'Com o Desenvolvimento', categoria: 'Site', assunto: 'Bug / Erro' },
       {
         data: '2026-10-01',
         status: 'Fechado',
         categoria: 'Site',
         assunto: 'Bug / Erro',
-        tipo: 'Bug/Erro',
-        local: 'Itapevi',
+        local: 'Itapevi CM',
         fechadoEm: '2026-10-03',
       },
     ],

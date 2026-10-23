@@ -3,9 +3,7 @@ import gsap from 'gsap';
 import { useRef, useState } from 'react';
 import { MEDIA } from '../../../utils/media.js';
 import Contagem from '../../Suporte/card/Contagem.jsx';
-import { TIPOS } from '../mappers/chamados.js';
-import { OUTROS } from '../mappers/visaoGeral.js';
-import { CORES_TIPOS } from './cores.js';
+import { coresDosTipos } from './cores.js';
 import Dica from './Dica.jsx';
 import { useRevelar } from './medidas.js';
 import styles from './GraficoLocais.module.css';
@@ -13,8 +11,8 @@ import styles from './GraficoLocais.module.css';
 gsap.registerPlugin(useGSAP);
 
 const formato = new Intl.NumberFormat('pt-BR');
-// "Melhoria/Função" pode quebrar depois da barra, para caber na legenda.
-const quebravel = (tipo) => tipo.replace('/', '/​');
+// "Falha na Exportação/Relatórios" pode quebrar depois da barra, para caber na legenda.
+const quebravel = (tipo) => tipo.replaceAll('/', '/​');
 
 // Entrada, quando o gráfico aparece: os eixos se traçam, as barras crescem do eixo e os valores chegam depois.
 function animarEntrada(raiz) {
@@ -30,22 +28,25 @@ function animarEntrada(raiz) {
 }
 
 /**
- * "Carga por Local": os locais com mais tickets no período, numa barra por
- * local, dividida pelos tipos de solicitação. Ao trocar de período, as barras
- * deslizam até o tamanho novo e as linhas trocam de lugar sem saltos.
+ * "Carga por Local": os locais (campo Local do ticket) com mais tickets no
+ * período, numa barra por local, dividida pelas subcategorias mais comuns da
+ * equipe; as demais somam em "Outros". A dica do mouse lista todas as
+ * subcategorias do local. Ao trocar de período, as barras deslizam até o
+ * tamanho novo e as linhas trocam de lugar sem saltos.
  *
  * @param {object} props
- * @param {{ local: string, total: number, tipos: { tipo: string, total: number }[] }[]} props.locais
+ * @param {{ local: string, rotulo: string, total: number, tipos: { tipo: string, total: number }[],
+ *   assuntos: { assunto: string, total: number }[] }[]} props.locais
+ * @param {string[]} props.tipos a legenda, na ordem das cores (visaoGeral().tiposDosLocais)
  */
-export default function GraficoLocais({ locais }) {
+export default function GraficoLocais({ locais, tipos: legenda }) {
   const raiz = useRef(null);
   const area = useRef(null);
   const visto = useRevelar(raiz);
   const [ativo, setAtivo] = useState(null);
 
   const maximo = Math.max(1, ...locais.map(({ total }) => total));
-  const temOutros = locais.some(({ tipos }) => tipos.some(({ tipo }) => tipo === OUTROS));
-  const legenda = temOutros ? [...TIPOS, OUTROS] : TIPOS;
+  const corDe = coresDosTipos(legenda);
   const linhaAtiva = locais.find(({ local }) => local === ativo?.local);
 
   useGSAP(
@@ -67,20 +68,20 @@ export default function GraficoLocais({ locais }) {
       <div ref={area} className={styles.area} aria-hidden="true" onPointerLeave={() => setAtivo(null)}>
         <i className={styles.eixoY} />
         <ol className={styles.linhas} style={{ '--linhas': locais.length }} data-destaque={ativo ? true : undefined}>
-          {locais.map(({ local, total, tipos }, i) => (
+          {locais.map(({ local, rotulo, total, tipos }, i) => (
             <li
               key={local}
               style={{ '--posicao': i }}
               data-ativa={ativo?.local === local || undefined}
               onPointerMove={mover(local)}
             >
-              <span className={styles.local}>{local}</span>
+              <span className={styles.local}>{rotulo}</span>
               <span className={styles.trilho}>
                 <span className={styles.barra} style={{ '--fracao': total / maximo }}>
                   {tipos.map(({ tipo, total: doTipo }) => (
                     <i
                       key={tipo}
-                      style={{ flexGrow: doTipo, background: CORES_TIPOS[tipo] }}
+                      style={{ flexGrow: doTipo, background: corDe(tipo) }}
                       data-vazio={doTipo === 0 || undefined}
                     />
                   ))}
@@ -94,18 +95,16 @@ export default function GraficoLocais({ locais }) {
         </ol>
         <i className={styles.eixoX} />
         {linhaAtiva && (
-          <Dica x={ativo.x} y={ativo.y} largura={area.current?.clientWidth ?? 0}>
+          <Dica x={ativo.x} y={ativo.y} largura={area.current?.clientWidth ?? 0} className={styles.dica}>
             <strong>{linhaAtiva.local}</strong>
             <ul>
-              {linhaAtiva.tipos
-                .filter(({ total }) => total > 0)
-                .map(({ tipo, total }) => (
-                  <li key={tipo}>
-                    <i style={{ background: CORES_TIPOS[tipo] }} />
-                    {tipo}
-                    <b>{formato.format(total)}</b>
-                  </li>
-                ))}
+              {linhaAtiva.assuntos.map(({ assunto, total }) => (
+                <li key={assunto}>
+                  <i style={{ background: corDe(assunto) }} />
+                  <span>{assunto}</span>
+                  <b>{formato.format(total)}</b>
+                </li>
+              ))}
             </ul>
             <small>
               {formato.format(linhaAtiva.total)} {linhaAtiva.total === 1 ? 'ticket' : 'tickets'} no total
@@ -117,7 +116,7 @@ export default function GraficoLocais({ locais }) {
       <ul className={styles.legenda} hidden={locais.length === 0} aria-hidden="true">
         {legenda.map((tipo) => (
           <li key={tipo}>
-            <i style={{ background: CORES_TIPOS[tipo] }} />
+            <i style={{ background: corDe(tipo) }} />
             {quebravel(tipo)}
           </li>
         ))}
@@ -126,7 +125,7 @@ export default function GraficoLocais({ locais }) {
       {/* sr-only no invólucro: numa tabela, a largura e o overflow dele não valem. */}
       <div className="sr-only">
         <table>
-          <caption>Tickets dos {locais.length} locais com mais tickets no período, por tipo de solicitação</caption>
+          <caption>Tickets dos {locais.length} locais com mais tickets no período, por subcategoria</caption>
           <thead>
             <tr>
               <th scope="col">Local</th>

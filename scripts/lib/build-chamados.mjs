@@ -2,8 +2,8 @@
 // acesso à rede: o sync busca, aqui só se classifica e se conta.
 //
 // De cada ticket saem só campos de classificação: data de criação, status,
-// categoria, assunto (a subcategoria do Milldesk), tipo, cidade do cliente e
-// data de fechamento. Título, descrição e solicitante nunca saem daqui.
+// categoria, assunto (a subcategoria do Milldesk), local (o campo Local do
+// ticket) e data de fechamento. Título, descrição e solicitante nunca saem daqui.
 //
 // Só entram tickets cuja categoria está em CATEGORIAS_MILLDESK. Os demais ficam
 // fora de tudo (status, total e categorias) e aparecem só no relatório do sync.
@@ -96,38 +96,17 @@ export function assuntoDoTicket(subcategoria) {
   return nome && nome !== 'null' ? nome : SEM_ASSUNTO;
 }
 
-/*
- * Tipo da "Carga por Local" do quadro (TIPOS em mappers/chamados.js), deduzido
- * do assunto. O que não se encaixa vira "Outros".
- */
-const TIPO_DO_ASSUNTO = [
-  [/^bug ?\/ ?erro/, 'Bug/Erro'],
-  [/^melhoria|^nova funcao/, 'Melhoria/Função'],
-  [/^implantacao/, 'Implantação'],
-  [/^duvida/, 'Dúvidas'],
-  [/^migracao ?\/ ?dados/, 'Migração/Dados'],
-];
-export const OUTROS = 'Outros';
-
-export function tipoDoAssunto(assunto) {
-  const nome = normalizar(assunto);
-  return TIPO_DO_ASSUNTO.find(([padrao]) => padrao.test(nome))?.[1] ?? OUTROS;
+/** O local do ticket (o campo Local do Milldesk), ou null quando ele não tem. */
+export function localDoTicket(local) {
+  const nome = String(local ?? '').replace(/\s+/g, ' ').trim();
+  return nome && nome !== 'null' ? nome : null;
 }
-
-/**
- * Cidade de cada cliente, pelo nome do local no Milldesk (src/data/clients.json).
- * @param {{ cities: { city: string, clients: string[] }[] }} clientes
- * @returns {Map<string, string>}
- */
-export const cidadesDosClientes = (clientes) =>
-  new Map(clientes.cities.flatMap(({ city, clients }) => clients.map((cliente) => [normalizar(cliente), city])));
 
 /**
  * @param {object[]} tickets  showTicketsPerPeriod, de todas as janelas
  * @param {{ id: string, agent: string }[]} equipe  scripts/data/dev-team.json
- * @param {Map<string, string>} cidades  cidadesDosClientes(...)
  */
-export function montarChamados(tickets, equipe, cidades) {
+export function montarChamados(tickets, equipe) {
   const porAgente = new Map(equipe.map(({ id, agent }) => [normalizar(agent), id]));
   const desenvolvedores = Object.fromEntries(equipe.map(({ id }) => [id, []]));
   // Só para o relatório do sync.
@@ -154,9 +133,8 @@ export function montarChamados(tickets, equipe, cidades) {
       continue;
     }
 
-    const assunto = assuntoDoTicket(ticket.subcategory);
-    const chamado = { data, status, categoria, assunto, tipo: tipoDoAssunto(assunto) };
-    const local = cidades.get(normalizar(ticket.location));
+    const chamado = { data, status, categoria, assunto: assuntoDoTicket(ticket.subcategory) };
+    const local = localDoTicket(ticket.location);
     if (local) chamado.local = local;
     const fechadoEm = status === FECHADO ? dataIso(ticket.end) : null;
     if (fechadoEm) chamado.fechadoEm = fechadoEm;

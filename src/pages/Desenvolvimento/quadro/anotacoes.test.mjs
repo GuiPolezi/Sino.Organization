@@ -2,23 +2,26 @@
 // Uso: npm run test:quadro
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { CORES_TIPOS } from '../card/cores.js';
-import { anotacoesDoQuadro } from './anotacoes.js';
+import { COR_OUTROS, coresDosTipos } from '../card/cores.js';
+import { LETRAS_DO_LOCAL, anotacoesDoQuadro } from './anotacoes.js';
+
+const TIPOS = ['Bug / Erro', 'Melhoria / Nova Função', 'Implantação'];
+const corDe = coresDosTipos(TIPOS);
 
 const dev = (id, total) => ({ id, nome: `${id[0].toUpperCase()}${id.slice(1)} Silva`, total });
 const local = (nome, bug, melhoria) => ({
   local: nome,
   total: bug + melhoria,
   tipos: [
-    { tipo: 'Bug/Erro', total: bug },
-    { tipo: 'Melhoria/Função', total: melhoria },
+    { tipo: 'Bug / Erro', total: bug },
+    { tipo: 'Melhoria / Nova Função', total: melhoria },
     { tipo: 'Implantação', total: 0 },
   ],
 });
 
 const resumo = (visao = {}, totalDesenvolvedores = 3) => ({
   totalDesenvolvedores,
-  visao: { total: 3715, porDesenvolvedor: [dev('ana', 10), dev('beto', 30)], porCategoria: [], porLocal: [local('Araras', 4, 2)], ficticio: true, ...visao },
+  visao: { total: 3715, porDesenvolvedor: [dev('ana', 10), dev('beto', 30)], porCategoria: [], porLocal: [local('Araras', 4, 2)], tiposDosLocais: TIPOS, ficticio: true, ...visao },
 });
 
 test('com chamados, o quadro resume o painel: total no post-it, pizza por dev e barras por local', () => {
@@ -42,8 +45,8 @@ test('com chamados, o quadro resume o painel: total no post-it, pizza por dev e 
       rotulo: 'Araras',
       valor: 6,
       partes: [
-        { cor: CORES_TIPOS['Bug/Erro'], valor: 4 },
-        { cor: CORES_TIPOS['Melhoria/Função'], valor: 2 },
+        { cor: corDe('Bug / Erro'), valor: 4 },
+        { cor: corDe('Melhoria / Nova Função'), valor: 2 },
       ],
     },
   ]);
@@ -54,7 +57,7 @@ test('no papel cabem seis fatias: da sétima em diante, viram "outros"; quem nã
   const { fatias } = anotacoesDoQuadro(resumo({ porDesenvolvedor: [...porDesenvolvedor, dev('z', 0)] })).grafico;
 
   assert.equal(fatias.length, 6);
-  assert.deepEqual(fatias.at(-1), { chave: 'Outros', rotulo: 'outros', valor: 3 + 2 + 1, cor: CORES_TIPOS.Outros });
+  assert.deepEqual(fatias.at(-1), { chave: 'Outros', rotulo: 'outros', valor: 3 + 2 + 1, cor: COR_OUTROS });
   assert.ok(!fatias.some(({ rotulo }) => rotulo === 'Z'));
 });
 
@@ -65,6 +68,18 @@ test('na folha cabem cinco barras, na ordem do painel', () => {
     barras.map(({ rotulo }) => rotulo),
     ['A', 'B', 'C', 'D', 'E'],
   );
+});
+
+test('na folha, o nome comprido de um local termina em reticências; as cores seguem a legenda', () => {
+  const nome = '2º Tabelião de Notas de Piracicaba Bortoletto';
+  const [barra] = anotacoesDoQuadro(resumo({ porLocal: [local(nome, 1, 1)] })).lista.barras;
+  assert.equal(barra.rotulo.length, LETRAS_DO_LOCAL);
+  assert.ok(barra.rotulo.endsWith('…'));
+  assert.ok(nome.startsWith(barra.rotulo.slice(0, -1)));
+  assert.equal(anotacoesDoQuadro(resumo({ porLocal: [local('Itapevi CM', 1, 0)] })).lista.barras[0].rotulo, 'Itapevi CM');
+  // Cores distintas para tipos distintos, e "Outros" (ou um tipo fora da legenda) no cinza.
+  assert.notEqual(corDe('Bug / Erro'), corDe('Melhoria / Nova Função'));
+  assert.equal(corDe('Treinamento'), COR_OUTROS);
 });
 
 test('sem chamados, sobra o post-it com o tamanho da equipe; sem equipe, nada', () => {

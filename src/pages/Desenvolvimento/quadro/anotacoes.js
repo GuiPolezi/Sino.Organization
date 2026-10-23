@@ -6,7 +6,7 @@
  * Local", com as mesmas cores do painel. Cada anotação só existe quando há
  * dado para ela; sem dado, ela sai null e não é desenhada.
  */
-import { CORES_TIPOS, fatiasPorDesenvolvedor } from '../card/cores.js';
+import { COR_OUTROS, coresDosTipos, fatiasPorDesenvolvedor } from '../card/cores.js';
 import { OUTROS } from '../mappers/visaoGeral.js';
 
 /** @import { AnotacoesQuadro } from '../../Suporte/quadro/texturas.js' */
@@ -14,6 +14,8 @@ import { OUTROS } from '../mappers/visaoGeral.js';
 // No papel cabem seis fatias na legenda; na folha, cinco barras.
 const FATIAS_NO_PAPEL = 6;
 const BARRAS_NA_FOLHA = 5;
+// Na folha, o nome curto do local vai até aqui; mais que isso, a letra ficaria miúda.
+export const LETRAS_DO_LOCAL = 24;
 
 const formato = new Intl.NumberFormat('pt-BR');
 
@@ -26,16 +28,20 @@ function fatiasDaPizza(porDesenvolvedor) {
 
   const maiores = fatias.slice(0, FATIAS_NO_PAPEL - 1);
   const resto = fatias.slice(FATIAS_NO_PAPEL - 1).reduce((soma, { valor }) => soma + valor, 0);
-  return [...maiores, { chave: OUTROS, rotulo: 'outros', valor: resto, cor: CORES_TIPOS[OUTROS] }];
+  return [...maiores, { chave: OUTROS, rotulo: 'outros', valor: resto, cor: COR_OUTROS }];
 }
 
+const abreviar = (nome) => (nome.length > LETRAS_DO_LOCAL ? `${nome.slice(0, LETRAS_DO_LOCAL - 1).trimEnd()}…` : nome);
+
 // Os locais com mais tickets, cada barra dividida pelos tipos com ticket, nas cores do painel.
-const barrasDosLocais = (porLocal) =>
-  porLocal.slice(0, BARRAS_NA_FOLHA).map(({ local, total, tipos }) => ({
-    rotulo: local,
+function barrasDosLocais(porLocal, tiposDosLocais = []) {
+  const corDe = coresDosTipos(tiposDosLocais);
+  return porLocal.slice(0, BARRAS_NA_FOLHA).map(({ local, rotulo = local, total, tipos }) => ({
+    rotulo: abreviar(rotulo),
     valor: total,
-    partes: tipos.filter((tipo) => tipo.total > 0).map((tipo) => ({ cor: CORES_TIPOS[tipo.tipo], valor: tipo.total })),
+    partes: tipos.filter((tipo) => tipo.total > 0).map((tipo) => ({ cor: corDe(tipo.tipo), valor: tipo.total })),
   }));
+}
 
 // Post-it: o total de tickets do painel ou, sem chamados, o tamanho da equipe.
 function destaqueDoPostIt({ totalDesenvolvedores, visao }) {
@@ -57,7 +63,7 @@ function destaqueDoPostIt({ totalDesenvolvedores, visao }) {
  */
 export function anotacoesDoQuadro(resumo) {
   const fatias = fatiasDaPizza(resumo.visao.porDesenvolvedor);
-  const barras = barrasDosLocais(resumo.visao.porLocal);
+  const barras = barrasDosLocais(resumo.visao.porLocal, resumo.visao.tiposDosLocais);
   return {
     assinatura: 'desenvolvimento',
     grafico: fatias.length ? { titulo: 'Carga por Dev', subtitulo: 'todo o tempo', fatias } : null,
