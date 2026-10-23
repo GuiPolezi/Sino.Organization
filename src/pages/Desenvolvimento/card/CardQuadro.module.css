@@ -208,7 +208,8 @@
 }
 
 .subtitulo {
-  margin-bottom: 10px;
+  /* Espaço entre o título "Carga por Local" e o gráfico. */
+  margin-bottom: 18px;
   font-size: 0.8125rem;
   font-weight: var(--weight-bold);
   line-height: 1.2;
