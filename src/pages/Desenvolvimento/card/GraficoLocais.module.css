@@ -165,6 +165,13 @@
   white-space: normal;
 }
 
+/* No celular (painel com menos de 24rem), a dica usa a largura do gráfico: fica mais baixa e cabe melhor na tela. */
+@container (max-width: 24rem) {
+  .grafico .dica {
+    max-width: min(16rem, 100%);
+  }
+}
+
 .grafico .dica strong,
 .grafico .dica li > span {
   min-width: 0;

@@ -16,6 +16,11 @@
   animation: aparecer 0.18s ease;
 }
 
+/* Sem espaço acima do ponteiro (Dica.jsx, cabeNaTela): abre abaixo dele. */
+.dica[data-abaixo] {
+  transform: translate(-50%, 14px);
+}
+
 .dica strong {
   display: block;
   margin-bottom: 3px;

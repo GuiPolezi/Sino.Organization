@@ -122,7 +122,7 @@ export default function GraficoLocais({ locais, tipos: legenda }) {
         </ol>
         <i className={styles.eixoX} />
         {linhaAtiva && (
-          <Dica x={ativo.x} y={ativo.y} largura={area.current?.clientWidth ?? 0} className={styles.dica}>
+          <Dica x={ativo.x} y={ativo.y} largura={area.current?.clientWidth ?? 0} className={styles.dica} cabeNaTela>
             <strong>{linhaAtiva.local}</strong>
             <ul>
               {linhaAtiva.assuntos.map(({ assunto, total }) => (
