@@ -160,7 +160,9 @@ test('os chamados do Milldesk (src/data/chamados.json) são coerentes para toda 
     assert.ok(lista.every(({ data }) => /^\d{4}-\d{2}-\d{2}$/.test(data)), `datas de ${id}`);
     assert.ok(lista.every(({ categoria }) => CATEGORIAS.includes(categoria)), `categorias de ${id}`);
     assert.ok(lista.every(({ assunto, status }) => assunto && status), `assunto e status de ${id}`);
-    assert.ok(!lista.some(({ status }) => /desenvolvimento/i.test(status)), `"Com o Desenvolvimento" junto de ${id}`);
+    // "Com o Desenvolvimento" é outro status: aparece como quadro próprio para quem o tem.
+    const statusDoCard = resumirChamados(lista, 'tudo', HOJE).status.map(({ status }) => status);
+    assert.equal(statusDoCard.includes('Com o Desenvolvimento'), lista.some(({ status }) => status === 'Com o Desenvolvimento'), `status de ${id}`);
     assert.deepEqual(lista.map(({ data }) => data), lista.map(({ data }) => data).toSorted().reverse(), `ordem de ${id}`);
 
     const resumo = resumirChamados(lista, 'tudo', HOJE);

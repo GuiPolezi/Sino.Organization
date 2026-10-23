@@ -41,9 +41,9 @@ test('categorias fora do mapeamento não entram', () => {
   }
 });
 
-test('status: "Com o Desenvolvimento" e "Com o Desenvolvedor" são um só; os novos seguem como vieram', () => {
+test('status: "Com o Desenvolvimento" fica separado de "Com o Desenvolvedor"; os novos seguem como vieram', () => {
   assert.equal(statusDoSite('Com o Desenvolvedor'), 'Com o desenvolvedor');
-  assert.equal(statusDoSite('Com o Desenvolvimento'), 'Com o desenvolvedor');
+  assert.equal(statusDoSite('Com o Desenvolvimento'), 'Com o Desenvolvimento');
   assert.equal(statusDoSite('Fechado'), 'Fechado');
   assert.equal(statusDoSite('aguardando deploy'), 'Aguardando Deploy');
   assert.equal(statusDoSite(' Rejeitado '), 'Rejeitado');
@@ -97,7 +97,7 @@ test('montarChamados separa pelo campo Técnico e guarda só campos de classific
 
   assert.deepEqual(desenvolvedores, {
     ana: [
-      { data: '2026-10-05', status: 'Com o desenvolvedor', categoria: 'Site', assunto: 'Bug / Erro', tipo: 'Bug/Erro' },
+      { data: '2026-10-05', status: 'Com o Desenvolvimento', categoria: 'Site', assunto: 'Bug / Erro', tipo: 'Bug/Erro' },
       {
         data: '2026-10-01',
         status: 'Fechado',

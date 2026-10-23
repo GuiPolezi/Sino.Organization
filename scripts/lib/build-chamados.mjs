@@ -66,8 +66,9 @@ const CATEGORIA_DO_SITE = new Map(
 export const categoriaDoSite = (categoria) => CATEGORIA_DO_SITE.get(normalizar(categoria)) ?? null;
 
 /*
- * Status com o nome que o card usa. "Com o Desenvolvimento" é o mesmo passo que
- * "Com o Desenvolvedor". Um status que não está aqui segue como veio do Milldesk.
+ * Status com o nome que o card usa. Um status que não está aqui segue como veio
+ * do Milldesk e vira mais um quadro no card de quem tem tickets nele. É o caso de
+ * "Com o Desenvolvimento", que é outro status, separado de "Com o Desenvolvedor".
  */
 const STATUS_CONHECIDOS = [
   FECHADO,
@@ -78,10 +79,7 @@ const STATUS_CONHECIDOS = [
   'Pendente',
   'Aguardando Deploy',
 ];
-const STATUS_DO_SITE = new Map([
-  ...STATUS_CONHECIDOS.map((status) => [normalizar(status), status]),
-  [normalizar('Com o Desenvolvimento'), 'Com o desenvolvedor'],
-]);
+const STATUS_DO_SITE = new Map(STATUS_CONHECIDOS.map((status) => [normalizar(status), status]));
 
 /** @returns {string | null} null quando o ticket não tem status */
 export function statusDoSite(status) {
