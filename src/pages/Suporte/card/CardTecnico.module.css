@@ -194,7 +194,7 @@ section > .secao {
   }
 }
 
-/* Os quatro números de atendimentos, em blocos oliva. */
+/* Os três números de atendimentos, em blocos oliva. */
 .blocos {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -216,20 +216,17 @@ section > .secao {
     box-shadow 0.35s ease;
 }
 
+/* Mês ocupa a linha inteira, abaixo de Hoje e Semana. */
+.blocos .largo {
+  grid-column: 1 / -1;
+}
+
 .blocos dd {
   font-size: 2.125rem;
   font-weight: var(--weight-black);
   line-height: 1;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-}
-
-/* Unidade ao lado do número ("min", "h"). */
-.blocos small {
-  margin-left: 1px;
-  font-size: 1.125rem;
-  font-weight: var(--weight-bold);
-  letter-spacing: 0;
 }
 
 .blocos dt {

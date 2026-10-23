@@ -1,36 +1,12 @@
 import { aparenciaDe } from '../boneco/aparencia.js';
-import { EXPEDIENTES } from '../expedientes.js';
 import { hojeEmBrasilia, totaisDeAtendimentos } from '../mappers/atendimentos.js';
-import { partesDaDuracao, tempoMedioDiario } from '../mappers/tempoMedio.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
 import GraficoAtendimentos from './GraficoAtendimentos.jsx';
 import styles from './CardTecnico.module.css';
 import useAtalhos from './useAtalhos.js';
 
-// "—" sem média; "33 min" abaixo de 1 hora; "1h 05 min" a partir dela.
-function TempoMedio({ minutos }) {
-  if (minutos === null) return '—';
-  const { horas, minutos: resto } = partesDaDuracao(minutos);
-  if (horas === 0) {
-    return (
-      <>
-        <Contagem valor={resto} />
-        <small>min</small>
-      </>
-    );
-  }
-  return (
-    <>
-      <Contagem valor={horas} />
-      <small>h</small> {String(resto).padStart(2, '0')}
-      <small>min</small>
-    </>
-  );
-}
-
-// tempoMedioMin: undefined esconde o bloco (técnico sem expediente); null mostra "—".
-function Atendimentos({ totais, tempoMedioMin }) {
+function Atendimentos({ totais }) {
   return (
     <section className={styles.surge} style={{ '--ordem': 1 }}>
       <h3 className={styles.secao}>Atendimentos</h3>
@@ -47,20 +23,12 @@ function Atendimentos({ totais, tempoMedioMin }) {
             <Contagem valor={totais.semana} />
           </dd>
         </div>
-        <div>
+        <div className={styles.largo}>
           <dt>Mês</dt>
           <dd>
             <Contagem valor={totais.mes} />
           </dd>
         </div>
-        {tempoMedioMin !== undefined && (
-          <div>
-            <dt>Tempo Médio Diário de Atendimentos</dt>
-            <dd>
-              <TempoMedio minutos={tempoMedioMin} />
-            </dd>
-          </div>
-        )}
       </dl>
     </section>
   );
@@ -130,19 +98,7 @@ export default function CardTecnico() {
 
       {atendimentos && (
         <>
-          <Atendimentos
-            totais={totaisDeAtendimentos(atendimentos.porDia, hoje)}
-            tempoMedioMin={
-              EXPEDIENTES[tecnico.id]
-                ? tempoMedioDiario({
-                    expediente: EXPEDIENTES[tecnico.id],
-                    porDia: atendimentos.porDia,
-                    atualizadoEm: atendimentos.atualizadoEm,
-                    hoje,
-                  })
-                : undefined
-            }
-          />
+          <Atendimentos totais={totaisDeAtendimentos(atendimentos.porDia, hoje)} />
           {atendimentos.chamadosAtribuidos !== undefined && <Tickets atribuidos={atendimentos.chamadosAtribuidos} />}
           <div className={styles.surge} style={{ '--ordem': 3 }}>
             <GraficoAtendimentos porDia={atendimentos.porDia} hoje={hoje} />

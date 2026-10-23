@@ -6,8 +6,7 @@ import dados from '../../../data/atendimentos.json';
 /**
  * Atendimentos de cada técnico, para o card. Vêm de src/data/atendimentos.json,
  * gerado a partir dos tickets do Milldesk por `npm run sync:atendimentos` (a
- * chave da API nunca vem ao navegador): atendimentos por dia, tickets em aberto
- * e o horário do sync, usado no tempo médio diário (mappers/tempoMedio.js).
+ * chave da API nunca vem ao navegador): atendimentos por dia e tickets em aberto.
  * Técnico que não está no arquivo fica sem essas seções.
  *
  * @param {Tecnico[]} tecnicos
@@ -17,7 +16,7 @@ export async function buscarAtendimentos(tecnicos) {
   return Object.fromEntries(
     tecnicos.flatMap(({ id }) => {
       const atendimentos = dados.tecnicos[id];
-      return atendimentos ? [[id, { ...atendimentos, atualizadoEm: dados.geradoEm }]] : [];
+      return atendimentos ? [[id, atendimentos]] : [];
     }),
   );
 }
