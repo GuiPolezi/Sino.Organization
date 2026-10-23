@@ -7,7 +7,6 @@ import card from '../../Suporte/card/CardTecnico.module.css';
 import Contagem from '../../Suporte/card/Contagem.jsx';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
-import { solicitacoes } from '../api/chamados.js';
 import { desempenhoDaCategoria } from '../mappers/categoria.js';
 import PeriodoEmPilulas from './PeriodoEmPilulas.jsx';
 import Ranking from './Ranking.jsx';
@@ -120,7 +119,7 @@ export default function CardCategoria({ categoria, fechar }) {
   const hoje = hojeEmBrasilia();
 
   const desempenho = useMemo(
-    () => desempenhoDaCategoria(tecnicos, chamados, categoria, periodo, hoje, solicitacoes()),
+    () => desempenhoDaCategoria(tecnicos, chamados, categoria, periodo, hoje),
     [tecnicos, chamados, categoria, periodo, hoje],
   );
 

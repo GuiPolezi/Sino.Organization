@@ -66,25 +66,18 @@ test('o tempo até finalizar sai da hora de abertura e da de finalização', () 
   }
 });
 
-test('montarChamados conta os tickets abertos por dia, de qualquer técnico, no total e por categoria', () => {
+test('montarChamados guarda os minutos até finalizar do chamado fechado e devolve só os da equipe', () => {
   const ticket = (id, campos) => ({ id, agent: 'Outra Pessoa', category: 'Site', status: 'Fechado', start: '01/10/2026', ...campos });
-  const { solicitacoes, desenvolvedores } = montarChamados(
+  const resultado = montarChamados(
     [
       ticket(1),
-      ticket(1),
-      ticket(2, { category: 'Siscam 9 WEB' }),
-      ticket(3, { category: 'zEscrituras', start: '02/10/2026' }),
-      ticket(4, { category: null, start: '02/10/2026' }),
-      ticket(5, { start: null }),
       ticket(6, { agent: 'Ana Souza', start: '02/10/2026', starttime: '02/10/2026 09:00', end: '02/10/2026', endtime: '02/10/2026 11:30' }),
     ],
     [{ id: 'ana', agent: 'Ana Souza' }],
   );
-  assert.deepEqual(solicitacoes, {
-    todas: { '2026-10-01': 2, '2026-10-02': 3 },
-    categorias: { Site: { '2026-10-01': 1, '2026-10-02': 1 }, 'Siscam 9': { '2026-10-01': 1 } },
-  });
-  assert.equal(desenvolvedores.ana[0].minutos, 150);
+  assert.deepEqual(Object.keys(resultado).sort(), ['categoriasIgnoradas', 'desenvolvedores', 'semData']);
+  assert.equal(resultado.desenvolvedores.ana.length, 1);
+  assert.equal(resultado.desenvolvedores.ana[0].minutos, 150);
 });
 
 test('montarChamados separa pelo campo Técnico e guarda só campos de classificação', () => {

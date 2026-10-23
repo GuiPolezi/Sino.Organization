@@ -33,31 +33,12 @@ test('membros são quem tem algum chamado da categoria, em qualquer data, na ord
   assert.deepEqual(desempenhoDaCategoria(EQUIPE, CHAMADOS, 'Painel', 'tudo', HOJE).membros, []);
 });
 
-test('sem as solicitações, tickets criados e frequência saem dos chamados da equipe', () => {
+test('tickets criados e frequência saem só dos chamados da equipe', () => {
   const semana = desempenhoDaCategoria(EQUIPE, CHAMADOS, 'Cartórios', '7d', HOJE);
   // No período (10 a 16/10): 3 de Cartórios em 7 solicitações.
   assert.equal(semana.criados, 3);
   assert.deepEqual(semana.aCada, { x: 7, y: 3 });
   assert.equal(desempenhoDaCategoria(EQUIPE, CHAMADOS, 'Cartórios', 'hoje', HOJE).aCada, null);
-});
-
-test('com as solicitações, tickets criados contam os de qualquer técnico, no período', () => {
-  const solicitacoes = {
-    todas: { '2026-10-16': 10, '2026-10-12': 20, '2026-09-01': 70 },
-    categorias: { Site: { '2026-10-16': 4, '2026-10-12': 5, '2026-09-01': 1 }, Cartórios: { '2026-09-01': 2 } },
-  };
-  const site = (periodo) => desempenhoDaCategoria(EQUIPE, CHAMADOS, 'Site', periodo, HOJE, solicitacoes);
-  assert.equal(site('tudo').criados, 10);
-  assert.deepEqual(site('tudo').aCada, { x: 10, y: 1 });
-  // 7 dias: 9 de Site em 30 solicitações (30%).
-  assert.equal(site('7d').criados, 9);
-  assert.deepEqual(site('7d').aCada, { x: 10, y: 3 });
-  assert.deepEqual(site('hoje').aCada, { x: 5, y: 2 });
-  // Membros e rankings continuam dos chamados da equipe.
-  assert.deepEqual(site('tudo').membros.map(({ id }) => id), ['a', 'b', 'c']);
-  // Categoria sem solicitação no período, ou que nem aparece na contagem.
-  assert.equal(desempenhoDaCategoria(EQUIPE, CHAMADOS, 'Cartórios', '7d', HOJE, solicitacoes).aCada, null);
-  assert.equal(desempenhoDaCategoria(EQUIPE, CHAMADOS, 'Painel', 'tudo', HOJE, solicitacoes).criados, 0);
 });
 
 test('"a cada X, pelo menos Y": a fração com X até 10 mais perto da parte, sem passar dela', () => {
@@ -143,22 +124,16 @@ test('com os chamados do Milldesk, só fechado tem data de fechamento, nunca ant
   assert.ok(algum.rankings[2].itens.every(({ valor }) => valor === null || valor >= 0));
 });
 
-test('com as solicitações do Milldesk, os tickets criados incluem os da equipe e cabem no total', () => {
-  const { solicitacoes } = JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8'));
+test('com os chamados do Milldesk, tickets criados é a soma dos atribuídos dos membros', () => {
   const chamados = chamadosDoMilldesk();
   const equipe = Object.keys(chamados).map(dev);
-  const soma = (porDia) => Object.values(porDia ?? {}).reduce((total, n) => total + n, 0);
-  assert.ok(Object.keys(solicitacoes.categorias).every((nome) => CATEGORIAS.includes(nome)));
-  assert.ok(Object.values(solicitacoes.categorias).reduce((total, porDia) => total + soma(porDia), 0) <= soma(solicitacoes.todas));
-
   for (const periodo of ['tudo', '30d', '7d', 'hoje']) {
+    const total = CATEGORIAS.reduce((soma, nome) => soma + desempenhoDaCategoria(equipe, chamados, nome, periodo, HOJE).criados, 0);
     for (const nome of CATEGORIAS) {
-      const comTodos = desempenhoDaCategoria(equipe, chamados, nome, periodo, HOJE, solicitacoes);
-      const soDaEquipe = desempenhoDaCategoria(equipe, chamados, nome, periodo, HOJE);
-      assert.ok(comTodos.criados >= soDaEquipe.criados, `${nome} em ${periodo}`);
-      // Os atribuídos da equipe são parte dos criados da categoria.
-      const atribuidos = comTodos.rankings[0].itens.reduce((total, { valor }) => total + valor, 0);
-      assert.ok(atribuidos <= comTodos.criados, `atribuídos de ${nome} em ${periodo}`);
+      const { criados, rankings } = desempenhoDaCategoria(equipe, chamados, nome, periodo, HOJE);
+      const atribuidos = rankings[0].itens.reduce((soma, { valor }) => soma + valor, 0);
+      assert.equal(criados, atribuidos, `${nome} em ${periodo}`);
+      assert.ok(criados <= total);
     }
   }
   // Quase todo fechado tem as horas de abertura e de finalização.

@@ -2,23 +2,14 @@
  * Contas do card de uma categoria (o botão do Desempenho no painel do quadro):
  * quem da equipe trabalha na categoria, quantos tickets dela foram criados no
  * período, com que frequência ela aparece entre as solicitações e os três
- * rankings do slide. Membros e rankings saem dos chamados dos desenvolvedores;
- * os tickets criados e a frequência, das solicitações de qualquer técnico
- * (api/chamados.js). O período é sempre pela data de criação do ticket.
+ * rankings do slide. Tudo sai dos chamados dos desenvolvedores (campo Técnico):
+ * tickets de quem não é da equipe, como o suporte, não contam. O período é
+ * sempre pela data de criação do ticket.
  */
 import { FECHADO, filtrarPorPeriodo } from './chamados.js';
 
 /** @import { Tecnico } from '../../Suporte/tipos.js' */
 /** @import { ChamadosDesenvolvedor, Periodo } from './chamados.js' */
-
-/**
- * Tickets abertos por dia ("AAAA-MM-DD" -> quantos), de qualquer técnico: no
- * Milldesk todo e em cada categoria do site.
- *
- * @typedef {object} Solicitacoes
- * @property {Record<string, number>} todas
- * @property {Record<string, Record<string, number>>} categorias
- */
 
 /**
  * Um ranking do slide. `melhor` é o id do primeiro lugar (null sem ninguém
@@ -93,14 +84,6 @@ function horasAteFechar({ data, fechadoEm, minutos }) {
   return fechadoEm ? ((paraUtc(fechadoEm) - paraUtc(data)) / UM_DIA_MS) * 24 : null;
 }
 
-// Soma dos tickets abertos no período, a partir da contagem por dia.
-const somarNoPeriodo = (porDia, periodo, hoje) =>
-  filtrarPorPeriodo(
-    Object.entries(porDia ?? {}).map(([data, total]) => ({ data, total })),
-    periodo,
-    hoje,
-  ).reduce((soma, { total }) => soma + total, 0);
-
 /**
  * Tudo o que o card da categoria mostra, para um período.
  *
@@ -110,17 +93,17 @@ const somarNoPeriodo = (porDia, periodo, hoje) =>
  * todos eles, fechados os que já estão "Fechado", e o tempo médio é o desses
  * fechados, da abertura à finalização, em horas.
  *
- * Tickets criados e a frequência saem das solicitações de qualquer técnico;
- * sem elas, dos chamados da equipe.
+ * Tickets criados são os chamados da categoria criados no período, somando os
+ * membros (a soma dos atribuídos). A frequência compara esse número com todos
+ * os chamados da equipe criados no período, de qualquer categoria.
  *
  * @param {Tecnico[]} tecnicos na ordem da equipe
  * @param {Record<string, ChamadosDesenvolvedor>} chamados por id
  * @param {string} categoria
  * @param {Periodo} periodo
  * @param {string} hoje "AAAA-MM-DD"
- * @param {Solicitacoes} [solicitacoes]
  */
-export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, periodo, hoje, solicitacoes) {
+export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, periodo, hoje) {
   const comChamados = tecnicos.filter(({ id }) => Array.isArray(chamados[id]?.lista));
   const membros = comChamados
     .map((tecnico) => ({ tecnico, daCategoria: chamados[tecnico.id].lista.filter((c) => c.categoria === categoria) }))
@@ -132,16 +115,8 @@ export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, period
       return { tecnico, atribuidos: atribuidos.length, fechados: fechados.length, horas: media(horas) };
     });
 
-  let criados;
-  let total;
-  if (solicitacoes) {
-    criados = somarNoPeriodo(solicitacoes.categorias[categoria], periodo, hoje);
-    total = somarNoPeriodo(solicitacoes.todas, periodo, hoje);
-  } else {
-    const todosDoPeriodo = comChamados.flatMap(({ id }) => filtrarPorPeriodo(chamados[id].lista, periodo, hoje));
-    criados = todosDoPeriodo.filter((c) => c.categoria === categoria).length;
-    total = todosDoPeriodo.length;
-  }
+  const criados = membros.reduce((soma, { atribuidos }) => soma + atribuidos, 0);
+  const total = comChamados.reduce((soma, { id }) => soma + filtrarPorPeriodo(chamados[id].lista, periodo, hoje).length, 0);
 
   const ranking = (id, titulo, valorDe, menorVence = false) => {
     const itens = membros.map((membro) => ({ id: membro.tecnico.id, nome: membro.tecnico.nome, valor: valorDe(membro) }));

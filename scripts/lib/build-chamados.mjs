@@ -6,14 +6,8 @@
 // ticket), data de fechamento e quantos minutos o ticket levou até ser
 // finalizado. Título, descrição e solicitante nunca saem daqui.
 //
-// Além dos chamados de cada desenvolvedor, sai a contagem de tickets abertos
-// por dia, de qualquer técnico: no Milldesk todo e em cada categoria do site.
-// Ela alimenta os "Tickets criados" do card de uma categoria.
-//
-// Nos chamados dos desenvolvedores, só entram tickets cuja categoria está em
-// CATEGORIAS_MILLDESK; os demais ficam fora dos cards (status, total e
-// categorias) e aparecem só no relatório do sync. Na contagem do Milldesk todo
-// (solicitacoes.todas), entram todos os tickets.
+// Só entram tickets cuja categoria está em CATEGORIAS_MILLDESK; os demais ficam
+// fora dos cards (status, total e categorias) e aparecem só no relatório do sync.
 import { dataIso } from './build-atendimentos.mjs';
 
 export const FECHADO = 'Fechado';
@@ -133,15 +127,11 @@ export function localDoTicket(local) {
 /**
  * @param {object[]} tickets  showTicketsPerPeriod, de todas as janelas
  * @param {{ id: string, agent: string }[]} equipe  scripts/data/dev-team.json
- * @returns {{ desenvolvedores: Record<string, object[]>,
- *   solicitacoes: { todas: Record<string, number>, categorias: Record<string, Record<string, number>> },
- *   categoriasIgnoradas: Record<string, number>, semData: number }}
+ * @returns {{ desenvolvedores: Record<string, object[]>, categoriasIgnoradas: Record<string, number>, semData: number }}
  */
 export function montarChamados(tickets, equipe) {
   const porAgente = new Map(equipe.map(({ id, agent }) => [normalizar(agent), id]));
   const desenvolvedores = Object.fromEntries(equipe.map(({ id }) => [id, []]));
-  // Tickets abertos por dia, de qualquer técnico: no Milldesk todo e por categoria do site.
-  const solicitacoes = { todas: {}, categorias: {} };
   // Só para o relatório do sync.
   const categoriasIgnoradas = {};
   let semData = 0;
@@ -150,7 +140,6 @@ export function montarChamados(tickets, equipe) {
   for (const ticket of tickets) {
     if (vistos.has(ticket.id)) continue;
     vistos.add(ticket.id);
-    contarSolicitacao(solicitacoes, ticket);
     const id = porAgente.get(normalizar(ticket.agent));
     if (!id) continue;
 
@@ -179,16 +168,5 @@ export function montarChamados(tickets, equipe) {
 
   // Do mais novo para o mais antigo, como a lista que o card recebe.
   for (const lista of Object.values(desenvolvedores)) lista.sort((a, b) => b.data.localeCompare(a.data));
-  return { desenvolvedores, solicitacoes, categoriasIgnoradas, semData };
-}
-
-// Soma o ticket no dia em que foi aberto: no total e, se for de uma categoria do site, nela.
-function contarSolicitacao({ todas, categorias }, ticket) {
-  const data = dataIso(ticket.start);
-  if (!data) return;
-  todas[data] = (todas[data] ?? 0) + 1;
-  const categoria = categoriaDoSite(ticket.category);
-  if (!categoria) return;
-  const porDia = (categorias[categoria] ??= {});
-  porDia[data] = (porDia[data] ?? 0) + 1;
+  return { desenvolvedores, categoriasIgnoradas, semData };
 }
