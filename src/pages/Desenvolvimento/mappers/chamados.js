@@ -47,7 +47,7 @@ export const STATUS_DESTAQUE = FECHADO;
 
 // Sempre na grade do card, mesmo zerados, nesta ordem (a do fluxo do chamado).
 const STATUS_FIXOS = [COM_O_DESENVOLVEDOR, 'Em atendimento', FECHADO, 'Aguardando Testes', 'Aguardando Retorno do Solicitante'];
-// Só entram na grade de quem tem chamados nesses status.
+// Só entram na grade quando há chamados nesses status no período.
 const STATUS_EVENTUAIS = ['Pendente', 'Aguardando Deploy'];
 
 /**
@@ -108,16 +108,15 @@ function contarPor(chamados, campo) {
 }
 
 /*
- * Os status da grade, menos o do destaque. Saem de todos os chamados da pessoa,
- * e não só dos do período, para a grade não mudar de forma a cada troca de
- * período: quem tem chamados "Pendente" mantém o card dele, zerado se for o caso.
- * Um status que o card ainda não conhece entra no fim, em ordem alfabética.
+ * Os status da grade, menos o do destaque. Os fixos ficam sempre, mesmo zerados.
+ * Os demais (eventuais e os que o card ainda não conhece) só entram quando têm
+ * chamados no período: trocando para um período em que zeram, o card deles some.
+ * Os que o card não conhece vão para o fim, em ordem alfabética.
  */
-function statusDaGrade(todos) {
-  const existentes = new Set(todos.map(({ status }) => status));
+function statusDaGrade(porStatus) {
   const conhecidos = new Set([...STATUS_FIXOS, ...STATUS_EVENTUAIS]);
-  const novos = [...existentes].filter((status) => !conhecidos.has(status)).sort(porNome);
-  return [...STATUS_FIXOS, ...STATUS_EVENTUAIS.filter((status) => existentes.has(status)), ...novos].filter(
+  const novos = [...porStatus.keys()].filter((status) => !conhecidos.has(status)).sort(porNome);
+  return [...STATUS_FIXOS, ...STATUS_EVENTUAIS.filter((status) => porStatus.has(status)), ...novos].filter(
     (status) => status !== STATUS_DESTAQUE,
   );
 }
@@ -186,7 +185,7 @@ export function resumirChamados(todos, periodo, hoje) {
   return {
     total: doPeriodo.length,
     destaque: { status: STATUS_DESTAQUE, total: totalDe(STATUS_DESTAQUE) },
-    status: statusDaGrade(todos).map((status) => ({ status, total: totalDe(status) })),
+    status: statusDaGrade(porStatus).map((status) => ({ status, total: totalDe(status) })),
     percentualFeito: percentual(totalDe(FECHADO), doPeriodo.length),
     categorias: categoriasDoPeriodo(todos, doPeriodo),
   };

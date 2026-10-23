@@ -68,22 +68,27 @@ test('o destaque é o "Fechado" e a grade traz os outros status fixos, mesmo zer
   assert.ok(!resumo.status.some(({ status }) => status === FECHADO));
 });
 
-test('Pendente e Aguardando Deploy só aparecem para quem tem esses chamados, em qualquer período', () => {
+test('status fora dos fixos só aparecem quando têm chamados no período', () => {
   const statusDe = (lista, periodo) => resumirChamados(lista, periodo, HOJE).status.map(({ status }) => status);
   const semEventuais = LISTA.filter(({ status }) => status !== 'Pendente');
   assert.ok(!statusDe(semEventuais, 'tudo').includes('Pendente'));
   assert.ok(!statusDe(semEventuais, 'tudo').includes('Aguardando Deploy'));
 
-  // O "Pendente" da lista é de amanhã: fora do período, o card dele fica, zerado.
-  const hoje = resumirChamados(LISTA, 'hoje', HOJE).status;
-  assert.deepEqual(hoje.at(-1), { status: 'Pendente', total: 0 });
+  // O "Pendente" da lista é de amanhã: entra em "Todo o Tempo" e some nos outros períodos.
+  assert.deepEqual(resumirChamados(LISTA, 'tudo', HOJE).status.at(-1), { status: 'Pendente', total: 1 });
+  for (const periodo of ['30d', '7d', 'hoje']) assert.ok(!statusDe(LISTA, periodo).includes('Pendente'), periodo);
 
-  const comDeploy = [...LISTA, chamado('2026-10-16', 'Aguardando Deploy')];
+  const comDeploy = [...LISTA, chamado('2026-10-16', 'Aguardando Deploy'), chamado('2026-10-16', 'Pendente')];
   assert.deepEqual(statusDe(comDeploy, '7d').slice(4), ['Pendente', 'Aguardando Deploy']);
 
-  // Um status novo do Milldesk entra no fim, sem quebrar o card.
-  const comNovo = [...LISTA, chamado('2026-10-16', 'Em Homologação')];
-  assert.equal(statusDe(comNovo, 'tudo').at(-1), 'Em Homologação');
+  // Um status novo do Milldesk entra no fim, e também some quando zera no período.
+  const comNovo = [...LISTA, chamado('2026-10-01', 'Com o Desenvolvimento')];
+  assert.equal(statusDe(comNovo, 'tudo').at(-1), 'Com o Desenvolvimento');
+  assert.equal(statusDe(comNovo, '30d').at(-1), 'Com o Desenvolvimento');
+  assert.ok(!statusDe(comNovo, '7d').includes('Com o Desenvolvimento'));
+
+  // Os fixos ficam sempre, mesmo zerados.
+  assert.deepEqual(statusDe([], 'hoje'), ['Com o desenvolvedor', 'Em atendimento', 'Aguardando Testes', 'Aguardando Retorno do Solicitante']);
 });
 
 test('total do período e parte feita, sem arredondar para 0% ou 100% enganosos', () => {
