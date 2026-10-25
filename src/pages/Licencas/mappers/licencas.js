@@ -9,6 +9,22 @@ export const JANELA_PROXIMO_DIAS = 60;
 // Quantos cards cada seção mostra antes do "Mostrar mais".
 export const LIMITE_INICIAL = 3;
 
+// Depois do "Mostrar mais", cada página da seção tem até este número de cards.
+export const POR_PAGINA = 6;
+
+/*
+ * Botões da paginação: sempre a primeira, a última e as vizinhas da atual,
+ * com reticências (null) nos saltos. Com mais de 7 páginas são sempre 7 itens,
+ * para a barra não mudar de largura ao navegar.
+ *   paginasVisiveis(6, 12) -> [1, null, 5, 6, 7, null, 12]
+ */
+export function paginasVisiveis(atual, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (atual <= 4) return [1, 2, 3, 4, 5, null, total];
+  if (atual >= total - 3) return [1, null, total - 4, total - 3, total - 2, total - 1, total];
+  return [1, null, atual - 1, atual, atual + 1, null, total];
+}
+
 // 'YYYY-MM-DD' -> número do dia (em UTC, para o horário de verão não somar 23h).
 const paraDia = (iso) => {
   const [ano, mes, dia] = iso.split('-').map(Number);

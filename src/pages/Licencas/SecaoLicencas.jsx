@@ -4,12 +4,22 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { MEDIA, matches } from '../../utils/media.js';
-import { LIMITE_INICIAL } from './mappers/licencas.js';
-import { animarEntradaCards, animarSaidaCards, animarSecao } from './animacoes.js';
+import { LIMITE_INICIAL, POR_PAGINA } from './mappers/licencas.js';
+import {
+  animarEntradaCards,
+  animarEntradaPagina,
+  animarSaidaCards,
+  animarSaidaPagina,
+  animarSecao,
+} from './animacoes.js';
 import CardLicenca from './CardLicenca.jsx';
+import Paginacao from './Paginacao.jsx';
 import styles from './Licencas.module.css';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
+
+// Folga entre o topo da tela e o topo da seção quando a página rola até ela.
+const FOLGA_TOPO = 24;
 
 // Mantém o botão no mesmo ponto da tela enquanto a lista encolhe acima dele.
 function encolherSemPular(botao, encolher) {
@@ -18,16 +28,38 @@ function encolherSemPular(botao, encolher) {
   window.scrollBy(0, botao.getBoundingClientRect().top - antes);
 }
 
-// Uma seção da página ("Vencidas" ou "Vencimento Próximo").
-// `tom` escolhe as cores no CSS: "vencida" ou "proxima".
+// Se o topo da seção ficou acima da tela, rola até ele: a página nova começa
+// pelo primeiro card, e não pelo fim da lista onde está a paginação.
+function rolarAteSecao(secao, suave) {
+  const topo = secao.getBoundingClientRect().top;
+  if (topo >= 0) return;
+  window.scrollTo({ top: window.scrollY + topo - FOLGA_TOPO, behavior: suave ? 'smooth' : 'auto' });
+}
+
+/*
+ * Uma seção da página ("Vencidas" ou "Vencimento Próximo"). `tom` escolhe as
+ * cores no CSS: "vencida" ou "proxima".
+ *
+ * Começa com LIMITE_INICIAL cards; "Mostrar mais" abre a primeira página, com
+ * POR_PAGINA cards. Se houver mais que isso, aparece a paginação.
+ */
 export default function SecaoLicencas({ id, titulo, tom, licencas }) {
   const raiz = useRef(null);
+  const lista = useRef(null);
   const numeroSelo = useRef(null);
   const botaoMais = useRef(null);
+  const paginacao = useRef(null);
+  // Enquanto uma troca anima, novos cliques esperam.
+  const ocupado = useRef(false);
   const [expandido, setExpandido] = useState(false);
+  const [pagina, setPagina] = useState(1);
 
-  const temMais = licencas.length > LIMITE_INICIAL;
-  const visiveis = expandido ? licencas : licencas.slice(0, LIMITE_INICIAL);
+  const total = licencas.length;
+  const totalPaginas = Math.ceil(total / POR_PAGINA);
+  const temMais = total > LIMITE_INICIAL;
+  const paginado = expandido && totalPaginas > 1;
+  const inicio = expandido ? (pagina - 1) * POR_PAGINA : 0;
+  const visiveis = licencas.slice(inicio, inicio + (expandido ? POR_PAGINA : LIMITE_INICIAL));
   const tituloId = `${id}-titulo`;
   const listaId = `${id}-lista`;
 
@@ -36,10 +68,10 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
       const mm = gsap.matchMedia();
       mm.add(MEDIA.motion, () => {
         const numero = numeroSelo.current;
-        animarSecao(gsap.utils.selector(raiz), raiz.current, numero, licencas.length);
+        animarSecao(gsap.utils.selector(raiz), raiz.current, numero, total);
         // Se a animação for desfeita no meio da contagem, volta ao valor final.
         return () => {
-          numero.textContent = licencas.length;
+          numero.textContent = total;
         };
       });
     },
@@ -48,27 +80,77 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
 
   const { contextSafe } = useGSAP({ scope: raiz });
 
-  const alternar = contextSafe(() => {
-    if (!expandido) {
-      setExpandido(true);
-      return;
-    }
-    const recolher = () => encolherSemPular(botaoMais.current, () => setExpandido(false));
+  const cards = () => lista.current.querySelectorAll('[data-anim="card"]');
+  const extras = () => lista.current.querySelectorAll('[data-extra]');
+
+  // Tira os cards atuais, troca o estado e traz os novos, do lado `direcao`.
+  const trocarCards = (direcao, trocar) => {
     if (!matches(MEDIA.motion)) {
-      recolher();
+      flushSync(trocar);
+      rolarAteSecao(raiz.current, false);
       return;
     }
-    animarSaidaCards(raiz.current.querySelectorAll('[data-extra]'), recolher);
+    ocupado.current = true;
+    rolarAteSecao(raiz.current, true);
+    animarSaidaPagina(cards(), direcao, () => {
+      flushSync(trocar);
+      animarEntradaPagina(cards(), direcao, () => {
+        ocupado.current = false;
+      });
+    });
+  };
+
+  const irParaPagina = contextSafe((nova) => {
+    if (ocupado.current || nova === pagina) return;
+    trocarCards(nova > pagina ? 1 : -1, () => setPagina(nova));
   });
 
-  // Cards novos entram animados; o tamanho da página mudou, então os
-  // gatilhos de scroll das seções abaixo precisam ser recalculados.
-  useEffect(() => {
-    if (expandido && matches(MEDIA.motion)) {
-      animarEntradaCards(raiz.current.querySelectorAll('[data-extra]'));
+  const abrir = () => {
+    flushSync(() => setExpandido(true));
+    if (!matches(MEDIA.motion)) return;
+    animarEntradaCards(extras());
+    if (paginacao.current) {
+      gsap.from(paginacao.current, { autoAlpha: 0, y: 12, duration: 0.6, delay: 0.15, ease: 'power3.out' });
     }
+  };
+
+  const fechar = () => {
+    const recolher = () => setExpandido(false);
+
+    // Fora da primeira página, os cards trocam de vez pelos três primeiros.
+    if (pagina !== 1) {
+      trocarCards(-1, () => {
+        setPagina(1);
+        recolher();
+      });
+      return;
+    }
+
+    if (!matches(MEDIA.motion)) {
+      encolherSemPular(botaoMais.current, recolher);
+      return;
+    }
+    ocupado.current = true;
+    const saem = [...extras(), ...(paginacao.current ? [paginacao.current] : [])];
+    animarSaidaCards(saem, () => {
+      encolherSemPular(botaoMais.current, recolher);
+      ocupado.current = false;
+    });
+  };
+
+  const alternar = contextSafe(() => {
+    if (ocupado.current) return;
+    if (expandido) fechar();
+    else abrir();
+  });
+
+  // O tamanho da página mudou: os gatilhos de scroll das seções abaixo
+  // precisam ser recalculados.
+  useEffect(() => {
     ScrollTrigger.refresh();
-  }, [expandido]);
+  }, [expandido, pagina]);
+
+  const restantes = Math.min(POR_PAGINA - LIMITE_INICIAL, total - LIMITE_INICIAL);
 
   return (
     <section ref={raiz} className={styles.secao} data-tom={tom} aria-labelledby={tituloId}>
@@ -83,12 +165,12 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
           ))}
         </h2>
         <p className={styles.selo} data-anim="selo">
-          <span ref={numeroSelo}>{licencas.length}</span>
+          <span ref={numeroSelo}>{total}</span>
           <span className="sr-only"> licenças</span>
         </p>
       </header>
 
-      {licencas.length === 0 ? (
+      {total === 0 ? (
         <p className={styles.vazio}>Nenhuma licença nesta situação.</p>
       ) : (
         <>
@@ -98,9 +180,13 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
             <span data-anim="coluna">Data Vencimento</span>
           </div>
 
-          <ul id={listaId} className={styles.lista}>
+          <ul ref={lista} id={listaId} className={styles.lista}>
             {visiveis.map((licenca, i) => (
-              <CardLicenca key={licenca.chave} licenca={licenca} extra={i >= LIMITE_INICIAL} />
+              <CardLicenca
+                key={licenca.chave}
+                licenca={licenca}
+                extra={expandido && pagina === 1 && i >= LIMITE_INICIAL}
+              />
             ))}
           </ul>
         </>
@@ -108,6 +194,19 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
 
       {temMais && (
         <div className={styles.maisArea} data-anim="mais">
+          {paginado && (
+            <Paginacao
+              ref={paginacao}
+              pagina={pagina}
+              totalPaginas={totalPaginas}
+              inicio={inicio + 1}
+              fim={inicio + visiveis.length}
+              total={total}
+              rotulo={`Páginas de ${titulo}`}
+              onIr={irParaPagina}
+            />
+          )}
+
           <button
             ref={botaoMais}
             type="button"
@@ -116,7 +215,7 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
             aria-controls={listaId}
             onClick={alternar}
           >
-            {expandido ? 'Mostrar menos' : `Mostrar mais (${licencas.length - LIMITE_INICIAL})`}
+            {expandido ? 'Mostrar menos' : `Mostrar mais (+${restantes})`}
             <span className={styles.maisSeta} data-aberto={expandido} aria-hidden="true">
               ↓
             </span>

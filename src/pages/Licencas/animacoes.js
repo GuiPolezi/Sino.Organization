@@ -118,3 +118,30 @@ export const animarSaidaCards = (cards, aoTerminar) =>
     stagger: { each: 0.04, from: 'end' },
     onComplete: aoTerminar,
   });
+
+// Troca de página: os cards saem para o lado oposto ao da navegação...
+export const animarSaidaPagina = (cards, direcao, aoTerminar) =>
+  gsap.to(cards, {
+    autoAlpha: 0,
+    x: -28 * direcao,
+    duration: 0.28,
+    ease: 'power2.in',
+    stagger: 0.03,
+    onComplete: aoTerminar,
+  });
+
+// ...e os novos entram vindo do lado para onde se navegou.
+export const animarEntradaPagina = (cards, direcao, aoTerminar) =>
+  gsap.fromTo(
+    cards,
+    { autoAlpha: 0, x: 36 * direcao },
+    {
+      autoAlpha: 1,
+      x: 0,
+      duration: 0.6,
+      ease: 'power3.out',
+      stagger: 0.06,
+      clearProps: 'transform,opacity,visibility',
+      onComplete: aoTerminar,
+    },
+  );

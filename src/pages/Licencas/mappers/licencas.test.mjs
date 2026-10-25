@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   agruparLicencas,
+  paginasVisiveis,
   classificarLicencas,
   descreverPrazo,
   diasAte,
@@ -87,4 +88,18 @@ test('agruparLicencas põe o id no slug quando dois clientes têm o mesmo nome',
     { clienteId: 2, nome: 'CÂMARA DE ITU', sistema: 'Siscam', vencimento: '2026-10-01' },
   ]);
   assert.deepEqual(grupos.map((g) => g.slug), ['camara-de-itu-1', 'camara-de-itu-2']);
+});
+
+test('paginasVisiveis mostra pontas, vizinhas e reticências com largura fixa', () => {
+  assert.deepEqual(paginasVisiveis(1, 1), [1]);
+  assert.deepEqual(paginasVisiveis(2, 5), [1, 2, 3, 4, 5]);
+  assert.deepEqual(paginasVisiveis(1, 12), [1, 2, 3, 4, 5, null, 12]);
+  assert.deepEqual(paginasVisiveis(4, 12), [1, 2, 3, 4, 5, null, 12]);
+  assert.deepEqual(paginasVisiveis(6, 12), [1, null, 5, 6, 7, null, 12]);
+  assert.deepEqual(paginasVisiveis(9, 12), [1, null, 8, 9, 10, 11, 12]);
+  assert.deepEqual(paginasVisiveis(12, 12), [1, null, 8, 9, 10, 11, 12]);
+  for (let atual = 1; atual <= 12; atual += 1) {
+    assert.equal(paginasVisiveis(atual, 12).length, 7);
+    assert.ok(paginasVisiveis(atual, 12).includes(atual));
+  }
 });
