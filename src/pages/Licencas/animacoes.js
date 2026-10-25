@@ -18,8 +18,11 @@ const contar = (tl, el, total, duracao, posicao) => {
   );
 };
 
-// Entrada do topo da página, ao carregar.
-export function animarCabecalho(q, numeroEl, total) {
+// Contagem do "+229 Clientes Registrados", quando o total chega da API.
+export const animarContador = (el, total) => contar(gsap.timeline(), el, total, 2.2, 0);
+
+// Entrada do topo da página, ao carregar (o número do contador vem depois).
+export function animarCabecalho(q) {
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
   tl.from(q('[data-anim="titulo-palavra"]'), {
@@ -47,7 +50,7 @@ export function animarCabecalho(q, numeroEl, total) {
       stagger: 0.1,
     }, 0.6);
 
-  return contar(tl, numeroEl, total, 2.2, 0.6);
+  return tl;
 }
 
 // Entrada de uma seção (título, selo, colunas e cards) quando ela chega na tela.

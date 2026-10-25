@@ -119,3 +119,10 @@
   outline-offset: 4px;
   border-radius: 2px;
 }
+
+.carregando {
+  margin-top: clamp(48px, 7vw, 96px);
+  font-size: 1.0625rem;
+  color: var(--color-cream);
+  opacity: 0.8;
+}

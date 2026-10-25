@@ -516,3 +516,59 @@
     align-self: flex-end;
   }
 }
+
+/* ---------- Carregando / erro ---------- */
+
+.estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  margin-top: clamp(72px, 9vw, 128px);
+  font-size: 1.0625rem;
+  color: var(--color-cream);
+}
+
+.estado p {
+  max-width: 60ch;
+}
+
+/* Três pontos que acendem em sequência enquanto a API responde. */
+.pontos {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.pontos span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-cream);
+  opacity: 0.25;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pontos span {
+    animation: acender 1.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .pontos span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .pontos span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes acender {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}

@@ -59,7 +59,7 @@ async function lerPagina(requisitar, caminho) {
 }
 
 /*
- * Entra no site e devolve o HTML das páginas usadas pelo sync:
+ * Entra no site e devolve o HTML das páginas usadas pela API (server/api.mjs):
  * - inicio: a página inicial, com as tabelas de vencidas e de vencimento próximo;
  * - clientes: a primeira página da lista de clientes, com o total de registros.
  */

@@ -1,5 +1,5 @@
-// Lê as tabelas da página inicial do Sino.Licença. Sem acesso à rede: o sync
-// baixa o HTML, aqui só se extrai o conteúdo.
+// Lê as tabelas da página inicial do Sino.Licença. Sem acesso à rede: a API
+// (server/api.mjs) baixa o HTML, aqui só se extrai o conteúdo.
 //
 // Cada linha das tabelas é um sistema de um cliente: "Cliente" (um link para
 // /Clientes/Details/<id>), "Data" (dd/mm/aaaa) e "Sistema". O serial da licença
@@ -69,7 +69,7 @@ export function lerTotalClientes(html) {
 /*
  * Junta as duas tabelas numa lista só, sem linhas repetidas, da data mais antiga
  * para a mais nova. Quem separa vencidas de próximas é a página, pela data de
- * hoje: assim um arquivo de alguns dias atrás continua certo.
+ * hoje: assim um dado guardado no cache continua certo.
  */
 export function montarLicencas({ inicio, clientes }) {
   const vistas = new Set();

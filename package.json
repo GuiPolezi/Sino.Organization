@@ -14,7 +14,6 @@
     "sync:dev-team": "node --env-file-if-exists=.env scripts/sync-team.mjs desenvolvimento",
     "sync:atendimentos": "node --env-file-if-exists=.env scripts/sync-atendimentos.mjs",
     "sync:chamados": "node --env-file-if-exists=.env scripts/sync-chamados.mjs",
-    "sync:licencas": "node --env-file-if-exists=.env scripts/sync-licencas.mjs",
     "test:resolver": "node --test scripts/resolve-city.test.mjs",
     "test:team": "node --test scripts/build-team.test.mjs",
     "test:atendimentos": "node --test scripts/build-atendimentos.test.mjs",
@@ -24,6 +23,7 @@
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs",
     "test:chamados-sync": "node --test scripts/build-chamados.test.mjs",
     "test:licencas": "node --test src/pages/Licencas/mappers/licencas.test.mjs scripts/build-licencas.test.mjs",
+    "test:api": "node --test server/cache.test.mjs",
     "test:reunioes": "node --test src/components/Hero/reunioes/reunioes.test.mjs src/components/Hero/reunioes/periodos.test.mjs src/components/Hero/reunioes/reunioesSeed.test.mjs src/components/Hero/reunioes/selecao/favo.test.mjs"
   },
   "dependencies": {

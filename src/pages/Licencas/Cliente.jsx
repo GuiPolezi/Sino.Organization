@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MEDIA } from '../../utils/media.js';
 import NotFound from '../NotFound/index.jsx';
-import { LICENCAS, urlClienteNoSite } from './dados.js';
+import { urlClienteNoSite, useLicencas } from './dados.js';
 import {
   JANELA_PROXIMO_DIAS,
   descreverPrazo,
@@ -25,12 +25,14 @@ const situacao = (dias) => {
 /*
  * Página da licença de um cliente (/licencas/<slug>). Mostra as licenças do
  * cliente que estão nas tabelas do Sino.Licença, uma linha por data de
- * vencimento. A situação do topo é a da licença mais urgente.
+ * vencimento. A situação do topo é a da licença mais urgente. Os dados vêm
+ * de /api/licencas, como na listagem.
  */
 export default function Cliente({ slug }) {
   const raiz = useRef(null);
+  const estado = useLicencas();
   const hoje = hojeISO();
-  const licencas = LICENCAS.filter((licenca) => licenca.slug === slug)
+  const licencas = (estado.licencas ?? []).filter((licenca) => licenca.slug === slug)
     .map((licenca) => ({ ...licenca, dias: diasAte(licenca.vencimento, hoje) }))
     .sort((a, b) => a.dias - b.dias);
   const cliente = licencas[0];
@@ -48,8 +50,31 @@ export default function Cliente({ slug }) {
         });
       });
     },
-    { scope: raiz },
+    { scope: raiz, dependencies: [cliente?.chave] },
   );
+
+  if (estado.situacao === 'carregando') {
+    return (
+      <main ref={raiz} className={styles.page}>
+        <p className={styles.carregando} role="status">
+          Carregando a licença…
+        </p>
+      </main>
+    );
+  }
+
+  if (estado.situacao === 'erro') {
+    return (
+      <main ref={raiz} className={styles.page}>
+        <a className={styles.voltar} href="/licencas">
+          ← Voltar para licenças
+        </a>
+        <p className={styles.carregando} role="alert">
+          Não foi possível carregar a licença. {estado.mensagem}
+        </p>
+      </main>
+    );
+  }
 
   if (!cliente) return <NotFound />;
 
