@@ -16,7 +16,13 @@ import {
   separarReunioes,
   validarReuniao,
 } from './reunioes.js';
-import { CHAVE_STORAGE, carregarReunioes, salvarReunioes } from './reunioesRepo.js';
+import {
+  CHAVE_MIGRADA,
+  CHAVE_STORAGE,
+  lerReunioesLocais,
+  migrarReunioesLocais,
+  reunioesParaMigrar,
+} from './reunioesRepo.js';
 
 // Instantes explícitos em Brasília (-03:00): os testes valem em qualquer TZ.
 const AGORA = new Date('2026-10-19T10:00:00-03:00'); // 19/10/2026 10:00 Brasília
@@ -265,31 +271,49 @@ const storageFalso = (inicial = {}) => {
   };
 };
 
-test('repositório: ida e volta', () => {
-  const s = storageFalso();
-  const { reuniao } = criarReuniao(valido(), AGORA);
-  assert.equal(salvarReunioes([reuniao], s), true);
-  assert.deepEqual(carregarReunioes(s), [reuniao]);
-});
-
-test('repositório tolera ausência, JSON corrompido, schema inválido e storage quebrado', () => {
-  assert.deepEqual(carregarReunioes(storageFalso()), []);
-  assert.deepEqual(carregarReunioes(null), []);
-  assert.deepEqual(carregarReunioes(storageFalso({ [CHAVE_STORAGE]: '{quebrado' })), []);
-  assert.deepEqual(carregarReunioes(storageFalso({ [CHAVE_STORAGE]: '{"a":1}' })), []);
+test('leitura local (para a migração) tolera ausência, JSON corrompido, schema inválido e storage quebrado', () => {
+  assert.deepEqual(lerReunioesLocais(storageFalso()), []);
+  assert.deepEqual(lerReunioesLocais(null), []);
+  assert.deepEqual(lerReunioesLocais(storageFalso({ [CHAVE_STORAGE]: '{quebrado' })), []);
+  assert.deepEqual(lerReunioesLocais(storageFalso({ [CHAVE_STORAGE]: '{"a":1}' })), []);
 
   const ok = R('ok', '2026-11-01T10:00');
   const misto = JSON.stringify([ok, null, { id: 'x' }, { ...ok, id: 'y', membros: [{}] }]);
-  assert.deepEqual(carregarReunioes(storageFalso({ [CHAVE_STORAGE]: misto })), [ok]);
+  assert.deepEqual(lerReunioesLocais(storageFalso({ [CHAVE_STORAGE]: misto })), [ok]);
 
   const quebrado = {
     getItem: () => {
       throw new Error('bloqueado');
     },
-    setItem: () => {
-      throw new Error('cota');
-    },
   };
-  assert.deepEqual(carregarReunioes(quebrado), []);
-  assert.equal(salvarReunioes([ok], quebrado), false);
+  assert.deepEqual(lerReunioesLocais(quebrado), []);
+});
+
+test('migração deixa de fora as reuniões de exemplo', () => {
+  const real = { ...R('real', '2026-11-01T10:00'), titulo: 'Reunião com a Câmara' };
+  const exemplo = { ...R('ex', '2026-11-01T10:00'), titulo: 'Planejamento da Sprint 42' };
+  const s = storageFalso({ [CHAVE_STORAGE]: JSON.stringify([real, exemplo]) });
+  assert.deepEqual(reunioesParaMigrar(s), [real]);
+});
+
+test('migração envia uma vez, pula repetidas/inválidas e para sem conexão', async () => {
+  const a = { ...R('aaaaaaaa', '2026-11-01T10:00'), titulo: 'A' };
+  const b = { ...R('bbbbbbbb', '2026-11-02T10:00'), titulo: 'B' };
+  const comStatus = (status) => Object.assign(new Error('x'), { status });
+
+  const s = storageFalso({ [CHAVE_STORAGE]: JSON.stringify([a, b]) });
+  const enviadas = [];
+  const enviar = async (r) => {
+    if (r.id === 'aaaaaaaa') throw comStatus(409);
+    enviadas.push(r.id);
+  };
+  assert.equal(await migrarReunioesLocais(s, enviar), 1);
+  assert.deepEqual(enviadas, ['bbbbbbbb']);
+  assert.ok(s.dados[CHAVE_MIGRADA]);
+  assert.equal(await migrarReunioesLocais(s, enviar), 0); // já migrou
+
+  // Sem conexão: não marca, tenta de novo na próxima visita.
+  const offline = storageFalso({ [CHAVE_STORAGE]: JSON.stringify([a]) });
+  assert.equal(await migrarReunioesLocais(offline, async () => { throw comStatus(undefined); }), 0);
+  assert.equal(offline.dados[CHAVE_MIGRADA], undefined);
 });

@@ -23,8 +23,8 @@
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs",
     "test:chamados-sync": "node --test scripts/build-chamados.test.mjs",
     "test:licencas": "node --test src/pages/Licencas/mappers/licencas.test.mjs scripts/build-licencas.test.mjs",
-    "test:api": "node --test server/cache.test.mjs",
-    "test:reunioes": "node --test src/components/Hero/reunioes/reunioes.test.mjs src/components/Hero/reunioes/periodos.test.mjs src/components/Hero/reunioes/reunioesSeed.test.mjs src/components/Hero/reunioes/selecao/favo.test.mjs"
+    "test:api": "node --test server/cache.test.mjs server/reunioes.test.mjs",
+    "test:reunioes": "node --test src/components/Hero/reunioes/reunioes.test.mjs src/components/Hero/reunioes/periodos.test.mjs src/components/Hero/reunioes/selecao/favo.test.mjs"
   },
   "dependencies": {
     "@fontsource/caveat": "^5.3.0",

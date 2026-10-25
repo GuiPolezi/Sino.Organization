@@ -192,21 +192,23 @@ export const validarReuniao = (dados, agora = new Date(), { original } = {}) => 
   return erros;
 };
 
+// Os campos editáveis já normalizados (dados que passaram em validarReuniao).
+// O servidor usa a mesma função ao gravar.
+export const camposDaReuniao = (dados) => ({
+  titulo: normalizarNome(dados.titulo),
+  dataHora: paraDataHoraLocal(paraDate(dados.dataHora)),
+  horaFim: String(dados.horaFim).slice(0, 5),
+  modalidade: dados.modalidade,
+  membros: normalizarMembros(dados.membros),
+});
+
 export const criarReuniao = (dados, agora = new Date()) => {
   const erros = validarReuniao(dados, agora);
   if (Object.keys(erros).length > 0) return { ok: false, erros };
 
   return {
     ok: true,
-    reuniao: {
-      id: gerarId(),
-      titulo: normalizarNome(dados.titulo),
-      dataHora: paraDataHoraLocal(paraDate(dados.dataHora)),
-      horaFim: String(dados.horaFim).slice(0, 5),
-      modalidade: dados.modalidade,
-      membros: normalizarMembros(dados.membros),
-      criadaEm: agora.toISOString(),
-    },
+    reuniao: { id: gerarId(), ...camposDaReuniao(dados), criadaEm: agora.toISOString() },
   };
 };
 
@@ -220,15 +222,7 @@ export const editarReuniao = (reunioes, id, dados, agora = new Date()) => {
   const erros = validarReuniao(dados, agora, { original });
   if (Object.keys(erros).length > 0) return { ok: false, erros };
 
-  const reuniao = {
-    ...original,
-    titulo: normalizarNome(dados.titulo),
-    dataHora: paraDataHoraLocal(paraDate(dados.dataHora)),
-    horaFim: String(dados.horaFim).slice(0, 5),
-    modalidade: dados.modalidade,
-    membros: normalizarMembros(dados.membros),
-    editadaEm: agora.toISOString(),
-  };
+  const reuniao = { ...original, ...camposDaReuniao(dados), editadaEm: agora.toISOString() };
   return { ok: true, reuniao, reunioes: lista.map((r) => (r.id === id ? reuniao : r)) };
 };
 

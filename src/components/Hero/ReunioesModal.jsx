@@ -12,7 +12,7 @@ import styles from './ReunioesModal.module.css';
 
 // Modal do setor "Reuniões": histórico das reuniões e formulário para agendar.
 export default function ReunioesModal({ onClose }) {
-  const { reunioes, criar, editar, remover } = useReunioes();
+  const { reunioes, criar, editar, remover, carregando, erro, limparErro } = useReunioes();
   const agora = useAgora(reunioes);
   const [visao, setVisao] = useState('lista');
   // Filtro e página ficam aqui para sobreviver à ida ao formulário.
@@ -159,7 +159,19 @@ export default function ReunioesModal({ onClose }) {
       voltar={visao === 'lista'}
     >
       <div key={visao} ref={visaoRef} className={styles.visao} data-modal="item">
-        {visao === 'lista' ? (
+        {erro && (
+          <p className={styles.aviso} role="alert">
+            <span>{erro}</span>
+            <button type="button" className={styles.avisoFechar} onClick={limparErro} aria-label="Fechar aviso">
+              ×
+            </button>
+          </p>
+        )}
+        {visao === 'lista' && carregando ? (
+          <p className={styles.carregando} role="status">
+            Carregando reuniões…
+          </p>
+        ) : visao === 'lista' ? (
           <ReunioesLista
             reunioes={reunioes}
             agora={agora}

@@ -8,7 +8,16 @@ function apiLocal() {
     if (!req.url?.startsWith('/api/')) return next();
     try {
       const { tratarApi } = await import('./server/api.mjs');
-      const resposta = await tratarApi(new Request(new URL(req.url, 'http://localhost'), { method: req.method }));
+      const temCorpo = !['GET', 'HEAD'].includes(req.method);
+      const corpo = [];
+      if (temCorpo) for await (const pedaco of req) corpo.push(pedaco);
+      const resposta = await tratarApi(
+        new Request(new URL(req.url, 'http://localhost'), {
+          method: req.method,
+          headers: { 'content-type': req.headers['content-type'] ?? '' },
+          body: temCorpo ? Buffer.concat(corpo) : undefined,
+        }),
+      );
       res.statusCode = resposta.status;
       resposta.headers.forEach((valor, nome) => res.setHeader(nome, valor));
       res.end(Buffer.from(await resposta.arrayBuffer()));
