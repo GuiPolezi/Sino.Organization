@@ -3,14 +3,13 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MEDIA } from '../../utils/media.js';
 import NotFound from '../NotFound/index.jsx';
-import { gerarClientesFicticios } from './dados.js';
+import { LICENCAS, urlClienteNoSite } from './dados.js';
 import {
   JANELA_PROXIMO_DIAS,
   descreverPrazo,
   diasAte,
   formatarData,
   hojeISO,
-  slugify,
 } from './mappers/licencas.js';
 import styles from './Cliente.module.css';
 
@@ -24,13 +23,17 @@ const situacao = (dias) => {
 };
 
 /*
- * Página da licença de um cliente (/licencas/<slug>). Por enquanto mostra só
- * o resumo, com os mesmos dados fictícios da listagem.
+ * Página da licença de um cliente (/licencas/<slug>). Mostra as licenças do
+ * cliente que estão nas tabelas do Sino.Licença, uma linha por data de
+ * vencimento. A situação do topo é a da licença mais urgente.
  */
 export default function Cliente({ slug }) {
   const raiz = useRef(null);
   const hoje = hojeISO();
-  const cliente = gerarClientesFicticios(hoje).find(({ nome }) => slugify(nome) === slug);
+  const licencas = LICENCAS.filter((licenca) => licenca.slug === slug)
+    .map((licenca) => ({ ...licenca, dias: diasAte(licenca.vencimento, hoje) }))
+    .sort((a, b) => a.dias - b.dias);
+  const cliente = licencas[0];
 
   useGSAP(
     () => {
@@ -50,8 +53,7 @@ export default function Cliente({ slug }) {
 
   if (!cliente) return <NotFound />;
 
-  const dias = diasAte(cliente.vencimento, hoje);
-  const { tom, rotulo } = situacao(dias);
+  const { tom, rotulo } = situacao(cliente.dias);
 
   return (
     <main ref={raiz} className={styles.page} data-tom={tom}>
@@ -68,25 +70,37 @@ export default function Cliente({ slug }) {
         {cliente.nome}
       </h1>
 
-      <dl className={styles.dados} data-anim>
-        <div>
-          <dt>Vencimento</dt>
-          <dd>
-            <time dateTime={cliente.vencimento}>{formatarData(cliente.vencimento)}</time>
-            <span className={styles.prazo}>{descreverPrazo(dias)}</span>
-          </dd>
-        </div>
-        <div>
-          <dt>Sistemas</dt>
-          <dd>
-            <ul className={styles.sistemas}>
-              {cliente.sistemas.map((sistema) => (
-                <li key={sistema}>{sistema}</li>
-              ))}
-            </ul>
-          </dd>
-        </div>
-      </dl>
+      {licencas.map(({ chave, vencimento, dias, sistemas }) => (
+        <dl key={chave} className={styles.dados} data-tom={situacao(dias).tom} data-anim>
+          <div>
+            <dt>Vencimento</dt>
+            <dd>
+              <time dateTime={vencimento}>{formatarData(vencimento)}</time>
+              <span className={styles.prazo}>{descreverPrazo(dias)}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Sistemas</dt>
+            <dd>
+              <ul className={styles.sistemas}>
+                {sistemas.map((sistema) => (
+                  <li key={sistema}>{sistema}</li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+        </dl>
+      ))}
+
+      <a
+        className={styles.noSite}
+        href={urlClienteNoSite(cliente.clienteId)}
+        target="_blank"
+        rel="noreferrer"
+        data-anim
+      >
+        Abrir no Site Licenças ↗
+      </a>
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  agruparLicencas,
   classificarLicencas,
   descreverPrazo,
   diasAte,
@@ -9,7 +10,6 @@ import {
   slugify,
   somarDias,
 } from './licencas.js';
-import { gerarClientesFicticios } from '../dados.js';
 
 const HOJE = '2026-10-19';
 
@@ -57,12 +57,34 @@ test('classificarLicencas separa, ordena e descarta as distantes', () => {
   assert.equal(proximas[0].dias, 0);
 });
 
-test('dados fictícios: 10 vencidas, 15 próximas e slugs únicos', () => {
-  const clientes = gerarClientesFicticios(HOJE);
-  const { vencidas, proximas } = classificarLicencas(clientes, HOJE);
-  const slugs = clientes.map((c) => slugify(c.nome));
+test('agruparLicencas junta os sistemas de um cliente que vencem no mesmo dia', () => {
+  const linhas = [
+    { clienteId: 78, nome: 'Câmara Municipal de Guarujá', sistema: 'Siscam', vencimento: '2026-10-19' },
+    { clienteId: 78, nome: 'Câmara Municipal de Guarujá', sistema: 'Workflow', vencimento: '2026-10-19' },
+    { clienteId: 78, nome: 'Câmara Municipal de Guarujá', sistema: 'Siscam', vencimento: '2026-10-19' },
+    { clienteId: 200, nome: 'Câmara Municipal de Sorriso', sistema: 'Siscam', vencimento: '2026-11-08' },
+    { clienteId: 200, nome: 'Câmara Municipal de Sorriso', sistema: 'Workflow', vencimento: '2025-10-20' },
+  ];
+  const grupos = agruparLicencas(linhas);
 
-  assert.equal(vencidas.length, 10);
-  assert.equal(proximas.length, 15);
-  assert.equal(new Set(slugs).size, slugs.length);
+  assert.deepEqual(
+    grupos.map(({ chave, slug, sistemas }) => [chave, slug, sistemas]),
+    [
+      ['78-2026-10-19', 'camara-municipal-de-guaruja', ['Siscam', 'Workflow']],
+      ['200-2026-11-08', 'camara-municipal-de-sorriso', ['Siscam']],
+      ['200-2025-10-20', 'camara-municipal-de-sorriso', ['Workflow']],
+    ],
+  );
+
+  const { vencidas, proximas } = classificarLicencas(grupos, HOJE);
+  assert.deepEqual(vencidas.map((c) => c.chave), ['200-2025-10-20']);
+  assert.deepEqual(proximas.map((c) => c.chave), ['78-2026-10-19', '200-2026-11-08']);
+});
+
+test('agruparLicencas põe o id no slug quando dois clientes têm o mesmo nome', () => {
+  const grupos = agruparLicencas([
+    { clienteId: 1, nome: 'Câmara de Itu', sistema: 'Siscam', vencimento: '2026-10-01' },
+    { clienteId: 2, nome: 'CÂMARA DE ITU', sistema: 'Siscam', vencimento: '2026-10-01' },
+  ]);
+  assert.deepEqual(grupos.map((g) => g.slug), ['camara-de-itu-1', 'camara-de-itu-2']);
 });

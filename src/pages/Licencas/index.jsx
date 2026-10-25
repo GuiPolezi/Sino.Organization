@@ -5,9 +5,10 @@ import { useLenis } from '../../hooks/useLenis.js';
 import { MEDIA } from '../../utils/media.js';
 import { classificarLicencas, hojeISO } from './mappers/licencas.js';
 import {
+  ATUALIZADO_EM,
+  LICENCAS,
   SITE_LICENCAS_URL,
   TOTAL_CLIENTES_REGISTRADOS,
-  gerarClientesFicticios,
 } from './dados.js';
 import { animarCabecalho } from './animacoes.js';
 import SecaoLicencas from './SecaoLicencas.jsx';
@@ -16,7 +17,14 @@ import styles from './Licencas.module.css';
 gsap.registerPlugin(useGSAP);
 
 const HOJE = hojeISO();
-const { vencidas, proximas } = classificarLicencas(gerarClientesFicticios(HOJE), HOJE);
+const { vencidas, proximas } = classificarLicencas(LICENCAS, HOJE);
+
+// "25/10/2026 às 18:10", no horário do navegador.
+const ATUALIZADO = ATUALIZADO_EM
+  ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+      .format(new Date(ATUALIZADO_EM))
+      .replace(', ', ' às ')
+  : null;
 
 export default function Licencas() {
   useLenis();
@@ -93,6 +101,7 @@ export default function Licencas() {
               ↗
             </span>
           </a>
+          {ATUALIZADO && <span className={styles.atualizado}>Atualizado em {ATUALIZADO}</span>}
         </p>
       </header>
 

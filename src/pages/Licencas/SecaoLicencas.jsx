@@ -100,7 +100,7 @@ export default function SecaoLicencas({ id, titulo, tom, licencas }) {
 
           <ul id={listaId} className={styles.lista}>
             {visiveis.map((licenca, i) => (
-              <CardLicenca key={licenca.slug} licenca={licenca} extra={i >= LIMITE_INICIAL} />
+              <CardLicenca key={licenca.chave} licenca={licenca} extra={i >= LIMITE_INICIAL} />
             ))}
           </ul>
         </>

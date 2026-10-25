@@ -59,7 +59,7 @@ export function classificarLicencas(clientes, hoje, janela = JANELA_PROXIMO_DIAS
 
   for (const cliente of clientes) {
     const dias = diasAte(cliente.vencimento, hoje);
-    const item = { ...cliente, slug: slugify(cliente.nome), dias };
+    const item = { ...cliente, slug: cliente.slug ?? slugify(cliente.nome), dias };
     if (dias < 0) vencidas.push(item);
     else if (dias <= janela) proximas.push(item);
   }
@@ -67,6 +67,36 @@ export function classificarLicencas(clientes, hoje, janela = JANELA_PROXIMO_DIAS
   vencidas.sort((a, b) => b.dias - a.dias);
   proximas.sort((a, b) => a.dias - b.dias);
   return { vencidas, proximas };
+}
+
+/*
+ * Linhas do Sino.Licença (uma por sistema de um cliente) -> um card por cliente
+ * e data de vencimento: os sistemas que vencem no mesmo dia ficam juntos. Um
+ * cliente com sistemas vencendo em dias diferentes aparece uma vez por data.
+ * O slug vem do nome; se dois clientes derem o mesmo slug, o id entra no fim.
+ */
+export function agruparLicencas(linhas) {
+  const idsPorSlug = new Map();
+  for (const { clienteId, nome } of linhas) {
+    const slug = slugify(nome);
+    if (!idsPorSlug.has(slug)) idsPorSlug.set(slug, new Set());
+    idsPorSlug.get(slug).add(clienteId);
+  }
+  const slugDe = (clienteId, nome) => {
+    const slug = slugify(nome);
+    return idsPorSlug.get(slug).size > 1 ? `${slug}-${clienteId}` : slug;
+  };
+
+  const grupos = new Map();
+  for (const { clienteId, nome, sistema, vencimento } of linhas) {
+    const chave = `${clienteId}-${vencimento}`;
+    if (!grupos.has(chave)) {
+      grupos.set(chave, { chave, clienteId, nome, slug: slugDe(clienteId, nome), sistemas: [], vencimento });
+    }
+    const { sistemas } = grupos.get(chave);
+    if (!sistemas.includes(sistema)) sistemas.push(sistema);
+  }
+  return [...grupos.values()];
 }
 
 // Caminho da página de licença do cliente.

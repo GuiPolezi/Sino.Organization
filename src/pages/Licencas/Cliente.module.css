@@ -89,3 +89,33 @@
   display: grid;
   gap: 4px;
 }
+
+/* Com mais de uma data, cada licença usa a cor da própria situação. */
+.dados[data-tom='vencida'] {
+  --tom: #ffb3a3;
+}
+
+.dados[data-tom='proxima'] {
+  --tom: #72f0dd;
+}
+
+.noSite {
+  display: inline-block;
+  margin-top: clamp(32px, 4vw, 56px);
+  font-size: 1rem;
+  font-weight: var(--weight-bold);
+  color: var(--tom);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.noSite:hover {
+  color: var(--color-white);
+}
+
+.noSite:focus-visible {
+  outline: 2px solid var(--tom);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
