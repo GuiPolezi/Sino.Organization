@@ -1,5 +1,5 @@
 // Aparência de cada desenvolvedor: a configuração do mesmo boneco base do
-// suporte, mapeada pelo id em src/data/dev-team.json. Para ajustar alguém,
+// suporte, mapeada pelo id em scripts/data/dev-team.json. Para ajustar alguém,
 // edite a entrada dele aqui. Quase todos vestem a camisa verde do uniforme, a
 // mesma do suporte, com o logo da empresa no peito; o Caique vai de moletom.
 

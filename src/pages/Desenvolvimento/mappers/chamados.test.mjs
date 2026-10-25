@@ -156,9 +156,9 @@ test('passando do limite de colunas, os assuntos menos comuns somam em "Outros"'
   assert.ok(!resumirChamados(umAMais, 'tudo', HOJE).categorias[0].assuntos.some(({ assunto }) => assunto === OUTROS_ASSUNTOS));
 });
 
-test('os chamados do Milldesk (src/data/chamados.json) são coerentes para toda a equipe', () => {
-  const { desenvolvedores } = JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8'));
-  const equipe = JSON.parse(readFileSync(new URL('../../../data/dev-team.json', import.meta.url), 'utf8')).team;
+test('os chamados do Milldesk (fixtures/chamados.json, uma cópia do sync de 23/10/2026) são coerentes para toda a equipe', () => {
+  const { desenvolvedores } = JSON.parse(readFileSync(new URL('../fixtures/chamados.json', import.meta.url), 'utf8'));
+  const equipe = JSON.parse(readFileSync(new URL('../fixtures/dev-team.json', import.meta.url), 'utf8')).team;
   assert.deepEqual(Object.keys(desenvolvedores).sort(), equipe.map(({ id }) => id).sort());
 
   for (const [id, lista] of Object.entries(desenvolvedores)) {

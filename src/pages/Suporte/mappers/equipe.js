@@ -7,8 +7,8 @@ const iniciais = (nome) => {
 };
 
 /**
- * Único lugar que conhece o formato de src/data/team.json (gerado por
- * `npm run sync:team`). Quando o arquivo ganhar campos novos, eles entram aqui.
+ * Único lugar que conhece o formato das pessoas que /api/equipes/* devolve
+ * (scripts/lib/build-team.mjs). Quando elas ganharem campos novos, eles entram aqui.
  * @returns {Tecnico}
  */
 export function mapearTecnico({ id, name, role, absent }) {

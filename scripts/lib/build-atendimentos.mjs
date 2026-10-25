@@ -1,5 +1,5 @@
 // Contagem dos atendimentos e dos tickets em aberto de cada técnico de suporte,
-// a partir dos tickets crus do Milldesk. Sem acesso à rede: o sync busca, aqui só se conta.
+// a partir dos tickets crus do Milldesk. Sem acesso à rede: a API (server/fontes.mjs) busca, aqui só se conta.
 //
 // Atendimento é um ticket com uma destas tags no assunto:
 //   "API ..."              técnico na linha "Técnico: Nome" da descrição; sem
@@ -80,7 +80,7 @@ export function idNaEquipe(equipe, nome, origem) {
  */
 export function contarAtendimentos(ticketsDoPeriodo, ticketsEmAberto, equipe) {
   const tecnicos = Object.fromEntries(equipe.map(({ id }) => [id, { porDia: {}, chamadosAtribuidos: 0 }]));
-  // Técnicos que não estão na equipe e tickets sem data: só para o relatório do sync.
+  // Técnicos que não estão na equipe e tickets sem data: só para relatórios (a API não os devolve).
   const foraDaEquipe = {};
   let semData = 0;
   const vistos = new Set();

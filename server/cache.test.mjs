@@ -110,3 +110,15 @@ test('sem dado e com outra busca em andamento, espera ela terminar', async () =>
   assert.equal((await primeiro).dados, 'primeiro');
   assert.equal((await segundo).dados, 'primeiro');
 });
+
+test('cada fonte pode ter a própria idade máxima (0 força a busca)', async () => {
+  const { agora, avancar } = relogio();
+  const obter = criarCache({ armazem: armazemMemoria(), agora });
+  const buscar = contador();
+  const umDia = { idadeMaximaMs: 24 * 60 * MINUTO };
+
+  await obter('clientes', buscar, umDia);
+  avancar(3 * 60 * MINUTO);
+  assert.equal((await obter('clientes', buscar, umDia)).situacao, 'recente');
+  assert.equal((await obter('clientes', buscar, { idadeMaximaMs: 0 })).dados, 'dado 2');
+});

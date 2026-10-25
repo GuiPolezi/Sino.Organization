@@ -246,3 +246,8 @@
     margin-top: calc(var(--u) * 1.8);
   }
 }
+
+/* Enquanto os clientes chegam da API: ocupa a altura do painel, sem pular a página. */
+.espera {
+  min-height: 80svh;
+}

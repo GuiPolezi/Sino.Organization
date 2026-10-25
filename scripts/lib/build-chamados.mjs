@@ -1,5 +1,5 @@
 // Chamados de cada desenvolvedor, a partir dos tickets crus do Milldesk. Sem
-// acesso à rede: o sync busca, aqui só se classifica e se conta.
+// acesso à rede: a API (server/chamados.mjs) busca, aqui só se classifica e se conta.
 //
 // De cada ticket saem só campos de classificação: data de criação, status,
 // categoria, assunto (a subcategoria do Milldesk), local (o campo Local do
@@ -7,7 +7,7 @@
 // finalizado. Título, descrição e solicitante nunca saem daqui.
 //
 // Só entram tickets cuja categoria está em CATEGORIAS_MILLDESK; os demais ficam
-// fora dos cards (status, total e categorias) e aparecem só no relatório do sync.
+// fora dos cards (status, total e categorias) e não saem da API.
 import { dataIso } from './build-atendimentos.mjs';
 
 export const FECHADO = 'Fechado';
@@ -132,7 +132,7 @@ export function localDoTicket(local) {
 export function montarChamados(tickets, equipe) {
   const porAgente = new Map(equipe.map(({ id, agent }) => [normalizar(agent), id]));
   const desenvolvedores = Object.fromEntries(equipe.map(({ id }) => [id, []]));
-  // Só para o relatório do sync.
+  // Só para relatórios (a API não os devolve).
   const categoriasIgnoradas = {};
   let semData = 0;
   const vistos = new Set();

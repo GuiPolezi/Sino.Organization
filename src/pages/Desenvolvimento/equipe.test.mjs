@@ -7,7 +7,7 @@ import { aparenciaDe, registrarAparencias, temBochechas } from '../Suporte/bonec
 import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 
-const { team } = JSON.parse(readFileSync(new URL('../../data/dev-team.json', import.meta.url), 'utf8'));
+const { team } = JSON.parse(readFileSync(new URL('./fixtures/dev-team.json', import.meta.url), 'utf8'));
 const ESTILOS = ['curto', 'degrade', 'raspado', 'volumoso', 'topete', 'coque', 'moicano', 'longo', 'comprido', 'ombro', 'cacheado', 'cachinhos', 'careca'];
 const ACESSORIOS = ['nenhum', 'oculos', 'headset', 'bone', 'maleta', 'gravata'];
 const COR = /^#[0-9a-f]{6}$/i;

@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import clientsData from '../../data/clients.json';
+import { buscarDados } from '../../api/buscarApi.js';
 import { MEDIA, matches } from '../../utils/media.js';
 import BrazilMap from './BrazilMap.jsx';
 import { STATES } from './brazilMap.js';
@@ -20,30 +20,74 @@ import styles from './Clients.module.css';
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const TITLE_ID = 'clients-title';
-const { cities: PLACES, totals: TOTALS } = clientsData;
 const STATE_NAMES = new Map(STATES.map(({ uf, name }) => [uf, name]));
 
-const STATS = [
-  { id: 'clients', total: TOTALS.clients, label: 'clientes' },
-  { id: 'cities', total: TOTALS.cities, label: 'cidades' },
-  { id: 'states', total: TOTALS.states, label: 'estados' },
-];
+// Resposta de /api/clientes -> o que o painel mostra.
+function prepararClientes({ cities: PLACES, totals: TOTALS }) {
+  const STATS = [
+    { id: 'clients', total: TOTALS.clients, label: 'clientes' },
+    { id: 'cities', total: TOTALS.cities, label: 'cidades' },
+    { id: 'states', total: TOTALS.states, label: 'estados' },
+  ];
 
-// Estados com clientes, do que tem mais para o que tem menos.
-const TOTAL_BY_UF = PLACES.reduce(
-  (totals, { uf, clients }) => totals.set(uf, (totals.get(uf) ?? 0) + clients.length),
-  new Map(),
-);
-const CLIENT_STATES = [...TOTAL_BY_UF]
-  .map(([uf, total]) => ({ uf, total }))
-  .sort((a, b) => b.total - a.total);
-const CLIENT_UFS = new Set(CLIENT_STATES.map(({ uf }) => uf));
+  // Estados com clientes, do que tem mais para o que tem menos.
+  const TOTAL_BY_UF = PLACES.reduce(
+    (totals, { uf, clients }) => totals.set(uf, (totals.get(uf) ?? 0) + clients.length),
+    new Map(),
+  );
+  const CLIENT_STATES = [...TOTAL_BY_UF]
+    .map(([uf, total]) => ({ uf, total }))
+    .sort((a, b) => b.total - a.total);
+  const CLIENT_UFS = new Set(CLIENT_STATES.map(({ uf }) => uf));
+  return { PLACES, STATS, CLIENT_STATES, CLIENT_UFS };
+}
 
 /*
- * Os dados vêm de src/data/clients.json, gerado por `npm run sync:clients`
- * a partir da API do Milldesk. Nada é buscado no navegador.
+ * Os clientes vêm da API do site (/api/clientes), que lê os locais do Milldesk
+ * no servidor e guarda o resultado por até um dia (a chave da API nunca vem ao
+ * navegador). O painel completo só monta quando os dados chegam, para as
+ * animações de entrada (contadores, pinos) partirem dos números certos.
  */
 export default function Clients() {
+  const [estado, setEstado] = useState({ situacao: 'carregando' });
+
+  useEffect(() => {
+    let ativo = true;
+    buscarDados('/api/clientes').then(
+      (dados) => ativo && setEstado({ situacao: 'pronto', dados: prepararClientes(dados) }),
+      (erro) => ativo && setEstado({ situacao: 'erro', mensagem: erro.message }),
+    );
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  // O painel mudou de altura: os gatilhos de scroll das seções abaixo são recalculados.
+  useEffect(() => {
+    if (estado.situacao !== 'carregando') ScrollTrigger.refresh();
+  }, [estado.situacao]);
+
+  if (estado.situacao === 'pronto') return <PainelClientes {...estado.dados} />;
+
+  return (
+    <section className={`${styles.panel} ${styles.espera}`} aria-labelledby={TITLE_ID}>
+      <div className={styles.inner}>
+        <header className={styles.header}>
+          <h2 id={TITLE_ID} className={styles.title}>
+            Clientes
+          </h2>
+          <p className={styles.subtitle} role={estado.situacao === 'erro' ? 'alert' : 'status'}>
+            {estado.situacao === 'erro'
+              ? `Não foi possível carregar os clientes. ${estado.mensagem}`
+              : 'Carregando os clientes…'}
+          </p>
+        </header>
+      </div>
+    </section>
+  );
+}
+
+function PainelClientes({ PLACES, STATS, CLIENT_STATES, CLIENT_UFS }) {
   const root = useRef(null);
   const isSwitching = useRef(false);
   const hasSwitched = useRef(false);

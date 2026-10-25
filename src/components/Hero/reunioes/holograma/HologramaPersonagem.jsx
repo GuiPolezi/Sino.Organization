@@ -1,7 +1,6 @@
 import { Component, Suspense, lazy, memo, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import devTeam from '../../../../data/dev-team.json';
-import team from '../../../../data/team.json';
 import { iniciais } from '../MembrosAvatares.jsx';
+import { nomeDaPessoa } from '../membrosEquipe.js';
 import { useRetratoReuniao } from '../RetratosReunioes.jsx';
 import styles from './HologramaPersonagem.module.css';
 
@@ -23,8 +22,6 @@ const CenaHolograma = lazy(carregarCena);
 export function precarregarHolograma() {
   carregarCena().catch(() => {});
 }
-
-const NOMES = new Map([...team.team, ...devTeam.team].map((pessoa) => [pessoa.id, pessoa.name]));
 
 let webgl;
 function temWebGL() {
@@ -82,7 +79,7 @@ function Reserva({ pessoaId }) {
           draggable={false}
         />
       ) : (
-        <span className={styles.iniciais}>{iniciais(NOMES.get(pessoaId) ?? pessoaId)}</span>
+        <span className={styles.iniciais}>{iniciais(nomeDaPessoa(pessoaId) ?? pessoaId)}</span>
       )}
     </div>
   );

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useRetratoReuniao } from './RetratosReunioes.jsx';
-import { identificar, iniciais } from './membrosEquipe.js';
+import { identificar, iniciais, useEquipes } from './membrosEquipe.js';
 import styles from './MembrosAvatares.module.css';
 
-export { EQUIPE, identificar, iniciais } from './membrosEquipe.js';
+export { identificar, iniciais, useEquipes } from './membrosEquipe.js';
 
 // Lado do avatar em px (o CSS usa --avatar-tamanho; ≤ 480 px, --avatar-tamanho-compacto).
 export const tamanhos = Object.freeze({ padrao: 50, compacto: 36 });
@@ -31,6 +31,7 @@ function useDispensavel() {
 }
 
 function Avatar({ membro, estilo }) {
+  useEquipes(); // muda o boneco quando as equipes chegarem da API
   const { id, cargo } = identificar(membro);
   const url = useRetratoReuniao(id);
   const [carregado, setCarregado] = useState(false);

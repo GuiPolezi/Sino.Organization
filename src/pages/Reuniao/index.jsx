@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { STATUS, statusDe } from '../../components/Hero/reunioes/periodos.js';
+import { carregarEquipes } from '../../components/Hero/reunioes/membrosEquipe.js';
 import { migrarReunioesLocais, obterReuniao } from '../../components/Hero/reunioes/reunioesRepo.js';
 import { useAgora } from '../../components/Hero/reunioes/useAgora.js';
 import { APARENCIAS_DEV } from '../Desenvolvimento/aparencias.js';
@@ -58,9 +59,11 @@ function useReuniaoRemota(id) {
   useEffect(() => {
     let ativo = true;
     let atual = null;
+    // Na primeira leitura, espera também as equipes: os bonecos de quem é da
+    // equipe (com a aparência dela) são montados uma vez, quando a reunião chega.
     const ler = (primeira) =>
-      obterReuniao(id).then(
-        (reuniao) => {
+      Promise.all([obterReuniao(id), primeira && carregarEquipes().catch(() => {})]).then(
+        ([reuniao]) => {
           if (!ativo || (!primeira && JSON.stringify(reuniao) === JSON.stringify(atual))) return;
           atual = reuniao;
           setEstado({ situacao: 'pronto', reuniao });

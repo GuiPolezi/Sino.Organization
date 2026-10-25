@@ -2,8 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "functions": {
-    "api/**/*.js": { "maxDuration": 60 }
+    "api/**/*.js": { "maxDuration": 300 }
   },
+  "crons": [{ "path": "/api/cron/chamados", "schedule": "0 9 * * *" }],
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "headers": [
     {

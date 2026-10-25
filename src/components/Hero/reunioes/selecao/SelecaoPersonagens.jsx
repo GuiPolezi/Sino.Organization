@@ -3,17 +3,13 @@ import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MEDIA, matches } from '../../../../utils/media.js';
-import { EQUIPE, iniciais, matiz } from '../MembrosAvatares.jsx';
+import { iniciais, matiz } from '../MembrosAvatares.jsx';
+import { pessoasDasEquipes, usePessoasDasEquipes } from '../membrosEquipe.js';
 import { useRetratoReuniao } from '../RetratosReunioes.jsx';
 import { adicionarMembro, chaveMembro } from '../reunioes.js';
 import HologramaPersonagem, { precarregarHolograma } from '../holograma/HologramaPersonagem.jsx';
 import { calcularFavo, empurrar } from './favo.js';
 import styles from './SelecaoPersonagens.module.css';
-
-// Pessoas das equipes (Suporte e Desenvolvimento), sem repetir, por nome.
-const PESSOAS = [...new Map([...EQUIPE.values()].map((p) => [p.id, p])).values()].sort((a, b) =>
-  a.name.localeCompare(b.name, 'pt-BR'),
-);
 
 const ESCALA_ESCOLHIDA = 1.42;
 // Respiro entre o painel e a borda do cartão "Criar Reunião".
@@ -112,6 +108,8 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
   const botao = useRef(null);
   const fechando = useRef(false);
   const entrou = useRef(false);
+  // Pessoas das equipes (Suporte e Desenvolvimento), sem repetir, por nome; vêm da API.
+  const PESSOAS = usePessoasDasEquipes();
 
   const adicionados = useMemo(() => new Set(membros.map((m) => chaveMembro(m.nome))), [membros]);
   const estaNaReuniao = useCallback((p) => adicionados.has(chaveMembro(p.name)), [adicionados]);
@@ -125,6 +123,13 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
   const [retangulo, setRetangulo] = useState(() => retanguloDoPainel(cartaoDe(ancora)));
   const [area, setArea] = useState({ largura: 0, altura: 0 });
 
+  // Se o seletor abriu antes de as equipes chegarem, escolhe alguém quando chegarem.
+  useEffect(() => {
+    if (escolhidaId === null && PESSOAS.length) {
+      setEscolhidaId((PESSOAS.find((p) => !estaNaReuniao(p)) ?? PESSOAS[0]).id);
+    }
+  }, [PESSOAS, escolhidaId, estaNaReuniao]);
+
   const escolhida = PESSOAS.find((p) => p.id === escolhidaId) ?? null;
   const indiceEscolhida = PESSOAS.findIndex((p) => p.id === escolhidaId);
   const jaNaReuniao = escolhida ? estaNaReuniao(escolhida) : false;
@@ -132,7 +137,7 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
 
   const layout = useMemo(
     () => calcularFavo(PESSOAS.length, area.largura, area.altura, { maximo: 112, folga: 1.25 }),
-    [area.largura, area.altura],
+    [PESSOAS.length, area.largura, area.altura],
   );
 
   // 3D pronto antes da primeira escolha.
@@ -376,7 +381,7 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
   // Versões estáveis para as badges (memo): sempre chamam a função mais recente.
   const atuais = useRef(null);
   atuais.current = { escolher, onKeyBadge };
-  const escolherIndice = useCallback((i) => atuais.current.escolher(PESSOAS[i]), []);
+  const escolherIndice = useCallback((i) => atuais.current.escolher(pessoasDasEquipes()[i]), []);
   const teclaBadge = useCallback((event, i) => atuais.current.onKeyBadge(event, i), []);
   const guardarBadge = useCallback((i, el) => {
     badges.current[i] = el;

@@ -5,10 +5,13 @@
 //
 // Segredos (MILLDESK_API_KEY, LICENCA_*, SUPABASE_SECRET_KEY) só existem aqui,
 // no servidor: as respostas levam apenas os dados já filtrados.
-import { montarLicencas } from '../scripts/lib/build-licencas.mjs';
-import { LicencaError, baixarPaginas } from '../scripts/lib/licenca.mjs';
+import { ClientesError } from '../scripts/lib/build-clients.mjs';
+import { TeamError } from '../scripts/lib/build-team.mjs';
+import { LicencaError } from '../scripts/lib/licenca.mjs';
 import { MilldeskError } from '../scripts/lib/milldesk.mjs';
 import { armazemMemoria, criarCache } from './cache.mjs';
+import { obterChamados, renovarJanelasAntigas } from './chamados.mjs';
+import { FONTES } from './fontes.mjs';
 import { criarServicoReunioes, reunioesMemoria } from './reunioes.mjs';
 import {
   SupabaseConflito,
@@ -19,7 +22,7 @@ import {
 } from './supabase.mjs';
 
 // Só estes erros têm mensagem segura para mostrar (nunca trazem chave ou senha).
-const ERROS_SEGUROS = [LicencaError, MilldeskError, SupabaseError];
+const ERROS_SEGUROS = [LicencaError, MilldeskError, SupabaseError, TeamError, ClientesError];
 const ehSeguro = (erro) => ERROS_SEGUROS.some((Tipo) => erro instanceof Tipo);
 const mensagemDe = (erro) => (ehSeguro(erro) ? erro.message : 'Erro inesperado no servidor.');
 
@@ -27,26 +30,24 @@ const mensagemDe = (erro) => (ehSeguro(erro) ? erro.message : 'Erro inesperado n
 const CORPO_MAX = 20_000;
 
 // Supabase quando configurado; senão tudo em memória (só para desenvolvimento).
+// Exportado para os scripts de manutenção (ex.: scripts/seed-chamados.mjs).
 let servicos;
-function obterServicos() {
+export function obterServicos() {
   if (!servicos) {
     const { SUPABASE_URL: url, SUPABASE_SECRET_KEY: chave } = process.env;
-    if (url && chave) {
-      const pedir = criarClienteSupabase({ url, chave });
-      servicos = {
-        cache: criarCache({ armazem: armazemSupabase(pedir), mensagemDe }),
-        reunioes: criarServicoReunioes(reunioesSupabase(pedir)),
-      };
-    } else {
-      console.warn('[api] Sem SUPABASE_URL/SUPABASE_SECRET_KEY: dados só em memória.');
-      servicos = {
-        cache: criarCache({ armazem: armazemMemoria(), mensagemDe }),
-        reunioes: criarServicoReunioes(reunioesMemoria()),
-      };
-    }
+    const pedir = url && chave ? criarClienteSupabase({ url, chave }) : null;
+    if (!pedir) console.warn('[api] Sem SUPABASE_URL/SUPABASE_SECRET_KEY: dados só em memória.');
+    const armazem = pedir ? armazemSupabase(pedir) : armazemMemoria();
+    servicos = {
+      armazem,
+      cache: criarCache({ armazem, mensagemDe }),
+      reunioes: criarServicoReunioes(pedir ? reunioesSupabase(pedir) : reunioesMemoria()),
+    };
   }
   return servicos;
 }
+
+export { mensagemDe };
 
 const json = (corpo, status = 200) =>
   new Response(status === 204 ? null : JSON.stringify(corpo), {
@@ -65,20 +66,37 @@ const erroInterno = (contexto, erro) => {
 
 // ---------- Fontes de dados com cache ----------
 
-// Chave do cache -> função que busca o dado já filtrado.
-const FONTES = {
-  licencas: async () => {
-    const { totalClientes, licencas } = montarLicencas(await baixarPaginas());
-    return { totalClientes, licencas };
-  },
-};
-
+// As fontes (o que buscar e por quanto tempo vale) estão em server/fontes.mjs.
 async function responderFonte(chave) {
+  const { buscar, idadeMaximaMs } = FONTES[chave];
   try {
-    const { dados, geradoEm, situacao, aviso } = await obterServicos().cache(chave, FONTES[chave]);
+    const { dados, geradoEm, situacao, aviso } = await obterServicos().cache(chave, buscar, { idadeMaximaMs });
     return json({ dados, geradoEm, situacao, ...(aviso && { aviso }) });
   } catch (erro) {
     return erroInterno(chave, erro);
+  }
+}
+
+// ---------- Chamados (histórico em janelas, ver server/chamados.mjs) ----------
+
+async function responderChamados() {
+  try {
+    return json(await obterChamados(obterServicos()));
+  } catch (erro) {
+    return erroInterno('chamados', erro);
+  }
+}
+
+// Agendamento diário da Vercel (vercel.json > crons). A Vercel manda
+// "Authorization: Bearer <CRON_SECRET>"; sem o segredo certo, nada roda.
+async function responderCronChamados(request) {
+  const segredo = process.env.CRON_SECRET;
+  if (!segredo) return json({ erro: 'Defina CRON_SECRET nas variáveis de ambiente.' }, 503);
+  if (request.headers.get('authorization') !== `Bearer ${segredo}`) return json({ erro: 'Não autorizado.' }, 401);
+  try {
+    return json(await renovarJanelasAntigas(obterServicos(), { mensagemDe }));
+  } catch (erro) {
+    return erroInterno('cron chamados', erro);
   }
 }
 
@@ -130,6 +148,11 @@ const apagarReuniao = comServico('reuniao', async (servico, _request, id) => res
 
 const ROTAS = [
   { caminho: /^\/api\/licencas$/, GET: () => responderFonte('licencas') },
+  { caminho: /^\/api\/equipes\/(suporte|desenvolvimento)$/, GET: (_request, setor) => responderFonte(`equipe-${setor}`) },
+  { caminho: /^\/api\/atendimentos$/, GET: () => responderFonte('atendimentos') },
+  { caminho: /^\/api\/clientes$/, GET: () => responderFonte('clientes') },
+  { caminho: /^\/api\/chamados$/, GET: responderChamados },
+  { caminho: /^\/api\/cron\/chamados$/, GET: responderCronChamados },
   { caminho: /^\/api\/reunioes$/, GET: listarReunioes, POST: criarReuniao },
   { caminho: /^\/api\/reunioes\/([^/]+)$/, GET: obterReuniao, PUT: editarReuniao, DELETE: apagarReuniao },
 ];

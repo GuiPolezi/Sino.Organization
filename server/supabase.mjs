@@ -1,7 +1,7 @@
 // Acesso ao Supabase pela API REST do próprio Supabase: sem dependência extra.
 // Só o servidor usa a chave secreta; o navegador nunca fala com o Supabase direto.
 // Tabelas em supabase/migrations: `cache` (fontes de dados) e `reunioes`.
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 15_000;
 
 export class SupabaseError extends Error {}
 
@@ -43,6 +43,15 @@ export function armazemSupabase(pedir) {
       const [linha] = await pedir(`/cache?${igual('chave', chave)}&select=dados,gerado_em`);
       if (!linha?.gerado_em) return null;
       return { dados: linha.dados, geradoEm: new Date(linha.gerado_em).toISOString() };
+    },
+    // Todas as linhas cuja chave começa com `prefixo` (ex.: as janelas 'chamados:').
+    async lerPrefixo(prefixo) {
+      const linhas = await pedir(`/cache?chave=like.${encodeURIComponent(prefixo)}*&select=chave,dados,gerado_em`);
+      return new Map(
+        linhas
+          .filter((linha) => linha.gerado_em)
+          .map((linha) => [linha.chave, { dados: linha.dados, geradoEm: new Date(linha.gerado_em).toISOString() }]),
+      );
     },
     async gravar(chave, { dados, geradoEm }) {
       await pedir('/cache', {

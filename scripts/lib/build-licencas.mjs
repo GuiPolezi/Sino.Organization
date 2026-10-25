@@ -35,7 +35,7 @@ export function dataIso(texto) {
 
 /*
  * Linhas da tabela cuja legenda é `titulo`. Sem a tabela, o layout do site mudou:
- * erro, para o sync não gravar uma lista vazia como se não houvesse licenças.
+ * erro, para a API não guardar uma lista vazia como se não houvesse licenças.
  */
 export function lerTabela(html, titulo) {
   const legenda = html.search(new RegExp(`<caption>\\s*<h3>\\s*${titulo}\\s*</h3>`, 'i'));

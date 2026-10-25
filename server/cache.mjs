@@ -14,6 +14,7 @@ const TRAVA_SEGUNDOS = 90;
  * @typedef {{ dados: unknown, geradoEm: string }} Registro
  * @typedef {{
  *   ler(chave: string): Promise<Registro | null>,
+ *   lerPrefixo(prefixo: string): Promise<Map<string, Registro>>,
  *   gravar(chave: string, registro: Registro): Promise<void>,
  *   travar(chave: string, segundos: number): Promise<boolean>,
  *   destravar(chave: string): Promise<void>,
@@ -41,11 +42,12 @@ export function criarCache({
 }) {
   /**
    * Devolve o dado da `chave`, buscando de novo com `buscar()` se estiver velho.
+   * `opcoes.idadeMaximaMs` troca a idade máxima só para esta fonte (0 força a busca).
    * @returns {Promise<Registro & { situacao: Situacao, aviso?: string }>}
    */
-  return async function obter(chave, buscar) {
+  return async function obter(chave, buscar, { idadeMaximaMs: idade = idadeMaximaMs } = {}) {
     const atual = await armazem.ler(chave);
-    if (atual && agora() - Date.parse(atual.geradoEm) < idadeMaximaMs) {
+    if (atual && agora() - Date.parse(atual.geradoEm) < idade) {
       return { ...atual, situacao: 'recente' };
     }
 
@@ -83,6 +85,9 @@ export function armazemMemoria() {
   return {
     async ler(chave) {
       return registros.get(chave) ?? null;
+    },
+    async lerPrefixo(prefixo) {
+      return new Map([...registros].filter(([chave]) => chave.startsWith(prefixo)));
     },
     async gravar(chave, registro) {
       registros.set(chave, registro);

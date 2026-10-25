@@ -1,14 +1,13 @@
-import dados from '../../../data/team.json';
+import { buscarDados } from '../../../api/buscarApi.js';
 import { mapearTecnico } from '../mappers/equipe.js';
 
 /** @import { Tecnico } from '../tipos.js' */
 
 /**
- * A equipe vem de src/data/team.json, gerado a partir do Milldesk por
- * `npm run sync:team` (a chave da API nunca vem ao navegador). Se um dia os
- * dados vierem de um backend, só o corpo desta função muda.
+ * A equipe de suporte vem da API do site (/api/equipes/suporte), que lê o
+ * Milldesk no servidor (a chave da API nunca vem ao navegador).
  * @returns {Promise<Tecnico[]>}
  */
 export async function buscarEquipe() {
-  return dados.team.map(mapearTecnico);
+  return (await buscarDados('/api/equipes/suporte')).team.map(mapearTecnico);
 }

@@ -163,7 +163,7 @@ test('carga por local: só os dez maiores, e chamado sem local não entra', () =
 
 const chamadosDoMilldesk = () =>
   Object.fromEntries(
-    Object.entries(JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8')).desenvolvedores).map(
+    Object.entries(JSON.parse(readFileSync(new URL('../fixtures/chamados.json', import.meta.url), 'utf8')).desenvolvedores).map(
       ([id, lista]) => [id, { lista }],
     ),
   );

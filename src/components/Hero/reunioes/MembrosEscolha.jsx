@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { identificar, iniciais, matiz } from './MembrosAvatares.jsx';
+import { identificar, iniciais, matiz, useEquipes } from './MembrosAvatares.jsx';
 import { useRetratoReuniao } from './RetratosReunioes.jsx';
 import SelecaoPersonagens from './selecao/SelecaoPersonagens.jsx';
 import styles from './MembrosEscolha.module.css';
@@ -8,6 +8,7 @@ import styles from './MembrosEscolha.module.css';
 const SAIDA_MS = 220;
 
 function Membro({ membro, onRemover }) {
+  useEquipes(); // muda o boneco quando as equipes chegarem da API
   const { id, cargo } = identificar(membro);
   const url = useRetratoReuniao(id);
   const [carregado, setCarregado] = useState(false);

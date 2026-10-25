@@ -1,8 +1,25 @@
-# Milldesk: o que falta para os dados atualizarem sozinhos
+# Milldesk: dados que se atualizam sozinhos
 
-> Situação em 25/10/2026. Licenças e reuniões já vêm da API do site (`/api/*`, Supabase).
-> O que vem do Milldesk ainda é estático: só muda quando alguém roda `npm run sync:*` e faz push.
-> Este documento é o roteiro para migrar essas fontes quando tivermos a `MILLDESK_API_KEY`.
+> **Status (25/10/2026): migração concluída.** Equipes, atendimentos, clientes e chamados vêm
+> da API do site (`/api/*`), com cache no Supabase. Os `npm run sync:*` e a pasta `src/data/`
+> foram removidos. O que resta fazer está em "Pendências". O roteiro original segue abaixo
+> como documentação de como cada fonte foi migrada.
+
+## Pendências
+
+- [ ] Criar `CRON_SECRET` na Vercel (texto longo e aleatório) e fazer um novo deploy. Sem ele,
+      o agendamento diário responde 503 e as janelas antigas dos chamados não se renovam
+      (as recentes continuam se renovando pelo acesso).
+- [ ] Opcional: substituir os números inventados de `src/pages/Suporte/api/resumoEquipe.js`
+      (`ficticio: true`) por números reais dos atendimentos.
+- [ ] Opcional: trocar `src/pages/Desenvolvimento/fixtures/chamados.json` (cópia real de 23/10,
+      usada só pelos testes) por um fixture pequeno e sem nomes de clientes.
+
+## Comandos úteis
+
+- `npm run seed:chamados` — recarrega todo o histórico de chamados no Supabase (alguns minutos).
+- `npm run relatorio:clientes` — mostra os locais do mapa que merecem conferência
+  (para ajustar `scripts/data/client-overrides.json`). Não grava nada.
 
 ## Visão geral
 
@@ -18,7 +35,7 @@ Cada fonte pode ir para a `main` sozinha; o site continua funcionando com as que
 
 ---
 
-## 0. Antes de começar
+## 0. Antes de começar ✅
 
 - [ ] Pegar a chave no painel do Milldesk (configurações / integrações da API).
 - [ ] Colocar no `.env` local: `MILLDESK_API_KEY=...` (nunca no chat, no código ou com prefixo `VITE_`).
@@ -51,7 +68,7 @@ Na Vercel, prefira `import dados from '../scripts/data/x.json' with { type: 'jso
 
 ---
 
-## 1. Equipes
+## 1. Equipes ✅
 
 - **Busca:** endpoint `listAgents` (1 requisição). Lógica em `scripts/sync-team.mjs` e `scripts/lib/build-team.mjs` (`buildTeam`).
 - **Quem aparece** continua definido à mão em `scripts/data/support-team.json` e `scripts/data/dev-team.json` (ficam no repositório).
@@ -62,7 +79,7 @@ Na Vercel, prefira `import dados from '../scripts/data/x.json' with { type: 'jso
   - `src/components/Hero/reunioes/membrosEquipe.js` e `src/components/Hero/reunioes/holograma/HologramaPersonagem.jsx` importam o JSON de forma **síncrona**: precisam virar assíncronos (carregar uma vez e guardar num módulo ou store).
 - **Atenção:** se `buildTeam` encontrar um técnico ausente, duplicado ou desabilitado, ele lança erro. Na API isso cai no "mostra o último dado com aviso" do cache, o que é o comportamento certo.
 
-## 2. Atendimentos
+## 2. Atendimentos ✅
 
 - **Busca:** `showTicketsPerPeriod` (dia 1 do mês anterior até hoje) + `listTicketStatus` + um `showTicketsByStatus` por status aberto. Segundos no total.
   Lógica em `scripts/sync-atendimentos.mjs` e `scripts/lib/build-atendimentos.mjs` (`contarAtendimentos`).
@@ -72,7 +89,7 @@ Na Vercel, prefira `import dados from '../scripts/data/x.json' with { type: 'jso
 - **Ganho imediato:** hoje, com o JSON velho, os dias recentes do gráfico aparecem zerados. Com a API isso acaba.
 - **Opcional:** `src/pages/Suporte/api/resumoEquipe.js` tem números **inventados** (SLA, atendimentos de hoje, chamados abertos, `ficticio: true`). Com os dados reais de atendimentos dá para calcular parte deles.
 
-## 3. Clientes (mapa)
+## 3. Clientes (mapa) ✅
 
 - **Busca:** `listLocals` (1 requisição). Lógica em `scripts/sync-clients.mjs`.
 - **Transformação:** a cidade é deduzida do nome com `scripts/lib/resolve-city.mjs`, que usa `scripts/data/municipios.json` (188 KB) e as correções de `scripts/data/client-overrides.json`. Tudo isso vai junto com a função.
@@ -80,7 +97,7 @@ Na Vercel, prefira `import dados from '../scripts/data/x.json' with { type: 'jso
 - **Servidor:** `FONTES.clientes`, cache de 1 dia; rota `/api/clientes`. Manter as proteções do script: resposta vazia ou nenhuma cidade reconhecida = erro (não grava lista vazia).
 - **Navegador:** `src/components/Clients/Clients.jsx` importa o JSON de forma **síncrona** e está na home. Precisa de estado de carregando que não quebre as animações de entrada do mapa.
 
-## 4. Chamados (o mais trabalhoso)
+## 4. Chamados (o mais trabalhoso) ✅
 
 **O problema.** O sync atual busca **todo o histórico desde 2017** em janelas de 90 dias (~37 janelas), com 2,5 s de pausa entre elas e esperas de 15 s × tentativa quando o Milldesk responde HTTP 429. Leva alguns minutos.
 Uma função da Vercel no plano grátis roda no máximo **300 s** (o `vercel.json` hoje limita a 60 s), e um carregamento de página não pode esperar isso.
@@ -102,6 +119,14 @@ Uma função da Vercel no plano grátis roda no máximo **300 s** (o `vercel.jso
 - [ ] `vercel.json`: `"crons": [{ "path": "/api/cron/chamados", "schedule": "0 9 * * *" }]` (hora em UTC; no Hobby pode rodar até 59 min depois) e `maxDuration: 300` para essa rota.
 - [ ] Script `seed:chamados` para a primeira carga.
 - [ ] Navegador: `src/pages/Desenvolvimento/api/chamados.js` já é `async` — trocar o import por `fetch`.
+
+**Como ficou:** `server/chamados.mjs` (janelas, junção e rodízio), `api/chamados.js`,
+`api/cron/chamados.js` (agendamento às 9h UTC, até 10 janelas por dia) e `scripts/seed-chamados.mjs`.
+Os testes de /desenvolvimento leem `src/pages/Desenvolvimento/fixtures/`.
+
+**Limite do Milldesk (HTTP 429).** Muitos pedidos seguidos fazem a API pedir para esperar. Toda
+busca passa por `buscarMilldesk` (`server/fontes.mjs`), que espera e tenta de novo, e os
+atendimentos fazem uma pausa entre os pedidos por status.
 
 **Limitação conhecida.** Um chamado aberto há meses que mudar de status só é corrigido quando a janela dele passar pelo rodízio (até ~4 dias).
 Se isso incomodar: em cada renovação, buscar também os tickets abertos (`showTicketsByStatus`, como o sync de atendimentos faz) e corrigir o status deles nas janelas antigas.

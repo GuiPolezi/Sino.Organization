@@ -45,7 +45,7 @@ test('dois locais com o mesmo nome curto ficam com o nome inteiro', () => {
 });
 
 test('nos locais do Milldesk, nenhum nome curto se repete e todos ficam menores', () => {
-  const { desenvolvedores } = JSON.parse(readFileSync(new URL('../../../data/chamados.json', import.meta.url), 'utf8'));
+  const { desenvolvedores } = JSON.parse(readFileSync(new URL('../fixtures/chamados.json', import.meta.url), 'utf8'));
   const locais = Object.values(desenvolvedores).flatMap((lista) => lista.map(({ local }) => local));
   const curtos = nomesCurtos(locais);
   assert.equal(new Set(curtos.values()).size, curtos.size);

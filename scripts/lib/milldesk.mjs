@@ -1,6 +1,6 @@
-// Acesso de leitura à API do Milldesk, compartilhado pelos scripts de
-// sincronização. As falhas viram MilldeskError com mensagem segura para exibir:
-// a chave da API nunca aparece nelas.
+// Acesso de leitura à API do Milldesk, usado pela API do site (server/) e pelos
+// scripts de manutenção. As falhas viram MilldeskError com mensagem segura para
+// exibir: a chave da API nunca aparece nelas.
 const API_URL = 'https://v1.milldesk.com/api';
 const API_TIMEOUT_MS = 15000;
 const ERROR_PREVIEW_LENGTH = 80;
