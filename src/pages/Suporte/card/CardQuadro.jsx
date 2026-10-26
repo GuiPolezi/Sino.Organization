@@ -1,7 +1,7 @@
 import { useResumo } from '../quadro/useResumo.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
-import EstadoAtendimentos from './EstadoAtendimentos.jsx';
+import EstadoCarregamento from './EstadoCarregamento.jsx';
 import { rotuloAtualizacao } from './rotuloAtualizacao.js';
 import useFecharComEsc from './useFecharComEsc.js';
 import card from './CardTecnico.module.css';
@@ -173,7 +173,7 @@ export default function CardQuadro() {
         </button>
       </header>
 
-      <EstadoAtendimentos />
+      <EstadoCarregamento dados="atendimentos" />
       {resumo.atendimentosMes !== null && <TotalDoMes total={resumo.atendimentosMes} hoje={resumo.atendimentosHoje} />}
       {destaque && <TecnicoEmDestaque tecnico={destaque} />}
       {resumo.dias.length > 0 && <AtendimentosPorDia dias={resumo.dias} />}

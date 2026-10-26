@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { aparenciaDe } from '../../Suporte/boneco/aparencia.js';
 import card from '../../Suporte/card/CardTecnico.module.css';
 import Contagem from '../../Suporte/card/Contagem.jsx';
+import EstadoCarregamento from '../../Suporte/card/EstadoCarregamento.jsx';
 import useAtalhos from '../../Suporte/card/useAtalhos.js';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
@@ -169,12 +170,14 @@ export default function CardDesenvolvedor() {
         </span>
       )}
 
-      {resumo && (
+      {resumo ? (
         <>
           <Chamados resumo={resumo} periodo={periodo} onPeriodo={setPeriodo} />
           <Total total={resumo.total} percentualFeito={resumo.percentualFeito} />
           <Categorias categorias={resumo.categorias} />
         </>
+      ) : (
+        <EstadoCarregamento dados="chamados" />
       )}
 
       <nav className={`${card.nav} ${card.surge}`} style={{ '--ordem': 4 }} aria-label="Navegar pela equipe">

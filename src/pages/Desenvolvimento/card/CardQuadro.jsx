@@ -6,6 +6,8 @@ import { MEDIA } from '../../../utils/media.js';
 import quadro from '../../Suporte/card/CardQuadro.module.css';
 import card from '../../Suporte/card/CardTecnico.module.css';
 import Contagem from '../../Suporte/card/Contagem.jsx';
+import EstadoCarregamento from '../../Suporte/card/EstadoCarregamento.jsx';
+import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
 import useFecharComEsc from '../../Suporte/card/useFecharComEsc.js';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
@@ -104,6 +106,7 @@ function Painel({ fechar }) {
   const tecnicos = useEquipe((s) => s.tecnicos);
   const comExMembros = useComExMembros();
   const chamados = useEquipe((s) => s.chamados);
+  const geradoEm = useEquipe((s) => s.chamadosGeradoEm);
   const [periodo, setPeriodo] = useState('tudo');
   const hoje = hojeEmBrasilia();
 
@@ -149,6 +152,8 @@ function Painel({ fechar }) {
         <Tracos />
       </section>
 
+      <EstadoCarregamento dados="chamados" ordem={2} />
+
       {visao.total !== null && (
         <>
           <TotalDeTickets total={visao.total} />
@@ -165,9 +170,10 @@ function Painel({ fechar }) {
 
       <Desempenho />
 
-      {visao.ficticio && (
+      {(visao.ficticio || geradoEm) && (
         <footer className={card.rodape}>
-          <span>Dados de demonstração</span>
+          {geradoEm && <span>{rotuloAtualizacao(geradoEm)}</span>}
+          {visao.ficticio && <span>Dados de demonstração</span>}
         </footer>
       )}
     </aside>

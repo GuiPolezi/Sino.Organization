@@ -5,6 +5,7 @@ import { MEDIA } from '../../../utils/media.js';
 import quadro from '../../Suporte/card/CardQuadro.module.css';
 import card from '../../Suporte/card/CardTecnico.module.css';
 import Contagem from '../../Suporte/card/Contagem.jsx';
+import EstadoCarregamento, { useEsperandoDados } from '../../Suporte/card/EstadoCarregamento.jsx';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
 import { useComExMembros } from '../historico.js';
@@ -133,6 +134,8 @@ export default function CardCategoria({ categoria, fechar }) {
   const tecnicos = useComExMembros();
   const chamados = useEquipe((s) => s.chamados);
   const voltarAoQuadro = useEquipe((s) => s.abrirQuadro);
+  // Sem os chamados, membros e tickets dariam 0, como se fosse dado real.
+  const esperando = useEsperandoDados();
   const [periodo, setPeriodo] = useState('tudo');
   const hoje = hojeEmBrasilia();
 
@@ -179,15 +182,21 @@ export default function CardCategoria({ categoria, fechar }) {
         </button>
       </header>
 
-      <Membros membros={desempenho.membros} />
+      {esperando ? (
+        <EstadoCarregamento dados="chamados" />
+      ) : (
+        <>
+          <Membros membros={desempenho.membros} />
 
-      <section className={card.surge} style={{ '--ordem': 2 }}>
-        <PeriodoEmPilulas periodo={periodo} onMudar={setPeriodo} emLinha />
-      </section>
+          <section className={card.surge} style={{ '--ordem': 2 }}>
+            <PeriodoEmPilulas periodo={periodo} onMudar={setPeriodo} emLinha />
+          </section>
 
-      <TicketsCriados categoria={categoria} criados={desempenho.criados} aCada={desempenho.aCada} />
+          <TicketsCriados categoria={categoria} criados={desempenho.criados} aCada={desempenho.aCada} />
+        </>
+      )}
 
-      {desempenho.membros.length > 0 && (
+      {!esperando && desempenho.membros.length > 0 && (
         <Ranking rankings={desempenho.rankings} membros={desempenho.membros} className={card.surge} style={{ '--ordem': 4 }} />
       )}
 

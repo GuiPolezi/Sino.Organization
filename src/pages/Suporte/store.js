@@ -16,25 +16,23 @@ export const useEquipe = create((set) => ({
   extrasQuadro: null,
   // Atendimentos de cada técnico, por id, para o card (api/atendimentosTecnico.js).
   atendimentos: {},
-  // null quando a página não busca atendimentos (reuniões usam o mesmo card);
-  // 'carregando' até a primeira resposta, 'pronto' depois dela e 'erro' quando
-  // ela falhou e não há nada para mostrar. Os cards mostram o aviso de cada uma.
-  situacaoAtendimentos: null,
-  // Busca os atendimentos de novo na hora (botão "Tentar de novo"); null sem a página.
-  recarregarAtendimentos: null,
+  // Situação da busca dos atendimentos (/suporte) ou dos chamados (/desenvolvimento),
+  // controlada por api/acompanharComplementos.js. null quando a página não busca
+  // nada (reuniões usam o mesmo card); 'carregando' até a primeira resposta,
+  // 'pronto' depois dela e 'erro' quando ela falhou e não há nada para mostrar.
+  situacaoComplementos: null,
+  // Busca de novo na hora (botão "Tentar de novo"); null sem a busca.
+  recarregarComplementos: null,
   // Chamados de cada desenvolvedor, por id, para o card de /desenvolvimento.
   chamados: {},
+  // Quando o servidor juntou esses chamados (data ISO), para o rodapé do painel.
+  chamadosGeradoEm: null,
   // Quem saiu da equipe de /desenvolvimento: sem boneco, mas com o histórico no quadro.
   exMembros: [],
   setTecnicos: (tecnicos) => set({ tecnicos, carregando: false, erro: false }),
   setErro: () => set({ carregando: false, erro: true }),
-  setAtendimentos: (atendimentos, geradoEm) =>
-    set({ atendimentos, extrasQuadro: { atualizadoEm: geradoEm }, situacaoAtendimentos: 'pronto' }),
-  // Uma falha depois de já ter dados mantém os dados: a próxima busca corrige.
-  falharAtendimentos: () =>
-    set(({ situacaoAtendimentos }) => (situacaoAtendimentos === 'pronto' ? {} : { situacaoAtendimentos: 'erro' })),
-  setRecarregarAtendimentos: (recarregarAtendimentos) => set({ recarregarAtendimentos }),
-  setChamados: (chamados) => set({ chamados }),
+  setAtendimentos: (atendimentos, geradoEm) => set({ atendimentos, extrasQuadro: { atualizadoEm: geradoEm } }),
+  setChamados: (chamados, geradoEm = null) => set({ chamados, chamadosGeradoEm: geradoEm }),
   setExMembros: (exMembros) => set({ exMembros }),
   // Card do técnico e painel do quadro nunca ficam abertos juntos.
   selecionar: (id) => set({ selecionado: id, painel: null }),

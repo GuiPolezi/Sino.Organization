@@ -2,7 +2,7 @@ import { aparenciaDe } from '../boneco/aparencia.js';
 import { hojeEmBrasilia, totaisDeAtendimentos } from '../mappers/atendimentos.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
-import EstadoAtendimentos from './EstadoAtendimentos.jsx';
+import EstadoCarregamento from './EstadoCarregamento.jsx';
 import GraficoAtendimentos from './GraficoAtendimentos.jsx';
 import styles from './CardTecnico.module.css';
 import useAtalhos from './useAtalhos.js';
@@ -106,7 +106,7 @@ export default function CardTecnico() {
           </div>
         </>
       ) : (
-        <EstadoAtendimentos />
+        <EstadoCarregamento dados="atendimentos" />
       )}
 
       <nav className={`${styles.nav} ${styles.surge}`} style={{ '--ordem': 4 }} aria-label="Navegar pela equipe">

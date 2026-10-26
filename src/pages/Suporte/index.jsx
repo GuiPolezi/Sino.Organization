@@ -1,4 +1,4 @@
-import { acompanharFonte } from './api/acompanharFonte.js';
+import { acompanharComplementos } from './api/acompanharComplementos.js';
 import { buscarAtendimentos } from './api/atendimentosTecnico.js';
 import { buscarEquipe } from './api/equipeTecnica.js';
 import PaginaEquipe from './PaginaEquipe.jsx';
@@ -14,42 +14,19 @@ configurarCena({ recuo: 1.15 });
 
 /*
  * Os atendimentos completam o card e o quadro. Até chegarem, os cards dizem que
- * estão carregando (nada de número de exemplo). Com a página aberta eles são
- * buscados de novo sozinhos: logo, se o servidor mandou a versão anterior do
- * cache ou falhou, e a cada 15 minutos (api/acompanharFonte.js). Uma aba que
- * volta do segundo plano com o dado velho busca na hora.
+ * estão carregando (nada de número de exemplo); com a página aberta eles são
+ * buscados de novo sozinhos (api/acompanharComplementos.js).
  */
 function buscarComplementos(equipe) {
-  const loja = useEquipe.getState();
-  useEquipe.setState({ situacaoAtendimentos: 'carregando' });
-  const fonte = acompanharFonte({
+  const parar = acompanharComplementos({
     buscar: () => buscarAtendimentos(equipe),
     aoReceber: ({ porTecnico, geradoEm }) => useEquipe.getState().setAtendimentos(porTecnico, geradoEm),
-    aoFalhar: () => useEquipe.getState().falharAtendimentos(),
-  });
-
-  const aoVoltar = () => {
-    if (document.visibilityState === 'visible' && fonte.atrasado()) fonte.agora();
-  };
-  document.addEventListener('visibilitychange', aoVoltar);
-
-  loja.setRecarregarAtendimentos(() => {
-    if (useEquipe.getState().situacaoAtendimentos === 'erro') {
-      useEquipe.setState({ situacaoAtendimentos: 'carregando' });
-    }
-    fonte.agora();
   });
 
   return () => {
-    fonte.parar();
-    document.removeEventListener('visibilitychange', aoVoltar);
+    parar();
     // Ao voltar à página, nada da visita anterior aparece antes do dado novo.
-    useEquipe.setState({
-      atendimentos: {},
-      extrasQuadro: null,
-      situacaoAtendimentos: null,
-      recarregarAtendimentos: null,
-    });
+    useEquipe.setState({ atendimentos: {}, extrasQuadro: null });
   };
 }
 

@@ -1,6 +1,7 @@
 import { registrarAparencias } from '../Suporte/boneco/aparencia.js';
 import { definirEstacoes } from '../Suporte/boneco/estacoes.js';
 import PaginaEquipe from '../Suporte/PaginaEquipe.jsx';
+import { acompanharComplementos } from '../Suporte/api/acompanharComplementos.js';
 import { configurarQuadro } from '../Suporte/quadro/posicao.js';
 import { configurarCena, useEquipe } from '../Suporte/store.js';
 import { buscarChamados } from './api/chamados.js';
@@ -27,19 +28,30 @@ definirEstacoes(basesDasMesas(false));
 configurarQuadro({ corredorPaisagem: CORREDOR_DEV });
 registrarAparencias(APARENCIAS_DEV);
 
-// Os chamados completam o card e o quadro. Se a busca falhar, o card fica só com
-// nome e cargo, e o quadro, só com o tamanho da equipe. Os chamados de quem saiu
-// da equipe também vêm, para o histórico continuar no quadro.
-function buscarComplementos(equipe, ativo) {
-  buscarExMembros()
-    .catch(() => [])
-    .then(async (exMembros) => {
-      const chamados = await buscarChamados([...equipe, ...exMembros]);
-      if (!ativo()) return;
+/*
+ * Os chamados completam o card e o quadro. Até chegarem, os cards dizem que
+ * estão carregando; se a busca falhar, mostram o erro com "Tentar de novo".
+ * Com a página aberta eles são buscados de novo sozinhos
+ * (Suporte/api/acompanharComplementos.js). Os chamados de quem saiu da equipe
+ * também vêm, para o histórico continuar no quadro.
+ */
+function buscarComplementos(equipe) {
+  const parar = acompanharComplementos({
+    buscar: async () => {
+      const exMembros = await buscarExMembros().catch(() => []);
+      return { ...(await buscarChamados([...equipe, ...exMembros])), exMembros };
+    },
+    aoReceber: ({ porId, geradoEm, exMembros }) => {
       useEquipe.getState().setExMembros(exMembros);
-      useEquipe.getState().setChamados(chamados);
-    })
-    .catch(() => {});
+      useEquipe.getState().setChamados(porId, geradoEm);
+    },
+  });
+
+  return () => {
+    parar();
+    // Ao voltar à página, nada da visita anterior aparece antes do dado novo.
+    useEquipe.setState({ chamados: {}, chamadosGeradoEm: null, exMembros: [] });
+  };
 }
 
 export default function Desenvolvimento() {
