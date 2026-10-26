@@ -1,15 +1,12 @@
 import { useResumo } from '../quadro/useResumo.js';
 import { useEquipe } from '../store.js';
 import Contagem from './Contagem.jsx';
+import EstadoAtendimentos from './EstadoAtendimentos.jsx';
+import { rotuloAtualizacao } from './rotuloAtualizacao.js';
 import useFecharComEsc from './useFecharComEsc.js';
 import card from './CardTecnico.module.css';
 import styles from './CardQuadro.module.css';
 
-const formatoHora = new Intl.DateTimeFormat('pt-BR', {
-  hour: '2-digit',
-  minute: '2-digit',
-  timeZone: 'America/Sao_Paulo',
-});
 const primeiroNome = (nome) => nome.split(' ')[0];
 
 function TotalDoMes({ total, hoje }) {
@@ -176,6 +173,7 @@ export default function CardQuadro() {
         </button>
       </header>
 
+      <EstadoAtendimentos />
       {resumo.atendimentosMes !== null && <TotalDoMes total={resumo.atendimentosMes} hoje={resumo.atendimentosHoje} />}
       {destaque && <TecnicoEmDestaque tecnico={destaque} />}
       {resumo.dias.length > 0 && <AtendimentosPorDia dias={resumo.dias} />}
@@ -185,7 +183,7 @@ export default function CardQuadro() {
       {temRodape && (
         <footer className={`${card.rodape} ${card.surge}`} style={{ '--ordem': 5 }}>
           {resumo.atualizadoEm !== null && (
-            <span>Atualizado às {formatoHora.format(new Date(resumo.atualizadoEm))}</span>
+            <span>{rotuloAtualizacao(resumo.atualizadoEm)}</span>
           )}
         </footer>
       )}

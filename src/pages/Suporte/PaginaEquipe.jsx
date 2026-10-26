@@ -82,8 +82,9 @@ function ListaTecnicos({ tecnicos, selecionado, rotulo }) {
  * @param {import('react').ReactNode} [props.selo] logo abaixo do subtítulo (o status de uma reunião)
  * @param {string} props.rotuloElenco nome da lista de pessoas para leitores de tela
  * @param {() => Promise<import('./tipos.js').Tecnico[]>} props.buscarEquipe
- * @param {(equipe: import('./tipos.js').Tecnico[], ativo: () => boolean) => void} [props.aoCarregar]
- *   busca o que complementa a equipe; `ativo()` diz se a página ainda está na tela
+ * @param {(equipe: import('./tipos.js').Tecnico[], ativo: () => boolean) => (void | (() => void))} [props.aoCarregar]
+ *   busca o que complementa a equipe; `ativo()` diz se a página ainda está na tela.
+ *   Pode devolver uma função que para as buscas ao sair da página.
  * @param {import('react').ComponentType | null} [props.Estacoes] as estações de trabalho no tapete
  *   (o bloco 2×2 do suporte por padrão; null: nenhuma, e os bonecos só andam)
  * @param {import('react').ComponentType} [props.Card] card de quem foi selecionado
@@ -117,18 +118,20 @@ export default function PaginaEquipe({
 
   useEffect(() => {
     let ativo = true;
+    let pararComplementos;
     const { setTecnicos, setErro, limpar } = useEquipe.getState();
 
     buscarEquipe()
       .then((equipe) => {
         if (!ativo) return;
         setTecnicos(equipe);
-        aoCarregar?.(equipe, () => ativo);
+        pararComplementos = aoCarregar?.(equipe, () => ativo);
       })
       .catch(() => ativo && setErro());
 
     return () => {
       ativo = false;
+      pararComplementos?.();
       limpar();
       // O hover de um boneco troca o cursor do body.
       document.body.style.cursor = '';

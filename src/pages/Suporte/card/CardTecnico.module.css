@@ -265,6 +265,41 @@ section > .secao {
   line-height: 1.2;
 }
 
+/* "Carregando atendimentos…" ou o erro com o botão de tentar de novo. */
+.estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--fundo-suave);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--neutro-pequeno);
+}
+
+.estado p {
+  margin: 0;
+}
+
+.estado button {
+  padding: 8px 14px;
+  border: 1px solid var(--linha);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-olive-dark);
+  font: inherit;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+
+.estado button:hover {
+  background: var(--fundo-suave);
+}
+
 .rodape {
   display: flex;
   flex-wrap: wrap;

@@ -4,8 +4,11 @@ import { diasRecentes, hojeEmBrasilia, totaisDeAtendimentos } from './atendiment
 /** @import { AtendimentosTecnico } from './atendimentos.js' */
 
 /**
- * Dados da equipe que não saem da lista de técnicos (api/resumoEquipe.js).
- * Tudo é opcional: o quadro e o painel mostram cada parte só quando o dado existe.
+ * Dados da equipe que não saem da lista de técnicos. Hoje a página só manda
+ * `atualizadoEm` (a hora em que o servidor contou os atendimentos, store.js); o
+ * resto fica para quando houver fonte real. Nunca preencher com números de
+ * exemplo: tudo é opcional e o quadro e o painel mostram cada parte só quando o
+ * dado existe.
  *
  * @typedef {object} ExtrasQuadro
  * @property {boolean} [ficticio]                  dados de demonstração, ainda sem backend

@@ -1,6 +1,6 @@
+import { acompanharFonte } from './api/acompanharFonte.js';
 import { buscarAtendimentos } from './api/atendimentosTecnico.js';
 import { buscarEquipe } from './api/equipeTecnica.js';
-import { buscarExtrasQuadro } from './api/resumoEquipe.js';
 import PaginaEquipe from './PaginaEquipe.jsx';
 import { configurarCena, useEquipe } from './store.js';
 
@@ -12,18 +12,45 @@ import { configurarCena, useEquipe } from './store.js';
  */
 configurarCena({ recuo: 1.15 });
 
-// O que complementa a equipe do suporte. Se uma dessas buscas falhar, a página
-// continua de pé: o quadro fica só com o que os técnicos trazem e o card, só
-// com nome e cargo.
-function buscarComplementos(equipe, ativo) {
-  const { setExtrasQuadro, setAtendimentos } = useEquipe.getState();
+/*
+ * Os atendimentos completam o card e o quadro. Até chegarem, os cards dizem que
+ * estão carregando (nada de número de exemplo). Com a página aberta eles são
+ * buscados de novo sozinhos: logo, se o servidor mandou a versão anterior do
+ * cache ou falhou, e a cada 15 minutos (api/acompanharFonte.js). Uma aba que
+ * volta do segundo plano com o dado velho busca na hora.
+ */
+function buscarComplementos(equipe) {
+  const loja = useEquipe.getState();
+  useEquipe.setState({ situacaoAtendimentos: 'carregando' });
+  const fonte = acompanharFonte({
+    buscar: () => buscarAtendimentos(equipe),
+    aoReceber: ({ porTecnico, geradoEm }) => useEquipe.getState().setAtendimentos(porTecnico, geradoEm),
+    aoFalhar: () => useEquipe.getState().falharAtendimentos(),
+  });
 
-  buscarExtrasQuadro(equipe)
-    .then((extras) => ativo() && setExtrasQuadro(extras))
-    .catch(() => {});
-  buscarAtendimentos(equipe)
-    .then((atendimentos) => ativo() && setAtendimentos(atendimentos))
-    .catch(() => {});
+  const aoVoltar = () => {
+    if (document.visibilityState === 'visible' && fonte.atrasado()) fonte.agora();
+  };
+  document.addEventListener('visibilitychange', aoVoltar);
+
+  loja.setRecarregarAtendimentos(() => {
+    if (useEquipe.getState().situacaoAtendimentos === 'erro') {
+      useEquipe.setState({ situacaoAtendimentos: 'carregando' });
+    }
+    fonte.agora();
+  });
+
+  return () => {
+    fonte.parar();
+    document.removeEventListener('visibilitychange', aoVoltar);
+    // Ao voltar à página, nada da visita anterior aparece antes do dado novo.
+    useEquipe.setState({
+      atendimentos: {},
+      extrasQuadro: null,
+      situacaoAtendimentos: null,
+      recarregarAtendimentos: null,
+    });
+  };
 }
 
 export default function Suporte() {

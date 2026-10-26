@@ -11,18 +11,29 @@ export const useEquipe = create((set) => ({
   // Categoria do card aberto pelo Desempenho do quadro (/desenvolvimento).
   categoria: null,
   hover: null,
-  // Dados do quadro que não saem dos técnicos (api/resumoEquipe.js).
+  // Dados do quadro que não saem dos técnicos (mappers/resumoEquipe.js). Hoje só
+  // a hora em que o servidor contou os atendimentos (atualizadoEm).
   extrasQuadro: null,
   // Atendimentos de cada técnico, por id, para o card (api/atendimentosTecnico.js).
   atendimentos: {},
+  // null quando a página não busca atendimentos (reuniões usam o mesmo card);
+  // 'carregando' até a primeira resposta, 'pronto' depois dela e 'erro' quando
+  // ela falhou e não há nada para mostrar. Os cards mostram o aviso de cada uma.
+  situacaoAtendimentos: null,
+  // Busca os atendimentos de novo na hora (botão "Tentar de novo"); null sem a página.
+  recarregarAtendimentos: null,
   // Chamados de cada desenvolvedor, por id, para o card de /desenvolvimento.
   chamados: {},
   // Quem saiu da equipe de /desenvolvimento: sem boneco, mas com o histórico no quadro.
   exMembros: [],
   setTecnicos: (tecnicos) => set({ tecnicos, carregando: false, erro: false }),
   setErro: () => set({ carregando: false, erro: true }),
-  setExtrasQuadro: (extrasQuadro) => set({ extrasQuadro }),
-  setAtendimentos: (atendimentos) => set({ atendimentos }),
+  setAtendimentos: (atendimentos, geradoEm) =>
+    set({ atendimentos, extrasQuadro: { atualizadoEm: geradoEm }, situacaoAtendimentos: 'pronto' }),
+  // Uma falha depois de já ter dados mantém os dados: a próxima busca corrige.
+  falharAtendimentos: () =>
+    set(({ situacaoAtendimentos }) => (situacaoAtendimentos === 'pronto' ? {} : { situacaoAtendimentos: 'erro' })),
+  setRecarregarAtendimentos: (recarregarAtendimentos) => set({ recarregarAtendimentos }),
   setChamados: (chamados) => set({ chamados }),
   setExMembros: (exMembros) => set({ exMembros }),
   // Card do técnico e painel do quadro nunca ficam abertos juntos.
