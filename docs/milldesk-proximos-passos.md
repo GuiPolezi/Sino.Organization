@@ -77,7 +77,7 @@ Na Vercel, prefira `import dados from '../scripts/data/x.json' with { type: 'jso
 - **Navegador:**
   - `src/pages/Suporte/api/equipeTecnica.js` e `src/pages/Desenvolvimento/api/equipe.js` já são `async`: só trocar o import por `fetch`.
   - `src/components/Hero/reunioes/membrosEquipe.js` e `src/components/Hero/reunioes/holograma/HologramaPersonagem.jsx` importam o JSON de forma **síncrona**: precisam virar assíncronos (carregar uma vez e guardar num módulo ou store).
-- **Atenção:** se `buildTeam` encontrar um técnico ausente, duplicado ou desabilitado, ele lança erro. Na API isso cai no "mostra o último dado com aviso" do cache, o que é o comportamento certo.
+- **Atenção:** quem está desabilitado no Milldesk sai da equipe sozinho (em até 1 dia, a idade do cache), sem precisar mexer na lista. Já um técnico que não é encontrado ou tem nome repetido faz `buildTeam` lançar erro, e o mesmo vale quando ninguém da lista está habilitado. Na API isso cai no "mostra o último dado com aviso" do cache.
 
 ## 2. Atendimentos ✅
 

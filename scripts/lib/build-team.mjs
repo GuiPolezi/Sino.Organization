@@ -67,15 +67,16 @@ export function shortenNames(names) {
  * records: registros de listAgents. roster: [{ id, agent }], em que `agent` é
  * o nome exato do técnico no Milldesk (a API não tem outro identificador) e
  * `id` é o nosso, fixo, que liga o técnico à aparência do boneco.
- * Qualquer técnico que não possa ser publicado com certeza interrompe tudo:
- * melhor manter o arquivo atual do que publicar uma equipe incompleta.
+ * Quem está desabilitado no Milldesk (ex.: saiu da empresa) sai da equipe. Já
+ * um nome que não se encontra ou se repete interrompe tudo, porque aí a lista
+ * está errada: melhor manter a equipe anterior do que publicar uma incompleta.
  * file: nome do arquivo da lista, para as mensagens de erro. shortNames: publica
  * os nomes abreviados (ver shortenNames) em vez do nome inteiro do Milldesk.
  */
 export function buildTeam(records, roster, { file = 'support-team.json', shortNames = false } = {}) {
   checkRoster(roster, file);
 
-  const team = roster.map(({ id, agent }) => {
+  const found = roster.map(({ id, agent }) => {
     const matches = records.filter((record) => clean(record?.agent) === clean(agent));
     if (matches.length === 0) {
       throw new TeamError(
@@ -88,20 +89,27 @@ export function buildTeam(records, roster, { file = 'support-team.json', shortNa
       );
     }
 
-    const [record] = matches;
-    if (!isYes(record.enabled)) {
-      throw new TeamError(
-        `Técnico "${agent}" está desabilitado no Milldesk: reabilite-o ou tire-o de ${file}.`,
-      );
-    }
+    return { id, record: matches[0] };
+  });
 
-    return {
+  const disabled = found.filter(({ record }) => !isYes(record.enabled));
+  if (disabled.length > 0) {
+    const names = disabled.map(({ record }) => clean(record.agent)).join(', ');
+    console.warn(`[equipe] Fora de ${file} por estarem desabilitados no Milldesk: ${names}.`);
+  }
+
+  const team = found
+    .filter(({ record }) => isYes(record.enabled))
+    .map(({ id, record }) => ({
       id,
       name: clean(record.agent),
       role: clean(record.post) || null,
       absent: isYes(record.temporary_absence),
-    };
-  });
+    }));
+  // Uma equipe vazia é mais provável ser falha do Milldesk do que todos terem saído.
+  if (team.length === 0) {
+    throw new TeamError(`Nenhum técnico habilitado no Milldesk entre os de ${file}.`);
+  }
   if (!shortNames) return team;
 
   const names = shortenNames(team.map((member) => member.name));

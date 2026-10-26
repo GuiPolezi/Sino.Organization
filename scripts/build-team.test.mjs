@@ -46,12 +46,40 @@ test('o nome precisa bater exatamente, com acento e maiúsculas', () => {
   assert.throws(() => buildTeam(records, [{ id: 'fabio', agent: 'fábio' }]), TeamError);
 });
 
+test('quem está desabilitado no Milldesk sai da equipe, sem travar os outros', () => {
+  const list = [agent('Fábio'), agent('Luiz', { enabled: 'Não' })];
+  assert.deepEqual(
+    buildTeam(list, roster).map(({ id }) => id),
+    ['fabio'],
+  );
+});
+
+test('sem o campo enabled conta como desabilitado', () => {
+  const list = [agent('Fábio'), { agent: 'Luiz' }];
+  assert.deepEqual(
+    buildTeam(list, roster).map(({ id }) => id),
+    ['fabio'],
+  );
+});
+
+test('a abreviação dos nomes considera só quem ficou na equipe', () => {
+  const list = [agent('Luiz Souza'), agent('Luiz Prado', { enabled: 'Não' })];
+  const team = buildTeam(
+    list,
+    [
+      { id: 'luiz-s', agent: 'Luiz Souza' },
+      { id: 'luiz-p', agent: 'Luiz Prado' },
+    ],
+    { shortNames: true },
+  );
+  assert.deepEqual(team, [{ id: 'luiz-s', name: 'Luiz', role: 'Analista de Suporte', absent: false }]);
+});
+
 const luiz = [{ id: 'luiz', agent: 'Luiz' }];
 const failures = [
   ['técnico que não existe no Milldesk', records, [{ id: 'ana', agent: 'Ana' }], /não encontrado/],
   ['dois técnicos com o mesmo nome', [agent('Luiz'), agent('Luiz')], luiz, /2 técnicos/],
-  ['técnico desabilitado', [agent('Luiz', { enabled: 'Não' })], luiz, /desabilitado/],
-  ['técnico sem o campo enabled', [{ agent: 'Luiz' }], luiz, /desabilitado/],
+  ['todos os técnicos desabilitados', [agent('Luiz', { enabled: 'Não' })], luiz, /nenhum técnico habilitado/i],
   ['lista vazia', records, [], /ao menos um/],
   ['lista ausente', records, undefined, /ao menos um/],
   ['id repetido', records, [{ id: 'x', agent: 'Luiz' }, { id: 'x', agent: 'Fábio' }], /Id repetido/],
