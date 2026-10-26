@@ -10,6 +10,7 @@ import useFecharComEsc from '../../Suporte/card/useFecharComEsc.js';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
 import { CATEGORIAS } from '../mappers/chamados.js';
+import { useComExMembros } from '../historico.js';
 import { visaoGeral } from '../mappers/visaoGeral.js';
 import CardCategoria from './CardCategoria.jsx';
 import { fatiasPorCategoria, fatiasPorDesenvolvedor } from './cores.js';
@@ -101,11 +102,15 @@ function animarEntrada(painel) {
 function Painel({ fechar }) {
   const raiz = useRef(null);
   const tecnicos = useEquipe((s) => s.tecnicos);
+  const comExMembros = useComExMembros();
   const chamados = useEquipe((s) => s.chamados);
   const [periodo, setPeriodo] = useState('tudo');
   const hoje = hojeEmBrasilia();
 
-  const visao = useMemo(() => visaoGeral(tecnicos, chamados, periodo, hoje), [tecnicos, chamados, periodo, hoje]);
+  const visao = useMemo(
+    () => visaoGeral(comExMembros, chamados, periodo, hoje),
+    [comExMembros, chamados, periodo, hoje],
+  );
   const fatiasDev = useMemo(() => fatiasPorDesenvolvedor(visao.porDesenvolvedor), [visao]);
   const fatiasCategoria = useMemo(() => fatiasPorCategoria(visao.porCategoria), [visao]);
 

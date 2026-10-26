@@ -161,3 +161,24 @@ test('os técnicos do suporte também levam o logo; quem não tem aparência pr�
   }
   assert.equal(aparenciaDe('alguem-novo').logo, undefined);
 });
+
+test('o ex-membro tem o formato de técnico, marcado como ex-membro e nunca ausente', async () => {
+  const { mapearExMembro } = await import('../Suporte/mappers/equipe.js');
+  assert.deepEqual(mapearExMembro({ id: 'rafael', name: 'Rafael', role: 'Analista de Sistemas' }), {
+    id: 'rafael',
+    nome: 'Rafael',
+    funcao: 'Analista de Sistemas',
+    ausente: false,
+    avatarIniciais: 'R',
+    exMembro: true,
+  });
+});
+
+test('na carga por desenvolvedor, o ex-membro aparece com "(ex)" no rótulo', async () => {
+  const { fatiasPorDesenvolvedor } = await import('./card/cores.js');
+  const fatias = fatiasPorDesenvolvedor([
+    { id: 'ana', nome: 'Ana Souza', total: 3, exMembro: false },
+    { id: 'rafael', nome: 'Rafael', total: 2, exMembro: true },
+  ]);
+  assert.deepEqual(fatias.map(({ rotulo }) => rotulo), ['Ana', 'Rafael (ex)']);
+});

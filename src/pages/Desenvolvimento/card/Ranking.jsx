@@ -91,7 +91,10 @@ function Coluna({ tecnico, ranking, valor, fracao, indice, melhor }) {
               </span>
             </span>
           )}
-          <span className={styles.nome}>{primeiroNome(tecnico.nome)}</span>
+          <span className={styles.nome}>
+            {primeiroNome(tecnico.nome)}
+            {tecnico.exMembro && ' (ex)'}
+          </span>
           <Retrato tecnico={tecnico} className={styles.retrato} />
         </div>
       </div>
@@ -139,9 +142,10 @@ function Leitura({ ranking }) {
   };
   return (
     <ol className="sr-only">
-      {ranking.itens.map(({ id, nome, valor }) => (
+      {ranking.itens.map(({ id, nome, exMembro, valor }) => (
         <li key={id}>
-          {nome}: {texto(valor)}
+          {nome}
+          {exMembro && ' (ex-membro)'}: {texto(valor)}
           {id === ranking.melhor && ' (primeiro lugar)'}
         </li>
       ))}

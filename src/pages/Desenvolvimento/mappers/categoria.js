@@ -97,7 +97,7 @@ function horasAteFechar({ data, fechadoEm, minutos }) {
  * membros (a soma dos atribuídos). A frequência compara esse número com todos
  * os chamados da equipe criados no período, de qualquer categoria.
  *
- * @param {Tecnico[]} tecnicos na ordem da equipe
+ * @param {Tecnico[]} tecnicos na ordem da equipe, com os ex-membros (exMembro: true) no fim
  * @param {Record<string, ChamadosDesenvolvedor>} chamados por id
  * @param {string} categoria
  * @param {Periodo} periodo
@@ -119,7 +119,12 @@ export function desempenhoDaCategoria(tecnicos, chamados = {}, categoria, period
   const total = comChamados.reduce((soma, { id }) => soma + filtrarPorPeriodo(chamados[id].lista, periodo, hoje).length, 0);
 
   const ranking = (id, titulo, valorDe, menorVence = false) => {
-    const itens = membros.map((membro) => ({ id: membro.tecnico.id, nome: membro.tecnico.nome, valor: valorDe(membro) }));
+    const itens = membros.map((membro) => ({
+      id: membro.tecnico.id,
+      nome: membro.tecnico.nome,
+      exMembro: membro.tecnico.exMembro === true,
+      valor: valorDe(membro),
+    }));
     return { id, titulo, menorVence, itens, melhor: primeiroLugar(itens, menorVence) };
   };
 

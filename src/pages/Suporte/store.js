@@ -17,11 +17,14 @@ export const useEquipe = create((set) => ({
   atendimentos: {},
   // Chamados de cada desenvolvedor, por id, para o card de /desenvolvimento.
   chamados: {},
+  // Quem saiu da equipe de /desenvolvimento: sem boneco, mas com o histórico no quadro.
+  exMembros: [],
   setTecnicos: (tecnicos) => set({ tecnicos, carregando: false, erro: false }),
   setErro: () => set({ carregando: false, erro: true }),
   setExtrasQuadro: (extrasQuadro) => set({ extrasQuadro }),
   setAtendimentos: (atendimentos) => set({ atendimentos }),
   setChamados: (chamados) => set({ chamados }),
+  setExMembros: (exMembros) => set({ exMembros }),
   // Card do técnico e painel do quadro nunca ficam abertos juntos.
   selecionar: (id) => set({ selecionado: id, painel: null }),
   abrirQuadro: () => set({ painel: 'quadro', selecionado: null, hover: null }),

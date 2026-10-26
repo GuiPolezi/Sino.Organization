@@ -2,7 +2,7 @@
 // Uso: npm run test:team
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { TeamError, buildTeam, shortenNames } from './lib/build-team.mjs';
+import { TeamError, buildRoster, buildTeam, shortenNames } from './lib/build-team.mjs';
 
 const agent = (name, extra = {}) => ({
   agent: name,
@@ -153,4 +153,30 @@ test('shortNames publica os nomes abreviados, sem mexer nos outros campos', () =
     ],
   );
   assert.deepEqual(Object.keys(team[0]), ['id', 'name', 'role', 'absent']);
+});
+
+test('buildRoster separa a equipe atual dos ex-membros (desabilitados da lista)', () => {
+  const list = [agent('Fábio'), agent('Luiz', { enabled: 'Não', post: 'Analista' })];
+  assert.deepEqual(buildRoster(list, roster), {
+    team: [{ id: 'fabio', name: 'Fábio', role: 'Analista de Suporte', absent: false }],
+    former: [{ id: 'luiz', name: 'Luiz', role: 'Analista' }],
+  });
+});
+
+test('sem ninguém desabilitado, a lista de ex-membros vem vazia', () => {
+  assert.deepEqual(buildRoster(records, roster).former, []);
+});
+
+test('o nome curto do ex-membro não se confunde com o de quem ficou', () => {
+  const list = [agent('Luiz Souza'), agent('Luiz Prado', { enabled: 'Não' })];
+  const { team, former } = buildRoster(
+    list,
+    [
+      { id: 'luiz-s', agent: 'Luiz Souza' },
+      { id: 'luiz-p', agent: 'Luiz Prado' },
+    ],
+    { shortNames: true },
+  );
+  assert.equal(team[0].name, 'Luiz');
+  assert.equal(former[0].name, 'Luiz Prado');
 });

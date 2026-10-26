@@ -4,7 +4,7 @@ import PaginaEquipe from '../Suporte/PaginaEquipe.jsx';
 import { configurarQuadro } from '../Suporte/quadro/posicao.js';
 import { configurarCena, useEquipe } from '../Suporte/store.js';
 import { buscarChamados } from './api/chamados.js';
-import { buscarEquipe } from './api/equipe.js';
+import { buscarEquipe, buscarExMembros } from './api/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
 import CardDesenvolvedor from './card/CardDesenvolvedor.jsx';
 import CardQuadro from './card/CardQuadro.jsx';
@@ -28,10 +28,17 @@ configurarQuadro({ corredorPaisagem: CORREDOR_DEV });
 registrarAparencias(APARENCIAS_DEV);
 
 // Os chamados completam o card e o quadro. Se a busca falhar, o card fica só com
-// nome e cargo, e o quadro, só com o tamanho da equipe.
+// nome e cargo, e o quadro, só com o tamanho da equipe. Os chamados de quem saiu
+// da equipe também vêm, para o histórico continuar no quadro.
 function buscarComplementos(equipe, ativo) {
-  buscarChamados(equipe)
-    .then((chamados) => ativo() && useEquipe.getState().setChamados(chamados))
+  buscarExMembros()
+    .catch(() => [])
+    .then(async (exMembros) => {
+      const chamados = await buscarChamados([...equipe, ...exMembros]);
+      if (!ativo()) return;
+      useEquipe.getState().setExMembros(exMembros);
+      useEquipe.getState().setChamados(chamados);
+    })
     .catch(() => {});
 }
 

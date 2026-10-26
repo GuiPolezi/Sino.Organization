@@ -140,3 +140,16 @@ test('com os chamados do Milldesk, tickets criados é a soma dos atribuídos dos
   const fechados = Object.values(chamados).flatMap(({ lista }) => lista.filter(({ status }) => status === FECHADO));
   assert.ok(fechados.filter(({ minutos }) => typeof minutos === 'number').length > fechados.length * 0.9);
 });
+
+test('o ex-membro conta nos tickets criados e vem marcado no ranking', () => {
+  const ex = { ...dev('b'), exMembro: true };
+  const desempenho = desempenhoDaCategoria([dev('a'), ex], CHAMADOS, 'Site', 'tudo', HOJE);
+  assert.equal(desempenho.criados, 3);
+  assert.deepEqual(
+    desempenho.rankings[0].itens.map(({ id, exMembro }) => [id, exMembro]),
+    [
+      ['a', false],
+      ['b', true],
+    ],
+  );
+});

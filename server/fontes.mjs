@@ -13,7 +13,7 @@ import equipeDesenvolvimento from '../scripts/data/dev-team.json' with { type: '
 import { STATUS_FECHADO, contarAtendimentos } from '../scripts/lib/build-atendimentos.mjs';
 import { montarClientes } from '../scripts/lib/build-clients.mjs';
 import { montarLicencas } from '../scripts/lib/build-licencas.mjs';
-import { buildTeam } from '../scripts/lib/build-team.mjs';
+import { buildRoster } from '../scripts/lib/build-team.mjs';
 import { baixarPaginas } from '../scripts/lib/licenca.mjs';
 import { setTimeout as esperar } from 'node:timers/promises';
 import { MilldeskError, fetchMilldesk, toRecords } from '../scripts/lib/milldesk.mjs';
@@ -62,9 +62,11 @@ const EQUIPES = {
   desenvolvimento: { roster: equipeDesenvolvimento.team, file: 'dev-team.json', shortNames: true },
 };
 
+// `team`: a equipe atual (os bonecos). `former`: quem saiu (desabilitado no
+// Milldesk), para o histórico de tickets continuar no quadro.
 const fonteEquipe = ({ roster, file, shortNames }) => ({
   idadeMaximaMs: DIA,
-  buscar: async () => ({ team: buildTeam(await buscarMilldesk('listAgents'), roster, { file, shortNames }) }),
+  buscar: async () => buildRoster(await buscarMilldesk('listAgents'), roster, { file, shortNames }),
 });
 
 /** @type {Record<string, { buscar: () => Promise<unknown>, idadeMaximaMs?: number }>} */

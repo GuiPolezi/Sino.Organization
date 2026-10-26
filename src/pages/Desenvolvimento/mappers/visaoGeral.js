@@ -87,14 +87,20 @@ function cargaPorLocal(chamados, comCor, curtos) {
  * Tudo o que o painel mostra, para um período. Sem chamados carregados, o total
  * sai null e as listas vazias.
  *
- * @param {Tecnico[]} tecnicos
+ * @param {Tecnico[]} tecnicos a equipe e, depois dela, os ex-membros (exMembro: true),
+ *   para o histórico de quem saiu continuar nas contas
  * @param {Record<string, ChamadosDesenvolvedor>} [chamados] por id do desenvolvedor
  * @param {Periodo} periodo
  * @param {string} hoje "AAAA-MM-DD"
  */
 export function visaoGeral(tecnicos, chamados = {}, periodo, hoje) {
   const daEquipe = tecnicos.filter(({ id }) => Array.isArray(chamados[id]?.lista));
-  const comChamados = daEquipe.map(({ id, nome }) => ({ id, nome, lista: filtrarPorPeriodo(chamados[id].lista, periodo, hoje) }));
+  const comChamados = daEquipe.map(({ id, nome, exMembro }) => ({
+    id,
+    nome,
+    exMembro: exMembro === true,
+    lista: filtrarPorPeriodo(chamados[id].lista, periodo, hoje),
+  }));
   const todos = comChamados.flatMap(({ lista }) => lista);
   const daEquipeToda = daEquipe.flatMap(({ id }) => chamados[id].lista);
   const comCor = tiposComCor(daEquipeToda);
@@ -105,7 +111,7 @@ export function visaoGeral(tecnicos, chamados = {}, periodo, hoje) {
 
   return {
     total: comChamados.length > 0 ? todos.length : null,
-    porDesenvolvedor: comChamados.map(({ id, nome, lista }) => ({ id, nome, total: lista.length })),
+    porDesenvolvedor: comChamados.map(({ id, nome, exMembro, lista }) => ({ id, nome, exMembro, total: lista.length })),
     porCategoria: cargaPorCategoria(todos),
     porLocal,
     // Os tipos da legenda da "Carga por Local", na ordem das cores.

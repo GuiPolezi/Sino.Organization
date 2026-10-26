@@ -48,11 +48,19 @@ const primeiroNome = (nome) => nome.split(' ')[0];
 
 /**
  * Fatias da "Carga por Dev", com a cor fixa de cada pessoa.
- * @param {{ id: string, nome: string, total: number }[]} porDesenvolvedor na ordem da equipe
+ * Quem saiu da equipe leva "(ex)" no rótulo.
+ * @param {{ id: string, nome: string, total: number, exMembro?: boolean }[]} porDesenvolvedor na ordem da equipe
  * @returns {ItemPizza[]}
  */
 export const fatiasPorDesenvolvedor = (porDesenvolvedor) =>
-  pintar(porDesenvolvedor.map(({ id, nome, total }, posicao) => ({ chave: id, rotulo: primeiroNome(nome), valor: total, posicao })));
+  pintar(
+    porDesenvolvedor.map(({ id, nome, total, exMembro }, posicao) => ({
+      chave: id,
+      rotulo: exMembro ? `${primeiroNome(nome)} (ex)` : primeiroNome(nome),
+      valor: total,
+      posicao,
+    })),
+  );
 
 /**
  * Fatias da "Carga por Categoria", com a cor fixa de cada categoria.

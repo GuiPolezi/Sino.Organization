@@ -20,3 +20,12 @@ export function mapearTecnico({ id, name, role, absent }) {
     avatarIniciais: iniciais(name),
   };
 }
+
+/**
+ * Quem saiu da equipe (o `former` de /api/equipes/*): não vira boneco, mas o
+ * histórico de tickets continua no quadro, marcado como ex-membro.
+ * @returns {Tecnico & { exMembro: true }}
+ */
+export function mapearExMembro({ id, name, role }) {
+  return { ...mapearTecnico({ id, name, role, absent: false }), exMembro: true };
+}

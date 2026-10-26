@@ -7,6 +7,7 @@ import card from '../../Suporte/card/CardTecnico.module.css';
 import Contagem from '../../Suporte/card/Contagem.jsx';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
+import { useComExMembros } from '../historico.js';
 import { desempenhoDaCategoria } from '../mappers/categoria.js';
 import PeriodoEmPilulas from './PeriodoEmPilulas.jsx';
 import Ranking from './Ranking.jsx';
@@ -20,7 +21,19 @@ const primeiroNome = (nome) => nome.split(' ')[0];
 // Números compridos encolhem (ver [data-digitos] no CSS).
 const digitos = (valor) => Math.min(String(valor).length, 6);
 
-// Quem trabalha na categoria; o clique abre o card da pessoa.
+// O rosto, o nome e o cargo de um membro; quem saiu da equipe leva "Ex-membro".
+function Membro({ tecnico }) {
+  return (
+    <>
+      <Retrato tecnico={tecnico} className={styles.rosto} />
+      <strong>{primeiroNome(tecnico.nome)}</strong>
+      {tecnico.exMembro ? <small>Ex-membro</small> : tecnico.funcao && <small>{tecnico.funcao}</small>}
+    </>
+  );
+}
+
+// Quem trabalha na categoria; o clique abre o card da pessoa. Quem saiu da
+// equipe não tem card (nem boneco), então aparece sem botão.
 function Membros({ membros }) {
   const selecionar = useEquipe((s) => s.selecionar);
 
@@ -37,11 +50,15 @@ function Membros({ membros }) {
         <ul className={styles.membros}>
           {membros.map((tecnico) => (
             <li key={tecnico.id}>
-              <button type="button" onClick={() => selecionar(tecnico.id)} aria-label={`Abrir o card de ${tecnico.nome}`}>
-                <Retrato tecnico={tecnico} className={styles.rosto} />
-                <strong>{primeiroNome(tecnico.nome)}</strong>
-                {tecnico.funcao && <small>{tecnico.funcao}</small>}
-              </button>
+              {tecnico.exMembro ? (
+                <div className={styles.exMembro}>
+                  <Membro tecnico={tecnico} />
+                </div>
+              ) : (
+                <button type="button" onClick={() => selecionar(tecnico.id)} aria-label={`Abrir o card de ${tecnico.nome}`}>
+                  <Membro tecnico={tecnico} />
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -113,7 +130,7 @@ function animarEntrada(painel) {
  */
 export default function CardCategoria({ categoria, fechar }) {
   const raiz = useRef(null);
-  const tecnicos = useEquipe((s) => s.tecnicos);
+  const tecnicos = useComExMembros();
   const chamados = useEquipe((s) => s.chamados);
   const voltarAoQuadro = useEquipe((s) => s.abrirQuadro);
   const [periodo, setPeriodo] = useState('tudo');

@@ -51,8 +51,8 @@ test('total de tickets: a soma da equipe no período escolhido', () => {
 test('carga por desenvolvedor: na ordem da equipe, com zeros, só de quem tem chamados', () => {
   const visao = visaoGeral([dev('b'), dev('c'), dev('a')], CHAMADOS, '7d', HOJE);
   assert.deepEqual(visao.porDesenvolvedor, [
-    { id: 'b', nome: 'b', total: 1 },
-    { id: 'a', nome: 'a', total: 3 },
+    { id: 'b', nome: 'b', exMembro: false, total: 1 },
+    { id: 'a', nome: 'a', exMembro: false, total: 3 },
   ]);
   assert.deepEqual(
     visaoGeral([dev('b'), dev('a')], CHAMADOS, 'hoje', HOJE).porDesenvolvedor.map(({ total }) => total),
@@ -192,4 +192,17 @@ test('os chamados do Milldesk fecham as contas do painel em todos os períodos',
   const todos = Object.values(chamados).flatMap(({ lista }) => lista);
   assert.ok(todos.every(({ local }) => typeof local === 'string' && local.trim() === local && local !== ''));
   assert.ok(!visao.tiposDosLocais.includes('Sem assunto'));
+});
+
+test('o ex-membro entra nos totais e vem marcado na carga por desenvolvedor', () => {
+  const ex = { ...dev('b'), exMembro: true };
+  const visao = visaoGeral([dev('a'), ex], CHAMADOS, 'tudo', HOJE);
+  assert.equal(visao.total, 7);
+  assert.deepEqual(
+    visao.porDesenvolvedor.map(({ id, exMembro }) => [id, exMembro]),
+    [
+      ['a', false],
+      ['b', true],
+    ],
+  );
 });
