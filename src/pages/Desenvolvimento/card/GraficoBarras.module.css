@@ -1,0 +1,168 @@
+/*
+ * Barras deitadas do painel do quadro ("Carga por Dev" e "Carga por Categoria").
+ * O nome fica numa coluna à esquerda e a barra, com o valor logo depois, ocupa o
+ * resto. Fontes e medidas em cqi (largura do painel, ver .painel em
+ * CardQuadro.module.css), com piso e teto: legíveis no celular sem crescer
+ * demais no desktop.
+ */
+.grafico {
+  --altura-linha: clamp(1.75rem, 8.4cqi, 2.125rem);
+  --coluna-rotulo: clamp(4.75rem, 25cqi, 7.5rem);
+  /* Espaço à direita da maior barra, para o valor: cabe "12.345 45%" mesmo no painel mais estreito. */
+  --espaco-valor: clamp(5.25rem, 21cqi, 5.75rem);
+  --eixo: var(--color-ink);
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  min-width: 0;
+  margin: 0;
+}
+
+.titulo {
+  margin-bottom: 12px;
+  font-size: clamp(0.8125rem, 3.6cqi, 0.9375rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: var(--neutro);
+}
+
+.area {
+  position: relative;
+  padding: 2px 0;
+}
+
+/* O eixo passa entre os nomes e as barras. */
+.eixo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--coluna-rotulo);
+  width: 1.5px;
+  background: var(--eixo);
+}
+
+/*
+ * Cada linha fica na posição dela (--posicao) por transform: quando a ordem
+ * muda de um período para outro, a linha desliza até o lugar novo.
+ */
+.linhas {
+  position: relative;
+  height: calc(var(--linhas) * var(--altura-linha));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linhas > li {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: var(--coluna-rotulo) minmax(0, 1fr);
+  align-items: center;
+  height: var(--altura-linha);
+  transform: translateY(calc(var(--posicao) * var(--altura-linha)));
+  transition:
+    transform 0.6s var(--facil),
+    opacity 0.25s ease;
+  animation: chegar 0.45s var(--facil) backwards;
+}
+
+/* Com o mouse sobre uma linha, as outras recuam. */
+@media (hover: hover) and (pointer: fine) {
+  .linhas:has(> li:hover) > li:not(:hover) {
+    opacity: 0.4;
+  }
+}
+
+/* Uma linha; um nome maior que a coluna termina em reticências. */
+.rotulo {
+  padding-right: 8px;
+  overflow: hidden;
+  font-size: clamp(0.75rem, 3.4cqi, 0.875rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  color: var(--color-ink);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trilho {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-left: 1.5px;
+}
+
+.barra {
+  flex: none;
+  width: calc((100% - var(--espaco-valor)) * var(--fracao));
+  min-width: 3px;
+  height: clamp(0.75rem, 3.8cqi, 1rem);
+  border-radius: 0 4px 4px 0;
+  background: var(--cor);
+  transition: width 0.6s var(--facil);
+}
+
+.valor {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: none;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.valor b {
+  font-size: clamp(0.75rem, 3.4cqi, 0.875rem);
+  font-weight: var(--weight-black);
+  color: var(--color-ink);
+}
+
+.valor small {
+  font-size: clamp(0.6875rem, 3cqi, 0.8125rem);
+  font-weight: var(--weight-bold);
+  color: var(--neutro-pequeno);
+}
+
+.vazio {
+  padding: 2rem 0;
+  font-size: 0.875rem;
+  color: var(--neutro-pequeno);
+  text-align: center;
+}
+
+@keyframes chegar {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Até aparecer na tela, o gráfico espera vazio, para ser montado à vista. */
+@media (prefers-reduced-motion: no-preference) {
+  .grafico[data-esperando] .barra {
+    transform: scaleX(0);
+  }
+
+  .grafico[data-esperando] :is(.rotulo, .valor) {
+    opacity: 0;
+  }
+
+  .grafico[data-esperando] .eixo {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linhas > li {
+    animation: none;
+  }
+
+  .linhas > li,
+  .barra {
+    transition: none;
+  }
+}

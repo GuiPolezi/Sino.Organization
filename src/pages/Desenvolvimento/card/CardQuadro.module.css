@@ -200,17 +200,18 @@
 }
 
 /* ── Gráficos ── */
-/* Lado a lado só quando cada pizza tem largura para os rótulos; no painel, uma embaixo da outra. */
-.pizzas {
+/* Lado a lado só quando cada gráfico de barras tem largura; no painel, um embaixo do outro. */
+.cargas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: 1.25rem 1rem;
+  gap: 1.75rem 1.25rem;
 }
 
 .subtitulo {
   /* Espaço entre o título "Carga por Local" e o gráfico. */
   margin-bottom: 18px;
-  font-size: 0.8125rem;
+  /* O mesmo tamanho dos títulos de GraficoBarras.module.css. */
+  font-size: clamp(0.8125rem, 3.6cqi, 0.9375rem);
   font-weight: var(--weight-bold);
   line-height: 1.2;
   color: var(--neutro);
