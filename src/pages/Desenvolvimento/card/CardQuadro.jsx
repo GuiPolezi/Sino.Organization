@@ -18,6 +18,7 @@ import CardCategoria from './CardCategoria.jsx';
 import { fatiasPorCategoria, fatiasPorDesenvolvedor } from './cores.js';
 import GraficoLocais from './GraficoLocais.jsx';
 import GraficoBarras from './GraficoBarras.jsx';
+import GraficoPizza from './GraficoPizza.jsx';
 import { useRevelar } from './medidas.js';
 import PeriodoEmPilulas from './PeriodoEmPilulas.jsx';
 import styles from './CardQuadro.module.css';
@@ -159,7 +160,7 @@ function Painel({ fechar }) {
           <TotalDeTickets total={visao.total} />
           <section className={`${styles.cargas} ${card.surge}`} style={{ '--ordem': 3 }} aria-label="Carga de tickets">
             <GraficoBarras titulo="Carga por Dev" cabecalho="Desenvolvedor" itens={fatiasDev} />
-            <GraficoBarras titulo="Carga por Categoria" cabecalho="Categoria" itens={fatiasCategoria} />
+            <GraficoPizza titulo="Carga por Categoria" cabecalho="Categoria" itens={fatiasCategoria} />
           </section>
           <section>
             <h3 className={styles.subtitulo}>Carga por Local</h3>

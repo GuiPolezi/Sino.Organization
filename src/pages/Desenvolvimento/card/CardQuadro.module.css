@@ -200,7 +200,7 @@
 }
 
 /* ── Gráficos ── */
-/* Lado a lado só quando cada gráfico de barras tem largura; no painel, um embaixo do outro. */
+/* Lado a lado só quando cada gráfico (as barras por dev e a pizza por categoria) tem largura; no painel, um embaixo do outro. */
 .cargas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));

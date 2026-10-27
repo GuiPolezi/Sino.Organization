@@ -1,0 +1,96 @@
+/* Pizza do painel do quadro, de fatias cheias. As medidas do desenho saem de geometriaPizza.js. */
+.pizza {
+  /* O cinza do círculo é a superfície com que as cores das fatias foram validadas (cores.js). */
+  --fundo-pizza: #e3e2dc;
+  --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  min-width: 0;
+  margin: 0;
+}
+
+.titulo {
+  margin-bottom: 8px;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: var(--neutro);
+  text-align: center;
+}
+
+.area {
+  position: relative;
+  min-height: 10.5rem;
+}
+
+.svg {
+  display: block;
+  overflow: visible;
+}
+
+.fundo {
+  fill: var(--fundo-pizza);
+}
+
+/*
+ * A fatia: cor cheia, com um contorno no creme do card que vira o vão entre as
+ * vizinhas. Sob o mouse, salta um pouco para fora (o salto vem do JS, pelo
+ * meio da fatia) e as outras recuam.
+ */
+.corpo {
+  fill: var(--cor);
+  stroke: var(--color-cream);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  cursor: default;
+  transition: transform 0.3s var(--facil);
+}
+
+.fatia[data-ativa] .corpo {
+  transform: translate(var(--salto-x), var(--salto-y));
+}
+
+.guia {
+  fill: none;
+  stroke: var(--cor);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* O texto é sempre escuro: a cor da fatia fica na linha que liga o rótulo a ela. */
+.rotulo {
+  fill: var(--color-ink);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  pointer-events: none;
+}
+
+.fatia {
+  transition: opacity 0.25s ease;
+}
+
+.svg[data-destaque] .fatia:not([data-ativa]) {
+  opacity: 0.35;
+}
+
+.vazio {
+  padding: 3.5rem 0;
+  font-size: 0.875rem;
+  color: var(--neutro-pequeno);
+  text-align: center;
+}
+
+/* Até aparecer na tela, o desenho espera escondido, para entrar à vista. */
+@media (prefers-reduced-motion: no-preference) {
+  .area[data-esperando] .svg {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fatia,
+  .corpo {
+    transition: none;
+  }
+}
