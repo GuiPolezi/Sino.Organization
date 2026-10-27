@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { useMemo, useRef, useState } from 'react';
 import { MEDIA } from '../../../utils/media.js';
 import Dica from './Dica.jsx';
-import { ALTURA_LINHA, fatiar, montarPizza, textoPercentual } from './geometriaPizza.js';
+import { ALTURA_LINHA, TAMANHO_ROTULO, fatiar, montarPizza, textoPercentual } from './geometriaPizza.js';
 import { useLargura, useMedirTexto, useRevelar } from './medidas.js';
 import styles from './GraficoPizza.module.css';
 
@@ -97,7 +97,7 @@ export default function GraficoPizza({ titulo, cabecalho, itens }) {
   const svg = useRef(null);
   const desenhou = useRef(false);
   const largura = useLargura(area);
-  const medir = useMedirTexto(area);
+  const medir = useMedirTexto(area, { tamanho: TAMANHO_ROTULO });
   const visto = useRevelar(area);
   const [ativa, setAtiva] = useState(null);
 

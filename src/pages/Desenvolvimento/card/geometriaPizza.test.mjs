@@ -12,8 +12,8 @@ import {
   textoPercentual,
 } from './geometriaPizza.js';
 
-// Largura aproximada de um texto de 11px em negrito: 6,6px por letra.
-const medir = (texto) => texto.length * 6.6;
+// Largura aproximada de um texto de 12px em negrito: 7,2px por letra.
+const medir = (texto) => texto.length * 7.2;
 const item = (chave, valor) => ({ chave, rotulo: chave, valor, cor: '#000000' });
 const DEZ = ['Adriano', 'Antonio', 'Arnaldo', 'Caique', 'Donizeti', 'Eduardo', 'Guilherme', 'Gustavo', 'Ketlyn', 'Rafael'];
 
@@ -112,11 +112,14 @@ test('fatias finas seguidas não amontoam os rótulos', () => {
   for (const largura of [404, 358]) conferir(montarPizza({ itens, largura, medir }), largura);
 });
 
-test('com nome comprido e pouco espaço, o rótulo quebra nas palavras', () => {
+test('com nome comprido e pouco espaço, o rótulo quebra nas palavras, sem partir nome curto', () => {
   const itens = ['Legislação Digital', 'Siscam 9', 'Sistema (Outros)', 'App Mobile'].map((nome) => item(nome, 5));
   const desenho = montarPizza({ itens, largura: 358, medir });
-  assert.deepEqual(desenho.fatias[0].etiqueta.linhas, ['Legislação', 'Digital (25%)']);
-  assert.deepEqual(desenho.fatias[1].etiqueta.linhas, ['Siscam 9 (25%)']);
+  assert.deepEqual(desenho.fatias[0].etiqueta.linhas, ['Legislação', 'Digital', '(25%)']);
+  // "Siscam 9" fica inteiro; só a porcentagem desce.
+  assert.deepEqual(desenho.fatias[1].etiqueta.linhas, ['Siscam 9', '(25%)']);
+  // Quebrar vale a pena: o círculo fica bem maior que o mínimo.
+  assert.ok(desenho.raio >= 66, `raio ${desenho.raio}`);
   assert.ok(desenho.alturaRotulo >= ALTURA_LINHA * 2);
   conferir(desenho, 358);
   conferir(montarPizza({ itens, largura: 300, medir }), 300);

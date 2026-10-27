@@ -61,7 +61,8 @@
 /* O texto é sempre escuro: a cor da fatia fica na linha que liga o rótulo a ela. */
 .rotulo {
   fill: var(--color-ink);
-  font-size: 11px;
+  /* O mesmo TAMANHO_ROTULO de geometriaPizza.js, com que os rótulos são medidos. */
+  font-size: 12px;
   font-weight: var(--weight-bold);
   pointer-events: none;
 }

@@ -5,14 +5,20 @@
  * ponto a `r` do centro no ângulo `a` fica em (cx + r·sen a, cy − r·cos a).
  */
 
-/** Altura de uma linha de rótulo, para o texto de 11px. */
-export const ALTURA_LINHA = 13;
+/** Tamanho do texto dos rótulos, em px (o mesmo de .rotulo em GraficoPizza.module.css). */
+export const TAMANHO_ROTULO = 12;
+/** Altura de uma linha de rótulo, para o texto de TAMANHO_ROTULO. */
+export const ALTURA_LINHA = 14;
 /** O círculo não passa disso, mesmo com espaço sobrando… */
-export const RAIO_MAX = 76;
+export const RAIO_MAX = 84;
 /** …e não fica menor que isso: antes, os rótulos quebram em linhas. */
 export const RAIO_MIN = 46;
 // Numa largura menor que a de qualquer painel, os rótulos não cabem, mas o círculo continua um círculo.
 const RAIO_PISO = 12;
+// Quebrar os rótulos só compensa se o círculo crescer pelo menos isso (px)…
+const GANHO_MINIMO = 12;
+// …e a quebra mira este raio: mirar mais alto partiria os nomes ("Siscam" / "8 (17%)").
+const RAIO_DA_QUEBRA = 70;
 
 // Respiro mínimo entre dois rótulos do mesmo lado.
 const VAO_ROTULOS = 5;
@@ -106,18 +112,22 @@ const larguraMaior = (linhas, medir) => Math.max(0, ...linhas.flat().map(medir))
 
 /*
  * O texto de cada rótulo e o raio do círculo. Os rótulos ficam dos dois lados,
- * então o círculo leva o que sobra da largura. Se, com rótulos de uma linha,
- * ele ficaria pequeno demais, os rótulos compridos quebram nas palavras.
+ * então o círculo leva o que sobra da largura. Os rótulos ficam numa linha, a
+ * menos que, quebrados nas palavras (mirando RAIO_DA_QUEBRA), deixem o círculo
+ * bem maior, ou que numa linha ele ficasse pequeno demais. Com os nomes
+ * compridos das categorias ("Legislação Digital"), é a quebra que dá à pizza
+ * um tamanho bom na largura do painel.
  */
 function linhasERaio(textos, largura, medir) {
   const disponivel = largura / 2 - AFASTAMENTO - MARGEM;
   const umaLinha = textos.map((texto) => [texto]);
-  const raio = disponivel - larguraMaior(umaLinha, medir);
-  if (raio >= RAIO_MIN) return { linhas: umaLinha, raio: Math.min(raio, RAIO_MAX) };
+  const raio = Math.min(disponivel - larguraMaior(umaLinha, medir), RAIO_MAX);
+  if (raio >= RAIO_MAX) return { linhas: umaLinha, raio };
 
-  const quebradas = textos.map((texto) => quebrar(texto, medir, disponivel - RAIO_MIN));
-  const raioQuebrado = disponivel - larguraMaior(quebradas, medir);
-  return { linhas: quebradas, raio: Math.min(Math.max(raioQuebrado, RAIO_PISO), RAIO_MAX) };
+  const quebradas = textos.map((texto) => quebrar(texto, medir, disponivel - RAIO_DA_QUEBRA));
+  const raioQuebrado = Math.min(disponivel - larguraMaior(quebradas, medir), RAIO_MAX);
+  if (raio >= RAIO_MIN && raioQuebrado - raio < GANHO_MINIMO) return { linhas: umaLinha, raio };
+  return { linhas: quebradas, raio: Math.max(raioQuebrado, RAIO_PISO) };
 }
 
 const ponto = (cx, cy, raio, angulo) => [cx + raio * Math.sin(angulo), cy - raio * Math.cos(angulo)];
