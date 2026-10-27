@@ -12,8 +12,9 @@ import * as THREE from 'three';
  * @typedef {object} AnotacoesQuadro
  * @property {string} assinatura  escrita de pincel no canto do quadro
  * @property {{ titulo: string, subtitulo: string, dias: { rotulo: string, valor: number, hoje: boolean }[] }
- *   | { titulo: string, subtitulo: string, fatias: { rotulo: string, valor: number, cor: string }[] } | null} grafico
- *   papel rasgado com as barras dos últimos dias, ou com uma pizza e a legenda dela
+ *   | { titulo: string, subtitulo: string, barras: { rotulo: string, valor: number, cor: string, percentual: string }[] }
+ *   | null} grafico
+ *   papel rasgado com as colunas dos últimos dias, ou com até seis barras deitadas (cada uma com a parte do total)
  * @property {{ titulo: string, linhas: { texto: string, alerta?: boolean }[] }
  *   | { titulo: string, barras: { rotulo: string, valor: number, partes: { cor: string, valor: number }[] }[] } | null} lista
  *   folha pautada com até cinco linhas (`alerta` pinta a linha de vermelho), ou com até cinco barras deitadas
@@ -131,47 +132,63 @@ function barrasDosDias(ctx, w, dias) {
   ctx.stroke();
 }
 
-// Pizza à esquerda, com os vãos no creme do papel, e a legenda à direita, com a parte de cada fatia.
-function pizzaDasFatias(ctx, fatias) {
-  const total = fatias.reduce((soma, { valor }) => soma + valor, 0);
-  const cx = 150;
-  const cy = 304;
-  const raio = 116;
-  let angulo = -Math.PI / 2;
+// Barras deitadas, uma por item: o nome à esquerda do eixo, a barra na cor dele e, na ponta, o total e a parte do total.
+function barrasDasCargas(ctx, w, barras) {
+  const maximo = Math.max(...barras.map(({ valor }) => valor), 1);
+  const eixo = 166;
+  // Largura do "123 45%" de cada linha: o número e, depois de um vão, a parte do total.
+  const larguraDoTexto = ({ valor, percentual }) => {
+    ctx.font = `700 32px ${MAO}`;
+    const numero = ctx.measureText(String(valor)).width;
+    ctx.font = `600 26px ${MAO}`;
+    return numero + 8 + ctx.measureText(percentual).width;
+  };
+  // A maior barra deixa espaço para o texto mais largo antes da borda do papel (w - 42).
+  const larguraMaxima = w - 42 - eixo - 4 - 10 - Math.max(...barras.map(larguraDoTexto));
+  // Seis linhas terminam acima da faixa escura do pé do papel.
+  const topo = 160;
+  const passo = 44;
+  const altura = 26;
 
-  fatias.forEach(({ cor, valor }) => {
-    const fim = angulo + (valor / total) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, raio, angulo, fim);
-    ctx.closePath();
-    ctx.fillStyle = cor;
-    ctx.fill();
-    ctx.strokeStyle = '#F1ECDF';
-    ctx.lineWidth = 5;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-    angulo = fim;
-  });
-
-  ctx.textAlign = 'left';
-  fatias.forEach(({ rotulo, valor, cor }, i) => {
-    const y = 198 + i * 42;
-    ctx.fillStyle = cor;
-    ctx.beginPath();
-    ctx.arc(300, y - 9, 10, 0, Math.PI * 2);
-    ctx.fill();
+  barras.forEach(({ rotulo, valor, cor, percentual }, i) => {
+    const y = topo + i * passo;
+    ctx.textAlign = 'right';
     ctx.fillStyle = TINTA.escura;
-    escreverCabendo(ctx, `${rotulo} ${Math.round((valor / total) * 100)}%`, 320, y, 170, 600, 32);
+    escreverCabendo(ctx, rotulo, eixo - 12, y + altura - 4, eixo - 12 - 36, 600, 32);
+
+    const largura = Math.max((valor / maximo) * larguraMaxima, 4);
+    ctx.fillStyle = cor;
+    ctx.beginPath();
+    ctx.roundRect(eixo + 4, y, largura, altura, [0, 6, 6, 0]);
+    ctx.fill();
+
+    ctx.textAlign = 'left';
+    const x = eixo + 4 + largura + 10;
+    ctx.fillStyle = TINTA.escura;
+    ctx.font = `700 32px ${MAO}`;
+    const numero = String(valor);
+    ctx.fillText(numero, x, y + altura - 3);
+    const depoisDoNumero = x + ctx.measureText(numero).width + 8;
+    ctx.fillStyle = TINTA.suave;
+    ctx.font = `600 26px ${MAO}`;
+    ctx.fillText(percentual, depoisDoNumero, y + altura - 3);
   });
+
+  ctx.strokeStyle = TINTA.escura;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(eixo, topo - 12);
+  ctx.lineTo(eixo + 2, topo + barras.length * passo - 14);
+  ctx.stroke();
 }
 
 /**
- * Papel rasgado com o mini gráfico dos últimos dias, ou com a pizza.
+ * Papel rasgado com o mini gráfico dos últimos dias, ou com as barras de carga.
  * @param {AnotacoesQuadro['grafico']} grafico
  */
 export function texturaPapelRasgado(grafico) {
-  if (!grafico || !(grafico.dias?.length || grafico.fatias?.length)) return null;
+  if (!grafico || !(grafico.dias?.length || grafico.barras?.length)) return null;
   const { titulo, subtitulo } = grafico;
 
   return novaTextura(512, 540, (ctx, w, h) => {
@@ -192,7 +209,7 @@ export function texturaPapelRasgado(grafico) {
     ctx.font = `600 38px ${MAO}`;
     ctx.fillText(subtitulo, 36, 124);
 
-    if (grafico.fatias) pizzaDasFatias(ctx, grafico.fatias);
+    if (grafico.barras) barrasDasCargas(ctx, w, grafico.barras);
     else barrasDosDias(ctx, w, grafico.dias);
   });
 }

@@ -24,7 +24,7 @@ const resumo = (visao = {}, totalDesenvolvedores = 3) => ({
   visao: { total: 3715, porDesenvolvedor: [dev('ana', 10), dev('beto', 30)], porCategoria: [], porLocal: [local('Araras', 4, 2)], tiposDosLocais: TIPOS, ficticio: true, ...visao },
 });
 
-test('com chamados, o quadro resume o painel: total no post-it, pizza por dev e barras por local', () => {
+test('com chamados, o quadro resume o painel: total no post-it, barras por dev e barras por local', () => {
   const anotacoes = anotacoesDoQuadro(resumo());
 
   assert.equal(anotacoes.assinatura, 'desenvolvimento');
@@ -32,12 +32,13 @@ test('com chamados, o quadro resume o painel: total no post-it, pizza por dev e 
 
   assert.equal(anotacoes.grafico.titulo, 'Carga por Dev');
   assert.equal(anotacoes.grafico.subtitulo, 'todo o tempo');
-  // Da maior para a menor, com o primeiro nome e a cor fixa de cada pessoa (a posição dela na equipe).
+  // Da maior para a menor, com o primeiro nome, a parte do total (como no painel) e a cor fixa de cada pessoa.
   assert.deepEqual(
-    anotacoes.grafico.fatias.map(({ rotulo, valor }) => [rotulo, valor]),
-    [['Beto', 30], ['Ana', 10]],
+    anotacoes.grafico.barras.map(({ rotulo, valor, percentual }) => [rotulo, valor, percentual]),
+    [['Beto', 30, '75%'], ['Ana', 10, '25%']],
   );
-  assert.notEqual(anotacoes.grafico.fatias[0].cor, anotacoes.grafico.fatias[1].cor);
+  assert.notEqual(anotacoes.grafico.barras[0].cor, anotacoes.grafico.barras[1].cor);
+  assert.equal(anotacoes.grafico.fatias, undefined);
 
   assert.equal(anotacoes.lista.titulo, 'Carga por Local');
   assert.deepEqual(anotacoes.lista.barras, [
@@ -52,13 +53,16 @@ test('com chamados, o quadro resume o painel: total no post-it, pizza por dev e 
   ]);
 });
 
-test('no papel cabem seis fatias: da sétima em diante, viram "outros"; quem não tem ticket não entra', () => {
+test('no papel cabem seis barras: da sétima em diante, viram "outros"; quem não tem ticket não entra', () => {
   const porDesenvolvedor = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((id, i) => dev(id, 8 - i));
-  const { fatias } = anotacoesDoQuadro(resumo({ porDesenvolvedor: [...porDesenvolvedor, dev('z', 0)] })).grafico;
+  const { barras } = anotacoesDoQuadro(resumo({ porDesenvolvedor: [...porDesenvolvedor, dev('z', 0)] })).grafico;
 
-  assert.equal(fatias.length, 6);
-  assert.deepEqual(fatias.at(-1), { chave: 'Outros', rotulo: 'outros', valor: 3 + 2 + 1, cor: COR_OUTROS });
-  assert.ok(!fatias.some(({ rotulo }) => rotulo === 'Z'));
+  assert.equal(barras.length, 6);
+  assert.deepEqual(barras.at(-1), { chave: 'Outros', rotulo: 'outros', valor: 3 + 2 + 1, cor: COR_OUTROS, percentual: '17%' });
+  assert.ok(!barras.some(({ rotulo }) => rotulo === 'Z'));
+  // As partes somam 100%, como no painel (aqui nenhuma fica abaixo de 1%).
+  barras.forEach(({ percentual }) => assert.match(percentual, /^\d+%$/));
+  assert.equal(barras.reduce((soma, { percentual }) => soma + Number.parseInt(percentual, 10), 0), 100);
 });
 
 test('na folha cabem cinco barras, na ordem do painel', () => {
