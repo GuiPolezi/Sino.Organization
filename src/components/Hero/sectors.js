@@ -2,6 +2,7 @@
 
 import imgDesenvolvimento from '../../assets/images/dev.png';
 import imgSuporte from '../../assets/images/suporte.png';
+import imgCompilacao from '../../assets/images/juiz.png';
 import imgLicencas from '../../assets/images/license.png';
 import imgReuniao from '../../assets/images/meeting.png'
 
@@ -17,6 +18,11 @@ export const sectors = [
     href: '/suporte',
     // image: 'https://picsum.photos/seed/suporte/640/480',
     image: imgSuporte,
+  },
+  {
+    label: 'COMPILAÇÃO',
+    // Sem `href` nem `modal` por enquanto: só o hover, sem navegar.
+    image: imgCompilacao,
   },
   {
     label: 'LICENÇAS',

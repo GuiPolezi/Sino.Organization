@@ -52,7 +52,7 @@
     --panel-padding-inline: calc(var(--u) * 1.67);
     --panel-padding-bottom: 0px;
     --counter-inset-right: calc(var(--u) * 7.4);
-    /* 6.5u no design; menos 1.8u que a lista de 4 setores ganhou de altura. */
+    /* 6.5u no design; menos 1.8u que a lista de setores ganhou de altura. */
     --sectors-gap: calc(var(--u) * 4.7);
     --sectors-indent: calc(var(--u) * 1.87);
   }

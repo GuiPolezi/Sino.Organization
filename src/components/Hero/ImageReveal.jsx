@@ -6,6 +6,8 @@ import { MEDIA, matches } from '../../utils/media.js';
 import styles from './ImageReveal.module.css';
 
 const CURSOR_OFFSET = 20;
+// Distância mínima entre a imagem e a borda de baixo da tela.
+const VIEWPORT_MARGIN = 16;
 const FOLLOW = { duration: 0.4, ease: 'power3' };
 const SHOW = { duration: 0.4, ease: 'power4.out' };
 const HIDE = { duration: 0.3, ease: 'power4.out' };
@@ -21,6 +23,9 @@ export default function ImageReveal({ ref }) {
   const img = useRef(null);
   const follow = useRef(null);
   const timeline = useRef(null);
+  // Imagem acima do cursor (sem espaço embaixo). Vale até o próximo `show`,
+  // para não ficar pulando de lado enquanto o mouse anda no mesmo item.
+  const above = useRef(false);
 
   const { contextSafe } = useGSAP(() => {
     follow.current = {
@@ -31,7 +36,12 @@ export default function ImageReveal({ ref }) {
 
   const move = contextSafe((x, y, { immediate = false } = {}) => {
     const targetX = x + CURSOR_OFFSET;
-    const targetY = y + CURSOR_OFFSET;
+    // Sem espaço embaixo (últimos setores em notebooks), a imagem vai para cima
+    // do cursor, como um tooltip, em vez de sair da tela ou cobrir o item.
+    const height = reveal.current.offsetHeight;
+    const belowY = y + CURSOR_OFFSET;
+    if (belowY + height + VIEWPORT_MARGIN > window.innerHeight) above.current = true;
+    const targetY = above.current ? Math.max(0, y - CURSOR_OFFSET - height) : belowY;
     // Com `start` igual ao destino, o quickTo salta em vez de animar.
     follow.current.x(targetX, immediate ? targetX : undefined);
     follow.current.y(targetY, immediate ? targetY : undefined);
@@ -40,6 +50,7 @@ export default function ImageReveal({ ref }) {
   const show = contextSafe((image, x, y) => {
     timeline.current?.kill();
     img.current.style.backgroundImage = `url("${image}")`;
+    above.current = false;
     move(x, y, { immediate: true });
     gsap.set(reveal.current, { opacity: 1 });
 
