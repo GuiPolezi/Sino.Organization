@@ -2,19 +2,19 @@
  * O que vai escrito no quadro da cena de /desenvolvimento: um resumo, à mão,
  * do painel que ele abre (card/CardQuadro.jsx), feito das mesmas contas
  * (mappers/visaoGeral.js, período "todo o tempo"). O post-it é o total de
- * tickets, o papel rasgado são as barras da "Carga por Dev" e a folha é a
- * "Carga por Local", com as mesmas cores do painel. Cada anotação só existe quando há
+ * tickets, o papel rasgado são as barras da "Carga por Dev" (nas cores do painel)
+ * e a folha é a linha da "Carga por Local", só com a quantidade. Cada anotação só existe quando há
  * dado para ela; sem dado, ela sai null e não é desenhada.
  */
-import { COR_OUTROS, coresDosTipos, fatiasPorDesenvolvedor } from '../card/cores.js';
+import { COR_OUTROS, fatiasPorDesenvolvedor } from '../card/cores.js';
 import { percentuais, textoPercentual } from '../card/geometriaPizza.js';
 import { OUTROS } from '../mappers/visaoGeral.js';
 
 /** @import { AnotacoesQuadro } from '../../Suporte/quadro/texturas.js' */
 
-// No papel cabem seis barras; na folha, cinco.
+// No papel cabem seis barras; na folha, cinco pontos.
 const BARRAS_NO_PAPEL = 6;
-const BARRAS_NA_FOLHA = 5;
+const PONTOS_NA_FOLHA = 5;
 // Na folha, o nome curto do local vai até aqui; mais que isso, a letra ficaria miúda.
 export const LETRAS_DO_LOCAL = 24;
 
@@ -44,15 +44,9 @@ function barrasDosDevs(porDesenvolvedor) {
 
 const abreviar = (nome) => (nome.length > LETRAS_DO_LOCAL ? `${nome.slice(0, LETRAS_DO_LOCAL - 1).trimEnd()}…` : nome);
 
-// Os locais com mais tickets, cada barra dividida pelos tipos com ticket, nas cores do painel.
-function barrasDosLocais(porLocal, tiposDosLocais = []) {
-  const corDe = coresDosTipos(tiposDosLocais);
-  return porLocal.slice(0, BARRAS_NA_FOLHA).map(({ local, rotulo = local, total, tipos }) => ({
-    rotulo: abreviar(rotulo),
-    valor: total,
-    partes: tipos.filter((tipo) => tipo.total > 0).map((tipo) => ({ cor: corDe(tipo.tipo), valor: tipo.total })),
-  }));
-}
+// Os locais com mais tickets, um ponto por local, na ordem do painel: só o nome e a quantidade.
+const pontosDosLocais = (porLocal) =>
+  porLocal.slice(0, PONTOS_NA_FOLHA).map(({ local, rotulo = local, total }) => ({ rotulo: abreviar(rotulo), valor: total }));
 
 // Post-it: o total de tickets do painel ou, sem chamados, o tamanho da equipe.
 function destaqueDoPostIt({ totalDesenvolvedores, visao }) {
@@ -74,11 +68,11 @@ function destaqueDoPostIt({ totalDesenvolvedores, visao }) {
  */
 export function anotacoesDoQuadro(resumo) {
   const devs = barrasDosDevs(resumo.visao.porDesenvolvedor);
-  const barras = barrasDosLocais(resumo.visao.porLocal, resumo.visao.tiposDosLocais);
+  const pontos = pontosDosLocais(resumo.visao.porLocal);
   return {
     assinatura: 'desenvolvimento',
     grafico: devs.length ? { titulo: 'Carga por Dev', subtitulo: 'todo o tempo', barras: devs } : null,
-    lista: barras.length ? { titulo: 'Carga por Local', barras } : null,
+    lista: pontos.length ? { titulo: 'Carga por Local', pontos } : null,
     postit: destaqueDoPostIt(resumo),
   };
 }

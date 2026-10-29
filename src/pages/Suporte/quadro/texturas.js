@@ -16,8 +16,8 @@ import * as THREE from 'three';
  *   | null} grafico
  *   papel rasgado com as colunas dos últimos dias, ou com até seis barras deitadas (cada uma com a parte do total)
  * @property {{ titulo: string, linhas: { texto: string, alerta?: boolean }[] }
- *   | { titulo: string, barras: { rotulo: string, valor: number, partes: { cor: string, valor: number }[] }[] } | null} lista
- *   folha pautada com até cinco linhas (`alerta` pinta a linha de vermelho), ou com até cinco barras deitadas
+ *   | { titulo: string, pontos: { rotulo: string, valor: number }[] } | null} lista
+ *   folha pautada com até cinco linhas (`alerta` pinta a linha de vermelho), ou com um gráfico de linha de até cinco pontos
  * @property {{ numero: number | string, linhas: string[] } | null} postit  o número grande e duas linhas embaixo
  */
 
@@ -214,58 +214,92 @@ export function texturaPapelRasgado(grafico) {
   });
 }
 
-// Barras deitadas, uma por linha: o nome à esquerda do eixo, a barra dividida por tipo e o total na ponta.
-function barrasDosLocais(ctx, w, barras) {
-  const maximo = Math.max(...barras.map(({ valor }) => valor), 1);
-  const eixo = 246;
-  const larguraMaxima = w - eixo - 96;
-  const topo = 108;
-  const passo = 70;
-  const altura = 30;
+const PAPEL_DA_FOLHA = '#FBFAF4';
+const formatoDoNumero = new Intl.NumberFormat('pt-BR');
 
-  barras.forEach(({ rotulo, valor, partes }, i) => {
-    const y = topo + i * passo;
-    ctx.textAlign = 'right';
-    ctx.fillStyle = TINTA.azul;
-    escreverCabendo(ctx, rotulo, eixo - 14, y + altura - 6, 176, 600, 32);
+/*
+ * Gráfico de linha à mão: um ponto por item, do maior para o menor, com a
+ * quantidade escrita acima e o nome inclinado embaixo do eixo. O primeiro nome
+ * desce para a esquerda até ~165px do ponto (220px de texto a 45°), por isso o
+ * primeiro ponto fica em x = 176.
+ */
+function linhaDosLocais(ctx, w, pontos) {
+  const maximo = Math.max(...pontos.map(({ valor }) => valor), 1);
+  const eixoVertical = 104;
+  const eixoHorizontal = 300;
+  const alto = 132;
+  const zero = eixoHorizontal - 22;
+  const primeiro = 176;
+  const ultimo = w - 56;
+  const passo = pontos.length > 1 ? (ultimo - primeiro) / (pontos.length - 1) : 0;
+  const coordenadas = pontos.map(({ valor }, i) => ({
+    x: pontos.length > 1 ? primeiro + i * passo : (primeiro + ultimo) / 2,
+    y: zero - (valor / maximo) * (zero - alto),
+  }));
 
-    const largura = (valor / maximo) * larguraMaxima;
-    let x = eixo + 4;
-    partes.forEach(({ cor, valor: doTipo }, j) => {
-      const parte = (doTipo / valor) * largura - (j < partes.length - 1 ? 3 : 0);
-      if (parte <= 0) return;
-      ctx.fillStyle = cor;
-      ctx.beginPath();
-      ctx.roundRect(x, y, parte, altura, j === partes.length - 1 ? [0, 6, 6, 0] : 2);
-      ctx.fill();
-      x += parte + 3;
-    });
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = TINTA.escura;
-    ctx.font = `700 32px ${MAO}`;
-    ctx.fillText(String(valor), eixo + 4 + largura + 12, y + altura - 5);
-  });
-
+  // Eixos, com a leve inclinação de quem desenha à mão.
   ctx.strokeStyle = TINTA.escura;
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(eixo, topo - 14);
-  ctx.lineTo(eixo + 2, topo + barras.length * passo - 24);
+  ctx.moveTo(eixoVertical, alto - 34);
+  ctx.lineTo(eixoVertical + 2, eixoHorizontal);
+  ctx.lineTo(w - 28, eixoHorizontal + 2);
   ctx.stroke();
+
+  // A linha e os pontos.
+  ctx.strokeStyle = TINTA.pincel;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  coordenadas.forEach(({ x, y }, i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+  ctx.stroke();
+  coordenadas.forEach(({ x, y }) => {
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = TINTA.pincel;
+    ctx.fill();
+    ctx.strokeStyle = PAPEL_DA_FOLHA;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  });
+
+  // A quantidade acima de cada ponto, com um contorno da cor do papel para a linha não riscar o número.
+  ctx.textAlign = 'center';
+  ctx.font = `700 34px ${MAO}`;
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = PAPEL_DA_FOLHA;
+  ctx.fillStyle = TINTA.escura;
+  pontos.forEach(({ valor }, i) => {
+    const { x, y } = coordenadas[i];
+    const numero = formatoDoNumero.format(valor);
+    ctx.strokeText(numero, x, y - 18);
+    ctx.fillText(numero, x, y - 18);
+  });
+
+  // O nome inclinado, terminando embaixo do ponto.
+  ctx.fillStyle = TINTA.azul;
+  pontos.forEach(({ rotulo }, i) => {
+    ctx.save();
+    ctx.translate(coordenadas[i].x + 4, eixoHorizontal + 22);
+    ctx.rotate(-Math.PI / 4);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    escreverCabendo(ctx, rotulo, 0, 0, 220, 600, 30);
+    ctx.restore();
+  });
 }
 
 /**
- * Folha pautada com um título e uma lista curta, ou as barras por local.
+ * Folha pautada com um título e uma lista curta, ou o gráfico de linha por local.
  * @param {AnotacoesQuadro['lista']} lista
  */
 export function texturaFolhaPautada(lista) {
-  if (!lista || !(lista.linhas?.length || lista.barras?.length)) return null;
+  if (!lista || !(lista.linhas?.length || lista.pontos?.length)) return null;
   const { titulo } = lista;
 
   return novaTextura(640, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#FBFAF4';
+    ctx.fillStyle = PAPEL_DA_FOLHA;
     ctx.fillRect(0, 0, w, h);
 
     // Linhas alternando azul e vermelho.
@@ -298,8 +332,8 @@ export function texturaFolhaPautada(lista) {
     ctx.lineTo(58 + ctx.measureText(titulo).width + 6, 70);
     ctx.stroke();
 
-    if (lista.barras) {
-      barrasDosLocais(ctx, w, lista.barras);
+    if (lista.pontos) {
+      linhaDosLocais(ctx, w, lista.pontos);
       return;
     }
     lista.linhas.forEach(({ texto, alerta }, i) => {

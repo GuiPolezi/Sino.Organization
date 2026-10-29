@@ -2,11 +2,10 @@
 // Uso: npm run test:quadro
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { COR_OUTROS, coresDosTipos } from '../card/cores.js';
+import { COR_OUTROS } from '../card/cores.js';
 import { LETRAS_DO_LOCAL, anotacoesDoQuadro } from './anotacoes.js';
 
 const TIPOS = ['Bug / Erro', 'Melhoria / Nova Função', 'Implantação'];
-const corDe = coresDosTipos(TIPOS);
 
 const dev = (id, total) => ({ id, nome: `${id[0].toUpperCase()}${id.slice(1)} Silva`, total });
 const local = (nome, bug, melhoria) => ({
@@ -24,7 +23,7 @@ const resumo = (visao = {}, totalDesenvolvedores = 3) => ({
   visao: { total: 3715, porDesenvolvedor: [dev('ana', 10), dev('beto', 30)], porCategoria: [], porLocal: [local('Araras', 4, 2)], tiposDosLocais: TIPOS, ficticio: true, ...visao },
 });
 
-test('com chamados, o quadro resume o painel: total no post-it, barras por dev e barras por local', () => {
+test('com chamados, o quadro resume o painel: total no post-it, barras por dev e a linha por local', () => {
   const anotacoes = anotacoesDoQuadro(resumo());
 
   assert.equal(anotacoes.assinatura, 'desenvolvimento');
@@ -41,16 +40,9 @@ test('com chamados, o quadro resume o painel: total no post-it, barras por dev e
   assert.equal(anotacoes.grafico.fatias, undefined);
 
   assert.equal(anotacoes.lista.titulo, 'Carga por Local');
-  assert.deepEqual(anotacoes.lista.barras, [
-    {
-      rotulo: 'Araras',
-      valor: 6,
-      partes: [
-        { cor: corDe('Bug / Erro'), valor: 4 },
-        { cor: corDe('Melhoria / Nova Função'), valor: 2 },
-      ],
-    },
-  ]);
+  // Só o nome e a quantidade: nada da divisão por tipo.
+  assert.deepEqual(anotacoes.lista.pontos, [{ rotulo: 'Araras', valor: 6 }]);
+  assert.equal(anotacoes.lista.barras, undefined);
 });
 
 test('no papel cabem seis barras: da sétima em diante, viram "outros"; quem não tem ticket não entra', () => {
@@ -65,25 +57,22 @@ test('no papel cabem seis barras: da sétima em diante, viram "outros"; quem nã
   assert.equal(barras.reduce((soma, { percentual }) => soma + Number.parseInt(percentual, 10), 0), 100);
 });
 
-test('na folha cabem cinco barras, na ordem do painel', () => {
+test('na folha cabem cinco pontos, na ordem do painel', () => {
   const porLocal = ['A', 'B', 'C', 'D', 'E', 'F'].map((nome, i) => local(nome, 10 - i, 0));
-  const { barras } = anotacoesDoQuadro(resumo({ porLocal })).lista;
+  const { pontos } = anotacoesDoQuadro(resumo({ porLocal })).lista;
   assert.deepEqual(
-    barras.map(({ rotulo }) => rotulo),
-    ['A', 'B', 'C', 'D', 'E'],
+    pontos.map(({ rotulo, valor }) => [rotulo, valor]),
+    [['A', 10], ['B', 9], ['C', 8], ['D', 7], ['E', 6]],
   );
 });
 
-test('na folha, o nome comprido de um local termina em reticências; as cores seguem a legenda', () => {
+test('na folha, o nome comprido de um local termina em reticências', () => {
   const nome = '2º Tabelião de Notas de Piracicaba Bortoletto';
-  const [barra] = anotacoesDoQuadro(resumo({ porLocal: [local(nome, 1, 1)] })).lista.barras;
-  assert.equal(barra.rotulo.length, LETRAS_DO_LOCAL);
-  assert.ok(barra.rotulo.endsWith('…'));
-  assert.ok(nome.startsWith(barra.rotulo.slice(0, -1)));
-  assert.equal(anotacoesDoQuadro(resumo({ porLocal: [local('Itapevi CM', 1, 0)] })).lista.barras[0].rotulo, 'Itapevi CM');
-  // Cores distintas para tipos distintos, e "Outros" (ou um tipo fora da legenda) no cinza.
-  assert.notEqual(corDe('Bug / Erro'), corDe('Melhoria / Nova Função'));
-  assert.equal(corDe('Treinamento'), COR_OUTROS);
+  const [ponto] = anotacoesDoQuadro(resumo({ porLocal: [local(nome, 1, 1)] })).lista.pontos;
+  assert.equal(ponto.rotulo.length, LETRAS_DO_LOCAL);
+  assert.ok(ponto.rotulo.endsWith('…'));
+  assert.ok(nome.startsWith(ponto.rotulo.slice(0, -1)));
+  assert.equal(anotacoesDoQuadro(resumo({ porLocal: [local('Itapevi CM', 1, 0)] })).lista.pontos[0].rotulo, 'Itapevi CM');
 });
 
 test('sem chamados, sobra o post-it com o tamanho da equipe; sem equipe, nada', () => {
