@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { CATEGORIAS, FECHADO } from './chamados.js';
-import { LIMITE_LOCAIS, LIMITE_TIPOS, OUTROS, visaoGeral } from './visaoGeral.js';
+import { LIMITE_LOCAIS, visaoGeral } from './visaoGeral.js';
 
 const HOJE = '2026-10-16';
 const dev = (id) => ({ id, nome: id, funcao: '', ausente: false, avatarIniciais: 'X' });
@@ -78,59 +78,20 @@ test('carga por categoria: na ordem do Desempenho, sem as zeradas, e as novas no
   assert.deepEqual(ordem, ['Cartórios', 'Siscam 9', 'Site']);
 });
 
-test('carga por local: pelo campo Local, do maior para o menor, empate pelo nome, com as subcategorias', () => {
-  const visao = visaoGeral([dev('a'), dev('b')], CHAMADOS, 'tudo', HOJE);
-  const { porLocal } = visao;
+test('carga por local: pelo campo Local, do maior para o menor, empate pelo nome, só com a quantidade', () => {
+  const { porLocal } = visaoGeral([dev('a'), dev('b')], CHAMADOS, 'tudo', HOJE);
+  assert.deepEqual(porLocal, [
+    { local: 'Araras', rotulo: 'Araras', total: 3 },
+    { local: 'Franca', rotulo: 'Franca', total: 3 },
+    { local: 'Holambra CM', rotulo: 'Holambra CM', total: 1 },
+  ]);
   assert.deepEqual(
-    porLocal.map(({ local, total }) => [local, total]),
+    visaoGeral([dev('a'), dev('b')], CHAMADOS, 'hoje', HOJE).porLocal.map(({ local, total }) => [local, total]),
     [
-      ['Araras', 3],
-      ['Franca', 3],
+      ['Araras', 2],
       ['Holambra CM', 1],
     ],
   );
-  // As subcategorias com cor: as mais comuns da equipe, sem "Sem assunto"; no empate, pelo nome.
-  assert.deepEqual(visao.tiposDosLocais, ['Bug / Erro', 'Dúvida Operacional', 'Implantação', 'Melhoria / Nova Função', OUTROS]);
-  const franca = porLocal[1];
-  assert.deepEqual(
-    franca.tipos.map(({ tipo, total }) => [tipo, total]),
-    [
-      ['Bug / Erro', 1],
-      ['Dúvida Operacional', 0],
-      ['Implantação', 1],
-      ['Melhoria / Nova Função', 1],
-    ],
-  );
-  // "Sem assunto" não tem cor própria: soma em "Outros", depois das com cor.
-  assert.deepEqual(porLocal[2].tipos.at(-1), { tipo: OUTROS, total: 1 });
-  // A dica traz todas as subcategorias do local, da mais comum para a menos comum.
-  assert.deepEqual(porLocal[0].assuntos, [
-    { assunto: 'Bug / Erro', total: 2 },
-    { assunto: 'Dúvida Operacional', total: 1 },
-  ]);
-});
-
-test('carga por local: só as cinco subcategorias mais comuns têm cor, as mesmas em todo período', () => {
-  const assuntos = ['A', 'A', 'A', 'A', 'A', 'A', 'B', 'B', 'B', 'B', 'B', 'C', 'C', 'C', 'C', 'D', 'D', 'D', 'E', 'E', 'F'];
-  // "F" só existe hoje, e o mais comum ("A") só existe no passado.
-  const lista = assuntos.map((assunto) => chamado(assunto === 'A' ? '2026-01-01' : HOJE, 'Site', 'Itapevi CM', assunto));
-  const chamados = { x: { lista } };
-
-  assert.equal(LIMITE_TIPOS, 5);
-  for (const periodo of ['tudo', 'hoje']) {
-    const visao = visaoGeral([dev('x')], chamados, periodo, HOJE);
-    assert.deepEqual(visao.tiposDosLocais, ['A', 'B', 'C', 'D', 'E', OUTROS], periodo);
-  }
-  const [itapevi] = visaoGeral([dev('x')], chamados, 'hoje', HOJE).porLocal;
-  assert.deepEqual(
-    itapevi.tipos.map(({ total }) => total),
-    [0, 5, 4, 3, 2, 1],
-  );
-  assert.equal(itapevi.assuntos.length, 5);
-
-  // Sem chamado fora das cinco, a legenda não traz "Outros".
-  const semOutros = visaoGeral([dev('x')], { x: { lista: lista.filter(({ assunto }) => assunto !== 'F') } }, 'tudo', HOJE);
-  assert.ok(!semOutros.tiposDosLocais.includes(OUTROS));
 });
 
 test('carga por local: o rótulo é o nome curto, e o local continua inteiro', () => {
@@ -180,18 +141,14 @@ test('os chamados do Milldesk fecham as contas do painel em todos os períodos',
     assert.equal(soma(visao.porCategoria), visao.total, `categorias em ${periodo}`);
     assert.ok(visao.porCategoria.every(({ nome }) => CATEGORIAS.includes(nome)), `categorias em ${periodo}`);
     assert.ok(visao.porLocal.length <= 10, `locais em ${periodo}`);
-    assert.ok(visao.tiposDosLocais.filter((tipo) => tipo !== OUTROS).length <= LIMITE_TIPOS, `legenda em ${periodo}`);
-    for (const { local, total, tipos, assuntos } of visao.porLocal) {
-      assert.equal(soma(tipos), total, `tipos de ${local} em ${periodo}`);
-      assert.equal(soma(assuntos), total, `assuntos de ${local} em ${periodo}`);
-    }
+    assert.ok(soma(visao.porLocal) <= visao.total, `locais em ${periodo}`);
+    for (const item of visao.porLocal) assert.deepEqual(Object.keys(item), ['local', 'rotulo', 'total'], `${item.local} em ${periodo}`);
   }
   // Em todo o tempo há mais de dez locais, e todo chamado tem local.
   const visao = visaoGeral(equipe, chamados, 'tudo', HOJE);
   assert.equal(visao.porLocal.length, 10);
   const todos = Object.values(chamados).flatMap(({ lista }) => lista);
   assert.ok(todos.every(({ local }) => typeof local === 'string' && local.trim() === local && local !== ''));
-  assert.ok(!visao.tiposDosLocais.includes('Sem assunto'));
 });
 
 test('o ex-membro entra nos totais e vem marcado na carga por desenvolvedor', () => {

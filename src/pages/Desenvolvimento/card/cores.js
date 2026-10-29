@@ -3,7 +3,7 @@
  * validador de paleta de gráficos (faixa de luminosidade, saturação mínima e
  * distância entre vizinhas, com e sem daltonismo). O contraste com o fundo fica
  * abaixo de 3:1 em algumas, então a cor nunca está sozinha: toda fatia tem
- * rótulo com nome, as barras têm legenda e o valor escrito, e cada gráfico tem
+ * rótulo com nome, as barras têm o nome e o valor escritos, e cada gráfico tem
  * uma tabela para leitores de tela.
  */
 import { CATEGORIAS } from '../mappers/chamados.js';
@@ -14,24 +14,6 @@ import { OUTROS } from '../mappers/visaoGeral.js';
 // Pincéis do quadro, na ordem: a cor segue a posição da pessoa na equipe (ou da categoria no Desempenho).
 const PINCEIS = ['#2a78d6', '#eb6834', '#1baf7a', '#c98500', '#e87ba4', '#008300', '#6250d6', '#e34948', '#0090a8', '#9a5b1f'];
 export const COR_OUTROS = '#6f6c62';
-
-/*
- * Cores dos tipos (subcategorias) da "Carga por Local", na ordem da legenda: o
- * mais comum fica com a primeira. As cores do design, nesta ordem, para as
- * vizinhas na barra se distinguirem.
- */
-const CORES_TIPOS = ['#d64848', '#7bc65a', '#1d7fc0', '#99978e', '#e2aa00'];
-
-/**
- * A cor de cada tipo da legenda da "Carga por Local" (visaoGeral().tiposDosLocais).
- * Um tipo fora da legenda fica com a cor de "Outros".
- * @param {string[]} tipos
- * @returns {(tipo: string) => string}
- */
-export function coresDosTipos(tipos) {
-  const cores = new Map(tipos.filter((tipo) => tipo !== OUTROS).map((tipo, i) => [tipo, CORES_TIPOS[i] ?? COR_OUTROS]));
-  return (tipo) => cores.get(tipo) ?? COR_OUTROS;
-}
 
 /*
  * Cada item fica com o pincel da posição dele. Quem passa do número de pincéis

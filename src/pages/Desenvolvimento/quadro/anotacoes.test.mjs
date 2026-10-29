@@ -5,22 +5,12 @@ import test from 'node:test';
 import { COR_OUTROS } from '../card/cores.js';
 import { LETRAS_DO_LOCAL, anotacoesDoQuadro } from './anotacoes.js';
 
-const TIPOS = ['Bug / Erro', 'Melhoria / Nova Função', 'Implantação'];
-
 const dev = (id, total) => ({ id, nome: `${id[0].toUpperCase()}${id.slice(1)} Silva`, total });
-const local = (nome, bug, melhoria) => ({
-  local: nome,
-  total: bug + melhoria,
-  tipos: [
-    { tipo: 'Bug / Erro', total: bug },
-    { tipo: 'Melhoria / Nova Função', total: melhoria },
-    { tipo: 'Implantação', total: 0 },
-  ],
-});
+const local = (nome, total) => ({ local: nome, total });
 
 const resumo = (visao = {}, totalDesenvolvedores = 3) => ({
   totalDesenvolvedores,
-  visao: { total: 3715, porDesenvolvedor: [dev('ana', 10), dev('beto', 30)], porCategoria: [], porLocal: [local('Araras', 4, 2)], tiposDosLocais: TIPOS, ficticio: true, ...visao },
+  visao: { total: 3715, porDesenvolvedor: [dev('ana', 10), dev('beto', 30)], porCategoria: [], porLocal: [local('Araras', 6)], ficticio: true, ...visao },
 });
 
 test('com chamados, o quadro resume o painel: total no post-it, barras por dev e a linha por local', () => {
@@ -58,7 +48,7 @@ test('no papel cabem seis barras: da sétima em diante, viram "outros"; quem nã
 });
 
 test('na folha cabem cinco pontos, na ordem do painel', () => {
-  const porLocal = ['A', 'B', 'C', 'D', 'E', 'F'].map((nome, i) => local(nome, 10 - i, 0));
+  const porLocal = ['A', 'B', 'C', 'D', 'E', 'F'].map((nome, i) => local(nome, 10 - i));
   const { pontos } = anotacoesDoQuadro(resumo({ porLocal })).lista;
   assert.deepEqual(
     pontos.map(({ rotulo, valor }) => [rotulo, valor]),
@@ -68,11 +58,11 @@ test('na folha cabem cinco pontos, na ordem do painel', () => {
 
 test('na folha, o nome comprido de um local termina em reticências', () => {
   const nome = '2º Tabelião de Notas de Piracicaba Bortoletto';
-  const [ponto] = anotacoesDoQuadro(resumo({ porLocal: [local(nome, 1, 1)] })).lista.pontos;
+  const [ponto] = anotacoesDoQuadro(resumo({ porLocal: [local(nome, 2)] })).lista.pontos;
   assert.equal(ponto.rotulo.length, LETRAS_DO_LOCAL);
   assert.ok(ponto.rotulo.endsWith('…'));
   assert.ok(nome.startsWith(ponto.rotulo.slice(0, -1)));
-  assert.equal(anotacoesDoQuadro(resumo({ porLocal: [local('Itapevi CM', 1, 0)] })).lista.pontos[0].rotulo, 'Itapevi CM');
+  assert.equal(anotacoesDoQuadro(resumo({ porLocal: [local('Itapevi CM', 1)] })).lista.pontos[0].rotulo, 'Itapevi CM');
 });
 
 test('sem chamados, sobra o post-it com o tamanho da equipe; sem equipe, nada', () => {
