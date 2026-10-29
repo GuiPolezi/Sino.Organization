@@ -66,12 +66,16 @@
   fill: var(--color-olive);
   stroke: var(--color-cream);
   stroke-width: 2;
+}
+
+/* O aumento do hover no <g> em volta do círculo, que o GSAP da entrada não toca. */
+.marca {
   transform-box: fill-box;
   transform-origin: center;
   transition: scale 0.2s ease;
 }
 
-.ponto[data-ativa] circle {
+.ponto[data-ativa] .marca {
   scale: 1.5;
 }
 
@@ -92,16 +96,22 @@
   fill: var(--color-ink);
 }
 
+/*
+ * Sem transição de opacity: a entrada (GSAP) anima a opacity dos nomes, e as
+ * duas brigariam. O recuo do destaque usa fill-opacity.
+ */
 .nome {
   fill: var(--color-ink);
   transition:
     transform 0.6s var(--facil),
-    opacity 0.25s ease;
+    fill-opacity 0.25s ease,
+    stroke-opacity 0.25s ease;
 }
 
-/* Com o mouse sobre um local, os outros nomes recuam. */
+/* Com o mouse sobre um local, os outros nomes recuam (o contorno junto, para não cobrir o vizinho). */
 .svg[data-destaque] .nome:not([data-ativa]) {
-  opacity: 0.4;
+  fill-opacity: 0.4;
+  stroke-opacity: 0.4;
 }
 
 /*
@@ -145,7 +155,7 @@
   .area,
   .linha,
   .ponto,
-  .ponto circle,
+  .marca,
   .valor,
   .nome {
     transition: none;

@@ -100,7 +100,7 @@ export default function GraficoLocais({ locais }) {
             height={geo.altura}
             viewBox={`0 0 ${largura} ${geo.altura}`}
             style={{ '--fonte': `${fonte}px` }}
-            data-destaque={ativo ? true : undefined}
+            data-destaque={pontoAtivo ? true : undefined}
             focusable="false"
           >
             <defs>
@@ -141,7 +141,10 @@ export default function GraficoLocais({ locais }) {
                 style={{ transform: `translate(${x}px, ${y}px)` }}
                 data-ativa={ativo?.local === local || undefined}
               >
-                <circle r={RAIO} />
+                {/* O aumento do hover fica no <g>: o GSAP da entrada grava "scale: none" no próprio círculo. */}
+                <g className={styles.marca}>
+                  <circle r={RAIO} />
+                </g>
                 <text className={styles.valor} x={xValor - x} y={yValor - y} textAnchor="middle">
                   {textoDoValor(total)}
                 </text>
