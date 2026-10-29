@@ -1,163 +1,113 @@
 /*
- * "Carga por Local" do painel do quadro: barras deitadas, uma por local,
- * divididas por subcategoria. O nome do local (o campo Local do ticket, como
- * "2º Tabelião de Notas de Piracicaba") fica numa linha acima da barra, com a
- * largura toda; o que não couber termina em reticências e aparece inteiro na dica.
+ * "Carga por Local" do painel do quadro: gráfico de linha, um ponto por local,
+ * com o número de tickets escrito e o nome embaixo. Posições e tamanhos em px
+ * vêm de geometriaLinha.js, medidos na largura do painel; aqui ficam cores,
+ * traços e transições. A fonte dos textos vem em --fonte (11 a 13 px).
  */
 .grafico {
-  --altura-linha: 2.125rem;
-  /* Espaço à direita da maior barra, para o valor dela. */
-  --espaco-valor: 2.75rem;
   --eixo: var(--color-ink);
   --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   position: relative;
+  min-width: 0;
 }
 
-.area {
+.areaDoGrafico {
   position: relative;
-  padding: 6px 0 4px;
+  min-width: 0;
 }
 
-/* Eixos: o vertical na frente das barras, o horizontal por baixo de tudo. */
+.svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+  font-size: var(--fonte);
+  font-weight: var(--weight-bold);
+  /* Só as faixas (.alvo) recebem o ponteiro. */
+  pointer-events: none;
+}
+
+.alvo {
+  fill: transparent;
+  pointer-events: all;
+}
+
 .eixoY,
 .eixoX {
-  position: absolute;
-  left: 0;
-  background: var(--eixo);
+  stroke: var(--eixo);
+  stroke-width: 1.5;
 }
 
-.eixoY {
-  top: 0;
-  bottom: 0;
-  width: 1.5px;
+.guia {
+  stroke: color-mix(in srgb, var(--color-olive) 55%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
 }
 
-.eixoX {
-  right: 0;
-  bottom: 0;
-  height: 1.5px;
+/* O `d` em CSS deixa a linha deslizar ao trocar de período (onde o navegador anima `d`; nos outros, ela troca direto). */
+.area {
+  transition: d 0.6s var(--facil);
+}
+
+.linha {
+  fill: none;
+  stroke: var(--color-olive);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: d 0.6s var(--facil);
+}
+
+.ponto {
+  transition: transform 0.6s var(--facil);
+}
+
+.ponto circle {
+  fill: var(--color-olive);
+  stroke: var(--color-cream);
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: scale 0.2s ease;
+}
+
+.ponto[data-ativa] circle {
+  scale: 1.5;
 }
 
 /*
- * Cada linha fica na posição dela (--posicao) por transform: quando a ordem
- * muda de um período para outro, a linha desliza até o lugar novo.
+ * Números e nomes com um contorno da cor do card por baixo (paint-order): a
+ * linha, quando passa por trás de um número, não o risca.
  */
-.linhas {
-  position: relative;
-  height: calc(var(--linhas) * var(--altura-linha));
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.linhas > li {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-content: center;
-  gap: 3px;
-  height: var(--altura-linha);
-  transform: translateY(calc(var(--posicao) * var(--altura-linha)));
-  transition:
-    transform 0.6s var(--facil),
-    opacity 0.25s ease;
-  animation: chegar 0.45s var(--facil) backwards;
-}
-
-/* Com o mouse sobre um local, os outros recuam. */
-.linhas[data-destaque] > li:not([data-ativa]) {
-  opacity: 0.4;
-}
-
-/* Uma linha; um nome maior que isso termina em reticências. */
-.local {
-  padding-left: 6px;
-  overflow: hidden;
-  font-size: 0.625rem;
-  font-weight: var(--weight-bold);
-  line-height: 1.1;
-  color: var(--color-ink);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.trilho {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding-left: 1.5px;
-}
-
-/* A barra cresce até o valor; entre os tipos, um vão de 2px com o fundo do card. */
-.barra {
-  display: flex;
-  gap: 2px;
-  width: calc((100% - var(--espaco-valor)) * var(--fracao));
-  min-width: 3px;
-  height: 0.75rem;
-  border-radius: 0 4px 4px 0;
-  overflow: hidden;
-  transition: width 0.6s var(--facil);
-}
-
-.barra i {
-  flex: 0 1 0;
-  min-width: 0;
-  transition: flex-grow 0.6s var(--facil);
-}
-
-/* Tipo sem ticket: fica, com largura zero, para crescer suave se aparecer; a margem desfaz o vão dele. */
-.barra i[data-vazio] {
-  margin-left: -2px;
-}
-
-.valor {
-  flex: none;
-  font-size: 0.625rem;
-  font-weight: var(--weight-bold);
-  line-height: 1;
-  color: var(--color-ink);
+.valor,
+.nome {
+  paint-order: stroke;
+  stroke: var(--color-cream);
+  stroke-width: 3px;
+  stroke-linejoin: round;
   font-variant-numeric: tabular-nums;
 }
 
-.legenda {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
-  gap: 10px 6px;
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
+.valor {
+  fill: var(--color-ink);
 }
 
-.legenda li {
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 6px;
-  font-size: 0.625rem;
-  font-weight: var(--weight-bold);
-  line-height: 1.15;
-  color: var(--neutro-pequeno);
-  text-align: center;
+.nome {
+  fill: var(--color-ink);
+  transition:
+    transform 0.6s var(--facil),
+    opacity 0.25s ease;
 }
 
-.legenda i {
-  width: 1.375rem;
-  height: 0.625rem;
-  border-radius: 2px;
+/* Com o mouse sobre um local, os outros nomes recuam. */
+.svg[data-destaque] .nome:not([data-ativa]) {
+  opacity: 0.4;
 }
 
 /*
- * Na dica, o nome do local e as subcategorias são compridos ("IPREF - Instituto
- * de Previdência…"): quebram em mais linhas, em vez de passar da caixa. O
- * número de cada subcategoria fica numa linha só, alinhado à direita. O .grafico
- * na frente vence o Dica.module.css, seja qual for a ordem dos arquivos.
+ * Na dica, o nome do local é comprido ("IPREF - Instituto de Previdência…"):
+ * quebra em mais linhas, em vez de passar da caixa. O .grafico na frente vence
+ * o Dica.module.css, seja qual for a ordem dos arquivos.
  */
 .grafico .dica {
   /* Largura do conteúdo até o max-width, mesmo perto da borda do gráfico. */
@@ -172,22 +122,9 @@
   }
 }
 
-.grafico .dica strong,
-.grafico .dica li > span {
+.grafico .dica strong {
   min-width: 0;
   overflow-wrap: anywhere;
-}
-
-.grafico .dica li {
-  align-items: flex-start;
-}
-
-.grafico .dica li > i {
-  margin-top: 4px;
-}
-
-.grafico .dica li > b {
-  white-space: nowrap;
 }
 
 .vazio {
@@ -197,39 +134,20 @@
   text-align: center;
 }
 
-@keyframes chegar {
-  from {
-    opacity: 0;
-  }
-}
-
 /* Até aparecer na tela, o gráfico espera vazio, para ser montado à vista. */
 @media (prefers-reduced-motion: no-preference) {
-  .grafico[data-esperando] .barra {
-    transform: scaleX(0);
-  }
-
-  .grafico[data-esperando] :is(.local, .valor, .legenda li) {
+  .grafico[data-esperando] :is(.linha, .area, .ponto, .nome, .eixoY, .eixoX) {
     opacity: 0;
-  }
-
-  .grafico[data-esperando] .eixoY {
-    transform: scaleY(0);
-  }
-
-  .grafico[data-esperando] .eixoX {
-    transform: scaleX(0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .linhas > li {
-    animation: none;
-  }
-
-  .linhas > li,
-  .barra,
-  .barra i {
+  .area,
+  .linha,
+  .ponto,
+  .ponto circle,
+  .valor,
+  .nome {
     transition: none;
   }
 }

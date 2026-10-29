@@ -164,7 +164,7 @@ function Painel({ fechar }) {
           </section>
           <section>
             <h3 className={styles.subtitulo}>Carga por Local</h3>
-            <GraficoLocais locais={visao.porLocal} tipos={visao.tiposDosLocais} />
+            <GraficoLocais locais={visao.porLocal} />
           </section>
         </>
       )}
