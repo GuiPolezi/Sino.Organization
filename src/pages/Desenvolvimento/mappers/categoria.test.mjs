@@ -59,12 +59,13 @@ test('"a cada X, pelo menos Y": a fração com X até 10 mais perto da parte, se
 });
 
 test('o tempo médio aparece em horas abaixo de 1 dia e em dias a partir dele', () => {
-  assert.deepEqual(tempoParaMostrar(0.4), { numero: null, unidade: 'Menos de 1 h' });
-  assert.deepEqual(tempoParaMostrar(1), { numero: 1, unidade: 'h' });
-  assert.deepEqual(tempoParaMostrar(5.4), { numero: 5, unidade: 'h' });
-  assert.deepEqual(tempoParaMostrar(23.6), { numero: 1, unidade: 'Dia' });
-  assert.deepEqual(tempoParaMostrar(36), { numero: 2, unidade: 'Dias' });
-  assert.deepEqual(tempoParaMostrar(24 * 12.4), { numero: 12, unidade: 'Dias' });
+  // Menos de 1 hora: sem número (o ranking escreve "<1"), com a unidade embaixo.
+  assert.deepEqual(tempoParaMostrar(0.4), { numero: null, unidade: 'hora' });
+  assert.deepEqual(tempoParaMostrar(1), { numero: 1, unidade: 'hora' });
+  assert.deepEqual(tempoParaMostrar(5.4), { numero: 5, unidade: 'horas' });
+  assert.deepEqual(tempoParaMostrar(23.6), { numero: 1, unidade: 'dia' });
+  assert.deepEqual(tempoParaMostrar(36), { numero: 2, unidade: 'dias' });
+  assert.deepEqual(tempoParaMostrar(24 * 12.4), { numero: 12, unidade: 'dias' });
 });
 
 test('rankings: atribuídos e fechados no período, e o primeiro lugar de cada um', () => {

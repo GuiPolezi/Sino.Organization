@@ -281,14 +281,42 @@
   filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.25));
 }
 
+/*
+ * O valor embaixo da coluna: o número e, no tempo médio, a unidade numa linha
+ * menor embaixo ("<1" / "hora", "12" / "dias"). A altura das duas linhas fica
+ * reservada em todos os slides, para o gráfico não pular ao trocar de slide.
+ */
 .valor {
+  --tamanho-numero: clamp(0.8125rem, 3.8cqi, 0.9375rem);
+  --tamanho-unidade: 0.625rem;
+
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 2px;
+  min-height: calc(var(--tamanho-numero) + 2px + var(--tamanho-unidade) * 1.1);
   margin-top: 10px;
-  font-size: clamp(0.8125rem, 3.8cqi, 0.9375rem);
-  font-weight: var(--weight-black);
   line-height: 1;
-  color: var(--color-white);
   white-space: nowrap;
+}
+
+.numero {
+  font-size: var(--tamanho-numero);
+  font-weight: var(--weight-black);
+  color: var(--color-white);
   font-variant-numeric: tabular-nums;
+}
+
+.unidade {
+  font-size: var(--tamanho-unidade);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--creme) 80%, transparent);
+}
+
+/* A unidade inteira ("horas"); a inicial ("h") só no celular com muita gente (abaixo). */
+.curta {
+  display: none;
 }
 
 /* ── Paginação: setas e um ponto por slide ── */
@@ -394,6 +422,23 @@
 
   .retrato {
     border-radius: 12px;
+  }
+
+  /*
+   * Com oito pessoas ou mais, cada coluna tem pouco mais de 20px: o número
+   * encolhe e a unidade fica só com a inicial ("<1" / "h", "12" / "d"), para
+   * os valores vizinhos não se encostarem.
+   */
+  .slide[data-muitas] .valor {
+    --tamanho-numero: 0.6875rem;
+  }
+
+  .slide[data-muitas] .longa {
+    display: none;
+  }
+
+  .slide[data-muitas] .curta {
+    display: inline;
   }
 }
 

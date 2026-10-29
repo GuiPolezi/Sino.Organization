@@ -28,18 +28,35 @@ const ESTRELA = `M${Array.from({ length: 10 }, (_, i) => {
 
 const primeiroNome = (nome) => nome.split(' ')[0];
 
-// No tempo, o valor vem em horas: aparece em horas abaixo de 1 dia e em dias a partir dele.
+/*
+ * No tempo, o valor vem em horas: aparece em horas abaixo de 1 dia e em dias a
+ * partir dele. O número fica em cima e a unidade, menor, embaixo: assim o valor
+ * ocupa a largura do número e cabe na coluna mesmo com muita gente no ranking.
+ */
 function Valor({ ranking, valor }) {
-  if (valor === null) return '—';
-  if (ranking.id !== 'tempo') return <Contagem valor={valor} />;
+  if (valor === null) return <span className={styles.numero}>—</span>;
+  if (ranking.id !== 'tempo') {
+    return (
+      <span className={styles.numero}>
+        <Contagem valor={valor} />
+      </span>
+    );
+  }
   const { numero, unidade } = tempoParaMostrar(valor);
-  if (numero === null) return unidade;
   return (
     <>
-      <Contagem valor={numero} /> {unidade}
+      <span className={styles.numero}>{numero === null ? '<1' : <Contagem valor={numero} />}</span>
+      {/* Com muita gente no celular, só a inicial da unidade ("h", "d") cabe na coluna (CSS). */}
+      <small className={styles.unidade}>
+        <span className={styles.longa}>{unidade}</span>
+        <span className={styles.curta}>{unidade[0]}</span>
+      </small>
     </>
   );
 }
+
+// A partir daqui, no celular, os valores do ranking encolhem para não se encostarem.
+const MUITAS_COLUNAS = 8;
 
 /*
  * Uma pessoa no gráfico: a barra cresce do eixo e o rosto vai em cima dela.
@@ -113,6 +130,7 @@ function Slide({ ranking, membros, saindo }) {
     <ul
       className={styles.slide}
       style={{ '--colunas': ranking.itens.length }}
+      data-muitas={ranking.itens.length >= MUITAS_COLUNAS || undefined}
       data-saindo={saindo || undefined}
       aria-hidden={saindo || undefined}
     >
@@ -137,8 +155,7 @@ function Leitura({ ranking }) {
     if (valor === null) return 'sem tickets fechados';
     if (ranking.id !== 'tempo') return `${valor} tickets`;
     const { numero, unidade } = tempoParaMostrar(valor);
-    if (numero === null) return 'menos de 1 hora';
-    return `${numero} ${unidade === 'h' ? (numero === 1 ? 'hora' : 'horas') : unidade.toLowerCase()}`;
+    return numero === null ? 'menos de 1 hora' : `${numero} ${unidade}`;
   };
   return (
     <ol className="sr-only">

@@ -66,16 +66,18 @@ export function aCadaQuantas(daCategoria, total) {
 
 /**
  * O tempo médio do ranking, para mostrar: em horas abaixo de 1 dia, em dias a
- * partir dele. `numero` null quando é menos de 1 hora.
+ * partir dele. A unidade vai por extenso, numa linha menor embaixo do número.
+ * `numero` null quando é menos de 1 hora (o ranking escreve "<1").
  *
  * @param {number} horas
- * @returns {{ numero: number | null, unidade: string }}
+ * @returns {{ numero: number | null, unidade: 'hora' | 'horas' | 'dia' | 'dias' }}
  */
 export function tempoParaMostrar(horas) {
-  if (horas < 1) return { numero: null, unidade: 'Menos de 1 h' };
-  if (Math.round(horas) < 24) return { numero: Math.round(horas), unidade: 'h' };
+  if (horas < 1) return { numero: null, unidade: 'hora' };
+  const emHoras = Math.round(horas);
+  if (emHoras < 24) return { numero: emHoras, unidade: emHoras === 1 ? 'hora' : 'horas' };
   const dias = Math.round(horas / 24);
-  return { numero: dias, unidade: dias === 1 ? 'Dia' : 'Dias' };
+  return { numero: dias, unidade: dias === 1 ? 'dia' : 'dias' };
 }
 
 // Quantas horas o chamado fechado levou: pela hora de abertura e de finalização; sem elas, pelas datas.
