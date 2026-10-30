@@ -130,6 +130,19 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
       </>
     );
   }
+  // Comprido sem franja: o mesmo do comprido, com o topo bem inclinado para trás,
+  // para a linha do cabelo ficar acima da testa (sem franja nenhuma).
+  if (estilo === 'compridoSemFranja') {
+    return (
+      <>
+        <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.72} scale={1.03} />
+        <mesh geometry={G.rabo} material={material} position={[0, -0.32, -0.3]} scale={[1.25, 1.5, 0.5]} />
+        {LADOS.map((lado) => (
+          <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
+        ))}
+      </>
+    );
+  }
   // Até o ombro: cabelo longo de homem, liso e solto. A base tem a franja alta
   // (acima dos óculos) e desce até a nuca; atrás, o cabelo cobre o pescoço.
   if (estilo === 'ombro') {

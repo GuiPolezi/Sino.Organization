@@ -10,7 +10,6 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 
 const PRETO = '#17130F';
 const CASTANHO = '#5B3A24';
-const RUIVO = '#B4513A';
 const LOIRO = '#C9A26B';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
@@ -76,14 +75,14 @@ export const APARENCIAS_COMPILACAO = {
     acessorio: 'oculos',
     altura: 0.97,
   },
+  // Cabelo preto, longo e sem franja; olhos pretos (sem cor de olhos, ficam os escuros).
   laura: {
     pele: PELES[0],
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[3],
-    cabelo: { estilo: 'coque', cor: RUIVO },
+    cabelo: { estilo: 'compridoSemFranja', cor: PRETO },
     acessorio: 'nenhum',
-    olhos: '#3E8E5A',
     altura: 0.94,
   },
   damaris: {
