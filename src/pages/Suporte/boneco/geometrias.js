@@ -119,6 +119,11 @@ export const G = {
   cabeloRaspado: new THREE.SphereGeometry(0.348, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.46),
   cabeloLongo: new THREE.SphereGeometry(0.365, 32, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
   coque: new THREE.SphereGeometry(0.15, 18, 14),
+  // Coque samurai: a casca do cabelo puxado (até a altura das orelhas; girada
+  // para trás, cobre a nuca e deixa a testa livre) e o pé do coque, um anel de
+  // cabelo apertado logo abaixo da bola.
+  cabeloPuxado: new THREE.SphereGeometry(0.362, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.53),
+  peDoCoque: new THREE.CylinderGeometry(0.075, 0.1, 0.09, 18),
   rabo: new THREE.CapsuleGeometry(0.22, 0.32, 8, 16),
   // Mecha que cai do lado do rosto até o ombro, no cabelo comprido.
   mechaLateral: new THREE.CapsuleGeometry(0.08, 0.3, 6, 12),
@@ -130,6 +135,8 @@ export const G = {
   cavanhaque: new THREE.SphereGeometry(0.075, 14, 10),
   barbaFechada: criarBarba({ raio: 0.35, volume: 0.02 }),
   barbaCurta: criarBarba({ raio: 0.346, volume: 0, topoFrente: 0.62, estreitar: 8 }),
+  // Barba grande: o contorno da fechada, mais afastada do rosto e bem mais cheia embaixo.
+  barbaGrande: criarBarba({ raio: 0.356, volume: 0.06 }),
   queixo: new THREE.SphereGeometry(0.11, 18, 14),
   pupila: new THREE.SphereGeometry(0.022, 10, 8),
   lente: new THREE.TorusGeometry(0.085, 0.018, 8, 22),

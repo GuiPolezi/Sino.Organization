@@ -94,6 +94,17 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
       </>
     );
   }
+  // Samurai: cabelo grande puxado para trás, sem franja, cobrindo até a nuca, e
+  // preso num coque alto no topo de trás da cabeça.
+  if (estilo === 'samurai') {
+    return (
+      <>
+        <mesh geometry={G.cabeloPuxado} material={material} rotation-x={-0.62} />
+        <mesh geometry={G.peDoCoque} material={material} position={[0, 0.335, -0.13]} rotation-x={-0.5} />
+        <mesh geometry={G.coque} material={material} position={[0, 0.42, -0.17]} scale={[1.05, 0.95, 1.05]} />
+      </>
+    );
+  }
   if (estilo === 'longo') {
     return (
       <>
@@ -179,9 +190,10 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
 
 // Bigode em duas metades caídas; o cavanhaque soma a ele o tufo do queixo. A
 // barba fechada soma ao bigode as costeletas, o maxilar e o volume do queixo; a
-// curta tem o mesmo contorno, rente ao rosto e sem o volume.
+// curta tem o mesmo contorno, rente ao rosto e sem o volume. A grande é a fechada
+// mais cheia, com a ponta descendo do queixo até o peito.
 function Barba({ estilo, material }) {
-  if (!['bigode', 'cavanhaque', 'fechada', 'curta'].includes(estilo)) return null;
+  if (!['bigode', 'cavanhaque', 'fechada', 'curta', 'grande'].includes(estilo)) return null;
 
   return (
     <>
@@ -199,6 +211,13 @@ function Barba({ estilo, material }) {
         <>
           <mesh geometry={G.barbaFechada} material={material} />
           <mesh geometry={G.queixo} material={material} position={[0, -0.21, 0.24]} scale={[1.45, 0.9, 0.7]} />
+        </>
+      )}
+      {estilo === 'grande' && (
+        <>
+          <mesh geometry={G.barbaGrande} material={material} />
+          <mesh geometry={G.queixo} material={material} position={[0, -0.25, 0.25]} scale={[1.8, 1.3, 0.95]} />
+          <mesh geometry={G.queixo} material={material} position={[0, -0.33, 0.255]} scale={[1.45, 1.25, 0.88]} />
         </>
       )}
       {estilo === 'cavanhaque' && (

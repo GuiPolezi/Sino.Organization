@@ -10,7 +10,6 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 
 const PRETO = '#17130F';
 const CASTANHO = '#5B3A24';
-const CASTANHO_CLARO = '#8A5A33';
 const RUIVO = '#B4513A';
 const LOIRO = '#C9A26B';
 
@@ -56,13 +55,15 @@ export const APARENCIAS_COMPILACAO = {
     barba: 'cavanhaque',
     altura: 1.03,
   },
+  // Cabelo grande preso num coque samurai e barba grande, os dois pretos.
   glopes: {
     pele: PELES[0],
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[0],
-    cabelo: { estilo: 'curto', cor: CASTANHO_CLARO },
+    cabelo: { estilo: 'samurai', cor: PRETO },
     acessorio: 'gravata',
+    barba: 'grande',
     altura: 1.01,
   },
   nathalia: {

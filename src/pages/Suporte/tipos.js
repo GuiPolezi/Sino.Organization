@@ -17,7 +17,7 @@
  * @property {string} [ultimaAtividade]  data ISO
  * @property {string[]} [especialidades]
  *
- * @typedef {'curto' | 'degrade' | 'raspado' | 'volumoso' | 'topete' | 'coque' | 'moicano' | 'longo' | 'comprido' | 'ombro' | 'cacheado' | 'cachinhos' | 'careca'} EstiloCabelo
+ * @typedef {'curto' | 'degrade' | 'raspado' | 'volumoso' | 'topete' | 'coque' | 'moicano' | 'longo' | 'comprido' | 'ombro' | 'cacheado' | 'cachinhos' | 'careca' | 'samurai'} EstiloCabelo
  *
  * @typedef {object} AparenciaTecnico
  * @property {string} pele    hex
@@ -25,7 +25,7 @@
  * @property {string} calca   hex
  * @property {{ estilo: EstiloCabelo, cor: string, mechas?: string }} cabelo  mechas: cor das luzes
  * @property {'nenhum' | 'oculos' | 'headset' | 'bone' | 'maleta' | 'gravata'} acessorio
- * @property {'nenhuma' | 'bigode' | 'cavanhaque' | 'fechada' | 'curta'} [barba]  usa a cor do cabelo
+ * @property {'nenhuma' | 'bigode' | 'cavanhaque' | 'fechada' | 'curta' | 'grande'} [barba]  usa a cor do cabelo
  * @property {string} [olhos]  hex; escuros quando ausente
  * @property {number} [altura] escala de 0.9 a 1.1
  * @property {string} [bone]   hex; o boné tem a cor da camisa quando ausente
