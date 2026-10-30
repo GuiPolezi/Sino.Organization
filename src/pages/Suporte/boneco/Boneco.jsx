@@ -105,6 +105,16 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
   if (estilo === 'degradeLateral') {
     return <mesh geometry={G.degradeLateral} material={materialDegrade} rotation-x={-0.35} />;
   }
+  // Degradê com o alto médio: o mesmo degradê nas laterais e na nuca, com mais
+  // cabelo em cima (um volume achatado no alto da cabeça).
+  if (estilo === 'degradeMedio') {
+    return (
+      <>
+        <mesh geometry={G.degrade} material={materialDegrade} rotation-x={-0.35} />
+        <mesh geometry={G.topete} material={material} position={[0, 0.25, 0.03]} scale={[1.6, 0.7, 1.8]} />
+      </>
+    );
+  }
   if (estilo === 'raspado') return <mesh geometry={G.cabeloRaspado} material={material} rotation-x={-0.3} />;
   if (estilo === 'coque') {
     return (
@@ -343,7 +353,7 @@ export function useMateriais(aparencia) {
           : null,
       // O degradê tira a transparência de cada ponto da cor dos vértices.
       degrade:
-        ['degrade', 'degradeLateral'].includes(aparencia.cabelo.estilo)
+        ['degrade', 'degradeLateral', 'degradeMedio'].includes(aparencia.cabelo.estilo)
           ? Object.assign(clay(aparencia.cabelo.cor), { transparent: true, vertexColors: true })
           : null,
     }),

@@ -11,6 +11,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 const PRETO = '#17130F';
 const CASTANHO_ESCURO = '#2B1E16';
 const LOIRO = '#C9A26B';
+const LOIRO_ESCURO = '#A8834F';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
 const PESSOAS = [
@@ -36,14 +37,14 @@ export const APARENCIAS_COMPILACAO = {
     barba: 'curta',
     altura: 1.06,
   },
+  // Pele clara, óculos, sem barba, cabelo médio loiro escuro com degradê e o uniforme da Sino.
   ramon: {
-    pele: PELES[2],
-    camisa: '#6E7480',
-    moletom: true,
+    pele: PELES[0],
+    camisa: UNIFORME,
+    logo: true,
     calca: CALCAS[2],
-    cabelo: { estilo: 'cachinhos', cor: PRETO },
+    cabelo: { estilo: 'degradeMedio', cor: LOIRO_ESCURO },
     acessorio: 'oculos',
-    barba: 'curta',
   },
   // Cabelo curto e loiro, óculos (sem fone) e só bigode (loiro, a cor do cabelo), sem barba.
   gdressano: {
