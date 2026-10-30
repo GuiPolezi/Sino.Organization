@@ -45,14 +45,14 @@ export const APARENCIAS_COMPILACAO = {
     acessorio: 'oculos',
     barba: 'curta',
   },
-  // Cabelo curto e loiro, sem fone, e só bigode (loiro, a cor do cabelo), sem barba.
+  // Cabelo curto e loiro, óculos (sem fone) e só bigode (loiro, a cor do cabelo), sem barba.
   gdressano: {
     pele: PELES[1],
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[4],
     cabelo: { estilo: 'curto', cor: LOIRO },
-    acessorio: 'nenhum',
+    acessorio: 'oculos',
     barba: 'bigode',
     altura: 1.03,
   },
