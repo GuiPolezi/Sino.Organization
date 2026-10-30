@@ -10,7 +10,6 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 
 const PRETO = '#17130F';
 const CASTANHO = '#5B3A24';
-const LOIRO = '#C9A26B';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
 const PESSOAS = [
@@ -85,13 +84,16 @@ export const APARENCIAS_COMPILACAO = {
     acessorio: 'nenhum',
     altura: 0.94,
   },
+  // Pele morena mais clara, cabelo cacheado longo e preto, óculos e roupa social
+  // (blazer azul-ardósia sobre a camisa branca, sem o uniforme; o tom é claro o
+  // bastante para as iniciais escuras do avatar do card continuarem legíveis).
   damaris: {
-    pele: PELES[4],
-    camisa: UNIFORME,
-    logo: true,
-    calca: CALCAS[1],
-    cabelo: { estilo: 'cacheado', cor: PRETO, mechas: LOIRO },
-    acessorio: 'nenhum',
+    pele: PELES[2],
+    camisa: '#6A7FA8',
+    social: true,
+    calca: CALCAS[4],
+    cabelo: { estilo: 'cacheadoLongo', cor: PRETO },
+    acessorio: 'oculos',
     altura: 0.96,
   },
 };

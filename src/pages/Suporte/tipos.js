@@ -17,7 +17,7 @@
  * @property {string} [ultimaAtividade]  data ISO
  * @property {string[]} [especialidades]
  *
- * @typedef {'curto' | 'degrade' | 'raspado' | 'volumoso' | 'topete' | 'coque' | 'moicano' | 'longo' | 'comprido' | 'ombro' | 'cacheado' | 'cachinhos' | 'careca' | 'samurai' | 'degradeLateral' | 'compridoSemFranja'} EstiloCabelo
+ * @typedef {'curto' | 'degrade' | 'raspado' | 'volumoso' | 'topete' | 'coque' | 'moicano' | 'longo' | 'comprido' | 'ombro' | 'cacheado' | 'cachinhos' | 'careca' | 'samurai' | 'degradeLateral' | 'compridoSemFranja' | 'cacheadoLongo'} EstiloCabelo
  *
  * @typedef {object} AparenciaTecnico
  * @property {string} pele    hex
@@ -31,6 +31,7 @@
  * @property {string} [bone]   hex; o boné tem a cor da camisa quando ausente
  * @property {boolean} [logo]  logo da empresa no peito esquerdo da camisa
  * @property {boolean} [moletom]  a camisa vira um moletom com capuz, da mesma cor
+ * @property {boolean} [social]  roupa social: a camisa vira o blazer, com o V da camisa branca e botões
  */
 
 export {};

@@ -4,7 +4,7 @@ import { MathUtils, Vector3 } from 'three';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe, temBochechas } from './aparencia.js';
-import { BOCHECHA, BRANCO, CORDAO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
+import { BOCHECHA, BOTAO, BRANCO, CAMISA_SOCIAL, CORDAO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
 import { EXTRA, useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
 
@@ -69,6 +69,23 @@ const CACHOS = espalharCachos([
   [115, 120, 240, 6],
   [138, 150, 210, 4],
 ], 0.33);
+// Cacheado longo: os cachos do cacheado e mais fileiras descendo pelas costas e
+// pelos lados até os ombros (sem passar para a frente do rosto). Cada fileira:
+// [altura, raio, primeiro e último giro a partir da frente, quantidade].
+const CACHOS_LONGOS = [
+  ...CACHOS,
+  ...[
+    [-0.12, 0.33, 100, 260, 8],
+    [-0.24, 0.31, 105, 255, 7],
+    [-0.36, 0.29, 112, 248, 6],
+    [-0.47, 0.27, 125, 235, 5],
+  ].flatMap(([y, raio, inicio, fim, quantidade]) =>
+    Array.from({ length: quantidade }, (_, i) => {
+      const giro = (inicio + ((fim - inicio) * i) / (quantidade - 1)) * GRAUS;
+      return [raio * Math.sin(giro), y, raio * Math.cos(giro)];
+    }),
+  ),
+];
 // Cachinhos: cabelo curto, cachos pequenos e juntos só no alto da cabeça.
 const CACHINHOS = espalharCachos([
   [0, 0, 0, 1],
@@ -169,8 +186,8 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
       </>
     );
   }
-  if (estilo === 'cacheado') {
-    return CACHOS.map((posicao, indice) => (
+  if (estilo === 'cacheado' || estilo === 'cacheadoLongo') {
+    return (estilo === 'cacheado' ? CACHOS : CACHOS_LONGOS).map((posicao, indice) => (
       <mesh
         key={indice}
         geometry={G.cacho}
@@ -239,6 +256,19 @@ function Barba({ estilo, material }) {
       {estilo === 'cavanhaque' && (
         <mesh geometry={G.cavanhaque} material={material} position={[0, -0.215, 0.245]} scale={[1, 0.8, 0.6]} />
       )}
+    </>
+  );
+}
+
+// Roupa social: a camisa (aparencia.camisa) vira o blazer; por cima, o V da camisa
+// branca no peito e dois botões logo abaixo dele.
+function RoupaSocial() {
+  return (
+    <>
+      <mesh geometry={G.decote} material={CAMISA_SOCIAL} position-y={0.86} />
+      {[0.89, 0.79].map((y) => (
+        <mesh key={y} geometry={G.botao} material={BOTAO} position={[0, y, 0.343]} />
+      ))}
     </>
   );
 }
@@ -355,6 +385,7 @@ export function Figura({ aparencia, materiais, partes = {}, aceno = false, naMao
       {/* No peito esquerdo de quem veste: o boneco olha para +z. */}
       {aparencia.logo && <mesh geometry={G.logo} material={LOGO} position-y={0.99} rotation-y={0.47} />}
       {aparencia.moletom && <Moletom material={materiais.camisa} />}
+      {aparencia.social && <RoupaSocial />}
       {aparencia.acessorio === 'gravata' && (
         <mesh geometry={G.gravata} material={ESCURO} position={[0, 0.93, 0.33]} rotation-x={-0.12} />
       )}

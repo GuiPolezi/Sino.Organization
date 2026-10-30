@@ -51,6 +51,44 @@ function criarBarba({ raio: raioBase, volume, topoFrente = 0.58, estreitar = 4 }
   return geometria;
 }
 
+// Metade do trecho reto da cápsula do tronco (G.corpo: comprimento 0,36).
+const MEIO_RETO_CORPO = 0.18;
+
+// Decote em V da roupa social: a camisa branca entre as lapelas do blazer. Os
+// vértices ficam na superfície do tronco (o trecho reto e, acima dele, a cúpula
+// da cápsula), um pouco por fora; larga em cima, rente ao queixo, e fecha em
+// ponta embaixo. `topo` e `base` são alturas a partir do centro do tronco, e
+// `abertura`, o meio ângulo do V no topo.
+function criarDecote({ topo, base, abertura }) {
+  const LINHAS = 16;
+  const COLUNAS = 12;
+  const posicoes = [];
+  const indices = [];
+  for (let j = 0; j <= LINHAS; j++) {
+    const t = j / LINHAS;
+    const y = topo + (base - topo) * t;
+    const meia = abertura * (1 - t);
+    const acima = Math.max(0, y - MEIO_RETO_CORPO);
+    const raio = Math.sqrt(Math.max(0, RAIO_CORPO ** 2 - acima ** 2)) + 0.006;
+    for (let i = 0; i <= COLUNAS; i++) {
+      const giro = -meia + (2 * meia * i) / COLUNAS;
+      posicoes.push(raio * Math.sin(giro), y, raio * Math.cos(giro));
+    }
+  }
+  for (let j = 0; j < LINHAS; j++) {
+    for (let i = 0; i < COLUNAS; i++) {
+      const a = j * (COLUNAS + 1) + i;
+      const b = a + COLUNAS + 1;
+      indices.push(a, b, a + 1, a + 1, b, b + 1);
+    }
+  }
+  const geometria = new THREE.BufferGeometry();
+  geometria.setAttribute('position', new THREE.Float32BufferAttribute(posicoes, 3));
+  geometria.setIndex(indices);
+  geometria.computeVertexNormals();
+  return geometria;
+}
+
 const suavizar = (inicio, fim, x) => {
   const t = Math.min(1, Math.max(0, (x - inicio) / (fim - inicio)));
   return t * t * (3 - 2 * t);
@@ -167,6 +205,9 @@ export const G = {
     -LADO_LOGO / RAIO_CORPO / 2,
     LADO_LOGO / RAIO_CORPO,
   ),
+  // Roupa social: o V da camisa e os botões do blazer.
+  decote: criarDecote({ topo: 0.36, base: 0.09, abertura: 0.5 }),
+  botao: new THREE.SphereGeometry(0.022, 10, 8),
   anel: new THREE.TorusGeometry(0.55, 0.035, 10, 48),
   hit: new THREE.CylinderGeometry(0.5, 0.5, 2.1, 10),
 };
@@ -177,6 +218,10 @@ export const clay = (color) =>
 
 export const ESCURO = clay('#1F1A24');
 export const CORDAO = clay('#EFEAE0');
+// Roupa social: a camisa branca do decote (dos dois lados, para nunca sumir pelo
+// sentido dos triângulos) e os botões do blazer, dourados e foscos.
+export const CAMISA_SOCIAL = Object.assign(clay('#F4F1EA'), { side: THREE.DoubleSide });
+export const BOTAO = clay('#B8A27A');
 // Logo estampado na camisa: a imagem tem fundo transparente.
 const texturaLogo = new THREE.TextureLoader().load(logoUrl);
 texturaLogo.colorSpace = THREE.SRGBColorSpace;
