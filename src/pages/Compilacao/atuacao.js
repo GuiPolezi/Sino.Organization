@@ -15,14 +15,8 @@ import { PRODUCAO, TIPOS_DE_NORMA, fimDeSemana, normasPorDia, somarDias, sorteio
 import { repartir } from './resumo.js';
 
 export const RESPONSABILIDADES = {
-  atualizacoes: {
-    rotulo: 'Atualizações',
-    descricao: 'Mantém em dia as normas de várias cidades: novas versões, vínculos e alterações.',
-  },
-  projetos: {
-    rotulo: 'Projetos Novos',
-    descricao: 'Monta a base de uma cidade nova, do cadastro das normas até a publicação.',
-  },
+  atualizacoes: { rotulo: 'Atualizações' },
+  projetos: { rotulo: 'Projetos Novos' },
 };
 
 const cidade = (nome, uf) => ({ nome, uf });

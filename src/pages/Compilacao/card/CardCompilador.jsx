@@ -35,9 +35,9 @@ export default function CardCompilador() {
   return (
     // A key refaz as animações de entrada ao trocar de pessoa.
     <aside key={pessoa.id} className={`${base.card} ${styles.card}`} aria-label={`Informações de ${pessoa.nome}`}>
-      <header className={`${base.topo} ${styles.topo}`}>
-        <div className={styles.monograma} style={{ '--cor-avatar': aparenciaDe(pessoa.id).camisa }} aria-hidden="true">
-          {pessoa.nome.charAt(0)}
+      <header className={base.topo}>
+        <div className={base.avatar} style={{ '--cor-avatar': aparenciaDe(pessoa.id).camisa }} aria-hidden="true">
+          {pessoa.avatarIniciais}
         </div>
         <div className={base.titulo}>
           <h2>{pessoa.nome}</h2>
@@ -51,7 +51,7 @@ export default function CardCompilador() {
       </header>
 
       {/* Quem não está em atuacao.js (alguém novo na equipe) fica só com as normas. */}
-      {atuacao && <Responsabilidade nome={pessoa.nome} atuacao={atuacao} escolher={escolher} />}
+      {atuacao && <Responsabilidade atuacao={atuacao} escolher={escolher} />}
       {/* A key fecha o "Ver mais" e refaz a entrada quando as cidades mudam com a responsabilidade. */}
       {atuacao && <Cidades key={atuacao.responsabilidade} cidades={atuacao.cidades} />}
       <Normas id={pessoa.id} hoje={hoje} emFila={emFila} />
