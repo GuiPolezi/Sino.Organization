@@ -27,25 +27,25 @@ const cidade = (nome, uf) => ({ nome, uf });
  * alterada: quando a responsabilidade mudou pela última vez (dias úteis atrás e hora).
  */
 const ATUACAO = {
-  helena: {
+  nathalia: {
     responsabilidade: 'atualizacoes',
     cidades: [cidade('Piracicaba', 'SP'), cidade('Limeira', 'SP'), cidade('Rio Claro', 'SP'), cidade('Águas de São Pedro', 'SP'), cidade('Americana', 'SP')],
     projeto: cidade('Indaiatuba', 'SP'),
     alterada: { diasUteis: 1, hora: '10:50' },
   },
-  marcos: {
+  leonardo: {
     responsabilidade: 'projetos',
     cidades: [cidade('Alfenas', 'MG'), cidade('Varginha', 'MG'), cidade('Lavras', 'MG')],
     projeto: cidade('Poços de Caldas', 'MG'),
     alterada: { diasUteis: 3, hora: '09:12' },
   },
-  leticia: {
+  laura: {
     responsabilidade: 'atualizacoes',
     cidades: [cidade('Londrina', 'PR'), cidade('Maringá', 'PR'), cidade('Cascavel', 'PR')],
     projeto: cidade('Toledo', 'PR'),
     alterada: { diasUteis: 2, hora: '14:37' },
   },
-  bruno: {
+  ramon: {
     responsabilidade: 'atualizacoes',
     cidades: [
       cidade('Altinópolis', 'SP'),
@@ -58,19 +58,19 @@ const ATUACAO = {
     projeto: cidade('Cravinhos', 'SP'),
     alterada: { diasUteis: 5, hora: '16:05' },
   },
-  camila: {
+  damaris: {
     responsabilidade: 'projetos',
     cidades: [cidade('Itu', 'SP'), cidade('Salto', 'SP')],
     projeto: cidade('Alumínio', 'SP'),
     alterada: { diasUteis: 1, hora: '08:44' },
   },
-  otavio: {
+  gdressano: {
     responsabilidade: 'atualizacoes',
     cidades: [cidade('Botucatu', 'SP'), cidade('Avaré', 'SP'), cidade('Lençóis Paulista', 'SP'), cidade('São Manuel', 'SP')],
     projeto: cidade('Alambari', 'SP'),
     alterada: { diasUteis: 7, hora: '11:20' },
   },
-  priscila: {
+  glopes: {
     responsabilidade: 'projetos',
     cidades: [cidade('Bauru', 'SP'), cidade('Jaú', 'SP')],
     projeto: cidade('Pederneiras', 'SP'),

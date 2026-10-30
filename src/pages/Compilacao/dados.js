@@ -15,13 +15,13 @@
 // anteriores: normas compiladas antes dos 56 dias do histórico (entram só em "Todo o Tempo", no card).
 /** @type {Record<string, { mediaDiaria: number, emFila: number, anteriores: number }>} */
 export const PRODUCAO = {
-  helena: { mediaDiaria: 6, emFila: 3, anteriores: 1840 },
-  marcos: { mediaDiaria: 11, emFila: 8, anteriores: 3420 },
-  leticia: { mediaDiaria: 9, emFila: 5, anteriores: 2760 },
-  bruno: { mediaDiaria: 7, emFila: 12, anteriores: 1990 },
-  camila: { mediaDiaria: 10, emFila: 4, anteriores: 3105 },
-  otavio: { mediaDiaria: 5, emFila: 6, anteriores: 1260 },
-  priscila: { mediaDiaria: 8, emFila: 7, anteriores: 2380 },
+  nathalia: { mediaDiaria: 6, emFila: 3, anteriores: 1840 },
+  leonardo: { mediaDiaria: 11, emFila: 8, anteriores: 3420 },
+  laura: { mediaDiaria: 9, emFila: 5, anteriores: 2760 },
+  ramon: { mediaDiaria: 7, emFila: 12, anteriores: 1990 },
+  damaris: { mediaDiaria: 10, emFila: 4, anteriores: 3105 },
+  gdressano: { mediaDiaria: 5, emFila: 6, anteriores: 1260 },
+  glopes: { mediaDiaria: 8, emFila: 7, anteriores: 2380 },
 };
 
 export const TIPOS_DE_NORMA = [

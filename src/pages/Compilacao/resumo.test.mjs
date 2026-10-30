@@ -23,8 +23,8 @@ test('as partes dos tipos de norma somam 1', () => {
 });
 
 test('a produção do dia a dia é sempre a mesma, sem sábado e domingo, e some para quem não está em dados.js', () => {
-  const porDia = normasPorDia('marcos', HOJE);
-  assert.deepEqual(normasPorDia('marcos', HOJE), porDia);
+  const porDia = normasPorDia('leonardo', HOJE);
+  assert.deepEqual(normasPorDia('leonardo', HOJE), porDia);
   assert.equal(porDia['2026-10-25'], undefined, 'domingo');
   assert.equal(porDia['2026-10-24'], undefined, 'sábado');
   assert.ok(porDia['2026-10-29'] > 0);
