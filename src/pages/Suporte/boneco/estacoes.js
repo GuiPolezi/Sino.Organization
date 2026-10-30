@@ -37,6 +37,10 @@
  * @property {{ x: number, z: number, r: number }[]} [obstaculos] pegada própria (padrão: mesa e cadeira)
  * @property {boolean} [semBloco]                peça redonda e solta (pufe): os bonecos desviam dela
  *   como de um obstáculo, sem o retângulo de contorno das mesas
+ * @property {string} [tipo]                    o que é o lugar ('mesa', 'pufe', 'cafe'...), para quem o escolhe
+ * @property {boolean} [especial]               só a página reserva (ex.: o pufe e a cafeteira de /compilacao):
+ *   o "ir trabalhar" padrão escolhe só os outros lugares
+ * @property {boolean} [emPe]                   usado de pé (o balcão do café): chega, mas não dobra as pernas
  */
 
 /** O bloco 2×2 de /suporte. */
@@ -355,12 +359,13 @@ export function rotaAte(pos, alvo, area, preferido = null, offset = 0) {
 /*
  * Reserva exclusiva: 1 técnico por computador. Acontece na decisão de ir
  * trabalhar, antes de andar até lá, então dois técnicos nunca disputam o mesmo PC.
+ * `aceita` filtra os lugares: por padrão, todos menos os especiais (que só a página escolhe).
  */
-export function reservarEstacao(idTecnico, area) {
+export function reservarEstacao(idTecnico, area, aceita = (e) => !e.especial) {
   if (ESTACOES.some((e) => e.ocupante === idTecnico)) return null;
   const ocupadas = ESTACOES.filter((e) => e.ocupante !== null).length;
   if (ocupadas >= maxSentados()) return null;
-  const livres = ESTACOES.filter((e) => e.ocupante === null && dentroDaArea(area, e.aprox, 0.2));
+  const livres = ESTACOES.filter((e) => e.ocupante === null && aceita(e) && dentroDaArea(area, e.aprox, 0.2));
   if (!livres.length) return null;
   const estacao = livres[Math.floor(Math.random() * livres.length)];
   estacao.ocupante = idTecnico;

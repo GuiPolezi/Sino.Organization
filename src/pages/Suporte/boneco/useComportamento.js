@@ -57,6 +57,33 @@ export function configurarRitmo(config) {
   Object.assign(RITMO, config);
 }
 
+/*
+ * Comportamento a mais de uma página (o café e os pufes de /compilacao). Vazio
+ * em /suporte, /desenvolvimento e nas reuniões. Cada gancho é opcional:
+ *   criar(s)            campos a mais no estado de cada boneco
+ *   decidir(s, acoes)   parado, escolhe o que fazer; true se escolheu (senão vale o padrão)
+ *   aoSentar(s)         chegou ao lugar reservado (pode trocar o tempo que fica nele)
+ *   aoLevantar(s, e)    saiu do lugar `e`, antes de a reserva ser solta
+ *   atualizar(s, dt)    a cada frame, depois da máquina de estados
+ *   pose(pose, s, info) ajusta a pose calculada; info: { selecionado, andando, t, olharCamera }
+ *   NaMao               componente desenhado na mão direita do boneco (recebe `ia`, o estado)
+ * Configurado antes de a cena nascer (configurarExtra), como o ritmo.
+ */
+export const EXTRA = {
+  criar: null,
+  decidir: null,
+  aoSentar: null,
+  aoLevantar: null,
+  atualizar: null,
+  pose: null,
+  NaMao: null,
+};
+
+/** @param {Partial<typeof EXTRA>} config */
+export function configurarExtra(config) {
+  Object.assign(EXTRA, config);
+}
+
 // Altura do corpo sentado numa cadeira, quando a estação não diz a dela (estacoes.js).
 const ELEVACAO_CADEIRA = 0.17;
 // Altura do quadril (pivô das pernas) do boneco em pé, antes da escala (Boneco.jsx).
@@ -140,7 +167,7 @@ function hash(texto) {
 // Velocidade e fase variam por boneco, para dar personalidade.
 export function criarEstado(id) {
   const pos = pontoAleatorio(new THREE.Vector3());
-  return {
+  const estado = {
     id,
     pos,
     estado: 'parado',
@@ -182,6 +209,8 @@ export function criarEstado(id) {
     duracaoSentar: 0.7,
     duracaoLevantar: 0.6,
   };
+  EXTRA.criar?.(estado);
+  return estado;
 }
 
 const velocidade = (s) => s.vel * (MOVIMENTO.reduzido ? 0.5 : 1);
@@ -331,8 +360,9 @@ function posicaoNoTrajeto(s, k) {
   const f = trechos[i] > 1e-6 ? Math.min(d / trechos[i], 1) : 1;
   pos.x = trajeto[i].x + (trajeto[i + 1].x - trajeto[i].x) * f;
   pos.z = trajeto[i].z + (trajeto[i + 1].z - trajeto[i].z) * f;
-  // As pernas dobram e o quadril sobe só no último trecho, já ao lado do assento.
-  s.sentado = i === 2 ? f : 0;
+  // As pernas dobram e o quadril sobe só no último trecho, já ao lado do assento
+  // (num lugar usado de pé, como o balcão do café, ficam esticadas).
+  s.sentado = i === 2 && !s.estacao.emPe ? f : 0;
 }
 
 function andar(s, dt) {
@@ -380,30 +410,60 @@ function andar(s, dt) {
   return { yawAlvo: Math.atan2(direcao.x, direcao.z), andando: true };
 }
 
+// Vai até uma estação já reservada para ele (reservarEstacao).
+function irParaEstacao(s, estacao) {
+  s.estacao = estacao;
+  s.indo = true;
+  s.estado = 'andando';
+  s.alvo.set(estacao.aprox.x, 0, estacao.aprox.z);
+  // Prazo para chegar: 14 s, ou mais quando a volta pelo bloco é longa para o passo dele.
+  s.timer = Math.max(PRAZO_ATE_ESTACAO, (2 * rotaAte(s.pos, s.alvo, AREA).comprimento) / velocidade(s));
+  iniciarCaminhada(s);
+}
+
+// Uma ação parada no lugar, por `duracao` segundos.
+function fazerAcao(s, acao, duracao) {
+  s.estado = 'acao';
+  s.acao = acao;
+  s.timer = duracao;
+  s.tAcao = 0;
+}
+
+function passear(s) {
+  s.estado = 'andando';
+  novoPasseio(s);
+}
+
+// O que a decisão de uma página (EXTRA.decidir) pode mandar o boneco fazer.
+const ACOES_EXTRA = {
+  area: AREA,
+  /** Reserva um lugar que passe no filtro e vai até ele; false se não havia nenhum livre. */
+  irPara: (s, aceita) => {
+    const estacao = reservarEstacao(s.id, AREA, aceita);
+    if (estacao) irParaEstacao(s, estacao);
+    return Boolean(estacao);
+  },
+  fazerAcao,
+  passear,
+};
+
 // Parado, escolhe o que fazer em seguida: trabalhar num computador, uma ação ou andar.
 function decidir(s) {
+  if (EXTRA.decidir?.(s, ACOES_EXTRA)) return;
+
   // A reserva é feita agora, antes de andar: 1 técnico por computador.
   const querTrabalhar = s.descanso <= 0 && Math.random() < RITMO.chance;
   const estacao = querTrabalhar ? reservarEstacao(s.id, AREA) : null;
 
   if (estacao) {
-    s.estacao = estacao;
-    s.indo = true;
-    s.estado = 'andando';
-    s.alvo.set(estacao.aprox.x, 0, estacao.aprox.z);
-    // Prazo para chegar: 14 s, ou mais quando a volta pelo bloco é longa para o passo dele.
-    s.timer = Math.max(PRAZO_ATE_ESTACAO, (2 * rotaAte(s.pos, s.alvo, AREA).comprimento) / velocidade(s));
-    iniciarCaminhada(s);
+    irParaEstacao(s, estacao);
   } else if (Math.random() < 0.4) {
-    s.estado = 'acao';
     const acoes = RITMO.semComputador ? ACOES_SEM_COMPUTADOR : ACOES;
-    s.acao = acoes[Math.floor(Math.random() * acoes.length)];
-    if (MOVIMENTO.reduzido && s.acao === 'pular') s.acao = 'olhar';
-    s.timer = s.acao === 'trabalhar' ? rand(2.5, 4) : rand(1.6, 2.6);
-    s.tAcao = 0;
+    const acao = acoes[Math.floor(Math.random() * acoes.length)];
+    const sorteada = MOVIMENTO.reduzido && acao === 'pular' ? 'olhar' : acao;
+    fazerAcao(s, sorteada, sorteada === 'trabalhar' ? rand(2.5, 4) : rand(1.6, 2.6));
   } else {
-    s.estado = 'andando';
-    novoPasseio(s);
+    passear(s);
   }
 }
 
@@ -459,7 +519,9 @@ function atualizarSentado(s, selecionado, dt) {
     s.timer = rand(...RITMO.duracao);
     s.micro = microPadrao();
     s.tMicro = rand(2, 4);
+    EXTRA.aoSentar?.(s);
   } else if (s.estado === 'levantando' && s.tSent <= 0) {
+    EXTRA.aoLevantar?.(s, estacao);
     liberarEstacao(s);
     s.sentado = 0;
     s.estado = 'parado';
@@ -654,6 +716,11 @@ function calcularPose(s, selecionado, camera, t, dt) {
     pose.pernaD = pose.pernaD * (1 - s.sentado) - 1.5 * s.sentado;
   }
 
+  if (EXTRA.pose) {
+    const olharCamera = clamp(anguloMaisCurto(s.yaw, anguloPara(s.pos, camera.position)), -1.1, 1.1);
+    EXTRA.pose(pose, s, { selecionado, andando, t, olharCamera });
+  }
+
   return pose;
 }
 
@@ -678,6 +745,8 @@ export function useComportamento({ id, altura = 1 }) {
 
   const ia = useRef(null);
   if (!ia.current) ia.current = criarEstado(id);
+  // O estado, para o que a página desenha na mão (EXTRA.NaMao) acompanhar o boneco.
+  partes.ia = ia;
 
   // No efeito (e não no render), para sobreviver à montagem dupla do StrictMode.
   useEffect(() => {
@@ -698,6 +767,7 @@ export function useComportamento({ id, altura = 1 }) {
 
     atualizarBolha(idSelecionado);
     const { yawAlvo } = atualizarEstado(s, selecionado, state.camera, dt);
+    EXTRA.atualizar?.(s, dt);
     // Sentado, fica fixo na cadeira: sem separação, desvio nem limite da elipse.
     if (!SENTADO.has(s.estado)) {
       aplicarLimites(s, idSelecionado, dt);

@@ -21,7 +21,7 @@ export const sectors = [
   },
   {
     label: 'COMPILAÇÃO',
-    // Sem `href` nem `modal` por enquanto: só o hover, sem navegar.
+    href: '/compilacao',
     image: imgCompilacao,
   },
   {

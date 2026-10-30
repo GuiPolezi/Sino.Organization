@@ -38,6 +38,15 @@ export const CONFIG_QUADRO = {
     { x: 0, z: 0.5, rMax: 1.6 },
     { x: 0, z: 0.5, rMax: 0 },
   ],
+  /*
+   * Onde a câmera para com o painel aberto (cena/CameraRig.jsx), a partir do quadro:
+   * dx para o lado, y e z da câmera e a altura para onde ela olha. `largo` vale
+   * com o painel ao lado; `estreito`, com ele embaixo (bottom sheet, no mobile).
+   */
+  foco: {
+    largo: { dx: 0.45, y: 5.2, z: 7.2, olhar: 1.6 },
+    estreito: { dx: 0, y: 6.2, z: 10, olhar: -0.4 },
+  },
 };
 
 // Onde o quadro está agora. Mutado por posicionarQuadro e lido pela câmera a cada frame.

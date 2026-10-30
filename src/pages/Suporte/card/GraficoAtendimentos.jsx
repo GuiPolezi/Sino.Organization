@@ -47,8 +47,9 @@ function SeletorDeSemana({ semana, recuo, limite, onMudar }) {
  * Gráfico de barras dos atendimentos de uma semana (domingo a sábado). O eixo Y
  * acompanha os dados (escalaY): cresce quando os atendimentos crescem. As barras
  * são as mesmas a cada troca de semana, então a altura delas desliza até o valor novo.
+ * `assunto` é o que se conta (o título e o eixo): "Normas" em /compilacao.
  */
-export default function GraficoAtendimentos({ porDia, hoje }) {
+export default function GraficoAtendimentos({ porDia, hoje, assunto = 'Atendimentos' }) {
   const [recuo, setRecuo] = useState(0);
   const semana = semanaDoGrafico(porDia, hoje, recuo);
   const { topo, marcas } = escalaY(Math.max(...semana.dias.map((dia) => dia.total)));
@@ -63,13 +64,13 @@ export default function GraficoAtendimentos({ porDia, hoje }) {
         <h3 className={card.secao}>
           Gráfico{' '}
           <br />
-          de Atendimentos
+          de {assunto}
         </h3>
         <SeletorDeSemana semana={semana} recuo={recuo} limite={semanasAnteriores(porDia, hoje)} onMudar={setRecuo} />
       </div>
 
       <div className={styles.grafico} role="img" aria-label={descricao}>
-        <span className={styles.eixo}>Atendimentos</span>
+        <span className={styles.eixo}>{assunto}</span>
 
         <div className={styles.marcas}>
           {marcas.map((marca) => (

@@ -6,11 +6,12 @@ import { useLenis } from './hooks/useLenis.js';
 
 /*
  * Rotas além da home. Cada página é um chunk à parte (o three.js só baixa em
- * /suporte e /desenvolvimento). A navegação entre elas é por link comum, com recarga da página.
+ * /suporte, /desenvolvimento e /compilacao). A navegação entre elas é por link comum, com recarga da página.
  */
 const routes = {
   '/suporte': lazy(() => import('./pages/Suporte/index.jsx')),
   '/desenvolvimento': lazy(() => import('./pages/Desenvolvimento/index.jsx')),
+  '/compilacao': lazy(() => import('./pages/Compilacao/index.jsx')),
   '/licencas': lazy(() => import('./pages/Licencas/index.jsx')),
 };
 const NotFound = lazy(() => import('./pages/NotFound/index.jsx'));

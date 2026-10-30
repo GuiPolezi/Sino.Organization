@@ -22,19 +22,19 @@ import * as THREE from 'three';
  */
 
 // Caveat vem de @fontsource/caveat (importada em Quadro.jsx).
-const MAO = '"Caveat", "Segoe Print", "Comic Sans MS", cursive';
+export const MAO = '"Caveat", "Segoe Print", "Comic Sans MS", cursive';
 
-const TINTA = { escura: '#3B3A4A', suave: '#6B6A7A', azul: '#24407A', alerta: '#B8423A', pincel: '#2E8C93' };
+export const TINTA = { escura: '#3B3A4A', suave: '#6B6A7A', azul: '#24407A', alerta: '#B8423A', pincel: '#2E8C93' };
 
 // Escreve na largura dada: se o texto não couber, a letra diminui até caber.
-function escreverCabendo(ctx, texto, x, y, larguraMaxima, peso, tamanho) {
+export function escreverCabendo(ctx, texto, x, y, larguraMaxima, peso, tamanho) {
   ctx.font = `${peso} ${tamanho}px ${MAO}`;
   const largura = ctx.measureText(texto).width;
   if (largura > larguraMaxima) ctx.font = `${peso} ${Math.floor((tamanho * larguraMaxima) / largura)}px ${MAO}`;
   ctx.fillText(texto, x, y);
 }
 
-function novaTextura(largura, altura, desenhar) {
+export function novaTextura(largura, altura, desenhar) {
   const canvas = document.createElement('canvas');
   canvas.width = largura;
   canvas.height = altura;

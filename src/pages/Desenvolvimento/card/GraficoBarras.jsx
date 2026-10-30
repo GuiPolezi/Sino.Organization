@@ -37,8 +37,9 @@ function animarEntrada(raiz) {
  * @param {string} props.titulo
  * @param {string} props.cabecalho nome da primeira coluna da tabela para leitores de tela
  * @param {import('./geometriaPizza.js').ItemPizza[]} props.itens
+ * @param {string} [props.unidade] o que é contado, no plural ("Normas" em /compilacao)
  */
-export default function GraficoBarras({ titulo, cabecalho, itens }) {
+export default function GraficoBarras({ titulo, cabecalho, itens, unidade = 'Tickets' }) {
   const raiz = useRef(null);
   const visto = useRevelar(raiz);
   const barras = useMemo(() => emOrdem(fatiar(itens)), [itens]);
@@ -56,7 +57,7 @@ export default function GraficoBarras({ titulo, cabecalho, itens }) {
   return (
     <figure ref={raiz} className={styles.grafico} data-esperando={!visto || undefined}>
       <figcaption className={styles.titulo}>{titulo}</figcaption>
-      {vazio && <p className={styles.vazio}>Nenhum ticket neste período.</p>}
+      {vazio && <p className={styles.vazio}>{unidade === 'Tickets' ? 'Nenhum ticket neste período.' : `Nenhum registro de ${unidade.toLowerCase()} neste período.`}</p>}
       {!vazio && (
         <div className={styles.area} aria-hidden="true">
           <i className={styles.eixo} />
@@ -88,7 +89,7 @@ export default function GraficoBarras({ titulo, cabecalho, itens }) {
           <thead>
             <tr>
               <th scope="col">{cabecalho}</th>
-              <th scope="col">Tickets</th>
+              <th scope="col">{unidade}</th>
               <th scope="col">Parte do total</th>
             </tr>
           </thead>

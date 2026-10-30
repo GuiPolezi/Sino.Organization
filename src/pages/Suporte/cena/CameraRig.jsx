@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { QUADRO } from '../quadro/posicao.js';
+import { CONFIG_QUADRO, QUADRO } from '../quadro/posicao.js';
 import { CENA, passoDoFrame, posicoes, useEquipe } from '../store.js';
 
 // Mesma largura em que o card vira bottom sheet (CardTecnico.module.css).
@@ -30,9 +30,10 @@ export default function CameraRig() {
     if (painel) {
       // No desktop o quadro fica à esquerda do painel. No mobile a câmera recua, para o
       // quadro caber na largura, e olha para baixo dele, para ele subir acima do bottom sheet.
-      const dx = estreito ? 0 : 0.45;
-      alvoPos.current.set(QUADRO.x + dx, estreito ? 6.2 : 5.2, QUADRO.z + (estreito ? 10 : 7.2));
-      alvoOlhar.current.set(QUADRO.x + dx, estreito ? -0.4 : 1.6, QUADRO.z);
+      // Cada página pode trocar o enquadramento (CONFIG_QUADRO.foco).
+      const foco = estreito ? CONFIG_QUADRO.foco.estreito : CONFIG_QUADRO.foco.largo;
+      alvoPos.current.set(QUADRO.x + foco.dx, foco.y, QUADRO.z + foco.z);
+      alvoOlhar.current.set(QUADRO.x + foco.dx, foco.olhar, QUADRO.z);
     } else if (pos) {
       // No desktop o boneco fica à esquerda do card. No mobile a câmera olha para baixo
       // dele, para ele subir acima do bottom sheet (que ocupa até 62% da altura).

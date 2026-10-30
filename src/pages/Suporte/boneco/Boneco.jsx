@@ -5,7 +5,7 @@ import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe, temBochechas } from './aparencia.js';
 import { BOCHECHA, BRANCO, CORDAO, ESCURO, G, INVISIVEL, LOGO, clay } from './geometrias.js';
-import { useComportamento } from './useComportamento.js';
+import { EXTRA, useComportamento } from './useComportamento.js';
 import styles from './Boneco.module.css';
 
 const LADOS = [-1, 1];
@@ -302,8 +302,9 @@ export function useMateriais(aparencia) {
  * @param {ReturnType<typeof useMateriais>} props.materiais
  * @param {object} [props.partes]
  * @param {boolean} [props.aceno]
+ * @param {import('react').ReactNode} [props.naMao] o que vai na mão direita (a xícara de /compilacao)
  */
-export function Figura({ aparencia, materiais, partes = {}, aceno = false }) {
+export function Figura({ aparencia, materiais, partes = {}, aceno = false, naMao = null }) {
   return (
     <group ref={partes.corpo}>
       {/* Pernas (pivô no quadril) */}
@@ -334,6 +335,7 @@ export function Figura({ aparencia, materiais, partes = {}, aceno = false }) {
         {aparencia.acessorio === 'maleta' && (
           <mesh geometry={G.maleta} material={ESCURO} position={[0, -0.6, 0]} />
         )}
+        {naMao && <group position-y={-0.42}>{naMao}</group>}
       </group>
 
       <group ref={partes.cabeca} position-y={1.56} {...(aceno && { 'rotation-z': -0.08 })}>
@@ -415,7 +417,12 @@ export default function Boneco({ tecnico }) {
         onClick={onClick}
       />
 
-      <Figura aparencia={aparencia} materiais={materiais} partes={partes} />
+      <Figura
+        aparencia={aparencia}
+        materiais={materiais}
+        partes={partes}
+        naMao={EXTRA.NaMao && <EXTRA.NaMao ia={partes.ia} bracoD={partes.bracoD} />}
+      />
 
       {/* Selecionado, o nome já está no card. Sem distanceFactor: com a câmera perto de
           um boneco, a etiqueta dos vizinhos crescia até passar de 400 px e sair da tela.

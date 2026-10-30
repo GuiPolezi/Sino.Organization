@@ -16,7 +16,7 @@
     "test:atendimentos": "node --test scripts/build-atendimentos.test.mjs",
     "test:quadro": "node --test src/pages/Suporte/mappers/resumoEquipe.test.mjs src/pages/Suporte/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/quadro/anotacoes.test.mjs src/pages/Desenvolvimento/mappers/visaoGeral.test.mjs src/pages/Desenvolvimento/mappers/locais.test.mjs src/pages/Desenvolvimento/mappers/categoria.test.mjs src/pages/Desenvolvimento/card/geometriaPizza.test.mjs src/pages/Desenvolvimento/card/geometriaLinha.test.mjs",
     "test:card": "node --test src/pages/Suporte/mappers/atendimentos.test.mjs src/pages/Suporte/api/acompanharFonte.test.mjs src/pages/Suporte/card/rotuloAtualizacao.test.mjs",
-    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/cena/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs src/pages/Reuniao/cena/cena.test.mjs src/pages/Reuniao/cena/ritmo.test.mjs",
+    "test:cenario": "node --test src/pages/Suporte/boneco/estacoes.test.mjs src/pages/Desenvolvimento/cena/estacoes.test.mjs src/pages/Desenvolvimento/equipe.test.mjs src/pages/Reuniao/cena/cena.test.mjs src/pages/Reuniao/cena/ritmo.test.mjs src/pages/Compilacao/cena/planta.test.mjs src/pages/Compilacao/cena/cafe.test.mjs src/pages/Compilacao/resumo.test.mjs",
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs",
     "test:chamados-sync": "node --test scripts/build-chamados.test.mjs",
     "test:licencas": "node --test src/pages/Licencas/mappers/licencas.test.mjs scripts/build-licencas.test.mjs",
