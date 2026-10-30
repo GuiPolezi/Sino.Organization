@@ -62,7 +62,7 @@ export const APARENCIAS_COMPILACAO = {
     logo: true,
     calca: CALCAS[0],
     cabelo: { estilo: 'samurai', cor: PRETO },
-    acessorio: 'gravata',
+    acessorio: 'nenhum',
     barba: 'grande',
     altura: 1.01,
   },
