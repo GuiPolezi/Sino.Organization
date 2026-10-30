@@ -26,14 +26,15 @@ const PESSOAS = [
 
 /** @type {Record<string, AparenciaTecnico>} */
 export const APARENCIAS_COMPILACAO = {
+  // Pele clara, cabelo com degradê só nas laterais e barba rala, crescendo.
   leonardo: {
-    pele: PELES[3],
+    pele: PELES[0],
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[0],
-    cabelo: { estilo: 'raspado', cor: PRETO },
+    cabelo: { estilo: 'degradeLateral', cor: PRETO },
     acessorio: 'nenhum',
-    barba: 'fechada',
+    barba: 'curta',
     altura: 1.06,
   },
   ramon: {

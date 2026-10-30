@@ -59,7 +59,12 @@ const suavizar = (inicio, fim, x) => {
 // Degradê: uma casca só, sem degraus. Grossa em cima; nas laterais e na nuca vai
 // ficando rente à cabeça e some na pele (a transparência vai na cor de cada
 // vértice). Na frente o corte não esfuma: só a borda da franja se afina.
-function criarDegrade() {
+// `lateralDe(giro)` diz, de 0 a 1, quanto cada lado esfuma (o padrão: laterais e
+// nuca; o degradê lateral passa só as laterais).
+const LATERAIS_E_NUCA = (giro) => 1 - Math.max(0, Math.cos(giro)) ** 2;
+const SO_LATERAIS = (giro) => Math.sin(giro) ** 2;
+
+function criarDegrade(lateralDe = LATERAIS_E_NUCA) {
   const COLUNAS = 48;
   const LINHAS = 20;
   const POLAR_MAX = Math.PI * 0.47;
@@ -70,8 +75,8 @@ function criarDegrade() {
   const indices = [];
   for (let i = 0; i <= COLUNAS; i++) {
     const giro = (2 * Math.PI * i) / COLUNAS;
-    // 0 na frente, 1 nas laterais e atrás.
-    const lateral = 1 - Math.max(0, Math.cos(giro)) ** 2;
+    // 0 onde o cabelo fica cheio até a borda, 1 onde esfuma por inteiro.
+    const lateral = lateralDe(giro);
     const inicioAfinar = 0.9 - 0.45 * lateral;
     const inicioSumir = 0.95 - 0.35 * lateral;
     for (let j = 0; j <= LINHAS; j++) {
@@ -113,6 +118,8 @@ export const G = {
   bochecha: new THREE.SphereGeometry(0.06, 14, 10),
   cabeloCurto: new THREE.SphereGeometry(0.36, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.42),
   degrade: criarDegrade(),
+  // Degradê só nas laterais: a frente e a nuca ficam cheias até a borda.
+  degradeLateral: criarDegrade(SO_LATERAIS),
   // Cabelo volumoso: mais grosso e um pouco mais baixo que o curto.
   cabeloVolumoso: new THREE.SphereGeometry(0.375, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.44),
   // Cabelo raspado: uma película rente à cabeça, um pouco mais baixa que o curto.
