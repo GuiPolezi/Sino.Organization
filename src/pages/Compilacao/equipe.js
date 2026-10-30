@@ -10,6 +10,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 
 const PRETO = '#17130F';
 const CASTANHO = '#5B3A24';
+const LOIRO = '#C9A26B';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
 const PESSOAS = [
@@ -44,14 +45,15 @@ export const APARENCIAS_COMPILACAO = {
     acessorio: 'oculos',
     barba: 'curta',
   },
+  // Cabelo curto e loiro, sem fone, e só bigode (loiro, a cor do cabelo), sem barba.
   gdressano: {
     pele: PELES[1],
     camisa: UNIFORME,
     logo: true,
     calca: CALCAS[4],
-    cabelo: { estilo: 'topete', cor: CASTANHO },
-    acessorio: 'headset',
-    barba: 'cavanhaque',
+    cabelo: { estilo: 'curto', cor: LOIRO },
+    acessorio: 'nenhum',
+    barba: 'bigode',
     altura: 1.03,
   },
   // Cabelo grande preso num coque samurai e barba grande, os dois pretos.
