@@ -9,7 +9,7 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 /** @import { AparenciaTecnico, Tecnico } from '../Suporte/tipos.js' */
 
 const PRETO = '#17130F';
-const CASTANHO = '#5B3A24';
+const CASTANHO_ESCURO = '#2B1E16';
 const LOIRO = '#C9A26B';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
@@ -67,12 +67,14 @@ export const APARENCIAS_COMPILACAO = {
     barba: 'grande',
     altura: 1.01,
   },
+  // Cabelo comprido castanho bem escuro, quase preto, óculos e roupa social (blazer
+  // rosé, claro o bastante para as iniciais escuras do avatar do card).
   nathalia: {
     pele: PELES[1],
-    camisa: UNIFORME,
-    logo: true,
+    camisa: '#B0717A',
+    social: true,
     calca: CALCAS[1],
-    cabelo: { estilo: 'comprido', cor: CASTANHO },
+    cabelo: { estilo: 'comprido', cor: CASTANHO_ESCURO },
     acessorio: 'oculos',
     altura: 0.97,
   },
