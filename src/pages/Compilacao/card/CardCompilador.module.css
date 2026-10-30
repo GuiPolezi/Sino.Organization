@@ -1,0 +1,639 @@
+/*
+ * O card de quem foi selecionado em /compilacao. A casca (vidro, posição, entrada
+ * em cascata, títulos de seção, navegação) é a do card do técnico
+ * (Suporte/card/CardTecnico.module.css); aqui fica só o que é da compilação.
+ * Variáveis --neutro, --linha e --fundo-suave vêm de lá.
+ */
+.card,
+.modal {
+  --suave: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.card {
+  gap: 1.375rem;
+}
+
+/* ---------- Cabeçalho ---------- */
+
+.topo {
+  align-items: center;
+}
+
+/* A inicial em letra cursiva, num medalhão da cor do uniforme. */
+.monograma {
+  display: grid;
+  place-items: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 34% 28%,
+    color-mix(in srgb, var(--cor-avatar) 62%, var(--color-white)),
+    var(--cor-avatar) 72%
+  );
+  box-shadow:
+    inset 0 -6px 12px rgb(0 0 0 / 0.16),
+    inset 0 4px 8px rgb(255 255 255 / 0.45),
+    0 6px 16px color-mix(in srgb, var(--color-olive-dark) 22%, transparent);
+  color: var(--color-olive-dark);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.125rem;
+  font-style: italic;
+  line-height: 1;
+  /* A letra cursiva pende para a direita: puxa de volta ao centro. */
+  text-indent: -0.08em;
+}
+
+/* ---------- Responsabilidade atual ---------- */
+
+.responsabilidade {
+  container-type: inline-size;
+}
+
+.linhaTitulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.alterar {
+  padding: 6px 12px;
+  border: 1.5px solid var(--color-olive-dark);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-white) 35%, transparent);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--color-olive-dark) 22%, transparent);
+  color: var(--color-olive-dark);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.3s var(--suave);
+}
+
+.alterar:hover {
+  background: var(--color-olive-dark);
+  color: var(--color-cream);
+  transform: translateY(-1px);
+}
+
+.alterar:active {
+  box-shadow: none;
+  transform: translateY(1px);
+}
+
+/* A responsabilidade em letras grandes, do tamanho que cabe na largura do card. */
+.palavra {
+  margin: 0;
+  font-size: min(2.5rem, 9.4cqi);
+  font-weight: var(--weight-black);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--color-olive-dark);
+  white-space: nowrap;
+}
+
+/* Cada letra sobe e ganha foco, uma depois da outra. */
+.letra {
+  display: inline-block;
+  /* O espaço de "Projetos Novos" também é uma letra: sem pre, ele sumiria. */
+  white-space: pre;
+  animation: letra 0.7s var(--suave) both;
+  animation-delay: calc(var(--i) * 32ms + 160ms);
+}
+
+@keyframes letra {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(0.45em);
+  }
+}
+
+.alteracao {
+  margin: 8px 0 0;
+  font-size: 0.6875rem;
+  font-weight: var(--weight-bold);
+  text-align: right;
+  color: var(--neutro);
+  animation: aparecer 0.6s ease 0.45s both;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Trabalhando em ---------- */
+
+.cidade {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: var(--weight-black);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-olive-dark);
+}
+
+.verMais {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--color-olive-dark);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.verMais:hover .textoVerMais {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.qtdCidades {
+  color: var(--neutro-pequeno);
+}
+
+/* O "+" que gira e vira "−" ao abrir. */
+.sinal {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  transition: transform 0.5s var(--suave);
+}
+
+.sinal::before,
+.sinal::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  margin-top: -0.75px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.5s var(--suave);
+}
+
+.sinal::after {
+  transform: rotate(90deg);
+}
+
+.verMais[aria-expanded='true'] .sinal {
+  transform: rotate(180deg);
+}
+
+.verMais[aria-expanded='true'] .sinal::after {
+  transform: rotate(90deg) scaleX(0);
+}
+
+/* As outras cidades: a gaveta abre na altura certa (0fr → 1fr). */
+.gaveta {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.55s var(--suave);
+}
+
+.gaveta[data-aberta='true'] {
+  grid-template-rows: 1fr;
+}
+
+.gaveta > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gaveta ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 0 2px;
+  list-style: none;
+}
+
+.gaveta li {
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--fundo-suave);
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s var(--suave);
+}
+
+.gaveta[data-aberta='true'] li {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(var(--i) * 45ms + 90ms);
+}
+
+/* ---------- Normas ---------- */
+
+.centro {
+  text-align: center;
+}
+
+/* Os períodos, com a pílula escura que desliza até o escolhido. */
+.periodos {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+}
+
+.periodos button {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-olive-dark) 9%, transparent);
+  color: var(--color-olive-dark);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.35s ease,
+    background-color 0.35s ease;
+}
+
+.periodos button[aria-pressed='true'] {
+  background: transparent;
+  color: var(--color-cream);
+}
+
+.periodos button[aria-pressed='false']:hover {
+  background: color-mix(in srgb, var(--color-olive-dark) 16%, transparent);
+}
+
+.pilula {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--w, 0);
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-olive);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-olive-dark) 32%, transparent);
+  transform: translateX(var(--x, 0));
+  transition:
+    transform 0.55s var(--suave),
+    width 0.55s var(--suave),
+    opacity 0.3s ease;
+}
+
+.total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 0 1.25rem;
+}
+
+.total strong {
+  font-size: 3.25rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-olive-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.total > span {
+  font-size: 1.125rem;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+/* Os seis tipos numa grade 3 × 2, com as linhas que se desenham ao abrir. */
+.grade {
+  position: relative;
+}
+
+.grade dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grade dl div {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 6px 14px;
+  text-align: center;
+}
+
+.grade dd {
+  font-size: 1.375rem;
+  line-height: 1;
+  color: var(--neutro-pequeno);
+  font-variant-numeric: tabular-nums;
+}
+
+.grade dt {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  color: var(--neutro-pequeno);
+}
+
+.linha {
+  position: absolute;
+  background: color-mix(in srgb, var(--color-olive-dark) 55%, transparent);
+}
+
+.linhaDeitada {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform-origin: left;
+  animation: riscarDeitada 0.9s var(--suave) 0.5s both;
+}
+
+.linhaEmPe {
+  top: 0;
+  left: var(--x);
+  width: 1px;
+  height: 100%;
+  transform-origin: top;
+  animation: riscarEmPe 0.9s var(--suave) 0.6s both;
+}
+
+@keyframes riscarDeitada {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes riscarEmPe {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 1.125rem 0 0;
+}
+
+.fila strong {
+  font-size: 2.25rem;
+  font-weight: var(--weight-regular);
+  line-height: 1;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.fila > span {
+  font-size: 0.875rem;
+  color: var(--color-ink);
+}
+
+/* ---------- Atividade recente ---------- */
+
+.atividade {
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--color-olive);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-olive-dark) 28%, transparent);
+  color: var(--color-white);
+}
+
+.atividade dl {
+  display: grid;
+  /* Ação, data e hora do tamanho delas; cidade e módulo dividem o resto. */
+  grid-template-columns: auto minmax(0, 1.5fr) minmax(0, 1fr) auto auto;
+}
+
+.atividade dl > div {
+  min-width: 0;
+  padding: 7px 9px 9px;
+  border-left: 1px solid color-mix(in srgb, var(--color-cream) 26%, transparent);
+  animation: aparecer 0.5s ease both;
+  animation-delay: calc(var(--i) * 60ms + 560ms);
+}
+
+.atividade dl > div:first-child {
+  border-left: 0;
+}
+
+.atividade dt {
+  margin-bottom: 4px;
+  font-size: 0.625rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--color-cream) 78%, transparent);
+}
+
+.atividade dd {
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+}
+
+.atividade .descricao {
+  grid-column: 1 / -1;
+  padding: 9px 12px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--color-cream) 26%, transparent);
+  border-left: 0;
+}
+
+.atividade .descricao dd {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+/* ---------- Modal "Alterar" ---------- */
+
+.modal {
+  width: min(100%, 28rem);
+}
+
+.modalTexto {
+  margin: 0.75rem 0 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--color-olive-dark) 85%, transparent);
+}
+
+.opcoes {
+  display: grid;
+  gap: 10px;
+}
+
+.opcao {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid color-mix(in srgb, var(--color-olive) 22%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-white) 40%, transparent);
+  color: var(--color-olive-dark);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.35s ease,
+    transform 0.35s var(--suave);
+}
+
+.opcao:hover {
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--color-olive-dark) 16%, transparent);
+  transform: translateY(-2px);
+}
+
+.opcao:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.opcao:focus-visible {
+  outline: 2px solid var(--color-olive);
+  outline-offset: 3px;
+}
+
+.opcao[aria-pressed='true'] {
+  border-color: var(--color-olive);
+  background: color-mix(in srgb, var(--color-olive) 12%, transparent);
+}
+
+.opcao strong {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: var(--weight-black);
+  line-height: 1.15;
+}
+
+.opcao small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--color-olive-dark) 80%, transparent);
+}
+
+.icone {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--color-olive);
+  color: var(--color-cream);
+}
+
+.icone svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* O círculo da escolhida, com o "✓" que se desenha. */
+.marcador {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1.5px solid color-mix(in srgb, var(--color-olive) 35%, transparent);
+  border-radius: 50%;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.marcador svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: var(--color-cream);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  transition: stroke-dashoffset 0.45s var(--suave) 0.05s;
+}
+
+.opcao[aria-pressed='true'] .marcador {
+  border-color: var(--color-olive);
+  background: var(--color-olive);
+}
+
+.opcao[aria-pressed='true'] .marcador svg {
+  stroke-dashoffset: 0;
+}
+
+/* ---------- Telas pequenas e movimento reduzido ---------- */
+
+@media (max-width: 760px) {
+  .total strong {
+    font-size: 2.75rem;
+  }
+
+  .atividade dl > div {
+    padding: 7px 7px 9px;
+  }
+
+  .atividade dd {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .letra,
+  .alteracao,
+  .linhaDeitada,
+  .linhaEmPe,
+  .atividade dl > div {
+    animation: none;
+  }
+
+  .gaveta,
+  .gaveta li,
+  .sinal,
+  .sinal::before,
+  .sinal::after,
+  .pilula,
+  .periodos button,
+  .alterar,
+  .opcao,
+  .marcador,
+  .marcador svg {
+    transition: none;
+  }
+}

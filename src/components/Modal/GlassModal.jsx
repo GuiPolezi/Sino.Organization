@@ -18,6 +18,8 @@ const blockScroll = (event) => {
  * título e troca o botão Fechar por um link "← Voltar" acima dele, que chama
  * `onVoltar` (ou fecha o modal, se não vier); `voltar={false}` esconde esse
  * link (quem usa põe a própria volta nas ações); sem `tag`, o selo some.
+ * `children` também pode ser uma função: recebe o "fechar" com a animação de
+ * saída, para um botão de dentro fechar o modal como o X e o Esc fecham.
  */
 export default function GlassModal({
   tag,
@@ -159,7 +161,7 @@ export default function GlassModal({
           </>
         )}
 
-        {children}
+        {typeof children === 'function' ? children(requestClose) : children}
       </article>
     </dialog>,
     document.body,

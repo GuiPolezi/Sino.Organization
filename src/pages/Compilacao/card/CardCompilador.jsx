@@ -1,58 +1,21 @@
 import { aparenciaDe } from '../../Suporte/boneco/aparencia.js';
-import Contagem from '../../Suporte/card/Contagem.jsx';
-import GraficoAtendimentos from '../../Suporte/card/GraficoAtendimentos.jsx';
-import styles from '../../Suporte/card/CardTecnico.module.css';
+import base from '../../Suporte/card/CardTecnico.module.css';
 import useAtalhos from '../../Suporte/card/useAtalhos.js';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
 import { producaoDe } from '../resumo.js';
-
-function Normas({ totais }) {
-  return (
-    <section className={styles.surge} style={{ '--ordem': 1 }}>
-      <h3 className={styles.secao}>Normas compiladas</h3>
-      <dl className={styles.blocos}>
-        <div>
-          <dt>Hoje</dt>
-          <dd>
-            <Contagem valor={totais.hoje} />
-          </dd>
-        </div>
-        <div>
-          <dt>Semana</dt>
-          <dd>
-            <Contagem valor={totais.semana} />
-          </dd>
-        </div>
-        <div className={styles.largo}>
-          <dt>Mês</dt>
-          <dd>
-            <Contagem valor={totais.mes} />
-          </dd>
-        </div>
-      </dl>
-    </section>
-  );
-}
-
-function Fila({ emFila }) {
-  return (
-    <section className={styles.surge} style={{ '--ordem': 2 }}>
-      <h3 className={styles.secao}>Fila</h3>
-      <p className={styles.tickets}>
-        <strong>
-          <Contagem valor={emFila} />
-        </strong>
-        <span>{emFila === 1 ? 'Norma aguardando compilação' : 'Normas aguardando compilação'}</span>
-      </p>
-    </section>
-  );
-}
+import { useAtuacao } from '../useAtuacao.js';
+import AtividadeRecente from './AtividadeRecente.jsx';
+import styles from './CardCompilador.module.css';
+import Cidades from './Cidades.jsx';
+import Normas from './Normas.jsx';
+import Responsabilidade from './Responsabilidade.jsx';
 
 /*
- * Card de quem foi selecionado em /compilacao: o card do técnico do suporte,
- * com a produção de normas no lugar dos atendimentos. Os números ainda são os
- * escritos à mão em dados.js.
+ * Card de quem foi selecionado em /compilacao: a casca do card do técnico do
+ * suporte com o que é da compilação (a responsabilidade, as cidades, as normas
+ * por período e a última atividade). Os dados ainda são fictícios (atuacao.js e
+ * dados.js).
  */
 export default function CardCompilador() {
   const tecnicos = useEquipe((s) => s.tecnicos);
@@ -63,36 +26,38 @@ export default function CardCompilador() {
 
   const indice = tecnicos.findIndex((tecnico) => tecnico.id === selecionado);
   const pessoa = tecnicos[indice];
+  const { atuacao, escolher } = useAtuacao(pessoa?.id);
   if (!pessoa) return null;
 
   const hoje = hojeEmBrasilia();
-  const { porDia, totais, emFila } = producaoDe(pessoa.id, hoje);
+  const { emFila } = producaoDe(pessoa.id, hoje);
 
   return (
     // A key refaz as animações de entrada ao trocar de pessoa.
-    <aside key={pessoa.id} className={styles.card} aria-label={`Informações de ${pessoa.nome}`}>
-      <header className={styles.topo}>
-        <div className={styles.avatar} style={{ '--cor-avatar': aparenciaDe(pessoa.id).camisa }} aria-hidden="true">
-          {pessoa.avatarIniciais}
+    <aside key={pessoa.id} className={`${base.card} ${styles.card}`} aria-label={`Informações de ${pessoa.nome}`}>
+      <header className={`${base.topo} ${styles.topo}`}>
+        <div className={styles.monograma} style={{ '--cor-avatar': aparenciaDe(pessoa.id).camisa }} aria-hidden="true">
+          {pessoa.nome.charAt(0)}
         </div>
-        <div className={styles.titulo}>
+        <div className={base.titulo}>
           <h2>{pessoa.nome}</h2>
           {pessoa.funcao && <p>{pessoa.funcao}</p>}
         </div>
-        <button type="button" className={styles.fechar} aria-label="Fechar" onClick={() => selecionar(null)}>
+        <button type="button" className={base.fechar} aria-label="Fechar" onClick={() => selecionar(null)}>
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </button>
       </header>
 
-      <Normas totais={totais} />
-      <Fila emFila={emFila} />
-      <div className={styles.surge} style={{ '--ordem': 3 }}>
-        <GraficoAtendimentos porDia={porDia} hoje={hoje} assunto="Normas" />
-      </div>
+      {/* Quem não está em atuacao.js (alguém novo na equipe) fica só com as normas. */}
+      {atuacao && <Responsabilidade nome={pessoa.nome} atuacao={atuacao} escolher={escolher} />}
+      {/* A key fecha o "Ver mais" e refaz a entrada quando as cidades mudam com a responsabilidade. */}
+      {atuacao && <Cidades key={atuacao.responsabilidade} cidades={atuacao.cidades} />}
+      <Normas id={pessoa.id} hoje={hoje} emFila={emFila} />
+      {atuacao && <AtividadeRecente id={pessoa.id} cidades={atuacao.cidades} />}
 
-      <nav className={`${styles.nav} ${styles.surge}`} style={{ '--ordem': 4 }} aria-label="Navegar pela equipe">
+      <nav className={`${base.nav} ${base.surge}`} style={{ '--ordem': 5 }} aria-label="Navegar pela equipe">
         <button type="button" aria-label="Anterior" onClick={() => navegar(-1)}>
           ←
         </button>

@@ -12,15 +12,16 @@
  * houver fonte de verdade, ela entra no lugar de normasPorDia e o resto segue igual.
  */
 
-/** @type {Record<string, { mediaDiaria: number, emFila: number }>} */
+// anteriores: normas compiladas antes dos 56 dias do histórico (entram só em "Todo o Tempo", no card).
+/** @type {Record<string, { mediaDiaria: number, emFila: number, anteriores: number }>} */
 export const PRODUCAO = {
-  helena: { mediaDiaria: 6, emFila: 3 },
-  marcos: { mediaDiaria: 11, emFila: 8 },
-  leticia: { mediaDiaria: 9, emFila: 5 },
-  bruno: { mediaDiaria: 7, emFila: 12 },
-  camila: { mediaDiaria: 10, emFila: 4 },
-  otavio: { mediaDiaria: 5, emFila: 6 },
-  priscila: { mediaDiaria: 8, emFila: 7 },
+  helena: { mediaDiaria: 6, emFila: 3, anteriores: 1840 },
+  marcos: { mediaDiaria: 11, emFila: 8, anteriores: 3420 },
+  leticia: { mediaDiaria: 9, emFila: 5, anteriores: 2760 },
+  bruno: { mediaDiaria: 7, emFila: 12, anteriores: 1990 },
+  camila: { mediaDiaria: 10, emFila: 4, anteriores: 3105 },
+  otavio: { mediaDiaria: 5, emFila: 6, anteriores: 1260 },
+  priscila: { mediaDiaria: 8, emFila: 7, anteriores: 2380 },
 };
 
 export const TIPOS_DE_NORMA = [
@@ -29,7 +30,7 @@ export const TIPOS_DE_NORMA = [
   { chave: 'resolucoes', rotulo: 'Resoluções', parte: 0.14, cor: '#F2B632' },
   { chave: 'portarias', rotulo: 'Portarias', parte: 0.12, cor: '#E58F8F' },
   { chave: 'complementares', rotulo: 'Leis Complementares', parte: 0.07, cor: '#B79CE0' },
-  { chave: 'emendas', rotulo: 'Emendas à Lei Orgânica', parte: 0.04, cor: '#6FC3C8' },
+  { chave: 'emendas', rotulo: 'Emendas à Lei Orgânica', curto: 'Emendas', parte: 0.04, cor: '#6FC3C8' },
 ];
 
 export const META_DO_MES = 1100;
@@ -39,14 +40,14 @@ const DIAS_DE_HISTORICO = 56;
 const UM_DIA_MS = 864e5;
 
 // Número estável de 0 a 1 a partir de um texto: a mesma pessoa no mesmo dia, o mesmo valor.
-function sorteioFixo(texto) {
+export function sorteioFixo(texto) {
   let h = 2166136261;
   for (let i = 0; i < texto.length; i++) h = Math.imul(h ^ texto.charCodeAt(i), 16777619);
   return (h >>> 0) / 4294967296;
 }
 
-const somarDias = (data, dias) => new Date(Date.parse(`${data}T00:00:00Z`) + dias * UM_DIA_MS).toISOString().slice(0, 10);
-const fimDeSemana = (data) => [0, 6].includes(new Date(`${data}T00:00:00Z`).getUTCDay());
+export const somarDias = (data, dias) => new Date(Date.parse(`${data}T00:00:00Z`) + dias * UM_DIA_MS).toISOString().slice(0, 10);
+export const fimDeSemana = (data) => [0, 6].includes(new Date(`${data}T00:00:00Z`).getUTCDay());
 
 /**
  * Normas compiladas por dia ("AAAA-MM-DD" -> total), dos últimos 56 dias até
