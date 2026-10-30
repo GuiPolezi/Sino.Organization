@@ -21,8 +21,9 @@ const { damp } = THREE.MathUtils;
  * da balança da Têmis de sempre); a outra apoia a espada no pedestal.
  *
  * A folha pende de PEGA, o ponto da borda de cima que a mão segura, um pouco à
- * esquerda do meio. O braço passa por trás dela e os dedos dobram por cima da
- * borda, na frente do papel: dá para ver que ela segura a folha.
+ * esquerda do meio. O braço passa por trás dela: o dorso da mão fica atrás do
+ * papel, os quatro dedos dobram por cima da borda e descem pela frente, e o
+ * polegar aperta o papel por trás. Dá para ver que ela segura a folha.
  */
 const BASE = 0.42;
 const TOPO = 2.72;
@@ -31,7 +32,27 @@ const PEGA = [0.8, 2.5, 0.16];
 const FOLHA = { largura: 0.86, altura: 1.12, dx: 0.19 };
 const OMBRO = { e: [-0.33, 1.98, 0], d: [0.33, 1.98, 0] };
 const COTOVELO = { e: [-0.43, 1.62, 0.06], d: [0.58, 2.14, 0.02] };
-const MAO = { e: [-0.46, 1.34, 0.2], d: [0.8, 2.53, 0.08] };
+// MAO.d é o pulso da mão erguida; a mão em si é montada em MaoNaFolha.
+const MAO = { e: [-0.46, 1.34, 0.2], d: [0.755, 2.45, 0.07] };
+// Onde o dorso da mão termina, nos nós dos dedos (atrás da folha, acima da borda).
+const NOS = [0.8, 2.56, 0.115];
+/*
+ * Os quatro dedos, do indicador (perto do polegar) ao mínimo: x em relação à PEGA,
+ * raio, quanto a ponta desce na frente da folha e quanto o nó sobe (o do meio é o
+ * mais alto). Comprimentos diferentes, como numa mão de verdade.
+ */
+const DEDOS = [
+  { x: -0.05, raio: 0.019, ponta: 0.05, alto: 0.004 },
+  { x: -0.017, raio: 0.02, ponta: 0.058, alto: 0.008 },
+  { x: 0.016, raio: 0.019, ponta: 0.053, alto: 0.006 },
+  { x: 0.047, raio: 0.016, ponta: 0.04, alto: 0 },
+];
+// O polegar, atrás da folha: base no pulso, junta e a ponta encostada no verso do papel.
+const POLEGAR = [
+  [0.752, 2.46, 0.075],
+  [0.738, 2.485, 0.112],
+  [0.772, 2.458, 0.137],
+];
 const PONTA_ESPADA = [-0.6, BASE + 0.03, 0.34];
 
 // O manto: um torno do pé até a cintura, com pregas que somem perto da cintura.
@@ -70,6 +91,8 @@ const G = {
   manto: criarManto(),
   losango: new THREE.OctahedronGeometry(0.5, 0),
   anel: new THREE.TorusGeometry(1, 0.045, 10, 80),
+  // Bem arredondada, para o dorso da mão não parecer um bloco.
+  dorso: new RoundedBoxGeometry(1, 1, 1, 6, 0.35),
 };
 
 // Massinha que acende em dourado no hover (como o quadro das outras equipes).
@@ -185,10 +208,9 @@ function Figura({ M }) {
       <Segmento de={OMBRO.e} ate={COTOVELO.e} raio={0.075} material={M.marmore} />
       <Segmento de={COTOVELO.e} ate={MAO.e} raio={0.065} material={M.marmore} />
       <mesh geometry={G.esfera} material={M.marmore} position={MAO.e} scale={0.15} />
-      {/* Braço erguido, por trás da folha, até a mão que segura a borda dela. */}
+      {/* Braço erguido, por trás da folha, até o pulso (a mão é a MaoNaFolha). */}
       <Segmento de={OMBRO.d} ate={COTOVELO.d} raio={0.075} material={M.marmore} />
-      <Segmento de={COTOVELO.d} ate={MAO.d} raio={0.065} material={M.marmore} />
-      <mesh geometry={G.esfera} material={M.marmore} position={MAO.d} scale={0.15} />
+      <Segmento de={COTOVELO.d} ate={MAO.d} raio={0.06} material={M.marmore} />
     </>
   );
 }
@@ -207,15 +229,59 @@ function Espada({ M }) {
   );
 }
 
-// Os dedos da mão erguida, dobrados por cima da borda da folha, na frente do papel.
-function Dedos({ M }) {
-  const [x, y, z] = PEGA;
+/*
+ * Um dedo dobrado por cima da borda da folha: a primeira falange sai do nó (atrás
+ * do papel) e passa por cima da borda; a ponta desce encostada na frente da folha,
+ * um pouco aberta para o lado, como os dedos de uma mão que segura.
+ */
+function pontosDoDedo({ x, raio, ponta, alto }) {
+  const [px, py, pz] = PEGA;
+  return {
+    no: [px + x, NOS[1] - 0.005 + alto, NOS[2] + 0.005],
+    junta: [px + x * 1.04, py + raio + 0.008, pz + raio * 0.5],
+    ponta: [px + x * 1.16, py - ponta, pz + raio + 0.003],
+  };
+}
+
+// A mão erguida segurando a folha pela borda de cima.
+function MaoNaFolha({ M }) {
   return (
     <>
-      <mesh geometry={G.arred} material={M.marmore} position={[x, y - 0.035, z + 0.035]} rotation-z={-0.08} scale={[0.15, 0.08, 0.055]} />
-      <mesh geometry={G.esfera} material={M.marmore} position={[x - 0.085, y - 0.055, z + 0.03]} scale={[0.06, 0.075, 0.05]} />
+      {/* O dorso, do pulso aos nós dos dedos, atrás da folha. */}
+      <Segmento de={MAO.d} ate={NOS} raio={0.068} espessura={0.055} material={M.marmore} geometria={G.dorso} />
+      {DEDOS.map((dedo) => {
+        const { no, junta, ponta } = pontosDoDedo(dedo);
+        return (
+          <group key={dedo.x}>
+            <Segmento de={no} ate={junta} raio={dedo.raio} material={M.marmore} />
+            <Segmento de={junta} ate={ponta} raio={dedo.raio * 0.88} material={M.marmore} />
+          </group>
+        );
+      })}
+      <Segmento de={POLEGAR[0]} ate={POLEGAR[1]} raio={0.026} material={M.marmore} />
+      <Segmento de={POLEGAR[1]} ate={POLEGAR[2]} raio={0.022} material={M.marmore} />
     </>
   );
+}
+
+// A sombrinha que os dedos fazem no papel, logo abaixo das pontas (some nas bordas).
+function useSombraDosDedos() {
+  const textura = useMemo(
+    () =>
+      novaTextura(128, 64, (ctx, w, h) => {
+        // Um círculo achatado na altura: o gradiente é desenhado num quadrado w×w encolhido.
+        ctx.setTransform(1, 0, 0, h / w, 0, 0);
+        const gradiente = ctx.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+        gradiente.addColorStop(0, 'rgba(40,38,50,0.55)');
+        gradiente.addColorStop(0.6, 'rgba(40,38,50,0.2)');
+        gradiente.addColorStop(1, 'rgba(40,38,50,0)');
+        ctx.fillStyle = gradiente;
+        ctx.fillRect(0, 0, w, w);
+      }),
+    [],
+  );
+  useEffect(() => () => textura.dispose(), [textura]);
+  return textura;
 }
 
 // Conta as vezes que a fonte manuscrita terminou de carregar, para redesenhar a folha.
@@ -236,10 +302,15 @@ function useFonteManuscrita() {
 
 // A folha: pende da mão e balança de leve. O pivô fica na PEGA (onde a mão segura).
 function Folha({ M, textura, folha }) {
+  const sombra = useSombraDosDedos();
   return (
     <group ref={folha} position={PEGA}>
       <mesh geometry={G.plano} position={[FOLHA.dx, -FOLHA.altura / 2, 0]} scale={[FOLHA.largura, FOLHA.altura, 1]}>
         <meshStandardMaterial map={textura} roughness={0.9} />
+      </mesh>
+      {/* Logo abaixo das pontas dos dedos, colada na frente do papel. */}
+      <mesh geometry={G.plano} position={[0.004, -0.04, 0.002]} scale={[0.2, 0.08, 1]}>
+        <meshBasicMaterial map={sombra} transparent depthWrite={false} />
       </mesh>
       <mesh
         geometry={G.plano}
@@ -340,7 +411,7 @@ export default function EstatuaTemis({ area }) {
         <Pedestal M={M} />
         <Figura M={M} />
         <Espada M={M} />
-        <Dedos M={M} />
+        <MaoNaFolha M={M} />
         <Folha M={M} textura={textura} folha={folha} />
       </group>
 
