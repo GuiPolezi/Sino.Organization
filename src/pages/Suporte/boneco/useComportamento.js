@@ -498,7 +498,8 @@ function atualizarSentado(s, selecionado, dt) {
   if (s.estado === 'trabalhando') {
     pos.x = estacao.assento.x;
     pos.z = estacao.assento.z;
-    s.sentado = 1;
+    // Num lugar usado de pé (o balcão do café), as pernas ficam esticadas.
+    s.sentado = estacao.emPe ? 0 : 1;
     s.tMicro -= dt;
     if (s.tMicro <= 0) sortearMicro(s);
     s.timer -= dt;

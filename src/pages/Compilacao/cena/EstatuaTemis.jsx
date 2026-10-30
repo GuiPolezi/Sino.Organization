@@ -17,18 +17,22 @@ const { damp } = THREE.MathUtils;
 
 /*
  * Medidas (m) no espaço da estátua, de frente para +z. O pedestal vai até BASE;
- * dali sobe a figura. A mão erguida segura uma haste com a folha pendurada
- * (no lugar da balança da Têmis de sempre); a outra apoia a espada no pedestal.
+ * dali sobe a figura. A mão erguida segura a folha pela borda de cima (no lugar
+ * da balança da Têmis de sempre); a outra apoia a espada no pedestal.
+ *
+ * A folha pende de PEGA, o ponto da borda de cima que a mão segura, um pouco à
+ * esquerda do meio. O braço passa por trás dela e os dedos dobram por cima da
+ * borda, na frente do papel: dá para ver que ela segura a folha.
  */
 const BASE = 0.42;
 const TOPO = 2.72;
-const FOLHA = { largura: 1.0, altura: 1.3, x: 1.22, y: 2.56, z: 0.16 };
+const PEGA = [0.8, 2.5, 0.16];
+// Tamanho da folha e onde fica o centro dela em relação à PEGA (só no x).
+const FOLHA = { largura: 0.86, altura: 1.12, dx: 0.19 };
 const OMBRO = { e: [-0.33, 1.98, 0], d: [0.33, 1.98, 0] };
-const COTOVELO = { e: [-0.43, 1.62, 0.06], d: [0.6, 2.12, 0.08] };
-const MAO = { e: [-0.46, 1.34, 0.2], d: [0.66, 2.48, 0.12] };
+const COTOVELO = { e: [-0.43, 1.62, 0.06], d: [0.58, 2.14, 0.02] };
+const MAO = { e: [-0.46, 1.34, 0.2], d: [0.8, 2.53, 0.08] };
 const PONTA_ESPADA = [-0.6, BASE + 0.03, 0.34];
-const HASTE = { de: [0.66, 2.38, 0.12], ate: [0.66, 2.7, 0.12] };
-const BARRA = { de: [0.62, 2.62, FOLHA.z - 0.04], ate: [FOLHA.x + FOLHA.largura / 2 + 0.06, 2.62, FOLHA.z - 0.04] };
 
 // O manto: um torno do pé até a cintura, com pregas que somem perto da cintura.
 function criarManto() {
@@ -181,7 +185,7 @@ function Figura({ M }) {
       <Segmento de={OMBRO.e} ate={COTOVELO.e} raio={0.075} material={M.marmore} />
       <Segmento de={COTOVELO.e} ate={MAO.e} raio={0.065} material={M.marmore} />
       <mesh geometry={G.esfera} material={M.marmore} position={MAO.e} scale={0.15} />
-      {/* Braço erguido, segurando a haste da folha. */}
+      {/* Braço erguido, por trás da folha, até a mão que segura a borda dela. */}
       <Segmento de={OMBRO.d} ate={COTOVELO.d} raio={0.075} material={M.marmore} />
       <Segmento de={COTOVELO.d} ate={MAO.d} raio={0.065} material={M.marmore} />
       <mesh geometry={G.esfera} material={M.marmore} position={MAO.d} scale={0.15} />
@@ -203,17 +207,13 @@ function Espada({ M }) {
   );
 }
 
-// A haste na mão erguida, a barra e as presilhas de onde a folha pende.
-function Haste({ M }) {
+// Os dedos da mão erguida, dobrados por cima da borda da folha, na frente do papel.
+function Dedos({ M }) {
+  const [x, y, z] = PEGA;
   return (
     <>
-      <Segmento de={HASTE.de} ate={HASTE.ate} raio={0.025} material={M.cabo} geometria={G.cil} />
-      <mesh geometry={G.esfera} material={M.cabo} position={HASTE.ate} scale={0.08} />
-      <Segmento de={BARRA.de} ate={BARRA.ate} raio={0.022} material={M.cabo} geometria={G.cil} />
-      <mesh geometry={G.esfera} material={M.cabo} position={BARRA.ate} scale={0.07} />
-      {[-0.36, 0.36].map((dx) => (
-        <mesh key={dx} geometry={G.arred} material={M.cabo} position={[FOLHA.x + dx, BARRA.de[1] - 0.04, FOLHA.z - 0.02]} scale={[0.08, 0.1, 0.05]} />
-      ))}
+      <mesh geometry={G.arred} material={M.marmore} position={[x, y - 0.035, z + 0.035]} rotation-z={-0.08} scale={[0.15, 0.08, 0.055]} />
+      <mesh geometry={G.esfera} material={M.marmore} position={[x - 0.085, y - 0.055, z + 0.03]} scale={[0.06, 0.075, 0.05]} />
     </>
   );
 }
@@ -234,14 +234,20 @@ function useFonteManuscrita() {
   return versao;
 }
 
-// A folha: pende da barra e balança de leve. O pivô fica na barra (topo da folha).
+// A folha: pende da mão e balança de leve. O pivô fica na PEGA (onde a mão segura).
 function Folha({ M, textura, folha }) {
   return (
-    <group ref={folha} position={[FOLHA.x, FOLHA.y, FOLHA.z]}>
-      <mesh geometry={G.plano} position-y={-FOLHA.altura / 2} scale={[FOLHA.largura, FOLHA.altura, 1]}>
+    <group ref={folha} position={PEGA}>
+      <mesh geometry={G.plano} position={[FOLHA.dx, -FOLHA.altura / 2, 0]} scale={[FOLHA.largura, FOLHA.altura, 1]}>
         <meshStandardMaterial map={textura} roughness={0.9} />
       </mesh>
-      <mesh geometry={G.plano} material={M.papelVerso} position={[0, -FOLHA.altura / 2, -0.004]} rotation-y={Math.PI} scale={[FOLHA.largura, FOLHA.altura, 1]} />
+      <mesh
+        geometry={G.plano}
+        material={M.papelVerso}
+        position={[FOLHA.dx, -FOLHA.altura / 2, -0.004]}
+        rotation-y={Math.PI}
+        scale={[FOLHA.largura, FOLHA.altura, 1]}
+      />
     </group>
   );
 }
@@ -303,7 +309,7 @@ export default function EstatuaTemis({ area }) {
     losango.current.position.y = TOPO * CONFIG_QUADRO.escala + 0.3 + Math.sin(t * 2.2) * 0.08;
     if (!MOVIMENTO.reduzido) losango.current.rotation.y += dt * (1.2 + b * 3);
     losango.current.scale.setScalar(0.3 + b * 0.08);
-    // A folha balança de leve na barra, como papel pendurado.
+    // A folha balança de leve na mão, como papel segurado pela borda.
     folha.current.rotation.x = Math.sin(t * 0.9) * 0.035;
     folha.current.rotation.z = Math.sin(t * 0.6 + 1) * 0.012;
   });
@@ -334,7 +340,7 @@ export default function EstatuaTemis({ area }) {
         <Pedestal M={M} />
         <Figura M={M} />
         <Espada M={M} />
-        <Haste M={M} />
+        <Dedos M={M} />
         <Folha M={M} textura={textura} folha={folha} />
       </group>
 

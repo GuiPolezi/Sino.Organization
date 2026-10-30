@@ -5,7 +5,7 @@
  *   • sete mesas de trabalho, as mesmas de /suporte: um bloco de quatro no meio,
  *     duas soltas na direita e uma no fundo
  *   • o cantinho do café, na esquerda: a mesa com a cafeteira, as xícaras e a
- *     flor, e três pufes de descanso virados para a câmera
+ *     flor, e na frente dela dois pufes em roda, um de frente para o outro
  *   • a estátua de Têmis no fundo (é o "quadro" da equipe: quadro/posicao.js)
  *
  * Tudo vira estação (Suporte/boneco/estacoes.js): as mesas, para trabalhar; os
@@ -45,7 +45,7 @@ export const QUADRO_COMPILACAO = {
   ],
   // Com o painel aberto a câmera recua e sobe: a estátua é alta e a folha fica à direita dela.
   foco: {
-    largo: { dx: 2.6, y: 4.2, z: 9.8, olhar: 2.1 },
+    largo: { dx: 2.3, y: 4.2, z: 9.4, olhar: 2.1 },
     estreito: { dx: 0.8, y: 6.4, z: 13.5, olhar: 0.2 },
   },
 };
@@ -60,8 +60,12 @@ const LUGARES_CAFE = [
 const ASSENTO_CAFE = 0.72;
 const CHEGADA_CAFE = 1.25;
 // Do centro do pufe até onde o boneco chega andando, e o raio dele (com metade do corpo).
-const CHEGADA_PUFE = 1.15;
+const CHEGADA_PUFE = 0.95;
 const RAIO_PUFE = 0.75;
+// A roda de pufes: distância de cada pufe ao centro e quanto os dois ficam atrás dele (rad),
+// para quem senta aparecer de três quartos para a câmera, e não de perfil.
+const RAIO_RODA = 1.05;
+const GIRO_RODA = 0.35;
 
 // O bloco 2×2 de /suporte, com centro em (cx, cz).
 const bloco = (cx, cz) => [
@@ -72,9 +76,19 @@ const bloco = (cx, cz) => [
 ];
 
 /*
- * Cada pufe olha para um ponto (`olhar`): quem senta fica de frente para ele.
- * forma: 'baixo' (redondo) ou 'alto' (com encosto), as do pufe da sala de reunião.
+ * Os dois pufes em roda em volta de `centro`, cada um olhando para ele: quem senta
+ * fica de frente para quem está no outro. forma: 'baixo' (redondo) ou 'alto' (com
+ * encosto), as do pufe da sala de reunião.
  */
+function rodaDePufes({ x, z }) {
+  const dx = Math.cos(GIRO_RODA) * RAIO_RODA;
+  const dz = Math.sin(GIRO_RODA) * RAIO_RODA;
+  return [
+    { id: 'pufe-vermelho', x: x - dx, z: z - dz, cor: '#E25656', forma: 'baixo', olhar: { x, z } },
+    { id: 'pufe-amarelo', x: x + dx, z: z - dz, cor: '#F2B632', forma: 'alto', olhar: { x, z } },
+  ];
+}
+
 const PLANTAS = {
   paisagem: {
     mesas: [
@@ -86,11 +100,8 @@ const PLANTAS = {
       { id: 'c-fundo', x: 2.4, z: -3.6, rot: 0.15 },
     ],
     cafe: { x: -6.1, z: -1.7, rot: 0.4 },
-    pufes: [
-      { id: 'pufe-vermelho', x: -5.2, z: 1.5, cor: '#E25656', forma: 'baixo', olhar: { x: 0, z: 6 } },
-      { id: 'pufe-amarelo', x: -7.1, z: 0.3, cor: '#F2B632', forma: 'alto', olhar: { x: 0, z: 6 } },
-      { id: 'pufe-azul', x: -3.4, z: 2.9, cor: '#1E88B8', forma: 'baixo', olhar: { x: 0, z: 6 } },
-    ],
+    // Na frente da mesa do café.
+    pufes: rodaDePufes({ x: -5.5, z: 1.0 }),
   },
   retrato: {
     mesas: [
@@ -101,11 +112,7 @@ const PLANTAS = {
     ],
     // De lado, com a frente virada para o meio do tapete.
     cafe: { x: -3.4, z: 1.2, rot: Math.PI / 2 },
-    pufes: [
-      { id: 'pufe-vermelho', x: -3.0, z: 3.6, cor: '#E25656', forma: 'baixo', olhar: { x: 1.5, z: 7 } },
-      { id: 'pufe-amarelo', x: -3.9, z: -1.0, cor: '#F2B632', forma: 'alto', olhar: { x: 0, z: -0.2 } },
-      { id: 'pufe-azul', x: -0.6, z: 4.9, cor: '#1E88B8', forma: 'baixo', olhar: { x: 2, z: 9 } },
-    ],
+    pufes: rodaDePufes({ x: -2.7, z: 3.5 }),
   },
 };
 

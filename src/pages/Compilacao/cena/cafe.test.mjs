@@ -2,7 +2,7 @@
 // Uso: npm run test:cenario
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { DURACAO_GOLE, aoLevantar, aoSentar, atualizar, criar, decidir, pose } from './cafe.js';
+import { DURACAO_GOLE, PAUSA, aoLevantar, aoSentar, atualizar, criar, decidir, pose, reiniciarPausa } from './cafe.js';
 
 // Math.random fixo enquanto `fn` roda.
 function comSorteio(valor, fn) {
@@ -15,8 +15,11 @@ function comSorteio(valor, fn) {
   }
 }
 
+// Cada teste começa sem ninguém na pausa do café.
+test.beforeEach(reiniciarPausa);
+
 const novoBoneco = (extra = {}) => {
-  const s = { id: 'x', estado: 'parado', timer: 0, acao: null, estacao: null, micro: 'digitar', passo: 0 };
+  const s = { id: extra.id ?? 'x', estado: 'parado', timer: 0, acao: null, estacao: null, micro: 'digitar', passo: 0 };
   criar(s);
   return Object.assign(s, extra);
 };
@@ -92,7 +95,7 @@ test('na cafeteira: a xícara aparece na metade do tempo e ele sai com ela cheia
   s.timer = duracao * 0.4;
   atualizar(s, 0);
   assert.equal(s.xicara, true);
-  assert.ok(s.goles >= 4);
+  assert.ok(s.goles >= 3);
 
   aoLevantar(s, CAFE);
   assert.equal(s.missaoCafe, null);
@@ -156,4 +159,46 @@ test('com a xícara, o braço direito a segura e sobe no gole; o aceno passa par
   pose(acenando, s, info);
   assert.ok(acenando.bracoEz < -2, 'acena com a esquerda');
   assert.equal(acenando.bracoDx, -1.1, 'e não derruba o café');
+});
+
+test('a pausa do café é de uma pessoa por vez', () => {
+  const comCafe = novoBoneco({ id: 'a', xicara: true, goles: 3 });
+  atualizar(comCafe, 0);
+  const s = novoBoneco({ id: 'b', descansoCafe: 0 });
+  const acoes = acoesFalsas([CAFE, MESA]);
+  assert.equal(comSorteio(0.1, () => decidir(s, acoes)), false, 'espera a vez');
+  assert.deepEqual(acoes.pedidos, []);
+
+  // Quem está a caminho do café também conta.
+  comCafe.xicara = false;
+  comCafe.estacao = CAFE;
+  assert.equal(comSorteio(0.1, () => decidir(s, acoesFalsas([CAFE]))), false);
+
+  // Saiu da pausa: agora pode.
+  comCafe.estacao = null;
+  const livre = acoesFalsas([CAFE]);
+  assert.equal(comSorteio(0.1, () => decidir(s, livre)), true);
+  assert.deepEqual(livre.pedidos, [['irPara', 'cafe']]);
+});
+
+test('depois de devolver a xícara, a próxima pausa espera um intervalo', () => {
+  const s = novoBoneco({ id: 'c', estado: 'trabalhando', estacao: CAFE, xicara: true, goles: 0 });
+  aoSentar(s);
+  aoLevantar(s, CAFE);
+  assert.ok(PAUSA.livreEm > performance.now() / 1000 + 10, 'intervalo de pelo menos uns segundos');
+
+  const outro = novoBoneco({ id: 'd', descansoCafe: 0 });
+  assert.equal(comSorteio(0.1, () => decidir(outro, acoesFalsas([CAFE]))), false);
+  // Com a xícara vazia na mão, devolver não espera ninguém.
+  const devolvendo = novoBoneco({ id: 'e', xicara: true, goles: 0 });
+  const acoes = acoesFalsas([CAFE]);
+  decidir(devolvendo, acoes);
+  assert.deepEqual(acoes.pedidos, [['irPara', 'cafe']]);
+});
+
+test('quem saiu de cena não segura a pausa dos outros', () => {
+  const sumido = novoBoneco({ id: 'f', xicara: true, goles: 3 });
+  sumido.vistoEm -= 10;
+  const s = novoBoneco({ id: 'g', descansoCafe: 0 });
+  assert.equal(comSorteio(0.1, () => decidir(s, acoesFalsas([CAFE]))), true);
 });

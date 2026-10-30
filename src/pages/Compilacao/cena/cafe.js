@@ -10,6 +10,8 @@
  *
  * Sem xícara, o resto é o de sempre (mesas, acenos, passeios). Com a xícara na
  * mão ninguém vai para o computador: primeiro termina o café e devolve a xícara.
+ * A pausa do café é esporádica: uma pessoa por vez, com um intervalo entre uma
+ * pausa e a próxima (PAUSA), além da espera de cada um.
  * Tudo aqui é mutado no estado do boneco (`s`), sem React nem three.js.
  */
 
@@ -20,19 +22,60 @@ const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
 // Duração (s) de um gole: o braço sobe, a xícara inclina e o braço desce.
 export const DURACAO_GOLE = 1.5;
 // Goles numa xícara cheia.
-const GOLES = [4, 7];
+const GOLES = [3, 5];
 // Pausa (s) entre um gole e outro: parado "tomando café" é mais seguido.
 const ENTRE_GOLES = [2.5, 5];
 const ENTRE_GOLES_BEBENDO = [0.5, 1.1];
 // Chance de, parado e sem xícara, ir buscar café ou descansar no pufe (quando já pode).
-const CHANCE_CAFE = 0.35;
-const CHANCE_PUFE = 0.15;
+const CHANCE_CAFE = 0.25;
+const CHANCE_PUFE = 0.12;
+// Espera (s) de cada um até querer café de novo: a primeira e depois de tomar um.
+const ESPERA_CAFE_INICIAL = [10, 70];
+const ESPERA_CAFE = [100, 200];
+const ESPERA_PUFE_INICIAL = [15, 45];
+const ESPERA_PUFE = [40, 80];
+// Quantas pessoas podem estar na pausa do café ao mesmo tempo (indo, com a xícara ou devolvendo)
+// e o intervalo (s) da saída de uma pausa até a próxima poder começar.
+const MAX_NA_PAUSA = 1;
+const INTERVALO_ENTRE_PAUSAS = [35, 80];
 // Com a xícara: chance de ir sentar no pufe e de ficar parado tomando (o resto é passeio).
 const CHANCE_PUFE_COM_CAFE = 0.4;
 const CHANCE_BEBER_PARADO = 0.4;
 // Em que parte do tempo na cafeteira a xícara aparece (buscar) ou fica na mesa (devolver).
 const XICARA_NA_MAO = 0.5;
 const XICARA_NA_MESA = 0.45;
+
+// Relógio de parede (s): a pausa é uma só para a equipe toda, não por boneco.
+const agora = () => performance.now() / 1000;
+
+/**
+ * A pausa do café da equipe: `livreEm` é quando a próxima pode começar. Começa com
+ * um intervalo, para ninguém correr para o café assim que a página abre.
+ */
+export const PAUSA = { livreEm: agora() + 8 };
+// O estado de cada boneco, por id, e quando ele foi visto pela última vez (a cada frame).
+const EQUIPE = new Map();
+// Some da conta quem não é visto há este tempo (s): saiu de cena.
+const SUMIDO = 2;
+
+/** Recomeça a conta da pausa: ninguém na equipe e a pausa livre (para os testes). */
+export function reiniciarPausa() {
+  EQUIPE.clear();
+  PAUSA.livreEm = 0;
+}
+
+const naPausa = (s) => s.xicara || s.missaoCafe !== null || s.estacao?.tipo === 'cafe';
+
+/** Pode começar uma pausa do café agora? Ninguém (além do limite) nela e o intervalo já passou. */
+function pausaLivre(s) {
+  const t = agora();
+  if (t < PAUSA.livreEm) return false;
+  let ocupados = 0;
+  for (const outro of EQUIPE.values()) {
+    if (outro.id !== s.id && t - outro.vistoEm < SUMIDO && naPausa(outro)) ocupados += 1;
+  }
+  return ocupados < MAX_NA_PAUSA;
+}
 
 const ehCafe = (e) => e.tipo === 'cafe';
 const ehPufe = (e) => e.tipo === 'pufe';
@@ -47,13 +90,15 @@ export function criar(s) {
     // Segundos até o próximo gole e quanto falta do gole atual (0 = sem gole).
     tGole: 0,
     bebendo: 0,
-    // Segundos até querer café (ou pufe) de novo; começam curtos, para a cena ganhar vida logo.
-    descansoCafe: rand(4, 24),
-    descansoPufe: rand(8, 30),
+    // Segundos até querer café (ou pufe) de novo.
+    descansoCafe: rand(...ESPERA_CAFE_INICIAL),
+    descansoPufe: rand(...ESPERA_PUFE_INICIAL),
     // 'buscar' ou 'devolver' enquanto está na mesa do café.
     missaoCafe: null,
     duracaoLugar: 1,
+    vistoEm: agora(),
   });
+  EQUIPE.set(s.id, s);
 }
 
 /**
@@ -80,7 +125,7 @@ export function decidir(s, acoes) {
     return true;
   }
 
-  if (s.descansoCafe <= 0 && Math.random() < CHANCE_CAFE && acoes.irPara(s, ehCafe)) return true;
+  if (s.descansoCafe <= 0 && Math.random() < CHANCE_CAFE && pausaLivre(s) && acoes.irPara(s, ehCafe)) return true;
   if (s.descansoPufe <= 0 && Math.random() < CHANCE_PUFE && acoes.irPara(s, ehPufe)) return true;
   return false;
 }
@@ -103,14 +148,16 @@ export function aoLevantar(s, estacao) {
     if (s.missaoCafe === 'buscar') {
       // Se levantou antes de a xícara aparecer (não deveria), sai com ela do mesmo jeito.
       if (!s.xicara) pegarXicara(s);
-      s.descansoCafe = rand(40, 80);
+      s.descansoCafe = rand(...ESPERA_CAFE);
     } else if (s.missaoCafe === 'devolver') {
       s.xicara = false;
       s.goles = 0;
+      // Fim da pausa: a próxima, de quem for, só depois de um intervalo.
+      PAUSA.livreEm = Math.max(PAUSA.livreEm, agora() + rand(...INTERVALO_ENTRE_PAUSAS));
     }
     s.missaoCafe = null;
   } else if (estacao.tipo === 'pufe') {
-    s.descansoPufe = rand(18, 35);
+    s.descansoPufe = rand(...ESPERA_PUFE);
   }
 }
 
@@ -130,6 +177,9 @@ export const progressoNoCafe = (s) => clamp(1 - s.timer / s.duracaoLugar, 0, 1);
 
 /** A cada frame: os tempos de espera, a xícara aparecendo e sumindo na mesa e os goles. */
 export function atualizar(s, dt) {
+  // O boneco vivo é o que atualiza (no modo estrito do React, o estado pode ser criado duas vezes).
+  s.vistoEm = agora();
+  EQUIPE.set(s.id, s);
   s.descansoCafe -= dt;
   s.descansoPufe -= dt;
 

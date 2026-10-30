@@ -29,12 +29,12 @@ function retangulo(id) {
 }
 const seTocam = (a, b) => a.minX <= b.maxX && b.minX <= a.maxX && a.minZ <= b.maxZ && b.minZ <= a.maxZ;
 
-test('são sete mesas, três pufes e dois lugares no café, nas duas formas do tapete', () => {
+test('são sete mesas, dois pufes e dois lugares no café, nas duas formas do tapete', () => {
   for (const [retrato] of FORMAS) {
     const estacoes = aplicarPlanta(retrato);
     const tipos = (tipo) => estacoes.filter((e) => e.tipo === tipo).length;
     assert.equal(tipos('mesa'), 7);
-    assert.equal(tipos('pufe'), 3);
+    assert.equal(tipos('pufe'), 2);
     assert.equal(tipos('cafe'), 2);
     assert.ok(estacoes.filter((e) => e.tipo !== 'mesa').every((e) => e.especial), 'pufe e café só pela página');
     assert.equal(OBSTACULOS.filter(({ estacao }) => estacao === MARCA_MOBILIA).length, 2, 'a mesa do café, uma vez só');
@@ -124,5 +124,20 @@ test('o "ir trabalhar" padrão só reserva as sete mesas; o café e o pufe só c
   const cafe = reservarEstacao('p7', area, (e) => e.tipo === 'cafe');
   assert.equal(cafe?.tipo, 'cafe');
   assert.ok(ESTACOES.every((e) => !doQuadro(e)));
+  tirarEstacoes();
+});
+
+test('os dois pufes ficam em roda, um de frente para o outro', () => {
+  for (const [retrato, , forma] of FORMAS) {
+    const [a, b] = aplicarPlanta(retrato).filter((e) => e.tipo === 'pufe');
+    // Cada um olha na direção do outro (o giro aponta para o centro da roda).
+    const paraB = Math.atan2(b.x - a.x, b.z - a.z);
+    const paraA = Math.atan2(a.x - b.x, a.z - b.z);
+    const diferenca = (x, y) => Math.abs(Math.atan2(Math.sin(x - y), Math.cos(x - y)));
+    assert.ok(diferenca(a.yaw, paraB) < 0.4, `${a.id} de frente para ${b.id} em ${forma}`);
+    assert.ok(diferenca(b.yaw, paraA) < 0.4, `${b.id} de frente para ${a.id} em ${forma}`);
+    // E sentam perto: menos de 2,5 m entre os dois assentos.
+    assert.ok(distancia(a.assento, b.assento) < 2.5, `assentos próximos em ${forma}`);
+  }
   tirarEstacoes();
 });
