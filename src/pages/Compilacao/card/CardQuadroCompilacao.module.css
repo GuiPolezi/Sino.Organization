@@ -1,7 +1,7 @@
 /*
  * O que o painel de /compilacao acrescenta ao do suporte (Suporte/card/CardQuadro.module.css).
  * O painel é um container: os tamanhos acompanham a largura dele (cqi) e, se ele
- * for largo, a fila passa de 2 para 3 colunas.
+ * for muito estreito (celular), a fila passa de 3 para 2 colunas.
  */
 .painel {
   container: quadro / inline-size;
@@ -228,10 +228,43 @@
   }
 }
 
-/* ── Fila: os blocos do suporte, em 3 colunas quando o painel é largo ── */
-@container quadro (min-width: 30rem) {
+/*
+ * ── Fila: os blocos do suporte, menores, para caberem 3 por linha ──
+ * Com .painel na frente, vence o tamanho do quadro do suporte. Só num painel
+ * muito estreito (celular) voltam a ser 2 por linha.
+ */
+.painel .fila {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.painel .fila li {
+  gap: 6px;
+  padding: 10px 11px 11px;
+  border-radius: 16px;
+}
+
+.painel .fila h4 {
+  font-size: 0.6875rem;
+}
+
+.painel .fila p {
+  gap: 2px 6px;
+}
+
+.painel .fila strong {
+  font-size: 1.625rem;
+}
+
+/* Continua creme cheio sobre o oliva (contraste acima de 4,5:1), só que menor. */
+.painel .fila small {
+  min-width: 3rem;
+  font-size: 0.5625rem;
+}
+
+@container quadro (max-width: 21.99rem) {
   .painel .fila {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
