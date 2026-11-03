@@ -1,54 +1,76 @@
-// Casos das contas de /compilacao (resumo.js e dados.js).
+// Casos do Quadro da equipe de /compilacao (resumo.js): a soma dos cards do servidor.
 // Uso: npm run test:cenario
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { META_DO_MES, TIPOS_DE_NORMA, normasPorDia } from './dados.js';
-import { EQUIPE_COMPILACAO } from './equipe.js';
-import { producaoDe, repartir, resumoCompilacao } from './resumo.js';
+import { resumoCompilacao, rotuloParcial } from './resumo.js';
+import { REFERENCIA, pessoaDeAtualizacoes, pessoaDeProjetos } from './respostas-teste.mjs';
 
-// Uma sexta-feira.
-const HOJE = '2026-10-30';
+const tecnicos = [
+  { id: 'leonardo', nome: 'Leonardo', funcao: 'Compilador' },
+  { id: 'ramon', nome: 'Ramon', funcao: 'Compilador' },
+  { id: 'damaris', nome: 'Damaris', funcao: 'Compiladora' },
+];
 
-test('repartir: inteiros que somam o total, pelos maiores restos', () => {
-  assert.deepEqual(repartir(10, [0.5, 0.25, 0.25]), [5, 3, 2]);
-  assert.deepEqual(repartir(7, [1 / 3, 1 / 3, 1 / 3]), [3, 2, 2]);
-  assert.deepEqual(repartir(0, [0.6, 0.4]), [0, 0]);
-  const tipos = repartir(813, TIPOS_DE_NORMA.map(({ parte }) => parte));
-  assert.equal(tipos.reduce((a, b) => a + b, 0), 813);
+const dados = {
+  referencia: REFERENCIA,
+  pessoas: {
+    leonardo: pessoaDeProjetos(),
+    ramon: pessoaDeProjetos({ producao: { hoje: 1, semana: 5, mes: 90, tudo: null }, porTipo: { ...pessoaDeProjetos().porTipo, mes: { leis: 0, decretos: 0, resolucoes: 0, portarias: 0, complementares: 85, emendas: 0, outros: 5 } } }),
+    damaris: pessoaDeAtualizacoes(), // Mês "—" (aba do mês não importada)
+  },
+};
+
+test('I1: quadro = soma dos cards com número, e "parcial" conta os "—"', () => {
+  const r = resumoCompilacao(tecnicos, dados, REFERENCIA);
+  assert.equal(r.normasMes, 130);
+  assert.equal(r.normasSemana, 12 + 5 + 9);
+  assert.equal(r.normasHoje, 3 + 1 + 2);
+  assert.deepEqual(r.parcial, { hoje: 0, semana: 0, mes: 1 });
+  assert.equal(rotuloParcial(r.parcial.mes), 'parcial · 1 sem dado');
+  assert.equal(rotuloParcial(0), '');
 });
 
-test('as partes dos tipos de norma somam 1', () => {
-  const soma = TIPOS_DE_NORMA.reduce((total, { parte }) => total + parte, 0);
-  assert.ok(Math.abs(soma - 1) < 1e-9);
+test('I2: Σ tipos do quadro = Mês do quadro (só de quem tem o Mês)', () => {
+  const r = resumoCompilacao(tecnicos, dados, REFERENCIA);
+  assert.equal(r.porTipo.length, 7);
+  assert.equal(r.porTipo.reduce((soma, { valor }) => soma + valor, 0), r.normasMes);
+  assert.equal(r.porTipo.find(({ chave }) => chave === 'outros').valor, 7);
 });
 
-test('a produção do dia a dia é sempre a mesma, sem sábado e domingo, e some para quem não está em dados.js', () => {
-  const porDia = normasPorDia('leonardo', HOJE);
-  assert.deepEqual(normasPorDia('leonardo', HOJE), porDia);
-  assert.equal(porDia['2026-10-25'], undefined, 'domingo');
-  assert.equal(porDia['2026-10-24'], undefined, 'sábado');
-  assert.ok(porDia['2026-10-29'] > 0);
-  assert.deepEqual(normasPorDia('ninguem', HOJE), {});
-  assert.equal(producaoDe('ninguem', HOJE).totais.mes, 0);
+test('I9: com dados de outro dia, o Dia fica "—" e o resto vale', () => {
+  const r = resumoCompilacao(tecnicos, dados, '2026-11-05');
+  assert.equal(r.normasHoje, null);
+  assert.equal(r.parcial.hoje, 0);
+  assert.equal(r.normasMes, 130);
 });
 
-test('o resumo da equipe: totais, ranking do maior para o menor, últimos dias e tipos que fecham o total', () => {
-  const resumo = resumoCompilacao(EQUIPE_COMPILACAO, HOJE);
-  assert.equal(resumo.totalCompiladores, 7);
-  assert.equal(resumo.ranking.length, 7);
-  const somaDoMes = resumo.ranking.reduce((total, { normasMes }) => total + normasMes, 0);
-  assert.equal(resumo.normasMes, somaDoMes);
-  assert.ok(resumo.ranking.every((pessoa, i, lista) => i === 0 || lista[i - 1].normasMes >= pessoa.normasMes));
-  assert.equal(resumo.porTipo.reduce((total, { valor }) => total + valor, 0), resumo.normasMes);
-  assert.equal(resumo.dias.length, 5);
-  assert.equal(resumo.dias.at(-1).rotulo, 'Hoje');
-  assert.equal(resumo.meta, META_DO_MES);
-  assert.equal(resumo.metaCumprida, Math.round((resumo.normasMes / META_DO_MES) * 100));
+test('I10: ranking do Mês, maior primeiro, "—" no fim; fila e cidades de cada um', () => {
+  const r = resumoCompilacao(tecnicos, dados, REFERENCIA);
+  assert.deepEqual(r.ranking.map(({ id }) => id), ['ramon', 'leonardo', 'damaris']);
+  const damaris = r.ranking.at(-1);
+  assert.equal(damaris.normasMes, null);
+  assert.equal(damaris.emFila, 112);
+  assert.equal(damaris.legendaFila, 'déficit · planilha de out.');
+  assert.equal(damaris.cidades, 3);
+  assert.equal(r.ranking[0].legendaFila, 'no projeto · Cidade A');
+  assert.equal(r.ranking[0].cidades, 1);
 });
 
-test('sem ninguém na equipe, tudo zera sem quebrar', () => {
-  const resumo = resumoCompilacao([], HOJE);
-  assert.equal(resumo.normasMes, 0);
-  assert.deepEqual(resumo.ranking, []);
-  assert.ok(resumo.porTipo.every(({ valor }) => valor === 0));
+test('empate no Mês fica na ordem da página', () => {
+  const empate = { ...dados, pessoas: { ...dados.pessoas, ramon: pessoaDeProjetos() } };
+  assert.deepEqual(resumoCompilacao(tecnicos, empate, REFERENCIA).ranking.map(({ id }) => id).slice(0, 2), ['leonardo', 'ramon']);
+});
+
+test('ninguém com número: somas "—" sem "parcial"; sem dados ainda: não carregado', () => {
+  const vazio = { referencia: REFERENCIA, pessoas: { damaris: pessoaDeAtualizacoes({ producao: { hoje: null, semana: null, mes: null, tudo: null } }) } };
+  const r = resumoCompilacao(tecnicos, vazio, REFERENCIA);
+  assert.equal(r.carregado, true);
+  assert.equal(r.normasMes, null);
+  assert.deepEqual(r.parcial, { hoje: 0, semana: 0, mes: 0 });
+  assert.ok(r.porTipo.every(({ valor }) => valor === null));
+
+  const antes = resumoCompilacao(tecnicos, null, REFERENCIA);
+  assert.equal(antes.carregado, false);
+  assert.equal(antes.totalCompiladores, 3);
+  assert.equal(resumoCompilacao([], null, REFERENCIA).ranking.length, 0);
 });

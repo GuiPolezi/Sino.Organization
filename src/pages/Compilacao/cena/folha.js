@@ -4,13 +4,14 @@
  * de /compilacao escrito à mão, com as mesmas seções do painel, na mesma ordem
  * (card/CardQuadroCompilacao.jsx): os totais do mês, da semana e do dia, o
  * destaque, as normas por tipo, a fila de cada um e os destaques. Os números
- * vêm prontos de resumo.js (resumoCompilacao) e destaques.js (primeirosLugares).
+ * vêm prontos de resumo.js (resumoCompilacao) e destaques.js (primeirosLugares):
+ * sem número é "—" (nunca "+—"), e a soma com card faltando leva "parcial".
  *
  * Cada linha escrita fica em cima de uma pauta: as pautas vão de LINHA em LINHA
  * a partir de TOPO, e a linha n do texto é TOPO + n * LINHA.
  */
 import { MAO, TINTA, escreverCabendo, novaTextura } from '../../Suporte/quadro/texturas.js';
-import { TIPOS_DE_NORMA } from '../dados.js';
+import { comMais, numeroOuTraco } from '../atuacao.js';
 
 const PAPEL = '#FBFAF4';
 const OURO = '#C98A12';
@@ -18,12 +19,10 @@ const TOPO = 190;
 const LINHA = 36;
 const ESQUERDA = 100;
 const DIREITA = 50;
-const formato = new Intl.NumberFormat('pt-BR');
 const MES = new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'America/Sao_Paulo' });
 
 const pauta = (n) => TOPO + n * LINHA;
 const primeiroNome = (nome) => nome.split(' ')[0];
-const ROTULOS_CURTOS = Object.fromEntries(TIPOS_DE_NORMA.map(({ chave, rotulo, curto }) => [chave, curto ?? rotulo]));
 
 // O que cada slide de "Destaques" vira na folha.
 const DESTAQUES = [
@@ -111,16 +110,17 @@ function estrela(ctx, x, y, raio) {
 function totais(ctx, w, resumo) {
   ctx.textAlign = 'left';
   ctx.fillStyle = TINTA.escura;
-  const numero = `+${formato.format(resumo.normasMes)}`;
+  const numero = comMais(resumo.normasMes);
   escreverCabendo(ctx, numero, 92, pauta(3), 380, 700, 160);
   const depois = 92 + Math.min(ctx.measureText(numero).width, 380) + 24;
   ctx.fillStyle = TINTA.suave;
   ctx.font = `600 40px ${MAO}`;
   ['normas', 'compiladas', 'no mês'].forEach((linha, i) => ctx.fillText(linha, depois, pauta(1 + i)));
   ctx.fillStyle = TINTA.pincel;
+  const faltam = Math.max(resumo.parcial.mes, resumo.parcial.semana, resumo.parcial.hoje);
   escreverCabendo(
     ctx,
-    `semana +${formato.format(resumo.normasSemana)} · dia +${formato.format(resumo.normasHoje)}`,
+    `semana ${comMais(resumo.normasSemana)} · dia ${comMais(resumo.normasHoje)}${faltam > 0 ? ' · parcial' : ''}`,
     ESQUERDA,
     pauta(4),
     w - ESQUERDA - DIREITA,
@@ -138,7 +138,7 @@ function destaque(ctx, w, resumo, pessoa) {
   ctx.fillStyle = OURO;
   escreverCabendo(
     ctx,
-    `destaque: ${primeiroNome(pessoa.nome)} · ${formato.format(pessoa.normasMes)} no mês · ${parte}%`,
+    `destaque: ${primeiroNome(pessoa.nome)} · ${numeroOuTraco(pessoa.normasMes)} no mês · ${parte}%`,
     ESQUERDA + 40,
     y,
     w - ESQUERDA - 40 - DIREITA,
@@ -147,18 +147,21 @@ function destaque(ctx, w, resumo, pessoa) {
   );
 }
 
-// "Normas por Tipo": os mesmos tipos e a mesma ordem do painel, em duas colunas.
+// "Normas por Tipo": os mesmos tipos e a mesma ordem do painel, em duas colunas
+// ("outros" sem bolinha de cor).
 function porTipo(ctx, w, tipos) {
   secao(ctx, 'normas por tipo', pauta(7));
   const coluna = (w - ESQUERDA - DIREITA - 40) / 2;
-  tipos.forEach(({ chave, cor, valor }, i) => {
+  tipos.forEach(({ rotulo, cor, valor }, i) => {
     const x = ESQUERDA + (i % 2) * (coluna + 40);
     const y = pauta(8 + Math.floor(i / 2));
-    ctx.fillStyle = cor;
-    ctx.beginPath();
-    ctx.arc(x + 9, y - 11, 9, 0, Math.PI * 2);
-    ctx.fill();
-    linhaComNumero(ctx, ROTULOS_CURTOS[chave] ?? chave, formato.format(valor), x + 28, y, coluna - 28, TINTA.azul);
+    if (cor) {
+      ctx.fillStyle = cor;
+      ctx.beginPath();
+      ctx.arc(x + 9, y - 11, 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    linhaComNumero(ctx, cor ? rotulo : rotulo.toLowerCase(), numeroOuTraco(valor), x + 28, y, coluna - 28, TINTA.azul);
   });
 }
 
@@ -170,7 +173,7 @@ function fila(ctx, w, ranking) {
   ranking.slice(0, 8).forEach(({ nome, emFila }, i) => {
     const x = ESQUERDA + (i % 2) * (coluna + 40);
     const y = pauta(13 + Math.floor(i / 2));
-    linhaComNumero(ctx, primeiroNome(nome), String(emFila), x, y, coluna);
+    linhaComNumero(ctx, primeiroNome(nome), numeroOuTraco(emFila), x, y, coluna);
   });
 }
 
@@ -179,7 +182,7 @@ function destaques(ctx, w, primeiros) {
   secao(ctx, 'destaques', pauta(18));
   DESTAQUES.forEach(({ chave, rotulo }, i) => {
     const primeiro = primeiros[chave];
-    const quem = primeiro ? `${primeiroNome(primeiro.pessoa.nome)} · ${formato.format(primeiro.valor)}` : '—';
+    const quem = primeiro ? `${primeiroNome(primeiro.pessoa.nome)} · ${numeroOuTraco(primeiro.valor)}` : '—';
     linhaComNumero(ctx, `★ ${rotulo}`, quem, ESQUERDA, pauta(19 + i), w - ESQUERDA - DIREITA, TINTA.pincel);
   });
 }

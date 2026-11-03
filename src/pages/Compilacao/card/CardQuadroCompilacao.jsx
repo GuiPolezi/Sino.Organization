@@ -1,17 +1,18 @@
 import Contagem from '../../Suporte/card/Contagem.jsx';
 import card from '../../Suporte/card/CardTecnico.module.css';
 import quadro from '../../Suporte/card/CardQuadro.module.css';
+import EstadoCarregamento from '../../Suporte/card/EstadoCarregamento.jsx';
+import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
 import useFecharComEsc from '../../Suporte/card/useFecharComEsc.js';
 import { useEquipe } from '../../Suporte/store.js';
-import { TIPOS_DE_NORMA } from '../dados.js';
+import { rotuloParcial } from '../resumo.js';
+import { useCompilacao } from '../store.js';
 import { useResumo } from '../useResumo.js';
 import styles from './CardQuadroCompilacao.module.css';
 import Destaques from './Destaques.jsx';
+import Numero from './Numero.jsx';
 
 const primeiroNome = (nome) => nome.split(' ')[0];
-
-// O nome curto do tipo ("Emendas" em vez de "Emendas à Lei Orgânica"), para caber no bloco.
-const ROTULOS_CURTOS = Object.fromEntries(TIPOS_DE_NORMA.map(({ chave, rotulo, curto }) => [chave, curto ?? rotulo]));
 
 function Estrela() {
   return (
@@ -61,7 +62,21 @@ function EmDestaque({ pessoa, totalDoMes }) {
   );
 }
 
-// O título grande, o destaque e os totais da equipe (soma das 7 pessoas) no mês, na semana e no dia.
+// Um período do quadro: a soma e, se algum card ficou fora, o "parcial".
+function Periodo({ rotulo, valor, semDado, className }) {
+  const parcial = rotuloParcial(semDado);
+  return (
+    <div className={className}>
+      <dt>{rotulo}</dt>
+      <dd>
+        <Numero valor={valor} mais />
+      </dd>
+      {parcial && <dd className={styles.parcial}>{parcial}</dd>}
+    </div>
+  );
+}
+
+// O título grande, o destaque e os totais da equipe (soma dos cards) no mês, na semana e no dia.
 function Totais({ resumo, destaque }) {
   return (
     <section className={`${styles.totais} ${card.surge}`} style={{ '--ordem': 0 }}>
@@ -70,24 +85,9 @@ function Totais({ resumo, destaque }) {
         {destaque && <EmDestaque pessoa={destaque} totalDoMes={resumo.normasMes} />}
       </div>
       <dl className={styles.periodos}>
-        <div className={styles.mes}>
-          <dt>Mês</dt>
-          <dd>
-            +<Contagem valor={resumo.normasMes} />
-          </dd>
-        </div>
-        <div>
-          <dt>Semana</dt>
-          <dd>
-            +<Contagem valor={resumo.normasSemana} />
-          </dd>
-        </div>
-        <div>
-          <dt>Dia</dt>
-          <dd>
-            +<Contagem valor={resumo.normasHoje} />
-          </dd>
-        </div>
+        <Periodo className={styles.mes} rotulo="Mês" valor={resumo.normasMes} semDado={resumo.parcial.mes} />
+        <Periodo rotulo="Semana" valor={resumo.normasSemana} semDado={resumo.parcial.semana} />
+        <Periodo rotulo="Dia" valor={resumo.normasHoje} semDado={resumo.parcial.hoje} />
       </dl>
     </section>
   );
@@ -98,12 +98,12 @@ function PorTipo({ tipos }) {
     <section className={card.surge} style={{ '--ordem': 1 }}>
       <h3 className={styles.secao}>Normas por Tipo</h3>
       <ul className={styles.tipos}>
-        {tipos.map(({ chave, valor }) => (
+        {tipos.map(({ chave, rotulo, valor }) => (
           <li key={chave}>
             <strong>
-              <Contagem valor={valor} />
+              <Numero valor={valor} />
             </strong>
-            <small>{ROTULOS_CURTOS[chave]}</small>
+            <small>{rotulo}</small>
           </li>
         ))}
       </ul>
@@ -111,21 +111,27 @@ function PorTipo({ tipos }) {
   );
 }
 
-// Quantas normas estão na fila de cada pessoa: os mesmos blocos do quadro do suporte.
+// Quantas normas aguardam compilação na fila de cada pessoa, com a fonte embaixo
+// (o projeto, ou o déficit da planilha). Fila dividida aparece marcada nas duas pessoas.
 function Filas({ ranking }) {
+  const nomeDe = (id) => primeiroNome(ranking.find((p) => p.id === id)?.nome ?? id);
   return (
     <section className={card.surge} style={{ '--ordem': 2 }}>
       <h3 className={styles.secao}>Fila</h3>
       <ul className={`${quadro.tickets} ${styles.fila}`}>
-        {ranking.map(({ id, nome, emFila }) => (
+        {ranking.map(({ id, nome, emFila, legendaFila, divididaCom }) => (
           <li key={id}>
             <h4>Fila de {primeiroNome(nome)}</h4>
             <p>
               <strong>
-                <Contagem valor={emFila} />
+                <Numero valor={emFila} />
               </strong>
               <small>{emFila === 1 ? 'Norma aguardando' : 'Normas aguardando'}</small>
             </p>
+            <span className={styles.legendaFila}>
+              {legendaFila}
+              {divididaCom.length > 0 && ` · dividida com ${divididaCom.map(nomeDe).join(' e ')}`}
+            </span>
           </li>
         ))}
       </ul>
@@ -136,14 +142,15 @@ function Filas({ ranking }) {
 /*
  * Painel "Quadro da equipe" de /compilacao: abre pela estátua de Têmis. Os totais
  * da equipe no mês, na semana e no dia, quem está em destaque, as normas por tipo,
- * a fila de cada um e os destaques (quem ficou em primeiro em cada conta).
- * Os números ainda são os escritos à mão (dados.js e atuacao.js).
+ * a fila de cada um e os destaques (quem ficou em primeiro em cada conta). Tudo é
+ * a soma dos cards (resumo.js), com os números do servidor (/api/compilacao).
  */
 export default function CardQuadroCompilacao() {
   const aberto = useEquipe((s) => s.painel === 'quadro');
   const fechar = useEquipe((s) => s.fecharPainel);
   const tecnicos = useEquipe((s) => s.tecnicos);
   const resumo = useResumo();
+  const geradoEm = useCompilacao((s) => s.geradoEm);
   useFecharComEsc(aberto, fechar);
 
   if (!aberto) return null;
@@ -175,14 +182,24 @@ export default function CardQuadroCompilacao() {
         </button>
       </header>
 
-      <Totais resumo={resumo} destaque={destaque} />
-      <PorTipo tipos={resumo.porTipo} />
-      {ranking.length > 0 && <Filas ranking={ranking} />}
-      {ranking.length > 0 && (
-        <section className={card.surge} style={{ '--ordem': 3 }}>
-          <h3 className={styles.secao}>Destaques</h3>
-          <Destaques ranking={ranking} tecnicos={tecnicos} />
-        </section>
+      {!resumo.carregado && <EstadoCarregamento dados="números da compilação" />}
+      {resumo.carregado && (
+        <>
+          <Totais resumo={resumo} destaque={destaque} />
+          <PorTipo tipos={resumo.porTipo} />
+          {ranking.length > 0 && <Filas ranking={ranking} />}
+          {ranking.length > 0 && (
+            <section className={card.surge} style={{ '--ordem': 3 }}>
+              <h3 className={styles.secao}>Destaques</h3>
+              <Destaques ranking={ranking} tecnicos={tecnicos} />
+            </section>
+          )}
+          {geradoEm && (
+            <footer className={`${card.rodape} ${card.surge}`} style={{ '--ordem': 4 }}>
+              <span>{rotuloAtualizacao(geradoEm)}</span>
+            </footer>
+          )}
+        </>
       )}
     </aside>
   );

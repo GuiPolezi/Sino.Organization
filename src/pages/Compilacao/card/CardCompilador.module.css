@@ -15,9 +15,6 @@
 /* ---------- Responsabilidade atual ---------- */
 
 .responsabilidade {
-  /* Acima das seções seguintes: a caixa do "Alterar" passa por cima delas. */
-  position: relative;
-  z-index: 2;
   container-type: inline-size;
 }
 
@@ -29,38 +26,6 @@
   margin-bottom: 8px;
 }
 
-.alterar {
-  padding: 6px 12px;
-  border: 1.5px solid var(--color-olive-dark);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-white) 35%, transparent);
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--color-olive-dark) 22%, transparent);
-  color: var(--color-olive-dark);
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: var(--weight-bold);
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background-color 0.25s ease,
-    color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.3s var(--suave);
-}
-
-.alterar:hover,
-.alterar[aria-expanded='true'] {
-  background: var(--color-olive-dark);
-  color: var(--color-cream);
-  transform: translateY(-1px);
-}
-
-.alterar:active {
-  box-shadow: none;
-  transform: translateY(1px);
-}
-
-/* A responsabilidade em letras grandes, do tamanho que cabe na largura do card. */
 .palavra {
   margin: 0;
   font-size: min(2.5rem, 9.4cqi);
@@ -442,97 +407,89 @@
   text-transform: none;
 }
 
-/* ---------- Caixa do "Alterar" ---------- */
+/* ---------- Dados do servidor: legendas, "Outros", barra do projeto ---------- */
 
-/* As opções abrem logo abaixo do botão, alinhadas à direita dele. */
-.seletor {
-  position: relative;
-}
-
-.caixa {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 3;
-  min-width: 11rem;
-  margin: 0;
-  padding: 6px;
-  border-radius: 16px;
-  background: var(--color-cream);
-  box-shadow:
-    0 0 0 1px var(--linha),
-    0 18px 40px color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
-  list-style: none;
-  transform-origin: top right;
-  animation: abrirCaixa 0.32s var(--suave);
-}
-
-.caixa button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 10px 10px 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--neutro-pequeno);
-  font: inherit;
-  font-size: 0.8125rem;
+/* De onde vem o número ("pelo sistema", "pela planilha") ou por que está "—". */
+.legenda {
+  margin: -0.875rem 0 1.125rem;
+  font-size: 0.6875rem;
   font-weight: var(--weight-bold);
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-  animation: surgirOpcao 0.36s var(--suave) both;
-  animation-delay: calc(var(--ordem) * 35ms + 40ms);
+  text-align: center;
+  color: var(--neutro-pequeno);
 }
 
-.caixa button:hover,
-.caixa button:focus-visible {
+.fila + .legenda {
+  margin: 4px 0 0;
+}
+
+/* "Outros" fecha a grade: a soma dos tipos dá o total. */
+.outros {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 0.6875rem;
+  color: var(--neutro-pequeno);
+}
+
+.outros b {
+  font-size: 1rem;
+  font-weight: var(--weight-regular);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "362 de 404 compiladas" no projeto. */
+.barra {
+  margin: 1.125rem 0 0;
+}
+
+.barra p {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.barra > div {
+  height: 8px;
+  border-radius: 999px;
   background: var(--fundo-suave);
-  color: var(--color-ink);
+  overflow: hidden;
 }
 
-/* Dentro da caixa, o fundo da opção já mostra o foco: o contorno fica rente. */
-.caixa button:focus-visible {
-  outline-offset: -2px;
+.barra > div > i {
+  display: block;
+  width: calc(var(--parte) * 1%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-olive);
+  transform-origin: left;
+  animation: encher 0.9s var(--suave) 0.3s both;
 }
 
-.caixa button[aria-checked='true'] {
-  color: var(--color-ink);
-}
-
-.caixa svg {
-  width: 0.75rem;
-  height: 0.75rem;
-  fill: none;
-  stroke: var(--color-olive);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0;
-}
-
-.caixa [aria-checked='true'] svg {
-  opacity: 1;
-}
-
-@keyframes abrirCaixa {
+@keyframes encher {
   from {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.96);
+    transform: scaleX(0);
   }
 }
 
-@keyframes surgirOpcao {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
+/* "Atualizado às 14:05", no pé das normas. */
+.selo {
+  margin: 1rem 0 0;
+  font-size: 0.6875rem;
+  text-align: center;
+  color: var(--neutro);
+}
+
+.semAtividade {
+  margin: 0;
+  padding: 12px;
+  font-size: 0.8125rem;
+  text-align: center;
+  color: var(--neutro-pequeno);
 }
 
 /* ---------- Telas pequenas e movimento reduzido ---------- */
@@ -566,14 +523,11 @@
   .sinal::before,
   .sinal::after,
   .pilula,
-  .periodos button,
-  .alterar,
-  .caixa button {
+  .periodos button {
     transition: none;
   }
 
-  .caixa,
-  .caixa button {
+  .barra > div > i {
     animation: none;
   }
 }

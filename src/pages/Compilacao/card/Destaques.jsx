@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useRetratoCorpo } from '../../Suporte/boneco/Retratos.jsx';
 import { useEquipe } from '../../Suporte/store.js';
 import { SLIDES, primeirosLugares, topoDoGrafico } from '../destaques.js';
-import { useCidadesEmAtuacao } from '../useAtuacao.js';
 import styles from './Destaques.module.css';
 
 const primeiroNome = (nome) => nome.split(' ')[0];
@@ -59,11 +58,10 @@ function Grafico({ primeiro }) {
  */
 export default function Destaques({ ranking, tecnicos }) {
   const [atual, setAtual] = useState(0);
-  const cidades = useCidadesEmAtuacao(tecnicos.map(({ id }) => id));
   const pessoas = new Map(tecnicos.map((tecnico) => [tecnico.id, tecnico]));
 
   const comPessoa = ({ id }) => pessoas.get(id);
-  const primeiros = primeirosLugares(ranking, cidades);
+  const primeiros = primeirosLugares(ranking);
 
   const ir = (passo) => setAtual((indice) => (indice + passo + SLIDES.length) % SLIDES.length);
 

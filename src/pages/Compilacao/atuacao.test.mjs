@@ -1,24 +1,31 @@
-// Casos da atuação de cada pessoa no card de /compilacao (atuacao.js).
+// Casos do card de cada pessoa em /compilacao (atuacao.js), sobre respostas inventadas do servidor.
 // Uso: npm run test:cenario
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   PERIODOS,
+  PERIODO_INICIAL,
   agoraEmBrasilia,
-  atividadeRecente,
+  aguardandoDe,
+  atividadeDe,
   atuacaoDe,
+  barraDoProjeto,
+  comMais,
   diaEMes,
+  mesCurto,
   nomeDaCidade,
+  nomeDoMes,
   normasDoPeriodo,
+  numeroOuTraco,
   rotuloDataHora,
+  trabalhandoEm,
 } from './atuacao.js';
-import { PRODUCAO, normasPorDia } from './dados.js';
 import { APARENCIAS_COMPILACAO, EQUIPE_COMPILACAO } from './equipe.js';
+import { REFERENCIA, pessoaDeAtualizacoes, pessoaDeProjetos } from './respostas-teste.mjs';
 
-// Uma sexta-feira.
-const HOJE = '2026-10-30';
+const doDia = { referencia: REFERENCIA, hoje: REFERENCIA };
 
-test('a equipe: os sete nomes, as iniciais do avatar e todos com aparência e produção', () => {
+test('a equipe: os sete nomes, as iniciais do avatar e todos com aparência', () => {
   assert.deepEqual(
     EQUIPE_COMPILACAO.map(({ nome }) => nome),
     ['Leonardo', 'Ramon', 'G.Dressano', 'G.Lopes', 'Nathalia', 'Laura', 'Damaris'],
@@ -26,103 +33,101 @@ test('a equipe: os sete nomes, as iniciais do avatar e todos com aparência e pr
   const iniciais = Object.fromEntries(EQUIPE_COMPILACAO.map(({ nome, avatarIniciais }) => [nome, avatarIniciais]));
   assert.equal(iniciais['G.Dressano'], 'GD');
   assert.equal(iniciais['G.Lopes'], 'GL');
-  assert.equal(iniciais.Nathalia, 'N');
-  for (const { id } of EQUIPE_COMPILACAO) {
-    assert.ok(APARENCIAS_COMPILACAO[id], `aparência de ${id}`);
-    assert.ok(PRODUCAO[id], `produção de ${id}`);
-  }
+  for (const { id } of EQUIPE_COMPILACAO) assert.ok(APARENCIAS_COMPILACAO[id], `aparência de ${id}`);
 });
 
-test('toda a equipe tem atuação, e só quem está em Atualizações tem mais de uma cidade', () => {
-  for (const { id } of EQUIPE_COMPILACAO) {
-    const atuacao = atuacaoDe(id, HOJE);
-    assert.ok(atuacao, id);
-    assert.ok(atuacao.cidades.length >= 1, id);
-    if (atuacao.responsabilidade === 'projetos') assert.equal(atuacao.cidades.length, 1, id);
-  }
-  assert.ok(
-    EQUIPE_COMPILACAO.some(({ id }) => atuacaoDe(id, HOJE).cidades.length > 1),
-    'alguém precisa mostrar o "Ver mais"',
-  );
-  assert.equal(atuacaoDe('ninguem', HOJE), null);
+test('os períodos são Todo o Tempo, Mês, Semana e Hoje, e o card abre no Mês', () => {
+  assert.deepEqual(PERIODOS.map(({ rotulo }) => rotulo), ['Todo o Tempo', 'Mês', 'Semana', 'Hoje']);
+  assert.equal(PERIODO_INICIAL, 'mes');
 });
 
-test('a escolha do card troca a responsabilidade, as cidades e a data da última alteração', () => {
-  const antes = atuacaoDe('nathalia', HOJE);
-  assert.equal(antes.responsabilidade, 'atualizacoes');
-  // Escrita à mão: um dia útil antes de sexta, às 10:50.
-  assert.deepEqual(antes.alteradaEm, { data: '2026-10-29', hora: '10:50' });
-
-  const alteradaEm = { data: HOJE, hora: '15:04' };
-  const depois = atuacaoDe('nathalia', HOJE, { responsabilidade: 'projetos', alteradaEm });
-  assert.equal(depois.rotulo, 'Projetos Novos');
-  assert.equal(depois.cidades.length, 1);
-  assert.deepEqual(depois.alteradaEm, alteradaEm);
+test('Projetos: "Desde" do projeto e "Trabalhando em" com cidade e tipo', () => {
+  const pessoa = pessoaDeProjetos({ projeto: { ...pessoaDeProjetos().projeto, tipos: ['Leis Ordinárias', 'Leis Complementares'] } });
+  assert.deepEqual(atuacaoDe(pessoa), { responsabilidade: 'projetos', rotulo: 'Projetos Novos', linha: 'Desde: 20/10 - 08:15' });
+  assert.deepEqual(trabalhandoEm(pessoa), { atual: 'Cidade A - XX · Leis Ordinárias + Leis Complementares', outras: [] });
+  assert.equal(atuacaoDe(pessoaDeProjetos({ desde: null })).linha, 'Desde: —');
+  assert.deepEqual(trabalhandoEm(pessoaDeProjetos({ projeto: null })), { atual: '—', outras: [] });
 });
 
-test('a última alteração escrita à mão pula o fim de semana', () => {
-  // Segunda-feira: três dias úteis antes é a quarta da semana anterior.
-  assert.equal(atuacaoDe('leonardo', '2026-11-02').alteradaEm.data, '2026-10-28');
+test('Atualizações: a planilha do mês e a carteira na ordem do servidor', () => {
+  const pessoa = pessoaDeAtualizacoes();
+  assert.equal(atuacaoDe(pessoa).linha, 'Planilha de outubro · importada em 01/11');
+  assert.deepEqual(trabalhandoEm(pessoa), { atual: 'Cidade D - XX', outras: ['Cidade E - XX', 'Cidade F - XX'] });
+  assert.equal(atuacaoDe(pessoaDeAtualizacoes({ planilha: null })).linha, 'Planilha: —');
+  assert.deepEqual(trabalhandoEm(pessoaDeAtualizacoes({ cidades: [] })), { atual: '—', outras: [] });
 });
 
-test('rótulos de cidade, data e hora', () => {
-  assert.equal(nomeDaCidade({ nome: 'Piracicaba', uf: 'SP' }), 'Piracicaba - SP');
+test('sem a pessoa na resposta (ou com função desconhecida), não há atuação', () => {
+  assert.equal(atuacaoDe(null), null);
+  assert.equal(atuacaoDe({ funcao: 'outra' }), null);
+});
+
+test('normas do período: total, fonte e os 7 tipos que fecham o total', () => {
+  const r = normasDoPeriodo(pessoaDeProjetos(), 'mes', doDia);
+  assert.equal(r.total, 40);
+  assert.equal(r.legenda, 'pelo sistema');
+  assert.deepEqual(r.porTipo.map(({ chave }) => chave), ['leis', 'decretos', 'resolucoes', 'portarias', 'complementares', 'emendas', 'outros']);
+  assert.equal(r.porTipo.reduce((soma, { valor }) => soma + valor, 0), r.total);
+  assert.equal(r.porTipo.find(({ chave }) => chave === 'emendas').rotulo, 'Emendas');
+  assert.equal(normasDoPeriodo(pessoaDeAtualizacoes(), 'tudo', doDia).legenda, 'pela planilha');
+});
+
+test('"—" não é 0: sem número, total e tipos ficam null com o motivo', () => {
+  const tudo = normasDoPeriodo(pessoaDeProjetos(), 'tudo', doDia);
+  assert.equal(tudo.total, null);
+  assert.equal(tudo.legenda, 'ainda sem histórico');
+  assert.ok(tudo.porTipo.every(({ valor }) => valor === null));
+  assert.equal(normasDoPeriodo(pessoaDeAtualizacoes(), 'mes', doDia).legenda, 'planilha do mês ainda não importada');
+  const zero = normasDoPeriodo(pessoaDeProjetos({ producao: { hoje: 0, semana: 0, mes: 0, tudo: null } }), 'hoje', doDia);
+  assert.equal(zero.total, 0);
+});
+
+test('Hoje só vale se os dados são de hoje (I9)', () => {
+  const ontem = normasDoPeriodo(pessoaDeProjetos(), 'hoje', { referencia: '2026-11-03', hoje: REFERENCIA });
+  assert.equal(ontem.total, null);
+  assert.equal(ontem.legenda, 'aguardando os números de hoje');
+  // A Semana continua valendo.
+  assert.equal(normasDoPeriodo(pessoaDeProjetos(), 'semana', { referencia: '2026-11-03', hoje: REFERENCIA }).total, 12);
+});
+
+test('aguardando: no projeto (com a fila dividida) ou o déficit da planilha', () => {
+  const dividido = pessoaDeProjetos({ projeto: { ...pessoaDeProjetos().projeto, compartilhadaCom: ['ramon'] } });
+  assert.deepEqual(aguardandoDe(dividido), { valor: 42, legenda: 'no projeto', divididaCom: ['ramon'] });
+  assert.deepEqual(aguardandoDe(pessoaDeAtualizacoes()), { valor: 112, legenda: 'déficit · planilha de outubro', divididaCom: [] });
+  assert.equal(aguardandoDe(pessoaDeAtualizacoes({ aguardando: { valor: null, fonte: null } })).valor, null);
+});
+
+test('barra do projeto: "362 de 404" só em Projetos e com o estoque fechando', () => {
+  assert.deepEqual(barraDoProjeto(pessoaDeProjetos()), { compiladas: 362, total: 404, parte: 89.6 });
+  assert.equal(barraDoProjeto(pessoaDeAtualizacoes()), null);
+  assert.equal(barraDoProjeto(pessoaDeProjetos({ projeto: { ...pessoaDeProjetos().projeto, total: null } })), null);
+  assert.equal(barraDoProjeto(pessoaDeProjetos({ projeto: { ...pessoaDeProjetos().projeto, total: 0, compiladas: 0 } })), null);
+});
+
+test('atividade recente: campos prontos para a tela, ou null', () => {
+  assert.deepEqual(atividadeDe(pessoaDeProjetos()), {
+    acao: 'Inclusão',
+    cidade: 'Cidade A-XX',
+    modulo: 'Versões',
+    data: '2026-11-04',
+    hora: '09:30',
+    descricao: 'Resolução nº 1/2026',
+  });
+  assert.equal(atividadeDe(pessoaDeAtualizacoes()), null);
+});
+
+test('rótulos: cidade, data e hora, mês, números com "—"', () => {
+  assert.equal(nomeDaCidade({ nome: 'Cidade A', uf: 'XX' }), 'Cidade A - XX');
+  assert.equal(nomeDaCidade({ nome: 'Cidade A', uf: '' }), 'Cidade A');
   assert.equal(rotuloDataHora({ data: '2026-10-30', hora: '10:50' }), '30/10 - 10:50');
-  assert.equal(diaEMes('2026-10-30'), '30/10');
-  // 13:25 UTC = 10:25 em Brasília (sem horário de verão).
-  assert.deepEqual(agoraEmBrasilia(Date.UTC(2026, 9, 30, 13, 25)), { data: '2026-10-30', hora: '10:25' });
-  assert.deepEqual(agoraEmBrasilia(Date.UTC(2026, 9, 31, 2, 5)), { data: '2026-10-30', hora: '23:05' });
-});
-
-test('normas do período: hoje ≤ 7 dias ≤ 30 dias ≤ todo o tempo, e os tipos fecham o total', () => {
-  const totais = PERIODOS.map(({ dias }) => normasDoPeriodo('leonardo', HOJE, dias).total);
-  const [tudo, trinta, sete, hoje] = totais;
-  assert.ok(hoje <= sete && sete <= trinta && trinta <= tudo, totais.join(' '));
-
-  const porDia = normasPorDia('leonardo', HOJE);
-  assert.equal(hoje, porDia[HOJE]);
-  const historico = Object.values(porDia).reduce((a, b) => a + b, 0);
-  assert.equal(tudo, historico + PRODUCAO.leonardo.anteriores);
-
-  for (const { dias } of PERIODOS) {
-    const { total, porTipo } = normasDoPeriodo('leonardo', HOJE, dias);
-    assert.equal(porTipo.length, 6);
-    assert.equal(porTipo.reduce((soma, { valor }) => soma + valor, 0), total);
-  }
-  assert.equal(normasDoPeriodo('ninguem', HOJE, null).total, 0);
-});
-
-test('7 dias contam hoje e os seis dias antes', () => {
-  const porDia = normasPorDia('laura', HOJE);
-  const esperado = ['2026-10-24', '2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', HOJE].reduce(
-    (soma, data) => soma + (porDia[data] ?? 0),
-    0,
-  );
-  assert.equal(normasDoPeriodo('laura', HOJE, 7).total, esperado);
-});
-
-test('atividade recente: na cidade da pessoa, sempre a mesma no mesmo dia, nunca no futuro', () => {
-  const { cidades } = atuacaoDe('ramon', HOJE);
-  const nomes = cidades.map(({ nome, uf }) => `${nome}-${uf}`);
-
-  const manha = { data: HOJE, hora: '10:50' };
-  const atividade = atividadeRecente('ramon', cidades, manha);
-  assert.deepEqual(atividadeRecente('ramon', cidades, manha), atividade);
-  assert.ok(nomes.includes(atividade.cidade));
-  assert.equal(atividade.data, HOJE);
-  assert.ok(atividade.hora < '10:50' && atividade.hora >= '08:05', atividade.hora);
-  for (const campo of ['acao', 'modulo', 'descricao']) assert.ok(atividade[campo], campo);
-
-  // Cedo demais: a atividade é do dia útil anterior, no fim do expediente.
-  const cedo = atividadeRecente('ramon', cidades, { data: HOJE, hora: '07:30' });
-  assert.equal(cedo.data, '2026-10-29');
-  assert.ok(cedo.hora < '18:00' && cedo.hora >= '15:00', cedo.hora);
-
-  // Sábado: da sexta.
-  assert.equal(atividadeRecente('ramon', cidades, { data: '2026-10-31', hora: '11:00' }).data, HOJE);
-
-  // De noite: ainda de hoje, mas antes das 18h.
-  const noite = atividadeRecente('ramon', cidades, { data: HOJE, hora: '22:40' });
-  assert.equal(noite.data, HOJE);
-  assert.ok(noite.hora < '18:00', noite.hora);
+  assert.equal(diaEMes('2026-10-05'), '05/10');
+  assert.equal(nomeDoMes('2026-10'), 'outubro');
+  assert.equal(nomeDoMes('x'), '—');
+  assert.equal(mesCurto('2026-10'), 'out.');
+  assert.equal(mesCurto('2026-05'), 'maio');
+  assert.equal(numeroOuTraco(1234), '1.234');
+  assert.equal(numeroOuTraco(null), '—');
+  assert.equal(comMais(0), '+0');
+  assert.equal(comMais(null), '—');
+  assert.deepEqual(agoraEmBrasilia(Date.parse('2026-11-04T02:30:00Z')), { data: '2026-11-03', hora: '23:30' });
 });

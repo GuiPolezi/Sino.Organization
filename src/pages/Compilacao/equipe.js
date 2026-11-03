@@ -1,7 +1,8 @@
 /*
  * A equipe de compilação: por enquanto escrita à mão aqui (não vem do Milldesk).
  * Os nomes são os da equipe; funções e aparências ainda são provisórias. O id
- * liga a pessoa à aparência, à produção (dados.js) e à atuação (atuacao.js).
+ * liga a pessoa à aparência e aos números do servidor (o "personagem" de
+ * /api/compilacao, que nunca devolve o nome do sistema).
  */
 import { CALCAS, PELES, UNIFORME } from '../Suporte/boneco/aparencia.js';
 import { mapearTecnico } from '../Suporte/mappers/equipe.js';

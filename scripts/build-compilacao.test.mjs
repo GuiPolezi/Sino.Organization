@@ -572,14 +572,30 @@ test('fila da equipe: par com estoque que não fecha fica fora da soma', () => {
   assert.equal(filaDaEquipe(entradas({ estoque })).projetos, 90);
 });
 
-test('carteira: nome com teto de 60 e UF inválida vira vazia', () => {
+test('carteira: do cadastro, nome com teto de 60 e UF inválida vira vazia', () => {
   const planilhas = {
     abas: planilhasSinteticas.abas,
-    linhas: planilhasSinteticas.linhas.map((l) => (l.cidade === 'cidade g' ? { ...l, cidade: 'g'.repeat(300), uf: 'xx; drop' } : l)),
+    linhas: planilhasSinteticas.linhas.map((l) => (l.cidade === 'cidade g' ? { ...l, cidade_id: 77 } : l)),
   };
-  const cidade = pessoa('gdressano', { planilhas }).cidades.find((c) => c.nome.startsWith('g'));
+  const cidadesPorId = { 77: { nome: 'g'.repeat(300), uf: 'xx; drop' } };
+  const cidade = pessoa('gdressano', { planilhas, cidadesPorId }).cidades.find((c) => c.nome.startsWith('g'));
   assert.equal(cidade.nome.length, 60);
   assert.equal(cidade.uf, '');
+});
+
+test('carteira: texto livre da planilha (sem cadastro) não vai para a página', () => {
+  const anotacoes = ['Cidade Z-XX cadastrar só AM; R só do RI', 'g'.repeat(300), 'Cidade sem UF'];
+  const planilhas = {
+    abas: planilhasSinteticas.abas,
+    linhas: [
+      ...planilhasSinteticas.linhas,
+      ...anotacoes.map((cidade, i) => ({ ...planilhasSinteticas.linhas.at(-1), cidade, uf: i === 2 ? '' : 'XX' })),
+    ],
+  };
+  const avisos = [];
+  const nomes = pessoa('gdressano', { planilhas, avisar: (m) => avisos.push(m) }).cidades.map((c) => c.nome);
+  assert.deepEqual(nomes.sort(), ['cidade g', 'cidade h']);
+  assert.ok(avisos.some((m) => m.includes('3 linha(s)')));
 });
 
 // ---------- correções da 2ª revisão ----------

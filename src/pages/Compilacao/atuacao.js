@@ -1,85 +1,25 @@
 /*
- * No que cada pessoa da compilação está trabalhando (o card dela em /compilacao):
- * a responsabilidade atual, as cidades, as normas por período e por tipo, e a
- * atividade mais recente. Tudo fictício, escrito à mão como dados.js.
+ * O card de cada pessoa em /compilacao, a partir dos dados do servidor
+ * (/api/compilacao, scripts/lib/build-compilacao.mjs): a responsabilidade, onde
+ * ela trabalha, as normas por período e por tipo, o que aguarda compilação e a
+ * atividade mais recente. Aqui só se traduz para a tela: as contas são do servidor.
  *
- * Os formatos seguem o sistema Legislação Digital, de onde os dados virão um dia
- * (docs/compilacao-legislacao-digital.md, só local): a atividade tem os campos da
- * Auditoria (ação, cidade, módulo, data, hora e descrição).
+ * Regra de vazio: 0 só quando a fonte respondeu 0; null vira "—" (sem dado, não
+ * se aplica, aba da planilha não importada). Nunca "+—".
  *
- * Responsabilidades:
- *   atualizacoes  mantém em dia as normas de várias cidades
- *   projetos      monta a base de uma cidade nova (uma cidade só)
+ * Responsabilidades (fixas por configuração no servidor):
+ *   atualizacoes  mantém em dia as normas das cidades da carteira (pela planilha)
+ *   projetos      monta a base de uma cidade nova (cidade e tipo(s) pelo sistema)
  */
-import { PRODUCAO, TIPOS_DE_NORMA, fimDeSemana, normasPorDia, somarDias, sorteioFixo } from './dados.js';
-import { repartir } from './resumo.js';
+import { TIPOS_DE_NORMA } from './dados.js';
 
 export const RESPONSABILIDADES = {
   atualizacoes: { rotulo: 'Atualizações' },
   projetos: { rotulo: 'Projetos Novos' },
 };
 
-const cidade = (nome, uf) => ({ nome, uf });
-
-/*
- * cidades: as de quem está em Atualizações (a primeira é a de agora).
- * projeto: a cidade de quem está em Projetos Novos.
- * alterada: quando a responsabilidade mudou pela última vez (dias úteis atrás e hora).
- */
-const ATUACAO = {
-  nathalia: {
-    responsabilidade: 'atualizacoes',
-    cidades: [cidade('Piracicaba', 'SP'), cidade('Limeira', 'SP'), cidade('Rio Claro', 'SP'), cidade('Águas de São Pedro', 'SP'), cidade('Americana', 'SP')],
-    projeto: cidade('Indaiatuba', 'SP'),
-    alterada: { diasUteis: 1, hora: '10:50' },
-  },
-  leonardo: {
-    responsabilidade: 'projetos',
-    cidades: [cidade('Alfenas', 'MG'), cidade('Varginha', 'MG'), cidade('Lavras', 'MG')],
-    projeto: cidade('Poços de Caldas', 'MG'),
-    alterada: { diasUteis: 3, hora: '09:12' },
-  },
-  laura: {
-    responsabilidade: 'atualizacoes',
-    cidades: [cidade('Londrina', 'PR'), cidade('Maringá', 'PR'), cidade('Cascavel', 'PR')],
-    projeto: cidade('Toledo', 'PR'),
-    alterada: { diasUteis: 2, hora: '14:37' },
-  },
-  ramon: {
-    responsabilidade: 'atualizacoes',
-    cidades: [
-      cidade('Altinópolis', 'SP'),
-      cidade('Batatais', 'SP'),
-      cidade('Franca', 'SP'),
-      cidade('Ribeirão Preto', 'SP'),
-      cidade('Sertãozinho', 'SP'),
-      cidade('Jardinópolis', 'SP'),
-    ],
-    projeto: cidade('Cravinhos', 'SP'),
-    alterada: { diasUteis: 5, hora: '16:05' },
-  },
-  damaris: {
-    responsabilidade: 'projetos',
-    cidades: [cidade('Itu', 'SP'), cidade('Salto', 'SP')],
-    projeto: cidade('Alumínio', 'SP'),
-    alterada: { diasUteis: 1, hora: '08:44' },
-  },
-  gdressano: {
-    responsabilidade: 'atualizacoes',
-    cidades: [cidade('Botucatu', 'SP'), cidade('Avaré', 'SP'), cidade('Lençóis Paulista', 'SP'), cidade('São Manuel', 'SP')],
-    projeto: cidade('Alambari', 'SP'),
-    alterada: { diasUteis: 7, hora: '11:20' },
-  },
-  glopes: {
-    responsabilidade: 'projetos',
-    cidades: [cidade('Bauru', 'SP'), cidade('Jaú', 'SP')],
-    projeto: cidade('Pederneiras', 'SP'),
-    alterada: { diasUteis: 4, hora: '15:58' },
-  },
-};
-
-/** "Piracicaba - SP" */
-export const nomeDaCidade = ({ nome, uf }) => `${nome} - ${uf}`;
+/** "Piracicaba - SP" (sem UF, só o nome). */
+export const nomeDaCidade = ({ nome, uf }) => (uf ? `${nome} - ${uf}` : nome);
 
 const formatoAgora = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Sao_Paulo',
@@ -106,152 +46,157 @@ export const rotuloDataHora = ({ data, hora }) => `${data.slice(8, 10)}/${data.s
 /** "30/10" */
 export const diaEMes = (data) => `${data.slice(8, 10)}/${data.slice(5, 7)}`;
 
-// O dia útil `quantos` dias úteis antes de `data`.
-function diaUtilAntes(data, quantos) {
-  let dia = data;
-  for (let faltam = quantos; faltam > 0; ) {
-    dia = somarDias(dia, -1);
-    if (!fimDeSemana(dia)) faltam -= 1;
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+/** "2026-10" -> "outubro" (ou "—" se não for um mês). */
+export function nomeDoMes(mes) {
+  const numero = Number(String(mes ?? '').slice(5, 7));
+  return MESES[numero - 1] ?? '—';
+}
+
+/** "2026-10" -> "out." (o nome curto, para os subtítulos da Fila). */
+export const mesCurto = (mes) => {
+  const nome = nomeDoMes(mes);
+  return nome === '—' || nome.length <= 4 ? nome : `${nome.slice(0, 3)}.`;
+};
+
+const formatoNumero = new Intl.NumberFormat('pt-BR');
+
+/** 1234 -> "1.234"; null -> "—". */
+export const numeroOuTraco = (valor) => (typeof valor === 'number' ? formatoNumero.format(valor) : '—');
+
+/** 1234 -> "+1.234"; null -> "—" (nunca "+—"). */
+export const comMais = (valor) => (typeof valor === 'number' ? `+${formatoNumero.format(valor)}` : '—');
+
+// "2026-11-01T12:00:00.000Z" -> "01/11" em Brasília.
+const diaDoIso = (iso) => {
+  const instante = new Date(iso ?? '');
+  return Number.isNaN(instante.getTime()) ? null : diaEMes(agoraEmBrasilia(instante.getTime()).data);
+};
+
+/**
+ * A responsabilidade da pessoa e a linha abaixo dela.
+ * Projetos: "Desde: DD/MM - HH:MM" (começo do projeto atual).
+ * Atualizações: "Planilha de {mês} · importada em DD/MM".
+ *
+ * @param {object | null} pessoa a pessoa da resposta do servidor
+ */
+export function atuacaoDe(pessoa) {
+  if (!pessoa || !RESPONSABILIDADES[pessoa.funcao]) return null;
+  const responsabilidade = pessoa.funcao;
+  let linha;
+  if (responsabilidade === 'projetos') {
+    linha = `Desde: ${pessoa.desde ? rotuloDataHora(pessoa.desde) : '—'}`;
+  } else if (pessoa.planilha) {
+    const importada = diaDoIso(pessoa.planilha.importadaEm);
+    linha = `Planilha de ${nomeDoMes(pessoa.planilha.mes)}${importada ? ` · importada em ${importada}` : ''}`;
+  } else {
+    linha = 'Planilha: —';
   }
-  return dia;
+  return { responsabilidade, rotulo: RESPONSABILIDADES[responsabilidade].rotulo, linha };
 }
 
 /**
- * A atuação de agora: a responsabilidade (a escrita aqui, ou a escolhida no card),
- * as cidades dela e quando ela mudou pela última vez.
- *
- * @param {string} id
- * @param {string} hoje "AAAA-MM-DD"
- * @param {{ responsabilidade: string, alteradaEm: { data: string, hora: string } }} [escolha]
+ * "Trabalhando em": a cidade de agora (com o(s) tipo(s), em Projetos) e as outras
+ * da carteira (Atualizações, na ordem da ação mais recente).
+ * @param {object | null} pessoa
+ * @returns {{ atual: string, outras: string[] }}
  */
-export function atuacaoDe(id, hoje, escolha) {
-  const base = ATUACAO[id];
-  if (!base) return null;
-  const responsabilidade = escolha?.responsabilidade ?? base.responsabilidade;
-  const alteradaEm = escolha?.alteradaEm ?? { data: diaUtilAntes(hoje, base.alterada.diasUteis), hora: base.alterada.hora };
-  return {
-    responsabilidade,
-    rotulo: RESPONSABILIDADES[responsabilidade].rotulo,
-    cidades: responsabilidade === 'projetos' ? [base.projeto] : base.cidades,
-    alteradaEm,
-  };
+export function trabalhandoEm(pessoa) {
+  if (pessoa?.funcao === 'projetos') {
+    const projeto = pessoa.projeto;
+    if (!projeto) return { atual: '—', outras: [] };
+    const tipos = projeto.tipos?.length ? ` · ${projeto.tipos.join(' + ')}` : '';
+    return { atual: `${nomeDaCidade(projeto.cidade)}${tipos}`, outras: [] };
+  }
+  const [atual, ...outras] = (pessoa?.cidades ?? []).map(nomeDaCidade);
+  return { atual: atual ?? '—', outras };
 }
 
 export const PERIODOS = [
-  { chave: 'tudo', rotulo: 'Todo o Tempo', dias: null },
-  { chave: '30', rotulo: '30 Dias', dias: 30 },
-  { chave: '7', rotulo: '07 Dias', dias: 7 },
-  { chave: 'hoje', rotulo: 'Hoje', dias: 1 },
+  { chave: 'tudo', rotulo: 'Todo o Tempo' },
+  { chave: 'mes', rotulo: 'Mês' },
+  { chave: 'semana', rotulo: 'Semana' },
+  { chave: 'hoje', rotulo: 'Hoje' },
 ];
 
-/**
- * Normas compiladas no período, no total e por tipo. `dias` conta para trás a
- * partir de hoje (1 = só hoje); sem `dias`, é todo o tempo, com as anteriores ao
- * histórico. Cada pessoa tem a própria mistura de tipos, fixa.
- *
- * @param {string} id
- * @param {string} hoje "AAAA-MM-DD"
- * @param {number | null} dias
- */
-export function normasDoPeriodo(id, hoje, dias) {
-  const porDia = normasPorDia(id, hoje);
-  const desde = dias ? somarDias(hoje, 1 - dias) : '';
-  const total =
-    Object.entries(porDia).reduce((soma, [data, valor]) => (data >= desde && data <= hoje ? soma + valor : soma), 0) +
-    (dias ? 0 : (PRODUCAO[id]?.anteriores ?? 0));
+/** Período que o card abre: o Mês (Todo o Tempo de Projetos ainda não tem número). */
+export const PERIODO_INICIAL = 'mes';
 
-  const pesos = TIPOS_DE_NORMA.map(({ chave, parte }) => parte * (0.6 + sorteioFixo(`${id}:${chave}`) * 0.8));
-  const somaDosPesos = pesos.reduce((a, b) => a + b, 0);
-  const valores = repartir(
-    total,
-    pesos.map((peso) => peso / somaDosPesos),
-  );
+const LEGENDA_DA_FONTE = { sistema: 'pelo sistema', planilha: 'pela planilha' };
+
+// Por que o período está "—".
+function semDado(pessoa, periodo, deOutroDia) {
+  if (deOutroDia) return 'aguardando os números de hoje';
+  if (pessoa?.funcao === 'projetos' && periodo === 'tudo') return 'ainda sem histórico';
+  if (pessoa?.funcao === 'atualizacoes' && periodo === 'mes') return 'planilha do mês ainda não importada';
+  return 'sem dado';
+}
+
+/**
+ * Normas compiladas no período, no total e por tipo (os 6 e "Outros"), com a
+ * fonte do número. Hoje só vale se os dados são de hoje (`referencia`); senão "—".
+ *
+ * @param {object | null} pessoa
+ * @param {'tudo' | 'mes' | 'semana' | 'hoje'} periodo
+ * @param {{ referencia?: string, hoje: string }} datas referencia: o dia dos dados; hoje: o do navegador
+ */
+export function normasDoPeriodo(pessoa, periodo, { referencia, hoje }) {
+  const deOutroDia = periodo === 'hoje' && referencia !== hoje;
+  const bruto = deOutroDia ? null : pessoa?.producao?.[periodo];
+  const total = typeof bruto === 'number' ? bruto : null;
+  const tipos = total === null ? null : pessoa?.porTipo?.[periodo];
+  const fonte = total === null ? null : (pessoa?.fontes?.[periodo] ?? null);
   return {
     total,
-    porTipo: TIPOS_DE_NORMA.map(({ chave, rotulo, curto }, i) => ({ chave, rotulo: curto ?? rotulo, valor: valores[i] })),
+    legenda: total === null ? semDado(pessoa, periodo, deOutroDia) : (LEGENDA_DA_FONTE[fonte] ?? ''),
+    porTipo: TIPOS_DE_NORMA.map(({ chave, rotulo, curto }) => {
+      const valor = tipos?.[chave];
+      return { chave, rotulo: curto ?? rotulo, valor: typeof valor === 'number' ? valor : null };
+    }),
   };
 }
 
-// O que pode aparecer na atividade, com o peso de cada um (os módulos da Auditoria).
-const MODULOS = [
-  { nome: 'Normas', peso: 3 },
-  { nome: 'Datas', peso: 2 },
-  { nome: 'Arquivos', peso: 3 },
-  { nome: 'Versões', peso: 2 },
-  { nome: 'Vínculos de Normas', peso: 2 },
-  { nome: 'Classificações', peso: 2 },
-];
-const ACOES = [
-  { nome: 'Inclusão', peso: 15 },
-  { nome: 'Alteração', peso: 4 },
-  { nome: 'Exclusão', peso: 1 },
-];
-const ESPECIES = ['Decreto Municipal', 'Lei Ordinária', 'Resolução', 'Portaria', 'Lei Complementar'];
-const ASSUNTOS = ['Administração Pública', 'Tributação', 'Meio Ambiente', 'Saúde', 'Educação', 'Urbanismo'];
-
-// Um item da lista, pelo peso, com o sorteio `s` de 0 a 1.
-function pelosPesos(lista, s) {
-  const total = lista.reduce((soma, { peso }) => soma + peso, 0);
-  let alvo = s * total;
-  return lista.find(({ peso }) => (alvo -= peso) < 0) ?? lista.at(-1);
+/**
+ * "Aguardando Compilação": o número, a legenda da fonte e com quem a fila é
+ * dividida (mesma cidade e tipo em Projetos).
+ * @param {object | null} pessoa
+ * @returns {{ valor: number | null, legenda: string, divididaCom: string[] }}
+ */
+export function aguardandoDe(pessoa) {
+  const valor = typeof pessoa?.aguardando?.valor === 'number' ? pessoa.aguardando.valor : null;
+  const divididaCom = pessoa?.projeto?.compartilhadaCom ?? [];
+  if (pessoa?.funcao === 'projetos') return { valor, legenda: 'no projeto', divididaCom };
+  const mes = pessoa?.aguardando?.mes;
+  return { valor, legenda: mes ? `déficit · planilha de ${nomeDoMes(mes)}` : 'déficit da planilha', divididaCom: [] };
 }
-
-const numeroDaNorma = new Intl.NumberFormat('pt-BR');
-const comDoisDigitos = (n) => String(n).padStart(2, '0');
-const paraHora = (minutos) => `${comDoisDigitos(Math.floor(minutos / 60))}:${comDoisDigitos(minutos % 60)}`;
-
-function descricao(modulo, norma, data, s) {
-  const dataCheia = `${data.slice(8, 10)}/${data.slice(5, 7)}/${data.slice(0, 4)}`;
-  switch (modulo) {
-    case 'Datas':
-      return `${norma} / Publicação: Publicação - Publicações - ${dataCheia}`;
-    case 'Arquivos':
-      return `${norma} / Arquivo: texto original (PDF)`;
-    case 'Versões':
-      return `${norma} / Versão compilada de ${dataCheia}`;
-    case 'Vínculos de Normas':
-      return `${norma} / Altera: Lei Ordinária nº ${numeroDaNorma.format(1000 + Math.floor(s * 4000))}/${Number(data.slice(0, 4)) - 1}`;
-    case 'Classificações':
-      return `${norma} / Classificação: ${ASSUNTOS[Math.floor(s * ASSUNTOS.length)]}`;
-    default:
-      return norma;
-  }
-}
-
-// Começo e fim do expediente (minutos do dia) em que aparece atividade.
-const EXPEDIENTE = { inicio: 8 * 60 + 5, fim: 18 * 60 };
 
 /**
- * A atividade mais recente da pessoa, numa das cidades de agora. Num dia útil,
- * depois das 8h25, é de poucos minutos atrás (no máximo até as 18h); antes disso
- * e no fim de semana, do fim do último dia útil.
- * A mesma pessoa, no mesmo dia e com as mesmas cidades, tem a mesma atividade.
- *
- * @param {string} id
- * @param {{ nome: string, uf: string }[]} cidades
- * @param {{ data: string, hora: string }} agora em Brasília (agoraEmBrasilia)
+ * A barra do projeto ("362 de 404 compiladas"), só em Projetos e com o estoque fechando.
+ * @param {object | null} pessoa
+ * @returns {{ compiladas: number, total: number, parte: number } | null}
  */
-export function atividadeRecente(id, cidades, agora) {
-  const sorteio = (qual) => sorteioFixo(`${id}:${agora.data}:${cidades[0]?.nome}:${qual}`);
-  const minutos = Number(agora.hora.slice(0, 2)) * 60 + Number(agora.hora.slice(3, 5));
-  const noExpediente = !fimDeSemana(agora.data) && minutos >= EXPEDIENTE.inicio + 20;
+export function barraDoProjeto(pessoa) {
+  const projeto = pessoa?.funcao === 'projetos' ? pessoa.projeto : null;
+  const { compiladas, total } = projeto ?? {};
+  if (typeof compiladas !== 'number' || typeof total !== 'number' || total <= 0 || compiladas > total) return null;
+  return { compiladas, total, parte: Math.round((compiladas / total) * 1000) / 10 };
+}
 
-  const data = noExpediente ? agora.data : diaUtilAntes(agora.data, 1);
-  const minuto = noExpediente
-    ? Math.max(EXPEDIENTE.inicio, Math.min(minutos, EXPEDIENTE.fim) - 3 - Math.floor(sorteio('minutos') * 40))
-    : EXPEDIENTE.fim - 15 - Math.floor(sorteio('minutos') * 90);
-
-  const modulo = pelosPesos(MODULOS, sorteio('modulo')).nome;
-  const especie = ESPECIES[Math.floor(sorteio('especie') * ESPECIES.length)];
-  const norma = `${especie} nº ${numeroDaNorma.format(1000 + Math.floor(sorteio('numero') * 19000))}/${data.slice(0, 4)}`;
-  const lugar = cidades[Math.floor(sorteio('cidade') * cidades.length)] ?? cidade('—', '—');
-
+/**
+ * A atividade mais recente, pronta para a tela (ou null: "Sem atividade recente").
+ * @param {object | null} pessoa
+ */
+export function atividadeDe(pessoa) {
+  const atividade = pessoa?.atividade;
+  if (!atividade?.data) return null;
+  const { nome, uf } = atividade.cidade ?? {};
   return {
-    acao: pelosPesos(ACOES, sorteio('acao')).nome,
-    cidade: `${lugar.nome}-${lugar.uf}`,
-    modulo,
-    data,
-    hora: paraHora(minuto),
-    descricao: descricao(modulo, norma, data, sorteio('descricao')),
+    acao: atividade.acao ?? '—',
+    cidade: nome ? (uf ? `${nome}-${uf}` : nome) : '—',
+    modulo: atividade.modulo ?? '—',
+    data: atividade.data,
+    hora: atividade.hora ?? '—',
+    descricao: atividade.descricao || '—',
   };
 }

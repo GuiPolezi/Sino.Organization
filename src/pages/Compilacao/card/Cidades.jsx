@@ -1,23 +1,23 @@
 import { useId, useState } from 'react';
 import base from '../../Suporte/card/CardTecnico.module.css';
-import { nomeDaCidade } from '../atuacao.js';
 import styles from './CardCompilador.module.css';
 
 /**
- * "Trabalhando em": a cidade de agora e, para quem mexe em mais de uma (quem
- * está em Atualizações), o "Ver mais" que abre a gaveta com as outras.
+ * "Trabalhando em": a cidade de agora (em Projetos, com o tipo de norma) e, para
+ * quem tem uma carteira de cidades (Atualizações), o "Ver mais" com as outras,
+ * na ordem da ação mais recente.
  *
- * @param {{ cidades: { nome: string, uf: string }[] }} props
+ * @param {{ atual: string, outras: string[] }} props
  */
-export default function Cidades({ cidades }) {
+export default function Cidades({ atual, outras }) {
   const [aberta, setAberta] = useState(false);
   const idGaveta = useId();
-  const [atual, ...outras] = cidades;
+  const naCarteira = outras.length + 1;
 
   return (
     <section className={base.surge} style={{ '--ordem': 2 }}>
       <h3 className={base.secao}>Trabalhando em</h3>
-      <p className={styles.cidade}>{nomeDaCidade(atual)}</p>
+      <p className={styles.cidade}>{atual}</p>
 
       {outras.length > 0 && (
         <>
@@ -30,16 +30,14 @@ export default function Cidades({ cidades }) {
           >
             <span className={styles.sinal} aria-hidden="true" />
             <span className={styles.textoVerMais}>{aberta ? 'Ver menos' : 'Ver mais'}</span>
-            <span className={styles.qtdCidades}>
-              {outras.length === 1 ? '1 cidade' : `${outras.length} cidades`}
-            </span>
+            <span className={styles.qtdCidades}>{naCarteira} cidades na carteira</span>
           </button>
           <div id={idGaveta} className={styles.gaveta} data-aberta={aberta} inert={!aberta}>
             <div>
-              <ul aria-label="Outras cidades">
+              <ul aria-label="Outras cidades da carteira">
                 {outras.map((cidade, i) => (
-                  <li key={nomeDaCidade(cidade)} style={{ '--i': i }}>
-                    {nomeDaCidade(cidade)}
+                  <li key={cidade} style={{ '--i': i }}>
+                    {cidade}
                   </li>
                 ))}
               </ul>

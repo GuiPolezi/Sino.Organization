@@ -41,13 +41,23 @@ test('topoDoGrafico: zero ainda tem topo (barra vazia)', () => {
 
 test('primeirosLugares: um primeiro lugar por slide', () => {
   const ranking = [
-    { id: 'a', normasMes: 30, emFila: 2 },
-    { id: 'b', normasMes: 20, emFila: 9 },
-    { id: 'c', normasMes: 10, emFila: 9 },
+    { id: 'a', normasMes: 30, emFila: 2, cidades: 1 },
+    { id: 'b', normasMes: 20, emFila: 9, cidades: 3 },
+    { id: 'c', normasMes: 10, emFila: 9, cidades: 6 },
   ];
-  const primeiros = primeirosLugares(ranking, { a: 1, b: 3, c: 6 });
+  const primeiros = primeirosLugares(ranking);
   assert.equal(primeiros.compiladas.pessoa.id, 'a');
   assert.deepEqual([primeiros.fila.pessoa.id, primeiros.fila.valor], ['b', 9]);
   assert.deepEqual([primeiros.cidades.pessoa.id, primeiros.cidades.valor], ['c', 6]);
-  assert.equal(primeirosLugares(ranking, {}).cidades, null);
+  assert.equal(primeirosLugares(ranking.map((p) => ({ ...p, cidades: 0 }))).cidades, null);
+});
+
+test('primeirosLugares: quem está em "—" (null) fica fora do ranking', () => {
+  const ranking = [
+    { id: 'a', normasMes: null, emFila: null, cidades: 0 },
+    { id: 'b', normasMes: 4, emFila: null, cidades: 2 },
+  ];
+  const primeiros = primeirosLugares(ranking);
+  assert.equal(primeiros.compiladas.pessoa.id, 'b');
+  assert.equal(primeiros.fila, null);
 });

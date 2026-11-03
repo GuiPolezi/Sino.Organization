@@ -1,43 +1,42 @@
-import { useMemo } from 'react';
 import base from '../../Suporte/card/CardTecnico.module.css';
-import { agoraEmBrasilia, atividadeRecente, diaEMes } from '../atuacao.js';
+import { atividadeDe, diaEMes } from '../atuacao.js';
 import styles from './CardCompilador.module.css';
 
 /**
- * "Atividade Recente": a última ação da pessoa no sistema, com os campos da
- * Auditoria do Legislação Digital (ação, cidade, módulo, data, hora e descrição).
+ * "Atividade Recente": a última ação da pessoa no sistema Legislação Digital
+ * (ação, cidade, módulo, data, hora e descrição), já filtrada pelo servidor.
  *
- * @param {{ id: string, cidades: { nome: string, uf: string }[] }} props
+ * @param {{ pessoa: object }} props a pessoa da resposta do servidor
  */
-export default function AtividadeRecente({ id, cidades }) {
-  const { acao, cidade, modulo, data, hora, descricao } = useMemo(
-    () => atividadeRecente(id, cidades, agoraEmBrasilia()),
-    [id, cidades],
-  );
-  const campos = [
-    ['Ação', acao],
-    ['Cidade', cidade],
-    ['Módulo', modulo],
-    ['Data', diaEMes(data)],
-    ['Hora', hora],
-  ];
+export default function AtividadeRecente({ pessoa }) {
+  const atividade = atividadeDe(pessoa);
 
   return (
     <section className={base.surge} style={{ '--ordem': 4 }}>
       <h3 className={`${base.secao} ${styles.centro}`}>Atividade Recente</h3>
       <div className={styles.atividade}>
-        <dl>
-          {campos.map(([rotulo, valor], i) => (
-            <div key={rotulo} style={{ '--i': i }}>
-              <dt>{rotulo}</dt>
-              <dd>{valor}</dd>
+        {atividade ? (
+          <dl>
+            {[
+              ['Ação', atividade.acao],
+              ['Cidade', atividade.cidade],
+              ['Módulo', atividade.modulo],
+              ['Data', diaEMes(atividade.data)],
+              ['Hora', atividade.hora],
+            ].map(([rotulo, valor], i) => (
+              <div key={rotulo} style={{ '--i': i }}>
+                <dt>{rotulo}</dt>
+                <dd>{valor}</dd>
+              </div>
+            ))}
+            <div className={styles.descricao} style={{ '--i': 5 }}>
+              <dt>Descrição</dt>
+              <dd>{atividade.descricao}</dd>
             </div>
-          ))}
-          <div className={styles.descricao} style={{ '--i': campos.length }}>
-            <dt>Descrição</dt>
-            <dd>{descricao}</dd>
-          </div>
-        </dl>
+          </dl>
+        ) : (
+          <p className={styles.semAtividade}>Sem atividade recente</p>
+        )}
       </div>
     </section>
   );

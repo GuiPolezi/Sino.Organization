@@ -18,9 +18,15 @@ function porBalde(linhas) {
 
 const somar = (linhas, campo) => linhas.reduce((total, l) => total + l[campo], 0);
 
+// Nome de cidade escrito na planilha (sem cadastro no sistema): só letras, espaços,
+// hífen, ponto e apóstrofo. Anotação solta na célula ("…; cadastrar só AM") não passa.
+const NOME_DE_CIDADE = /^[\p{L}][\p{L} .'-]{1,39}$/u;
+
 // Cidades ativas da aba, sem repetir, na ordem da ação mais recente da pessoa
-// (as sem ação vão para o fim). O nome vem do sistema quando há cidade_id.
-function carteira(linhas, cidadesPorId, versoes) {
+// (as sem ação vão para o fim). O nome vem do sistema quando há cidade_id; sem
+// cadastro, o da planilha só entra com UF válida e com cara de nome de cidade
+// (a página é pública: texto livre da planilha não vai para ela).
+function carteira(linhas, cidadesPorId, versoes, avisar) {
   const ultimaAcao = new Map();
   for (const item of versoes ?? []) {
     if (typeof item?.cidadeUf !== 'string') continue;
@@ -29,15 +35,24 @@ function carteira(linhas, cidadesPorId, versoes) {
     if (instante > (ultimaAcao.get(chave) ?? '')) ultimaAcao.set(chave, instante);
   }
   const vistas = new Map();
+  let foraDoCadastro = 0;
   for (const l of linhas) {
     if (l.cidade_status !== 'ativa') continue;
-    const bruta = cidadesPorId?.[l.cidade_id] ?? { nome: l.cidade, uf: l.uf };
+    const doSistema = cidadesPorId?.[l.cidade_id];
+    const bruta = doSistema ?? { nome: l.cidade, uf: l.uf };
     const uf = typeof bruta.uf === 'string' ? bruta.uf.trim().toUpperCase() : '';
-    const cidade = { nome: textoPublico(bruta.nome, 60), uf: /^[A-Z]{2}$/.test(uf) ? uf : '' };
+    const nome = typeof bruta.nome === 'string' ? bruta.nome.trim() : '';
+    const ufValida = /^[A-Z]{2}$/.test(uf);
+    if (!doSistema && (!ufValida || !NOME_DE_CIDADE.test(nome))) {
+      foraDoCadastro += 1;
+      continue;
+    }
+    const cidade = { nome: textoPublico(nome, 60), uf: ufValida ? uf : '' };
     if (!cidade.nome) continue;
     const chave = normalizar(`${cidade.nome}-${cidade.uf}`);
     if (!vistas.has(chave)) vistas.set(chave, cidade);
   }
+  if (foraDoCadastro > 0) avisar(`${foraDoCadastro} linha(s) de cidade da planilha sem cadastro ficaram fora da carteira`);
   return [...vistas]
     .sort(([a], [b]) => (ultimaAcao.get(b) ?? '').localeCompare(ultimaAcao.get(a) ?? ''))
     .map(([, cidade]) => cidade);
@@ -71,6 +86,6 @@ export function resumirPlanilhas(personagem, planilhas, referencia, { cidadesPor
     porTipoTudo: porBalde(linhas),
     aguardando: { valor: somar(daBase, 'deficit'), fonte: 'planilha', mes: textoDoMes(base) },
     planilha: { mes: textoDoMes(base), importadaEm: base.importado_em ? new Date(base.importado_em).toISOString() : null },
-    carteira: carteira(daBase, cidadesPorId, versoes),
+    carteira: carteira(daBase, cidadesPorId, versoes, avisar),
   };
 }

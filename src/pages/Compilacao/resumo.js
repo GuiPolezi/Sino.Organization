@@ -1,77 +1,77 @@
 /*
- * Contas da compilação: a produção de cada pessoa (para o card dela) e a visão
- * geral da equipe (para o painel do quadro e a folha da estátua). Tudo sai dos
- * números escritos à mão em dados.js; as contas de dias e semanas são as mesmas
- * do suporte (Suporte/mappers/atendimentos.js).
+ * A visão geral da equipe de /compilacao (o Quadro da equipe e a folha da
+ * estátua): a soma dos cards que vieram do servidor. Card sem número ("—") fica
+ * fora da soma e conta no "parcial". O Dia só vale se os dados são de hoje.
  */
-import { diasRecentes, totaisDeAtendimentos } from '../Suporte/mappers/atendimentos.js';
-import { META_DO_MES, PRODUCAO, TIPOS_DE_NORMA, normasPorDia } from './dados.js';
+import { mesCurto } from './atuacao.js';
+import { TIPOS_DE_NORMA } from './dados.js';
 
 /** @import { Tecnico } from '../Suporte/tipos.js' */
 
-/**
- * Inteiros que somam `total`, repartidos pelas partes: cada um fica com o piso e
- * as unidades que faltam vão para os maiores restos (no empate, o primeiro).
- * @param {number} total
- * @param {number[]} partes somam 1
- */
-export function repartir(total, partes) {
-  const exatos = partes.map((parte) => total * parte);
-  const inteiros = exatos.map(Math.floor);
-  const faltam = total - inteiros.reduce((a, b) => a + b, 0);
-  exatos
-    .map((exato, i) => ({ i, resto: exato - inteiros[i] }))
-    .toSorted((a, b) => b.resto - a.resto || a.i - b.i)
-    .slice(0, Math.max(0, faltam))
-    .forEach(({ i }) => {
-      inteiros[i] += 1;
-    });
-  return inteiros;
+const PERIODOS_DO_QUADRO = ['hoje', 'semana', 'mes'];
+const ehNumero = (valor) => typeof valor === 'number';
+
+// Subtítulo da fila no Quadro: de onde vem o número.
+function legendaDaFila(pessoa) {
+  if (pessoa.funcao === 'projetos') return pessoa.projeto ? `no projeto · ${pessoa.projeto.cidade.nome}` : 'no projeto';
+  return pessoa.aguardando?.mes ? `déficit · planilha de ${mesCurto(pessoa.aguardando.mes)}` : 'déficit da planilha';
 }
 
 /**
- * Produção de uma pessoa: as normas por dia (o gráfico do card), os totais de
- * hoje, da semana e do mês, e quantas estão na fila dela.
- * @param {string} id
- * @param {string} hoje "AAAA-MM-DD"
+ * @param {Tecnico[]} tecnicos a equipe, na ordem da página
+ * @param {{ referencia: string, pessoas: Record<string, object> } | null} dados resposta do servidor
+ * @param {string} hoje "AAAA-MM-DD" em Brasília (o do navegador)
  */
-export function producaoDe(id, hoje) {
-  const porDia = normasPorDia(id, hoje);
-  return { porDia, totais: totaisDeAtendimentos(porDia, hoje), emFila: PRODUCAO[id]?.emFila ?? 0 };
-}
+export function resumoCompilacao(tecnicos, dados, hoje) {
+  const daResposta = tecnicos.map((tecnico) => ({ tecnico, pessoa: dados?.pessoas?.[tecnico.id] ?? null }));
+  const deHoje = Boolean(dados) && dados.referencia === hoje;
 
-/**
- * Visão geral da equipe.
- * @param {Tecnico[]} tecnicos
- * @param {string} hoje "AAAA-MM-DD"
- */
-export function resumoCompilacao(tecnicos, hoje) {
-  const daEquipe = {};
-  const ranking = tecnicos
-    .map(({ id, nome, funcao }) => {
-      const { porDia, totais, emFila } = producaoDe(id, hoje);
-      for (const [data, valor] of Object.entries(porDia)) daEquipe[data] = (daEquipe[data] ?? 0) + valor;
-      return { id, nome, funcao, normasMes: totais.mes, emFila };
-    })
-    .toSorted((a, b) => b.normasMes - a.normasMes);
+  const totais = {};
+  const parcial = {};
+  for (const periodo of PERIODOS_DO_QUADRO) {
+    const valores = daResposta.map(({ pessoa }) => (periodo === 'hoje' && !deHoje ? null : pessoa?.producao?.[periodo]));
+    const comNumero = valores.filter(ehNumero);
+    totais[periodo] = comNumero.length > 0 ? comNumero.reduce((a, b) => a + b, 0) : null;
+    parcial[periodo] = comNumero.length > 0 ? valores.length - comNumero.length : 0;
+  }
 
-  const totais = totaisDeAtendimentos(daEquipe, hoje);
-  const porTipo = repartir(
-    totais.mes,
-    TIPOS_DE_NORMA.map(({ parte }) => parte),
-  ).map((valor, i) => ({ chave: TIPOS_DE_NORMA[i].chave, rotulo: TIPOS_DE_NORMA[i].rotulo, cor: TIPOS_DE_NORMA[i].cor, valor }));
+  // Normas por tipo no Mês: só de quem tem o Mês (assim Σ tipos = Mês do quadro).
+  const comMes = daResposta.filter(({ pessoa }) => ehNumero(pessoa?.producao?.mes));
+  const porTipo = TIPOS_DE_NORMA.map(({ chave, rotulo, curto, cor }) => ({
+    chave,
+    rotulo: curto ?? rotulo,
+    cor,
+    valor: totais.mes === null ? null : comMes.reduce((soma, { pessoa }) => soma + (pessoa.porTipo?.mes?.[chave] ?? 0), 0),
+  }));
+
+  // Do mais ao menos produtivo no Mês; "—" no fim; empate na ordem da página.
+  const ranking = daResposta
+    .map(({ tecnico, pessoa }) => ({
+      id: tecnico.id,
+      nome: tecnico.nome,
+      funcao: tecnico.funcao,
+      normasMes: ehNumero(pessoa?.producao?.mes) ? pessoa.producao.mes : null,
+      emFila: ehNumero(pessoa?.aguardando?.valor) ? pessoa.aguardando.valor : null,
+      legendaFila: pessoa ? legendaDaFila(pessoa) : '',
+      divididaCom: pessoa?.projeto?.compartilhadaCom ?? [],
+      cidades: pessoa?.funcao === 'projetos' ? (pessoa.projeto ? 1 : 0) : (pessoa?.cidades?.length ?? 0),
+    }))
+    .toSorted((a, b) => (b.normasMes ?? -1) - (a.normasMes ?? -1));
 
   return {
+    carregado: Boolean(dados),
     totalCompiladores: tecnicos.length,
     normasMes: totais.mes,
-    normasHoje: totais.hoje,
     normasSemana: totais.semana,
-    emFila: ranking.reduce((soma, { emFila }) => soma + emFila, 0),
-    meta: META_DO_MES,
-    // Parte da meta do mês já cumprida, de 0 a 100 (passa de 100 quando a meta é batida).
-    metaCumprida: Math.round((totais.mes / META_DO_MES) * 100),
-    dias: diasRecentes(daEquipe, hoje, 5),
+    normasHoje: totais.hoje,
+    parcial,
     porTipo,
     ranking,
   };
 }
+
+/**
+ * "parcial · 2 sem dado" quando algum card ficou fora da soma; "" se não.
+ * @param {number} semDado
+ */
+export const rotuloParcial = (semDado) => (semDado > 0 ? `parcial · ${semDado} sem dado` : '');

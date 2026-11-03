@@ -292,3 +292,27 @@
     transition: none;
   }
 }
+
+/* ── Dados do servidor: "parcial", fonte da fila e "Outros" ── */
+
+/* "parcial · 2 sem dado": algum card ficou fora da soma. */
+.periodos dd.parcial {
+  margin-top: 4px;
+  font-size: 0.5625rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0;
+  color: var(--neutro-pequeno);
+}
+
+/* "Outros" (o sétimo tipo) ocupa a linha inteira, para a grade fechar em 3 colunas. */
+.tipos li:last-child:nth-child(3n + 1) {
+  grid-column: 1 / -1;
+  min-height: 3rem;
+}
+
+/* De onde vem o número da fila ("no projeto · Cidade", "déficit · planilha de out."). */
+.painel .fila .legendaFila {
+  font-size: 0.5625rem;
+  line-height: 1.25;
+  opacity: 0.85;
+}

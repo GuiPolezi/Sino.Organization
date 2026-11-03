@@ -11,18 +11,18 @@ export const SLIDES = [
 
 /**
  * Quem ficou em primeiro: o maior valor; no empate, quem vem antes na lista.
- * Sem ninguém, ou com todos em zero, não há primeiro lugar.
+ * Sem ninguém, ou com todos em zero ou sem número ("—"), não há primeiro lugar.
  *
  * @template T
  * @param {T[]} pessoas
- * @param {(pessoa: T) => number} valorDe
+ * @param {(pessoa: T) => number | null} valorDe
  * @returns {{ pessoa: T, valor: number } | null}
  */
 export function primeiroLugar(pessoas, valorDe) {
   let primeiro = null;
   for (const pessoa of pessoas) {
     const valor = valorDe(pessoa);
-    if (valor > 0 && (!primeiro || valor > primeiro.valor)) primeiro = { pessoa, valor };
+    if (typeof valor === 'number' && valor > 0 && (!primeiro || valor > primeiro.valor)) primeiro = { pessoa, valor };
   }
   return primeiro;
 }
@@ -45,16 +45,16 @@ export function topoDoGrafico(valor) {
 /**
  * Quem ficou em primeiro em cada slide: o mesmo no painel e na folha da estátua.
  * O ranking vem do mais ao menos produtivo, então no empate vence quem compilou mais.
+ * Cidades: Projetos Novos conta 1 (a do projeto); Atualizações, a carteira do mês.
  *
- * @template {{ id: string, normasMes: number, emFila: number }} P
+ * @template {{ id: string, normasMes: number | null, emFila: number | null, cidades: number }} P
  * @param {P[]} ranking
- * @param {Record<string, number>} cidades id -> cidades em atuação
  * @returns {Record<'compiladas' | 'fila' | 'cidades', { pessoa: P, valor: number } | null>}
  */
-export function primeirosLugares(ranking, cidades) {
+export function primeirosLugares(ranking) {
   return {
     compiladas: primeiroLugar(ranking, ({ normasMes }) => normasMes),
     fila: primeiroLugar(ranking, ({ emFila }) => emFila),
-    cidades: primeiroLugar(ranking, ({ id }) => cidades[id] ?? 0),
+    cidades: primeiroLugar(ranking, ({ cidades }) => cidades),
   };
 }
