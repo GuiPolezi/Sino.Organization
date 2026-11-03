@@ -27,3 +27,18 @@ export function useAtuacao(id) {
   const atuacao = useMemo(() => atuacaoDe(id, hoje, escolha), [id, hoje, escolha]);
   return { atuacao, escolher: (responsabilidade) => escolher(id, responsabilidade) };
 }
+
+/**
+ * Quantas cidades cada pessoa atende agora (id -> quantidade), já com as
+ * responsabilidades trocadas no card. Quem está em Projetos Novos tem uma só.
+ * @param {string[]} ids
+ */
+export function useCidadesEmAtuacao(ids) {
+  const escolhas = useEscolhas((s) => s.escolhas);
+  const hoje = hojeEmBrasilia();
+  const chave = ids.join(',');
+  return useMemo(
+    () => Object.fromEntries((chave ? chave.split(',') : []).map((id) => [id, atuacaoDe(id, hoje, escolhas[id])?.cidades.length ?? 0])),
+    [chave, hoje, escolhas],
+  );
+}

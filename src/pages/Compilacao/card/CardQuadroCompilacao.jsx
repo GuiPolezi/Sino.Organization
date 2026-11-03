@@ -1,108 +1,122 @@
-import GraficoBarras from '../../Desenvolvimento/card/GraficoBarras.jsx';
 import Contagem from '../../Suporte/card/Contagem.jsx';
 import card from '../../Suporte/card/CardTecnico.module.css';
 import quadro from '../../Suporte/card/CardQuadro.module.css';
 import useFecharComEsc from '../../Suporte/card/useFecharComEsc.js';
 import { useEquipe } from '../../Suporte/store.js';
+import { TIPOS_DE_NORMA } from '../dados.js';
 import { useResumo } from '../useResumo.js';
 import styles from './CardQuadroCompilacao.module.css';
+import Destaques from './Destaques.jsx';
 
 const primeiroNome = (nome) => nome.split(' ')[0];
-const formato = new Intl.NumberFormat('pt-BR');
 
-// O total do mês e a barra da meta.
-function TotalDoMes({ resumo }) {
-  const cumprida = Math.min(resumo.metaCumprida, 100);
-  return (
-    <section className={`${quadro.total} ${card.surge}`} style={{ '--ordem': 0 }}>
-      <h3 className={card.rotulo}>Normas compiladas no mês</h3>
-      <p className={quadro.numero}>
-        <Contagem valor={resumo.normasMes} />
-      </p>
-      <p className={quadro.legendaTotal}>
-        {resumo.normasHoje} hoje · {resumo.normasSemana} na semana · soma de toda a equipe
-      </p>
-      <div
-        className={styles.meta}
-        role="meter"
-        aria-label="Meta do mês"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={cumprida}
-        style={{ '--cumprida': `${cumprida}%` }}
-      >
-        <i />
-      </div>
-      <p className={styles.legendaMeta}>
-        <span>Meta: {formato.format(resumo.meta)} normas</span>
-        <strong>{resumo.metaCumprida}%</strong>
-      </p>
-    </section>
-  );
-}
+// O nome curto do tipo ("Emendas" em vez de "Emendas à Lei Orgânica"), para caber no bloco.
+const ROTULOS_CURTOS = Object.fromEntries(TIPOS_DE_NORMA.map(({ chave, rotulo, curto }) => [chave, curto ?? rotulo]));
 
 function Estrela() {
   return (
-    <svg className={quadro.estrela} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg className={styles.estrela} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M12 1.8l3 6.7 7.2.8-5.4 4.9 1.5 7.2L12 17.7l-6.3 3.7 1.5-7.2L1.8 9.3l7.2-.8z" />
     </svg>
   );
 }
 
-// Quem mais compilou no mês. Clicar abre o card da pessoa.
-function EmDestaque({ pessoa }) {
-  const selecionar = useEquipe((s) => s.selecionar);
+// Anel com a parte do mês da equipe que veio de quem está em destaque.
+function Anel({ parte }) {
+  const cheio = Math.min(Math.max(parte, 0), 100);
   return (
-    <div className={card.surge} style={{ '--ordem': 1 }}>
-      <button type="button" className={quadro.destaque} onClick={() => selecionar(pessoa.id)}>
-        <span className={quadro.destaqueTitulo}>Destaque da Compilação</span>
-        <span className={quadro.destaqueLinha}>
-          <span className={quadro.destaqueQuem}>
-            <strong>
-              {primeiroNome(pessoa.nome)}
-              <Estrela />
-            </strong>
-            {pessoa.funcao && <small>{pessoa.funcao}</small>}
-          </span>
-          <span className={quadro.destaqueTotal}>
-            <strong>
-              <Contagem valor={pessoa.normasMes} />
-            </strong>
-            <small>Normas no Mês</small>
-          </span>
-        </span>
-      </button>
-    </div>
+    <span className={styles.anel} style={{ '--parte': cheio }} aria-hidden="true">
+      <svg viewBox="0 0 36 36" focusable="false">
+        <circle cx="18" cy="18" r="15" pathLength="100" />
+        <circle cx="18" cy="18" r="15" pathLength="100" />
+      </svg>
+      <small>{parte}%</small>
+    </span>
   );
 }
 
-function NormasPorDia({ dias }) {
-  const maximo = Math.max(...dias.map((dia) => dia.valor), 1);
-  const descricao = dias.map((dia) => `${dia.rotulo}: ${dia.valor}`).join(', ');
+// Quem mais compilou no mês: nome, total e a parte do mês da equipe. Clicar abre o card da pessoa.
+function EmDestaque({ pessoa, totalDoMes }) {
+  const selecionar = useEquipe((s) => s.selecionar);
+  const nome = primeiroNome(pessoa.nome);
+  const parte = totalDoMes > 0 ? Math.round((pessoa.normasMes / totalDoMes) * 100) : 0;
   return (
-    <section className={card.surge} style={{ '--ordem': 2 }}>
-      <h3 className={card.rotulo}>Normas por dia</h3>
-      <div className={quadro.dias} style={{ '--colunas': dias.length }} role="img" aria-label={descricao}>
-        {dias.map((dia, i) => (
-          <div key={i} className={dia.hoje ? quadro.hoje : undefined} style={{ '--fracao': dia.valor / maximo, '--ordem': i }}>
-            <div className={quadro.coluna}>
-              <b>{dia.valor}</b>
-              <i />
-            </div>
-            <small>{dia.rotulo}</small>
-          </div>
-        ))}
+    <button
+      type="button"
+      className={styles.destaque}
+      onClick={() => selecionar(pessoa.id)}
+      aria-label={`Destaque: ${nome}, ${pessoa.normasMes} normas no mês, ${parte}% das normas da equipe. Abrir o card.`}
+    >
+      <span className={styles.destaqueTexto}>
+        <span>
+          <b>Destaque:</b> {nome}
+          <Estrela />
+        </span>
+        <span>
+          <b>Normas no Mês:</b> <Contagem valor={pessoa.normasMes} />
+        </span>
+      </span>
+      <Anel parte={parte} />
+    </button>
+  );
+}
+
+// O título grande, o destaque e os totais da equipe (soma das 7 pessoas) no mês, na semana e no dia.
+function Totais({ resumo, destaque }) {
+  return (
+    <section className={`${styles.totais} ${card.surge}`} style={{ '--ordem': 0 }}>
+      <div className={styles.manchete}>
+        <h3>Normas Compiladas</h3>
+        {destaque && <EmDestaque pessoa={destaque} totalDoMes={resumo.normasMes} />}
       </div>
+      <dl className={styles.periodos}>
+        <div className={styles.mes}>
+          <dt>Mês</dt>
+          <dd>
+            +<Contagem valor={resumo.normasMes} />
+          </dd>
+        </div>
+        <div>
+          <dt>Semana</dt>
+          <dd>
+            +<Contagem valor={resumo.normasSemana} />
+          </dd>
+        </div>
+        <div>
+          <dt>Dia</dt>
+          <dd>
+            +<Contagem valor={resumo.normasHoje} />
+          </dd>
+        </div>
+      </dl>
     </section>
   );
 }
 
-// Quantas normas estão na fila de cada pessoa, um bloco por pessoa.
+function PorTipo({ tipos }) {
+  return (
+    <section className={card.surge} style={{ '--ordem': 1 }}>
+      <h3 className={styles.secao}>Normas por Tipo</h3>
+      <ul className={styles.tipos}>
+        {tipos.map(({ chave, valor }) => (
+          <li key={chave}>
+            <strong>
+              <Contagem valor={valor} />
+            </strong>
+            <small>{ROTULOS_CURTOS[chave]}</small>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// Quantas normas estão na fila de cada pessoa: os mesmos blocos do quadro do suporte.
 function Filas({ ranking }) {
   return (
-    <section className={card.surge} style={{ '--ordem': 4 }}>
-      <h3 className={card.secao}>Fila</h3>
-      <ul className={quadro.tickets}>
+    <section className={card.surge} style={{ '--ordem': 2 }}>
+      <h3 className={styles.secao}>Fila</h3>
+      <ul className={`${quadro.tickets} ${styles.fila}`}>
         {ranking.map(({ id, nome, emFila }) => (
           <li key={id}>
             <h4>Fila de {primeiroNome(nome)}</h4>
@@ -119,38 +133,16 @@ function Filas({ ranking }) {
   );
 }
 
-function Ranking({ ranking }) {
-  const selecionar = useEquipe((s) => s.selecionar);
-  return (
-    <section className={card.surge} style={{ '--ordem': 5 }}>
-      <h3 className={card.secao}>Ranking de Normas Compiladas</h3>
-      <ol className={quadro.ranking}>
-        {ranking.map(({ id, nome, normasMes }, i) => (
-          <li key={id} style={{ '--ordem': i }}>
-            <button type="button" onClick={() => selecionar(id)}>
-              <b>{i + 1} -</b>
-              <span className={quadro.nome}>{nome}</span>
-              <i className={quadro.seta} aria-hidden="true" />
-              <strong>
-                <Contagem valor={normasMes} />
-              </strong>
-            </button>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
 /*
- * Painel "Quadro da equipe" de /compilacao: abre pela estátua de Têmis. Mesma
- * moldura e seções do painel do suporte, com a produção de normas: o total e a
- * meta do mês, quem está em destaque, os últimos dias, os tipos de norma, a fila
- * de cada um e o ranking. Os números ainda são os escritos à mão (dados.js).
+ * Painel "Quadro da equipe" de /compilacao: abre pela estátua de Têmis. Os totais
+ * da equipe no mês, na semana e no dia, quem está em destaque, as normas por tipo,
+ * a fila de cada um e os destaques (quem ficou em primeiro em cada conta).
+ * Os números ainda são os escritos à mão (dados.js e atuacao.js).
  */
 export default function CardQuadroCompilacao() {
   const aberto = useEquipe((s) => s.painel === 'quadro');
   const fechar = useEquipe((s) => s.fecharPainel);
+  const tecnicos = useEquipe((s) => s.tecnicos);
   const resumo = useResumo();
   useFecharComEsc(aberto, fechar);
 
@@ -160,7 +152,7 @@ export default function CardQuadroCompilacao() {
   const destaque = ranking[0]?.normasMes > 0 ? ranking[0] : null;
 
   return (
-    <aside className={`${card.card} ${quadro.quadro}`} aria-label="Quadro da equipe: visão geral">
+    <aside className={`${card.card} ${quadro.quadro} ${styles.painel}`} aria-label="Quadro da equipe: visão geral">
       <header className={card.topo}>
         <div className={`${card.avatar} ${quadro.avatar}`} aria-hidden="true">
           {/* Uma folha com linhas escritas: o quadro geral que a estátua segura. */}
@@ -183,18 +175,15 @@ export default function CardQuadroCompilacao() {
         </button>
       </header>
 
-      <TotalDoMes resumo={resumo} />
-      {destaque && <EmDestaque pessoa={destaque} />}
-      {resumo.dias.length > 0 && <NormasPorDia dias={resumo.dias} />}
-      <section className={card.surge} style={{ '--ordem': 3 }}>
-        <GraficoBarras titulo="Normas por tipo" cabecalho="Tipo de norma" itens={resumo.porTipo} unidade="Normas" />
-      </section>
+      <Totais resumo={resumo} destaque={destaque} />
+      <PorTipo tipos={resumo.porTipo} />
       {ranking.length > 0 && <Filas ranking={ranking} />}
-      {ranking.length > 0 && <Ranking ranking={ranking} />}
-
-      <footer className={`${card.rodape} ${card.surge}`} style={{ '--ordem': 6 }}>
-        <span>Números provisórios, preenchidos à mão</span>
-      </footer>
+      {ranking.length > 0 && (
+        <section className={card.surge} style={{ '--ordem': 3 }}>
+          <h3 className={styles.secao}>Destaques</h3>
+          <Destaques ranking={ranking} tecnicos={tecnicos} />
+        </section>
+      )}
     </aside>
   );
 }

@@ -1,46 +1,261 @@
 /*
- * O que o painel de /compilacao acrescenta ao do suporte (Suporte/card/CardQuadro.module.css):
- * a barra da meta do mês, dentro do bloco dourado do total.
+ * O que o painel de /compilacao acrescenta ao do suporte (Suporte/card/CardQuadro.module.css).
+ * O painel é um container: os tamanhos acompanham a largura dele (cqi) e, se ele
+ * for largo, a fila passa de 2 para 3 colunas.
  */
-.meta {
-  height: 10px;
-  margin-top: 14px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-white) 70%, transparent);
+.painel {
+  container: quadro / inline-size;
+  gap: 1.5rem;
 }
 
-.meta i {
-  display: block;
-  width: var(--cumprida);
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-olive);
-  transform-origin: left;
-  animation: encher 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+/* Títulos de seção: grandes e apagados, como no design. Com .painel, vence o ".card h3" do card. */
+.painel .secao {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--color-olive) 38%, transparent);
 }
 
-.legendaMeta {
+/* ── Normas compiladas: título e destaque à esquerda, totais à direita ── */
+.totais {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 16px;
+}
+
+.manchete {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.manchete h3 {
+  margin: 0;
+  font-size: clamp(1.75rem, 9cqi, 2.625rem);
+  font-weight: var(--weight-black);
+  font-style: italic;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: #2b3518;
+}
+
+.destaque {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 9px 7px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--color-olive);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--color-olive-dark) 35%, transparent);
+  color: var(--color-cream);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease;
+}
+
+.destaqueTexto {
+  display: grid;
+  min-width: 0;
+}
+
+.destaqueTexto > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.destaqueTexto b {
+  font-weight: var(--weight-bold);
+  color: var(--color-white);
+}
+
+.estrela {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: #f2b632;
+  animation: cintilar 3.2s ease-in-out 1.4s infinite;
+}
+
+/* O anel: trilho claro e, por cima, a parte de quem está em destaque, em escuro. */
+.anel {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.375rem;
+  height: 2.375rem;
+}
+
+.anel svg {
+  position: absolute;
+  inset: 0;
+  fill: none;
+  stroke-width: 2.6;
+  transform: rotate(-90deg);
+}
+
+.anel circle:first-child {
+  stroke: color-mix(in srgb, var(--color-cream) 35%, transparent);
+}
+
+.anel circle:last-child {
+  stroke: var(--color-ink);
+  stroke-linecap: round;
+  stroke-dasharray: var(--parte) 100;
+  animation: encher 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s backwards;
+}
+
+.anel small {
+  font-size: 0.5625rem;
+  font-weight: var(--weight-bold);
+  color: var(--color-cream);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .destaque:hover {
+    box-shadow: 0 10px 18px color-mix(in srgb, var(--color-olive-dark) 32%, transparent);
+    transform: translateY(-2px);
+  }
+}
+
+.painel button.destaque:focus-visible {
+  outline: 2px solid var(--color-olive-dark);
+  outline-offset: 3px;
+}
+
+/* Mês em cima, grande; semana e dia lado a lado embaixo. */
+.periodos {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.mes {
+  grid-column: 1 / -1;
+}
+
+.periodos dt {
+  margin-bottom: 2px;
   font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--color-olive) 38%, transparent);
+}
+
+.mes dt {
+  font-size: 1.0625rem;
+}
+
+.periodos dd {
+  margin: 0;
+  font-size: clamp(1.375rem, 6.4cqi, 1.875rem);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--color-olive);
+  font-variant-numeric: tabular-nums;
+}
+
+.mes dd {
+  font-size: clamp(2.25rem, 11cqi, 3.25rem);
+}
+
+/* ── Normas por tipo: blocos claros em relevo, três por linha ── */
+.tipos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tipos li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 4.25rem;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-white) 45%, var(--color-cream));
+  box-shadow:
+    0 4px 6px color-mix(in srgb, var(--color-olive-dark) 22%, transparent),
+    inset 0 1px 0 var(--color-white);
+  text-align: center;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease;
+}
+
+.tipos strong {
+  font-size: clamp(1.25rem, 5.4cqi, 1.5rem);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--color-olive);
+  font-variant-numeric: tabular-nums;
+}
+
+.tipos small {
+  font-size: 0.6875rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
   color: var(--neutro-pequeno);
 }
 
-.legendaMeta strong {
-  color: var(--color-olive-dark);
-  font-weight: var(--weight-bold);
+@media (hover: hover) and (pointer: fine) {
+  .tipos li:hover {
+    box-shadow:
+      0 10px 16px color-mix(in srgb, var(--color-olive-dark) 22%, transparent),
+      inset 0 1px 0 var(--color-white);
+    transform: translateY(-3px);
+  }
+}
+
+/* ── Fila: os blocos do suporte, em 3 colunas quando o painel é largo ── */
+@container quadro (min-width: 30rem) {
+  .painel .fila {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @keyframes encher {
   from {
-    transform: scaleX(0);
+    stroke-dasharray: 0 100;
+  }
+}
+
+@keyframes cintilar {
+  50% {
+    filter: drop-shadow(0 0 4px color-mix(in srgb, #f2b632 85%, transparent));
+    transform: scale(1.15);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .meta i {
+  .estrela,
+  .anel circle:last-child {
     animation: none;
+  }
+
+  .destaque,
+  .tipos li {
+    transition: none;
   }
 }

@@ -1,0 +1,350 @@
+/*
+ * "Destaques" do quadro de /compilacao: os slides empilhados na mesma célula
+ * (só o ativo aparece), o gráfico de uma barra com o boneco de quem ficou em
+ * primeiro e a paginação embaixo.
+ */
+.destaques {
+  --suave: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --barra: #84e1d4;
+
+  display: grid;
+  gap: 12px;
+}
+
+.slides {
+  display: grid;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 14px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(18px);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s var(--suave),
+    visibility 0s 0.45s;
+}
+
+.slide[data-ativo] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.35s ease 0.08s,
+    transform 0.45s var(--suave) 0.08s,
+    visibility 0s;
+}
+
+.titulo {
+  margin: 0;
+  font-size: clamp(1.25rem, 6.2cqi, 1.875rem);
+  font-weight: var(--weight-black);
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* O quadro quadriculado: linhas finas a cada oitavo, decorativas. */
+.grafico {
+  position: relative;
+  aspect-ratio: 430 / 332;
+  overflow: hidden;
+  border: 1px solid var(--color-ink);
+  background-color: color-mix(in srgb, var(--color-white) 55%, transparent);
+  background-image:
+    linear-gradient(to right, rgb(17 20 12 / 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(17 20 12 / 0.08) 1px, transparent 1px);
+  background-size: calc(100% / 8) calc(100% / 5);
+}
+
+/* A barra parte do chão; o valor fica logo acima dela. A altura toda é o topo do gráfico. */
+.barra {
+  position: absolute;
+  bottom: 0;
+  left: 19%;
+  width: 24%;
+  height: calc(var(--fracao) * 100%);
+}
+
+.barra i {
+  position: absolute;
+  inset: 0;
+  background: var(--barra);
+  transform-origin: bottom;
+}
+
+.barra b {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  left: 0;
+  font-size: clamp(1.125rem, 5cqi, 1.5rem);
+  font-weight: var(--weight-black);
+  font-style: italic;
+  line-height: 1;
+  color: var(--color-ink);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.slide[data-ativo] .barra i {
+  animation: crescer 0.8s var(--suave) 0.15s backwards;
+}
+
+.slide[data-ativo] .barra b {
+  animation: aparecer 0.4s ease 0.6s backwards;
+}
+
+/* O boneco à direita, em pé no chão do gráfico; o balão com o nome fica sobre a cabeça. */
+.pessoa {
+  position: absolute;
+  right: 3%;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 46%;
+  height: 92%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.corpo {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 6px 10px rgb(17 20 12 / 0.18));
+  transform-origin: bottom;
+  transition: transform 0.35s var(--suave);
+  user-select: none;
+}
+
+.slide[data-ativo] .corpo,
+.slide[data-ativo] .iniciais {
+  animation: chegar 0.6s var(--suave) 0.2s backwards;
+}
+
+.iniciais {
+  display: grid;
+  place-items: center;
+  width: 62%;
+  aspect-ratio: 1;
+  margin: auto 0 18%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-olive) 18%, var(--color-white));
+  color: var(--color-olive-dark);
+  font-size: 1.75rem;
+  font-weight: var(--weight-black);
+}
+
+/*
+ * Balão de vidro: fundo translúcido que desfoca a grade de trás, um brilho na
+ * metade de cima, borda clara e a pontinha virada para a cabeça.
+ */
+.balao {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 6px 12px 6px 14px;
+  border: 1px solid rgb(255 255 255 / 0.75);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.7) 0%, rgb(255 255 255 / 0.12) 52%, rgb(255 255 255 / 0.28) 100%),
+    color-mix(in srgb, var(--barra) 30%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(180%);
+  box-shadow:
+    0 8px 18px rgb(17 20 12 / 0.16),
+    0 1px 2px rgb(17 20 12 / 0.12),
+    inset 0 1px 0 rgb(255 255 255 / 0.95),
+    inset 0 -1px 1px rgb(255 255 255 / 0.35);
+  color: var(--color-ink);
+  font-size: 0.875rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    transform 0.35s var(--suave),
+    box-shadow 0.35s ease;
+}
+
+.balao::after {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid rgb(255 255 255 / 0.75);
+  border-bottom: 1px solid rgb(255 255 255 / 0.75);
+  border-bottom-right-radius: 2px;
+  background: color-mix(in srgb, var(--barra) 22%, rgb(255 255 255 / 0.55));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.slide[data-ativo] .balao {
+  animation: flutuar 0.6s var(--suave) 0.45s backwards;
+}
+
+.estrela {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  fill: #f2b632;
+  filter: drop-shadow(0 1px 1px rgb(120 90 0 / 0.35));
+}
+
+.vazio {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.875rem;
+  color: var(--neutro-pequeno);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pessoa:hover .corpo {
+    transform: scale(1.03);
+  }
+
+  .pessoa:hover .balao {
+    box-shadow:
+      0 12px 24px rgb(17 20 12 / 0.2),
+      0 1px 2px rgb(17 20 12 / 0.12),
+      inset 0 1px 0 rgb(255 255 255 / 0.95),
+      inset 0 -1px 1px rgb(255 255 255 / 0.35);
+    transform: translateY(-2px);
+  }
+}
+
+/* .grafico na frente vence o contorno de foco do card (que ficaria cortado pela moldura). */
+.grafico .pessoa:focus-visible {
+  outline: 2px solid var(--color-olive);
+  outline-offset: -2px;
+}
+
+/* ── Paginação: ‹ • • • › ── */
+.paginas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.paginas button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.seta {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  transition: background-color 0.25s ease;
+}
+
+.seta:hover {
+  background: var(--fundo-suave);
+}
+
+.seta svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ponto {
+  width: 1rem;
+  height: 1.75rem;
+}
+
+.ponto i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-ink) 30%, transparent);
+  transition:
+    background-color 0.25s ease,
+    transform 0.35s var(--suave);
+}
+
+.ponto[aria-current] i {
+  background: var(--color-ink);
+  transform: scale(1.35);
+}
+
+@keyframes crescer {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes chegar {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes flutuar {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide,
+  .slide[data-ativo] {
+    transform: none;
+    transition: none;
+  }
+
+  .slide[data-ativo] .barra i,
+  .slide[data-ativo] .barra b,
+  .slide[data-ativo] .corpo,
+  .slide[data-ativo] .iniciais,
+  .slide[data-ativo] .balao {
+    animation: none;
+  }
+
+  .corpo,
+  .balao,
+  .ponto i {
+    transition: none;
+  }
+}

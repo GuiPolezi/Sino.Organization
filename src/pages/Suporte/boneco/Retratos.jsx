@@ -9,6 +9,15 @@ import { Figura, useMateriais } from './Boneco.jsx';
 const TAMANHO = 256;
 
 /*
+ * O retrato de corpo inteiro (o destaque do quadro de /compilacao) vai na mesma
+ * fila, com outra chave: "<id>#corpo". Sai em pé, de 3 por 4, da cabeça aos tornozelos.
+ */
+const CORPO = '#corpo';
+const CORPO_LARGURA = 288;
+const CORPO_ALTURA = 384;
+export const chaveDoCorpo = (id) => `${id}${CORPO}`;
+
+/*
  * Retratos já tirados (id → URL da imagem, ou null se a foto falhou) e a fila de quem espera o seu. Vivem até
  * a página recarregar: a aparência de cada pessoa não muda.
  */
@@ -58,17 +67,23 @@ export function useRetrato(id) {
   return url;
 }
 
+/**
+ * Como useRetrato, mas o boneco inteiro, em pé e acenando (3 por 4).
+ * @param {string | null} id
+ */
+export const useRetratoCorpo = (id) => useRetrato(id ? chaveDoCorpo(id) : null);
+
 // Os pixels do alvo, de baixo para cima e com a cor multiplicada pela opacidade,
 // viram uma imagem PNG. O toBlob codifica fora da thread principal (o toDataURL travava).
-function paraImagem(pixels) {
+function paraImagem(pixels, largura, altura) {
   const tela = document.createElement('canvas');
-  tela.width = TAMANHO;
-  tela.height = TAMANHO;
+  tela.width = largura;
+  tela.height = altura;
   const contexto = tela.getContext('2d');
-  const imagem = contexto.createImageData(TAMANHO, TAMANHO);
-  const linha = TAMANHO * 4;
-  for (let y = 0; y < TAMANHO; y++) {
-    const origem = (TAMANHO - 1 - y) * linha;
+  const imagem = contexto.createImageData(largura, altura);
+  const linha = largura * 4;
+  for (let y = 0; y < altura; y++) {
+    const origem = (altura - 1 - y) * linha;
     for (let x = 0; x < linha; x += 4) {
       const a = pixels[origem + x + 3];
       // Nas bordas suavizadas a cor vem multiplicada pela opacidade: desfaz, para não escurecer o contorno.
@@ -85,16 +100,17 @@ function paraImagem(pixels) {
 
 // Lê os pixels sem travar a GPU (leitura assíncrona); sem suporte, cai na síncrona.
 async function lerPixels(gl, alvo) {
-  const pixels = new Uint8Array(TAMANHO * TAMANHO * 4);
+  const { width: largura, height: altura } = alvo;
+  const pixels = new Uint8Array(largura * altura * 4);
   if (gl.readRenderTargetPixelsAsync) {
     try {
-      await gl.readRenderTargetPixelsAsync(alvo, 0, 0, TAMANHO, TAMANHO, pixels);
+      await gl.readRenderTargetPixelsAsync(alvo, 0, 0, largura, altura, pixels);
       return pixels;
     } catch {
       // segue para a leitura síncrona
     }
   }
-  gl.readRenderTargetPixels(alvo, 0, 0, TAMANHO, TAMANHO, pixels);
+  gl.readRenderTargetPixels(alvo, 0, 0, largura, altura, pixels);
   return pixels;
 }
 
@@ -103,7 +119,7 @@ async function lerPixels(gl, alvo) {
  * de estúdio. No segundo quadro (o primeiro monta e compila os materiais), a
  * foto é tirada num alvo de renderização e entregue.
  */
-function Pose({ id, cena, camera, alvo }) {
+function Pose({ chave, id, cena, camera, alvo }) {
   const aparencia = useMemo(() => aparenciaDe(id), [id]);
   const materiais = useMateriais(aparencia);
   const quadros = useRef(0);
@@ -124,9 +140,9 @@ function Pose({ id, cena, camera, alvo }) {
     gl.render(cena, camera);
     gl.setRenderTarget(anterior);
     lerPixels(gl, alvo)
-      .then(paraImagem)
-      .then((url) => useRetratos.getState().entregar(id, url))
-      .catch(() => falhou(id));
+      .then((pixels) => paraImagem(pixels, alvo.width, alvo.height))
+      .then((url) => useRetratos.getState().entregar(chave, url))
+      .catch(() => falhou(chave));
   });
 
   return createPortal(
@@ -140,28 +156,49 @@ function Pose({ id, cena, camera, alvo }) {
   );
 }
 
+function novoAlvo(largura, altura) {
+  const alvo = new THREE.WebGLRenderTarget(largura, altura, { samples: 4 });
+  // Grava em sRGB, como a tela; sem isso o retrato sai escuro.
+  alvo.texture.colorSpace = THREE.SRGBColorSpace;
+  return alvo;
+}
+
 /**
  * Fotógrafo da equipe, dentro do Canvas da cena: tira os retratos pedidos por
- * useRetrato, um por vez, com o mesmo renderizador (sem abrir outro contexto
- * WebGL). O enquadramento pega cabeça, ombros e a mão erguida.
+ * useRetrato (e useRetratoCorpo), um por vez, com o mesmo renderizador (sem abrir
+ * outro contexto WebGL). O rosto pega cabeça, ombros e a mão erguida; o corpo,
+ * o boneco em pé, da cabeça aos tornozelos.
  */
 export default function Retratista() {
-  const id = useRetratos((s) => s.fila[0]);
+  const chave = useRetratos((s) => s.fila[0]);
   const cena = useMemo(() => new THREE.Scene(), []);
-  const camera = useMemo(() => {
+  const rosto = useMemo(() => {
     const lente = new THREE.PerspectiveCamera(24, 1, 0.1, 20);
     lente.position.set(0, 1.55, 3.3);
     lente.lookAt(0, 1.42, 0);
-    return lente;
+    return { camera: lente, alvo: novoAlvo(TAMANHO, TAMANHO) };
   }, []);
-  const alvo = useMemo(() => {
-    const novo = new THREE.WebGLRenderTarget(TAMANHO, TAMANHO, { samples: 4 });
-    // Grava em sRGB, como a tela; sem isso o retrato sai escuro.
-    novo.texture.colorSpace = THREE.SRGBColorSpace;
-    return novo;
+  // O three só reserva a memória do alvo na primeira foto: quem nunca pede o corpo não paga por ele.
+  const corpo = useMemo(() => {
+    // Um pouco à direita do centro, por causa do braço erguido.
+    const lente = new THREE.PerspectiveCamera(24, CORPO_LARGURA / CORPO_ALTURA, 0.1, 20);
+    lente.position.set(0.08, 1.12, 4.9);
+    lente.lookAt(0.08, 1.1, 0);
+    return { camera: lente, alvo: novoAlvo(CORPO_LARGURA, CORPO_ALTURA) };
   }, []);
-  useEffect(() => () => alvo.dispose(), [alvo]);
+  useEffect(
+    () => () => {
+      rosto.alvo.dispose();
+      corpo.alvo.dispose();
+    },
+    [rosto, corpo],
+  );
 
-  // A key troca o boneco inteiro a cada pessoa.
-  return id ? <Pose key={id} id={id} cena={cena} camera={camera} alvo={alvo} /> : null;
+  if (!chave) return null;
+  const doCorpo = chave.endsWith(CORPO);
+  const { camera, alvo } = doCorpo ? corpo : rosto;
+  const id = doCorpo ? chave.slice(0, -CORPO.length) : chave;
+
+  // A key troca o boneco inteiro a cada foto.
+  return <Pose key={chave} chave={chave} id={id} cena={cena} camera={camera} alvo={alvo} />;
 }
