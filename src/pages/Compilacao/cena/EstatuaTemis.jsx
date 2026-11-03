@@ -9,6 +9,8 @@ import { CONFIG_QUADRO, QUADRO, atualizarObstaculos, posicionarQuadro, removerQu
 import { novaTextura } from '../../Suporte/quadro/texturas.js';
 import { MOVIMENTO, passoDoFrame, useEquipe } from '../../Suporte/store.js';
 import styles from '../../Suporte/quadro/Quadro.module.css';
+import { primeirosLugares } from '../destaques.js';
+import { useCidadesEmAtuacao } from '../useAtuacao.js';
 import { useResumo } from '../useResumo.js';
 import { texturaFolhaTemis } from './folha.js';
 
@@ -341,8 +343,13 @@ export default function EstatuaTemis({ area }) {
   const [emHover, setEmHover] = useState(false);
 
   const resumo = useResumo();
+  // As cidades de cada um, para o destaque "cidades em atuação" (o mesmo do painel).
+  const cidades = useCidadesEmAtuacao(resumo.ranking.map(({ id }) => id));
   const fonte = useFonteManuscrita();
-  const textura = useMemo(() => texturaFolhaTemis(resumo), [resumo, fonte]);
+  const textura = useMemo(
+    () => texturaFolhaTemis(resumo, primeirosLugares(resumo.ranking, cidades)),
+    [resumo, cidades, fonte],
+  );
   useEffect(() => () => textura.dispose(), [textura]);
 
   const M = useMemo(criarMateriais, []);

@@ -41,3 +41,20 @@ export function topoDoGrafico(valor) {
   const casa = 10 ** Math.floor(Math.log10(alvo));
   return REDONDOS.map((redondo) => redondo * casa).find((topo) => topo >= alvo);
 }
+
+/**
+ * Quem ficou em primeiro em cada slide: o mesmo no painel e na folha da estátua.
+ * O ranking vem do mais ao menos produtivo, então no empate vence quem compilou mais.
+ *
+ * @template {{ id: string, normasMes: number, emFila: number }} P
+ * @param {P[]} ranking
+ * @param {Record<string, number>} cidades id -> cidades em atuação
+ * @returns {Record<'compiladas' | 'fila' | 'cidades', { pessoa: P, valor: number } | null>}
+ */
+export function primeirosLugares(ranking, cidades) {
+  return {
+    compiladas: primeiroLugar(ranking, ({ normasMes }) => normasMes),
+    fila: primeiroLugar(ranking, ({ emFila }) => emFila),
+    cidades: primeiroLugar(ranking, ({ id }) => cidades[id] ?? 0),
+  };
+}

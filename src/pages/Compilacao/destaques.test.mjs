@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { primeiroLugar, topoDoGrafico } from './destaques.js';
+import { primeiroLugar, primeirosLugares, topoDoGrafico } from './destaques.js';
 
 const valor = ({ n }) => n;
 
@@ -37,4 +37,17 @@ test('topoDoGrafico: a barra fica entre dois quintos e quatro quintos da altura'
 
 test('topoDoGrafico: zero ainda tem topo (barra vazia)', () => {
   assert.equal(topoDoGrafico(0), 2);
+});
+
+test('primeirosLugares: um primeiro lugar por slide', () => {
+  const ranking = [
+    { id: 'a', normasMes: 30, emFila: 2 },
+    { id: 'b', normasMes: 20, emFila: 9 },
+    { id: 'c', normasMes: 10, emFila: 9 },
+  ];
+  const primeiros = primeirosLugares(ranking, { a: 1, b: 3, c: 6 });
+  assert.equal(primeiros.compiladas.pessoa.id, 'a');
+  assert.deepEqual([primeiros.fila.pessoa.id, primeiros.fila.valor], ['b', 9]);
+  assert.deepEqual([primeiros.cidades.pessoa.id, primeiros.cidades.valor], ['c', 6]);
+  assert.equal(primeirosLugares(ranking, {}).cidades, null);
 });

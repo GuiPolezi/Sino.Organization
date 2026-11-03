@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRetratoCorpo } from '../../Suporte/boneco/Retratos.jsx';
 import { useEquipe } from '../../Suporte/store.js';
-import { SLIDES, primeiroLugar, topoDoGrafico } from '../destaques.js';
+import { SLIDES, primeirosLugares, topoDoGrafico } from '../destaques.js';
 import { useCidadesEmAtuacao } from '../useAtuacao.js';
 import styles from './Destaques.module.css';
 
@@ -62,13 +62,8 @@ export default function Destaques({ ranking, tecnicos }) {
   const cidades = useCidadesEmAtuacao(tecnicos.map(({ id }) => id));
   const pessoas = new Map(tecnicos.map((tecnico) => [tecnico.id, tecnico]));
 
-  // ranking já vem do mais ao menos produtivo: no empate, vence quem compilou mais.
   const comPessoa = ({ id }) => pessoas.get(id);
-  const primeiros = {
-    compiladas: primeiroLugar(ranking, ({ normasMes }) => normasMes),
-    fila: primeiroLugar(ranking, ({ emFila }) => emFila),
-    cidades: primeiroLugar(ranking, ({ id }) => cidades[id] ?? 0),
-  };
+  const primeiros = primeirosLugares(ranking, cidades);
 
   const ir = (passo) => setAtual((indice) => (indice + passo + SLIDES.length) % SLIDES.length);
 
