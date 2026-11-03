@@ -88,3 +88,14 @@ test('catalogoDeModulos monta o reconhecedor a partir do ModulosNorma/Get', () =
 test('catalogoDeModulos ignora itens sem id ou sem nome', () => {
   assert.deepEqual(catalogoDeModulos([{ id: 1 }, { nomeSingular: 'x' }, null]), []);
 });
+
+test('descrição enorme (milhares de espaços) é lida rápido', async () => {
+  const { nomeDoTipo } = await import('./tipos.mjs');
+  const { chaveDaNorma } = await import('./normas-distintas.mjs');
+  const inicio = Date.now();
+  assert.equal(nomeDoTipo(`x${' '.repeat(200_000)}`), null);
+  assert.equal(nomeDoTipo(`${' '.repeat(200_000)}x`), null);
+  assert.equal(chaveDaNorma({ cidadeUf: 'Cidade A-XX', descricao: `Resolução${' '.repeat(200_000)}nº 1/2026` }), null);
+  assert.ok(Date.now() - inicio < 200, `levou ${Date.now() - inicio} ms`);
+  assert.equal(nomeDoTipo('Resolução nº 12/2026'), 'Resolução');
+});

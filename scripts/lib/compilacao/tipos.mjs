@@ -60,10 +60,14 @@ const PREFIXOS = /^\s*(?:(?:altera|revoga|prorroga|relacionada|regulamenta)\s*:\
 // O tipo vai até " nº" (aceita º, ° ou o).
 const ATE_NUMERO = /^(.*?)\s+n[º°o]\.?(?=\s|\d)/i;
 
+// O tipo e o número estão sempre no começo da descrição. Cortar antes evita que um
+// texto enorme (ex.: milhares de espaços) deixe as expressões lentas.
+export const MAX_DESCRICAO = 300;
+
 /** Só o nome do tipo (antes de " nº"), sem prefixo "altera:" etc.; null se não achar. */
 export function nomeDoTipo(descricao) {
   if (typeof descricao !== 'string') return null;
-  const casou = descricao.replace(PREFIXOS, '').match(ATE_NUMERO);
+  const casou = descricao.slice(0, MAX_DESCRICAO).replace(PREFIXOS, '').match(ATE_NUMERO);
   return casou ? casou[1] : null;
 }
 

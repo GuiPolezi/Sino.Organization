@@ -1,7 +1,7 @@
 // Normas distintas (I13). A Auditoria tem uma linha por AÇÃO: a mesma norma com
 // 2 versões aparece 2 vezes. Aqui uma norma vale 1, identificada por
 // cidade + tipo + número/ano. Itens: { cidadeUf, descricao }.
-import { BALDES, CATALOGO, baldeDoModulo, nomeDoTipo, normalizar, tipoDaDescricao } from './tipos.mjs';
+import { BALDES, CATALOGO, MAX_DESCRICAO, baldeDoModulo, nomeDoTipo, normalizar, tipoDaDescricao } from './tipos.mjs';
 
 // Dois formatos na Auditoria: "nº 500/2026" e "nº 1.234 / 15/10/2026" (número e a
 // data inteira; o ano é o do fim da data).
@@ -12,7 +12,7 @@ const NUMERO_ANO = /\bn[º°o]\.?\s*(\d[\d.]*(?:-?[A-Za-z])?)\s*\/\s*(?:\d{1,2}\
  * Tipo desconhecido mas com número/ano válido tem chave própria (vai para "outros").
  */
 export function chaveDaNorma(item, catalogo = CATALOGO) {
-  const descricao = item?.descricao;
+  const descricao = typeof item?.descricao === 'string' ? item.descricao.slice(0, MAX_DESCRICAO) : item?.descricao;
   const cidade = typeof item?.cidadeUf === 'string' ? item.cidadeUf.trim() : '';
   if (!cidade || typeof descricao !== 'string') return null;
   const nome = nomeDoTipo(descricao);

@@ -1,7 +1,7 @@
 // Projetos Novos: cidade e tipo(s) em que a pessoa está, pela Auditoria recente
 // (plano de dados, regras 4.2 e 4.3), e os números do estoque do projeto.
 // Ainda SEM estado: a histerese de 2 dias e a correção manual entram em F3.
-import { dataDoItem, ehDoModulo, instanteDoItem, separarCidadeUf } from './itens.mjs';
+import { dataDoItem, ehDoModulo, instanteDoItem, separarCidadeUf, textoPublico } from './itens.mjs';
 import { CATALOGO, tipoDaDescricao } from './tipos.mjs';
 
 // Janela da inferência: os últimos N dias COM ação (feriado e fim de semana não diluem).
@@ -28,7 +28,8 @@ const ROTULOS = new Map([
 ]);
 
 export function rotuloDoTipo(moduloId, catalogo = CATALOGO) {
-  return ROTULOS.get(moduloId) ?? catalogo.find((t) => t.id === moduloId)?.nomeSingular ?? `Tipo ${moduloId}`;
+  const doCatalogo = catalogo.find((t) => t.id === moduloId)?.nomeSingular;
+  return ROTULOS.get(moduloId) ?? (doCatalogo ? textoPublico(doCatalogo, 60) : `Tipo ${moduloId}`);
 }
 
 const cidadeDe = (item) => (typeof item?.cidadeUf === 'string' ? item.cidadeUf.trim() : '');
