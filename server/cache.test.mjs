@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { armazemMemoria, criarCache } from './cache.mjs';
+import { PAUSA_APOS_FALHA_SEGUNDOS, armazemMemoria, criarCache } from './cache.mjs';
 
 const MINUTO = 60_000;
 
@@ -40,9 +40,9 @@ test('busca na primeira vez e reaproveita enquanto tem menos de 15 minutos', asy
   assert.equal(terceiro.dados, 'dado 2');
 });
 
-test('se a busca falha, devolve o dado antigo com aviso e libera a trava', async () => {
+test('se a busca falha, devolve o dado antigo com aviso e só tenta de novo depois da pausa', async () => {
   const { agora, avancar } = relogio();
-  const obter = criarCache({ armazem: armazemMemoria(), agora, mensagemDe: () => 'Site fora do ar.' });
+  const obter = criarCache({ armazem: armazemMemoria({ agora }), agora, mensagemDe: () => 'Site fora do ar.' });
   await obter('licencas', contador());
 
   avancar(20 * MINUTO);
@@ -53,7 +53,17 @@ test('se a busca falha, devolve o dado antigo com aviso e libera a trava', async
   assert.equal(falhou.dados, 'dado 1');
   assert.equal(falhou.aviso, 'Site fora do ar.');
 
-  // A trava foi liberada: a próxima tentativa busca de novo.
+  // Logo depois da falha ninguém busca de novo (a fonte pode estar fora do ar), e
+  // quem chega recebe o dado antigo com o mesmo aviso.
+  const logo = contador('logo');
+  const durante = await obter('licencas', logo);
+  assert.equal(logo.vezes, 0);
+  assert.equal(durante.dados, 'dado 1');
+  assert.equal(durante.situacao, 'antigo');
+  assert.equal(durante.aviso, 'Site fora do ar.');
+
+  // Passada a pausa, a próxima tentativa busca de novo.
+  avancar(PAUSA_APOS_FALHA_SEGUNDOS * 1000 + 1);
   const depois = await obter('licencas', contador('novo'));
   assert.equal(depois.dados, 'novo 1');
 });
@@ -121,4 +131,20 @@ test('cada fonte pode ter a própria idade máxima (0 força a busca)', async ()
   avancar(3 * 60 * MINUTO);
   assert.equal((await obter('clientes', buscar, umDia)).situacao, 'recente');
   assert.equal((await obter('clientes', buscar, { idadeMaximaMs: 0 })).dados, 'dado 2');
+});
+
+test('sem dado nenhum, durante a pausa o erro da falha chega na hora (sem esperar)', async () => {
+  const { agora, avancar } = relogio();
+  const obter = criarCache({ armazem: armazemMemoria({ agora }), agora, esperaMs: 10_000 });
+  const falhar = async () => {
+    throw new Error('rede');
+  };
+  await assert.rejects(obter('licencas', falhar), /rede/);
+  const inicio = Date.now();
+  const outra = contador();
+  await assert.rejects(obter('licencas', outra), /rede/);
+  assert.equal(outra.vezes, 0);
+  assert.ok(Date.now() - inicio < 1000, 'não ficou esperando a "primeira busca"');
+  avancar(PAUSA_APOS_FALHA_SEGUNDOS * 1000 + 1);
+  assert.equal((await obter('licencas', outra)).dados, 'dado 1');
 });

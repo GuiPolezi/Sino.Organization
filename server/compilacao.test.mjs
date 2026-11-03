@@ -1,0 +1,210 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  AGORA,
+  EQUIPE_CONFIG,
+  auditoriaSintetica,
+  estoqueSintetico,
+  planilhasSinteticas,
+  registro,
+} from '../scripts/lib/compilacao/compilacao-sintetica.mjs';
+import { CompilacaoError } from '../scripts/lib/compilacao/configuracao.mjs';
+import { MAX_PARES, buscarCompilacao, lerPlanilhas } from './compilacao.mjs';
+import { LegislacaoError } from './legislacao.mjs';
+
+// Cadastro de cidades inventado: ids 1001-1009, "Cidade A-XX" etc.
+const CIDADES = ['A', 'B', 'C', 'D', 'E'].map((letra, i) => ({
+  id: 1001 + i,
+  nome: `Cidade ${letra}`,
+  uf: 'XX',
+  nomeUf: `Cidade ${letra}-XX`,
+}));
+const cidadeUfDoId = new Map(CIDADES.map((c) => [c.id, c.nomeUf]));
+
+// Cliente falso do Legislação Digital: responde com as fixtures e grava cada pedido.
+function clienteFalso({ auditoria = auditoriaSintetica(), estoque = estoqueSintetico, falhar = () => false } = {}) {
+  const pedidos = [];
+  const anotar = (metodo, controller, filtros) => {
+    pedidos.push({ metodo, controller, filtros });
+    if (falhar(controller, filtros)) throw new LegislacaoError('O Legislação Digital respondeu HTTP 500 em teste.');
+  };
+  return {
+    pedidos,
+    async listarTudo(controller, filtros = {}) {
+      anotar('listarTudo', controller, filtros);
+      if (controller === 'ModulosNorma') return [];
+      if (controller === 'Cidades') return CIDADES;
+      const entrada = auditoria[filtros.usuarioId] ?? { versoes: [], normas: [] };
+      return filtros.modulo === 'Normas' ? entrada.normas : entrada.versoes;
+    },
+    async primeiraPagina(controller, filtros = {}) {
+      anotar('primeiraPagina', controller, filtros);
+      return auditoria[filtros.usuarioId]?.recentes ?? [];
+    },
+    async contar(controller, filtros = {}) {
+      anotar('contar', controller, filtros);
+      const e = estoque[`${cidadeUfDoId.get(filtros.cidadeId)}|${filtros.moduloId}`];
+      if (!e) return 0;
+      if (filtros.versionada === 1) return e.versionadas;
+      if (filtros.versionada === 2) return e.naoVersionadas;
+      return e.total;
+    },
+  };
+}
+
+// Supabase falso: devolve as linhas das planilhas em páginas de no máximo `limit`.
+function supabaseFalso(planilhas = planilhasSinteticas, { falhar = false } = {}) {
+  const caminhos = [];
+  const pedir = async (caminho) => {
+    caminhos.push(caminho);
+    if (falhar) throw new Error('Supabase fora (teste)');
+    const url = new URL(`https://exemplo.invalid${caminho}`);
+    const tabela = url.pathname.endsWith('_abas') ? planilhas.abas : planilhas.linhas;
+    const limit = Number(url.searchParams.get('limit'));
+    const offset = Number(url.searchParams.get('offset'));
+    return tabela.slice(offset, offset + limit);
+  };
+  pedir.caminhos = caminhos;
+  return pedir;
+}
+
+const ENV = { COMPILACAO_EQUIPE: JSON.stringify(EQUIPE_CONFIG) };
+const buscar = (extra = {}) =>
+  buscarCompilacao({ cliente: clienteFalso(), pedirSupabase: supabaseFalso(), env: ENV, agora: AGORA, avisar: () => {}, ...extra });
+
+test('monta as 7 pessoas com os números do sistema e das planilhas', async () => {
+  const dados = await buscar();
+  assert.equal(Object.keys(dados.pessoas).length, 7);
+  assert.deepEqual(
+    [dados.pessoas.leonardo.projeto.total, dados.pessoas.leonardo.projeto.compiladas, dados.pessoas.leonardo.projeto.aguardando],
+    [40, 30, 10],
+  );
+  assert.equal(dados.pessoas.gdressano.producao.mes, 10);
+  assert.equal(dados.pessoas.gdressano.fontes.mes, 'planilha');
+});
+
+test('fica dentro do limite de pedidos por busca (≤ 40) e só lê as rotas permitidas', async () => {
+  const cliente = clienteFalso();
+  await buscar({ cliente });
+  assert.ok(cliente.pedidos.length <= 40, `foram ${cliente.pedidos.length} pedidos`);
+  for (const { controller } of cliente.pedidos) assert.ok(['Auditoria', 'Normas', 'Cidades', 'ModulosNorma'].includes(controller));
+});
+
+test('a Auditoria é sempre pedida por pessoa, com o período certo', async () => {
+  const cliente = clienteFalso();
+  await buscar({ cliente });
+  const daAuditoria = cliente.pedidos.filter((p) => p.controller === 'Auditoria');
+  assert.ok(daAuditoria.every((p) => /^\d+$/.test(String(p.filtros.usuarioId))));
+  const versoes = daAuditoria.filter((p) => p.filtros.modulo === 'Versões');
+  assert.equal(versoes.length, 7);
+  // Do mais cedo entre o começo da semana, do mês e da janela de 16 dias, até hoje.
+  assert.ok(versoes.every((p) => p.filtros.dataInicial === '2026-10-19' && p.filtros.dataFinal === '2026-11-04'));
+  assert.ok(versoes.every((p) => p.filtros.acao === 1), 'só as inclusões');
+  // Normas recentes só para quem faz Projetos (4 pessoas).
+  assert.equal(daAuditoria.filter((p) => p.filtros.modulo === 'Normas').length, 4);
+});
+
+test('o estoque é contado uma vez por par cidade×tipo, com total e versionada 1 e 2', async () => {
+  const cliente = clienteFalso();
+  await buscar({ cliente });
+  const contagens = cliente.pedidos.filter((p) => p.controller === 'Normas');
+  assert.equal(contagens.length, 5 * 3); // A|28, A|24, B|23, B|24, C|28
+  assert.deepEqual(new Set(contagens.map((p) => p.filtros.versionada ?? 0)), new Set([0, 1, 2]));
+});
+
+test('pessoa cuja Auditoria trouxe ações de outra pessoa (filtro ignorado) fica "—"', async () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900001].versoes.push(registro({ usuario: 900002, data: '2026-11-04' }));
+  const avisos = [];
+  const dados = await buscar({ cliente: clienteFalso({ auditoria }), avisar: (m) => avisos.push(m) });
+  assert.deepEqual(dados.pessoas.leonardo.producao, { hoje: null, semana: null, mes: null, tudo: null });
+  assert.equal(dados.pessoas.ramon.producao.hoje, 2);
+  assert.ok(avisos.some((m) => m.includes('leonardo')));
+});
+
+test('se ninguém responder, a busca falha (o cache antigo continua)', async () => {
+  const cliente = clienteFalso({ falhar: (controller) => controller === 'Auditoria' });
+  await assert.rejects(() => buscar({ cliente }), LegislacaoError);
+});
+
+test('sem a configuração da equipe, erro seguro de configuração', async () => {
+  await assert.rejects(() => buscar({ env: {} }), CompilacaoError);
+});
+
+test('sem Supabase, Atualizações fica com Mês e Todo o Tempo "—" e Projetos segue', async () => {
+  const dados = await buscar({ pedirSupabase: null });
+  assert.deepEqual([dados.pessoas.gdressano.producao.mes, dados.pessoas.gdressano.producao.tudo], [null, null]);
+  assert.equal(dados.pessoas.leonardo.producao.mes, 6);
+});
+
+test('Supabase fora do ar não derruba a busca', async () => {
+  const dados = await buscar({ pedirSupabase: supabaseFalso(planilhasSinteticas, { falhar: true }) });
+  assert.equal(dados.pessoas.damaris.producao.tudo, null);
+  assert.equal(dados.pessoas.leonardo.producao.hoje, 3);
+});
+
+test('estoque que não respondeu deixa só aquele projeto em "—"', async () => {
+  const cliente = clienteFalso({ falhar: (controller, f) => controller === 'Normas' && f.cidadeId === 1001 });
+  const dados = await buscar({ cliente });
+  assert.equal(dados.pessoas.leonardo.projeto.total, null);
+  assert.equal(dados.pessoas.glopes.projeto.total, 80);
+});
+
+test('D12 opção B pelo ambiente: Hoje e Semana de Atualizações ficam "—"', async () => {
+  const dados = await buscar({ env: { ...ENV, COMPILACAO_ATUALIZACOES_DIA_SEMANA: 'vazio' } });
+  assert.equal(dados.pessoas.damaris.producao.hoje, null);
+  assert.equal(dados.pessoas.leonardo.producao.hoje, 3);
+});
+
+test('a resposta não leva id de cidade, id de usuário nem login', async () => {
+  const texto = JSON.stringify(await buscar());
+  for (const proibido of ['1001', '1002', '9000', 'login.sintetico', 'Pessoa Sintetica', 'cidadeId', 'usuarioId']) {
+    assert.ok(!texto.includes(proibido), `vazou: ${proibido}`);
+  }
+});
+
+test('lerPlanilhas pagina de 1.000 em 1.000 (limite do Supabase) e pede só as colunas usadas', async () => {
+  const linhas = Array.from({ length: 1003 }, (_, i) => ({ personagem: 'damaris', ano: 2026, mes: 10, i }));
+  const pedir = supabaseFalso({ abas: [], linhas });
+  const { linhas: lidas } = await lerPlanilhas(pedir, ['damaris']);
+  assert.equal(lidas.length, 1003);
+  const daTabela = pedir.caminhos.filter((c) => c.startsWith('/compilacao_planilhas?'));
+  assert.equal(daTabela.length, 2);
+  for (const caminho of pedir.caminhos) {
+    assert.ok(!/faltantes|avisos|sha256|sigla_planilha,/.test(new URL(`https://x.invalid${caminho}`).searchParams.get('select')));
+    assert.match(caminho, /personagem=in\.\(damaris\)/);
+    assert.match(caminho, /order=/);
+  }
+});
+
+test('lerPlanilhas sem Supabase devolve null; sem ninguém de Atualizações, listas vazias sem pedir nada', async () => {
+  assert.equal(await lerPlanilhas(null, ['damaris']), null);
+  const pedir = supabaseFalso();
+  assert.deepEqual(await lerPlanilhas(pedir, []), { abas: [], linhas: [] });
+  assert.equal(pedir.caminhos.length, 0);
+});
+
+test('no fim do mês, Atualizações não pede o mês inteiro (o Mês delas vem da planilha)', async () => {
+  const cliente = clienteFalso();
+  await buscar({ cliente, agora: new Date('2026-11-25T15:00:00Z') });
+  const versoes = cliente.pedidos.filter((p) => p.controller === 'Auditoria' && p.filtros.modulo === 'Versões');
+  const inicio = (id) => versoes.find((p) => String(p.filtros.usuarioId) === id).filtros.dataInicial;
+  assert.equal(inicio('900001'), '2026-11-01'); // Projetos: o mês
+  assert.equal(inicio('900005'), '2026-11-09'); // Atualizações: a janela de 16 dias (antes da semana)
+});
+
+test(`no máximo ${MAX_PARES} pares cidade×tipo têm estoque por busca`, async () => {
+  const auditoria = auditoriaSintetica();
+  const tipos = ['Lei Ordinária', 'Lei Complementar', 'Resolução'];
+  for (const [i, id] of ['900001', '900002', '900003', '900004'].entries()) {
+    auditoria[id].versoes = tipos.flatMap((tipo, t) =>
+      [1, 2, 3].map((n) => registro({ tipo, numero: n + 10 * t, cidade: `Cidade ${'ABCD'[i]}-XX`, data: '2026-11-04', usuario: Number(id) })),
+    );
+  }
+  const avisos = [];
+  const cliente = clienteFalso({ auditoria });
+  await buscar({ cliente, avisar: (m) => avisos.push(m) });
+  assert.equal(cliente.pedidos.filter((p) => p.controller === 'Normas').length, MAX_PARES * 3);
+  assert.ok(avisos.some((m) => m.includes('pares')));
+  assert.ok(cliente.pedidos.length <= 40, `foram ${cliente.pedidos.length}`);
+});

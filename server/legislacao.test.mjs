@@ -62,6 +62,7 @@ for (const controller of ['Usuarios', 'Normas/Get/5', '../Usuarios', 'https://ev
     const cliente = criar(f);
     await assert.rejects(() => cliente.contar(controller), LegislacaoError);
     await assert.rejects(() => cliente.listarTudo(controller), LegislacaoError);
+    await assert.rejects(() => cliente.primeiraPagina(controller), LegislacaoError);
     assert.equal(f.chamadas.length, 0);
   });
 }
@@ -378,4 +379,25 @@ test('cada login faz um preparo antes; login recusado na espera não faz nem o p
   await assert.rejects(() => cliente.contar('Normas'), /recusou o login há pouco/);
   assert.equal(f.preparos.length, 1);
   assert.equal(f.preparos[0].opcoes.method, 'GET');
+});
+
+test('primeiraPagina pede só page=0 com o limit pedido e devolve os itens', async () => {
+  const f = fetchFalso((url) => (url.includes('Account/Login') ? loginOk() : lista([{ a: 1 }, { a: 2 }], 900)));
+  const itens = await criar(f).primeiraPagina('Auditoria', { usuarioId: 900001 }, { limit: 20 });
+  assert.deepEqual(itens, [{ a: 1 }, { a: 2 }]);
+  const leituras = f.chamadas.filter((c) => c.url.includes('/Auditoria/Get'));
+  assert.equal(leituras.length, 1);
+  const query = new URL(leituras[0].url).searchParams;
+  assert.equal(query.get('page'), '0');
+  assert.equal(query.get('limit'), '20');
+  assert.equal(query.get('usuarioId'), '900001');
+});
+
+test('primeiraPagina recusa limit fora de 1 a 200 sem chamar o fetch', async () => {
+  const f = fetchFalso(roteiro);
+  const cliente = criar(f);
+  for (const limit of [0, 201, 2000, 1.5, '50']) {
+    await assert.rejects(() => cliente.primeiraPagina('Auditoria', {}, { limit }), LegislacaoError);
+  }
+  assert.equal(f.chamadas.length, 0);
 });

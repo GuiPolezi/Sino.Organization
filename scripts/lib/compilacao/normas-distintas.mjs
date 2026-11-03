@@ -3,7 +3,9 @@
 // cidade + tipo + número/ano. Itens: { cidadeUf, descricao }.
 import { BALDES, CATALOGO, baldeDoModulo, nomeDoTipo, normalizar, tipoDaDescricao } from './tipos.mjs';
 
-const NUMERO_ANO = /\bn[º°o]\.?\s*(\d[\d.]*(?:-?[A-Za-z])?)\s*\/\s*(\d{4})\b/i;
+// Dois formatos na Auditoria: "nº 500/2026" e "nº 1.234 / 15/10/2026" (número e a
+// data inteira; o ano é o do fim da data).
+const NUMERO_ANO = /\bn[º°o]\.?\s*(\d[\d.]*(?:-?[A-Za-z])?)\s*\/\s*(?:\d{1,2}\/\d{1,2}\/)?(\d{4})\b/i;
 
 /**
  * Chave da norma, ou null se não der para identificar (sem cidade, sem número/ano).

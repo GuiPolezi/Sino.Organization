@@ -17,6 +17,9 @@ import { buildRoster } from '../scripts/lib/build-team.mjs';
 import { baixarPaginas } from '../scripts/lib/licenca.mjs';
 import { setTimeout as esperar } from 'node:timers/promises';
 import { MilldeskError, fetchMilldesk, toRecords } from '../scripts/lib/milldesk.mjs';
+import { buscarCompilacao } from './compilacao.mjs';
+import { criarClienteLegislacaoDoAmbiente } from './legislacao.mjs';
+import { criarClienteSupabase } from './supabase.mjs';
 
 const MINUTO = 60_000;
 const DIA = 24 * 60 * MINUTO;
@@ -69,6 +72,17 @@ const fonteEquipe = ({ roster, file, shortNames }) => ({
   buscar: async () => buildRoster(await buscarMilldesk('listAgents'), roster, { file, shortNames }),
 });
 
+// O cliente do Legislação Digital fica vivo entre as buscas da mesma instância
+// (reaproveita a sessão); sem LEGISLACAO_USUARIO/SENHA, cada busca dá erro seguro.
+let clienteLegislacao;
+const legislacao = () => (clienteLegislacao ??= criarClienteLegislacaoDoAmbiente());
+
+// As planilhas de Atualizações estão no Supabase; sem ele, ficam "—".
+const supabaseDoAmbiente = () => {
+  const { SUPABASE_URL: url, SUPABASE_SECRET_KEY: chave } = process.env;
+  return url && chave ? criarClienteSupabase({ url, chave }) : null;
+};
+
 /** @type {Record<string, { buscar: () => Promise<unknown>, idadeMaximaMs?: number }>} */
 export const FONTES = {
   // Sino.Licença: as tabelas de vencidas e de vencimento próximo.
@@ -101,6 +115,12 @@ export const FONTES = {
       const { tecnicos } = contarAtendimentos(periodo, emAberto, EQUIPES.suporte.roster);
       return { periodo: { inicio, fim: hoje }, tecnicos };
     },
+  },
+
+  // /compilacao: produção de cada pessoa (Legislação Digital + planilhas). Só
+  // números agregados e ids públicos de personagem (contrato no plano, 5.7).
+  compilacao: {
+    buscar: () => buscarCompilacao({ cliente: legislacao(), pedirSupabase: supabaseDoAmbiente() }),
   },
 
   // Clientes do mapa da home, agrupados por cidade.

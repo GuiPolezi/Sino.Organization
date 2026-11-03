@@ -7,6 +7,7 @@
 // no servidor: as respostas levam apenas os dados já filtrados.
 import { ClientesError } from '../scripts/lib/build-clients.mjs';
 import { TeamError } from '../scripts/lib/build-team.mjs';
+import { CompilacaoError } from '../scripts/lib/compilacao/configuracao.mjs';
 import { LicencaError } from '../scripts/lib/licenca.mjs';
 import { MilldeskError } from '../scripts/lib/milldesk.mjs';
 import { armazemMemoria, criarCache } from './cache.mjs';
@@ -23,7 +24,15 @@ import {
 } from './supabase.mjs';
 
 // Só estes erros têm mensagem segura para mostrar (nunca trazem chave ou senha).
-const ERROS_SEGUROS = [LicencaError, MilldeskError, SupabaseError, TeamError, ClientesError, LegislacaoError];
+const ERROS_SEGUROS = [
+  LicencaError,
+  MilldeskError,
+  SupabaseError,
+  TeamError,
+  ClientesError,
+  LegislacaoError,
+  CompilacaoError,
+];
 const ehSeguro = (erro) => ERROS_SEGUROS.some((Tipo) => erro instanceof Tipo);
 const mensagemDe = (erro) => (ehSeguro(erro) ? erro.message : 'Erro inesperado no servidor.');
 
@@ -152,6 +161,7 @@ const ROTAS = [
   { caminho: /^\/api\/equipes\/(suporte|desenvolvimento)$/, GET: (_request, setor) => responderFonte(`equipe-${setor}`) },
   { caminho: /^\/api\/atendimentos$/, GET: () => responderFonte('atendimentos') },
   { caminho: /^\/api\/clientes$/, GET: () => responderFonte('clientes') },
+  { caminho: /^\/api\/compilacao$/, GET: () => responderFonte('compilacao') },
   { caminho: /^\/api\/chamados$/, GET: responderChamados },
   { caminho: /^\/api\/cron\/chamados$/, GET: responderCronChamados },
   { caminho: /^\/api\/reunioes$/, GET: listarReunioes, POST: criarReuniao },

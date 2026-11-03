@@ -121,7 +121,12 @@ export async function renovarJanelasAntigas(
     if (i > 0) await esperar(PAUSA_MS);
     try {
       // idadeMaximaMs 0: busca de novo mesmo que exista.
-      await cache(janela.chave, buscadorDaJanela(janela, { tentativas: 8 }), { idadeMaximaMs: 0 });
+      const { situacao, aviso } = await cache(janela.chave, buscadorDaJanela(janela, { tentativas: 8 }), { idadeMaximaMs: 0 });
+      // Dado antigo (busca falhou ou está em pausa) ou outra busca em andamento: não renovou.
+      if (situacao !== 'atualizado') {
+        falhas.push({ chave: janela.chave, erro: aviso ?? 'Outra busca desta janela está em andamento.' });
+        continue;
+      }
       renovadas.push(janela.chave);
       aoRenovar(janela, i + 1, fila.length);
     } catch (erro) {

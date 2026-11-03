@@ -7,8 +7,12 @@
 import { setTimeout as esperar } from 'node:timers/promises';
 
 export const IDADE_MAXIMA_MS = 15 * 60_000;
-// Se uma busca morrer no meio (função encerrada), a trava expira sozinha.
-const TRAVA_SEGUNDOS = 90;
+// Se uma busca morrer no meio (função encerrada), a trava expira sozinha. Cobre
+// a busca mais lenta (Legislação Digital com novas tentativas: perto de 2 min).
+const TRAVA_SEGUNDOS = 180;
+// Depois de uma busca que falhou, ninguém tenta de novo por este tempo: a página é
+// pública, e sem isso cada visita refaria a busca inteira com a fonte fora do ar.
+export const PAUSA_APOS_FALHA_SEGUNDOS = 60;
 
 /**
  * @typedef {{ dados: unknown, geradoEm: string }} Registro
@@ -45,19 +49,33 @@ export function criarCache({
    * `opcoes.idadeMaximaMs` troca a idade máxima só para esta fonte (0 força a busca).
    * @returns {Promise<Registro & { situacao: Situacao, aviso?: string }>}
    */
+  // Última falha de cada chave nesta instância: durante a pausa, quem chega recebe
+  // o aviso certo na hora (em vez de "atualizando" ou de esperar à toa).
+  const falhas = new Map();
+
   return async function obter(chave, buscar, { idadeMaximaMs: idade = idadeMaximaMs } = {}) {
     const atual = await armazem.ler(chave);
     if (atual && agora() - Date.parse(atual.geradoEm) < idade) {
       return { ...atual, situacao: 'recente' };
     }
 
+    const falha = falhas.get(chave);
+    if (falha && agora() < falha.ate) {
+      if (atual) return { ...atual, situacao: 'antigo', aviso: mensagemDe(falha.erro) };
+      throw falha.erro;
+    }
+
     if (await armazem.travar(chave, TRAVA_SEGUNDOS)) {
       try {
         const novo = { dados: await buscar(), geradoEm: new Date(agora()).toISOString() };
         await armazem.gravar(chave, novo);
+        falhas.delete(chave);
         return { ...novo, situacao: 'atualizado' };
       } catch (erro) {
+        falhas.set(chave, { erro, ate: agora() + PAUSA_APOS_FALHA_SEGUNDOS * 1000 });
+        // A trava fica como pausa para as outras instâncias (a desta é o Map acima).
         await armazem.destravar(chave).catch(() => {});
+        await armazem.travar(chave, PAUSA_APOS_FALHA_SEGUNDOS).catch(() => {});
         // Melhor o dado de antes, avisando, do que uma página vazia.
         if (atual) return { ...atual, situacao: 'antigo', aviso: mensagemDe(erro) };
         throw erro;
@@ -79,7 +97,7 @@ export function criarCache({
 
 // Armazém em memória: para desenvolvimento local e testes. Na Vercel cada
 // instância teria o seu, por isso lá o armazém é o Supabase.
-export function armazemMemoria() {
+export function armazemMemoria({ agora = Date.now } = {}) {
   const registros = new Map();
   const travas = new Map();
   return {
@@ -94,8 +112,8 @@ export function armazemMemoria() {
       travas.delete(chave);
     },
     async travar(chave, segundos) {
-      if ((travas.get(chave) ?? 0) > Date.now()) return false;
-      travas.set(chave, Date.now() + segundos * 1000);
+      if ((travas.get(chave) ?? 0) > agora()) return false;
+      travas.set(chave, agora() + segundos * 1000);
       return true;
     },
     async destravar(chave) {

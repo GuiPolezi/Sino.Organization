@@ -57,10 +57,18 @@ test('rodízio: renova primeiro as janelas que nunca foram buscadas, respeitando
   const cache = async (chave, _buscar, opcoes) => {
     buscadas.push([chave, opcoes?.idadeMaximaMs]);
     await servicos.armazem.gravar(chave, { dados: {}, geradoEm: new Date().toISOString() });
-    return {};
+    return { situacao: 'atualizado' };
   };
   const resultado = await renovarJanelasAntigas({ ...servicos, cache }, { limite: 2, prazoMs: Infinity });
   assert.deepEqual(resultado.renovadas, ['chamados:2017-10-01', 'chamados:2017-12-30']);
   assert.ok(buscadas.every(([, idade]) => idade === 0));
   assert.equal(resultado.faltando, janelas().length - JANELAS_RECENTES - 2);
+});
+
+test('rodízio: janela que voltou com dado antigo (falha ou pausa) conta como falha, não como renovada', async () => {
+  const servicos = await servicosComJanelas([]);
+  const cache = async () => ({ dados: {}, situacao: 'antigo', aviso: 'Milldesk fora do ar.' });
+  const resultado = await renovarJanelasAntigas({ ...servicos, cache }, { limite: 2, prazoMs: Infinity });
+  assert.deepEqual(resultado.renovadas, []);
+  assert.deepEqual(resultado.falhas.map((f) => f.erro), ['Milldesk fora do ar.', 'Milldesk fora do ar.']);
 });

@@ -255,6 +255,17 @@ export function criarClienteLegislacao({
   }
 
   /**
+   * Só os itens da primeira página (`page=0`), no máximo `limit` (1 a 200). A
+   * Auditoria vem do mais novo para o mais antigo: serve para "a mais recente".
+   */
+  async function primeiraPagina(controller, filtros = {}, { limit = 50 } = {}) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
+      throw new LegislacaoError('Tamanho de página inválido para o Legislação Digital.');
+    }
+    return (await lerLista(controller, montarQuery(filtros, 0, limit))).items;
+  }
+
+  /**
    * I11: o painel ignora filtro desconhecido em silêncio e devolve tudo. Conta com
    * `filtrosBase` e depois com `filtrosBase + extra`; se o total não diminuiu, o
    * filtro não foi aplicado e dá erro. Se `extra` pode mesmo casar com tudo, use
@@ -269,7 +280,7 @@ export function criarClienteLegislacao({
     return { total, semFiltro };
   }
 
-  return { contar, listarTudo, contarComFiltro };
+  return { contar, listarTudo, primeiraPagina, contarComFiltro };
 }
 
 /** Cliente com as credenciais de LEGISLACAO_USUARIO/LEGISLACAO_SENHA. */

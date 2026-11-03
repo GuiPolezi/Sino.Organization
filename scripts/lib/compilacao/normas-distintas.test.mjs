@@ -86,3 +86,17 @@ test('invariante I13: distintas nunca passam do número de versões', () => {
 test('lista que não é array vira vazia', () => {
   assert.equal(contarDistintas(undefined).distintas, 0);
 });
+
+test('aceita o formato com a data inteira: "nº 1.234 / 15/10/2026" vale 1234/2026', () => {
+  assert.equal(chaveDaNorma(item('Lei Ordinária nº 1.234 / 15/10/2026')), 'Cidade A-XX|23|1234/2026');
+  assert.equal(chaveDaNorma(item('Resolução nº 12 / 1/2/2025')), 'Cidade A-XX|28|12/2025');
+});
+
+test('a mesma norma escrita nos dois formatos conta 1', () => {
+  const itens = [item('Decreto Municipal nº 10.500/2026'), item('Decreto Municipal nº 10.500 / 03/11/2026')];
+  assert.equal(contarDistintas(itens).distintas, 1);
+});
+
+test('data incompleta depois do número não vira ano', () => {
+  assert.equal(chaveDaNorma(item('Resolução nº 12 / 15/10')), null);
+});
