@@ -11,6 +11,8 @@
     "build:geo": "node scripts/build-geo-data.mjs",
     "seed:chamados": "node --env-file-if-exists=.env scripts/seed-chamados.mjs",
     "relatorio:clientes": "node --env-file-if-exists=.env scripts/relatorio-clientes.mjs",
+    "importar:planilhas": "node --env-file-if-exists=.env scripts/importar-planilhas.mjs",
+    "test:planilhas": "node --test scripts/lib/compilacao/siglas.test.mjs scripts/lib/compilacao/faltantes.test.mjs scripts/lib/compilacao/planilha.test.mjs scripts/lib/compilacao/planilha-erros.test.mjs scripts/lib/compilacao/planilhas-banco.test.mjs scripts/lib/compilacao/leitor-excel.test.mjs",
     "test:resolver": "node --test scripts/resolve-city.test.mjs",
     "test:team": "node --test scripts/build-team.test.mjs",
     "test:atendimentos": "node --test scripts/build-atendimentos.test.mjs",
@@ -20,6 +22,7 @@
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs",
     "test:chamados-sync": "node --test scripts/build-chamados.test.mjs",
     "test:licencas": "node --test src/pages/Licencas/mappers/licencas.test.mjs scripts/build-licencas.test.mjs",
+    "test:compilacao": "node --test server/legislacao.test.mjs scripts/lib/compilacao/tipos.test.mjs scripts/lib/compilacao/normas-distintas.test.mjs scripts/lib/compilacao/periodos.test.mjs",
     "test:api": "node --test server/cache.test.mjs server/reunioes.test.mjs server/chamados.test.mjs",
     "test:reunioes": "node --test src/components/Hero/reunioes/reunioes.test.mjs src/components/Hero/reunioes/periodos.test.mjs src/components/Hero/reunioes/selecao/favo.test.mjs"
   },
@@ -38,6 +41,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",
+    "exceljs": "^4.4.0",
     "sharp": "^0.35.5",
     "vite": "^8.3.3"
   }

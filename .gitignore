@@ -2,3 +2,6 @@ node_modules
 dist
 .env*
 !.env.example
+
+# Planilhas da equipe (dados reais): nunca vão para o git
+*.xlsx

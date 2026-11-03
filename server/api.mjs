@@ -12,6 +12,7 @@ import { MilldeskError } from '../scripts/lib/milldesk.mjs';
 import { armazemMemoria, criarCache } from './cache.mjs';
 import { obterChamados, renovarJanelasAntigas } from './chamados.mjs';
 import { FONTES } from './fontes.mjs';
+import { LegislacaoError } from './legislacao.mjs';
 import { criarServicoReunioes, reunioesMemoria } from './reunioes.mjs';
 import {
   SupabaseConflito,
@@ -22,7 +23,7 @@ import {
 } from './supabase.mjs';
 
 // Só estes erros têm mensagem segura para mostrar (nunca trazem chave ou senha).
-const ERROS_SEGUROS = [LicencaError, MilldeskError, SupabaseError, TeamError, ClientesError];
+const ERROS_SEGUROS = [LicencaError, MilldeskError, SupabaseError, TeamError, ClientesError, LegislacaoError];
 const ehSeguro = (erro) => ERROS_SEGUROS.some((Tipo) => erro instanceof Tipo);
 const mensagemDe = (erro) => (ehSeguro(erro) ? erro.message : 'Erro inesperado no servidor.');
 
