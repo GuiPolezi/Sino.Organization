@@ -99,14 +99,35 @@ async function responderChamados() {
 
 // Agendamento diário da Vercel (vercel.json > crons). A Vercel manda
 // "Authorization: Bearer <CRON_SECRET>"; sem o segredo certo, nada roda.
-async function responderCronChamados(request) {
+// Resposta de recusa, ou null quando o pedido traz o segredo certo.
+function recusarCron(request) {
   const segredo = process.env.CRON_SECRET;
   if (!segredo) return json({ erro: 'Defina CRON_SECRET nas variáveis de ambiente.' }, 503);
   if (request.headers.get('authorization') !== `Bearer ${segredo}`) return json({ erro: 'Não autorizado.' }, 401);
+  return null;
+}
+
+async function responderCronChamados(request) {
+  const recusa = recusarCron(request);
+  if (recusa) return recusa;
   try {
     return json(await renovarJanelasAntigas(obterServicos(), { mensagemDe }));
   } catch (erro) {
     return erroInterno('cron chamados', erro);
+  }
+}
+
+// 23:50 de Brasília: busca a compilação de novo (idade 0), o que grava o retrato
+// de fechamento do estoque do dia e atualiza as atribuições.
+async function responderCronCompilacao(request) {
+  const recusa = recusarCron(request);
+  if (recusa) return recusa;
+  const { buscar } = FONTES.compilacao;
+  try {
+    const { geradoEm, situacao, aviso } = await obterServicos().cache('compilacao', buscar, { idadeMaximaMs: 0 });
+    return json({ geradoEm, situacao, ...(aviso && { aviso }) });
+  } catch (erro) {
+    return erroInterno('cron compilacao', erro);
   }
 }
 
@@ -164,6 +185,7 @@ const ROTAS = [
   { caminho: /^\/api\/compilacao$/, GET: () => responderFonte('compilacao') },
   { caminho: /^\/api\/chamados$/, GET: responderChamados },
   { caminho: /^\/api\/cron\/chamados$/, GET: responderCronChamados },
+  { caminho: /^\/api\/cron\/compilacao$/, GET: responderCronCompilacao },
   { caminho: /^\/api\/reunioes$/, GET: listarReunioes, POST: criarReuniao },
   { caminho: /^\/api\/reunioes\/([^/]+)$/, GET: obterReuniao, PUT: editarReuniao, DELETE: apagarReuniao },
 ];

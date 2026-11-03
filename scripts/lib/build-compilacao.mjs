@@ -113,7 +113,7 @@ function pessoaDeProjetos(membro, ctx) {
   }
   return {
     funcao: 'projetos',
-    desde: null, // F3: começo da atribuição gravada
+    desde: desdePublico(ctx.atribuicoes?.[membro.personagem]?.desde),
     planilha: null,
     ...ausencia(entrada, ctx.periodos.hoje),
     cidades: projeto ? [projeto.cidade] : [],
@@ -171,21 +171,41 @@ function pessoaDeAtualizacoes(membro, ctx) {
   };
 }
 
-// Projeto inferido de cada pessoa de Projetos Novos.
-function projetosDaEquipe(equipe, auditoria, catalogo) {
+// Projeto de cada pessoa de Projetos Novos: o decidido (F3: gravado, com a regra
+// dos 2 dias e a correção manual) quando veio em `atribuicoes`; senão, inferido agora.
+function projetosDaEquipe(equipe, auditoria, catalogo, atribuicoes) {
   const projetos = new Map();
   for (const membro of equipe) {
     if (membro.funcao !== 'projetos') continue;
-    const projeto = inferirProjeto(auditoria?.[membro.usuarioId], catalogo);
-    if (projeto) projetos.set(membro.personagem, projeto);
+    const projeto = atribuicoes && Object.hasOwn(atribuicoes, membro.personagem)
+      ? atribuicoes[membro.personagem]
+      : inferirProjeto(auditoria?.[membro.usuarioId], catalogo);
+    if (projeto) projetos.set(membro.personagem, { cidadeUf: projeto.cidadeUf, moduloIds: projeto.moduloIds });
   }
   return projetos;
 }
 
+// ISO -> { data: 'AAAA-MM-DD', hora: 'HH:MM' } em Brasília.
+const FORMATO_DESDE = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Sao_Paulo',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+export function desdePublico(iso) {
+  const instante = iso ? new Date(iso) : null;
+  if (!instante || Number.isNaN(instante.getTime())) return null;
+  const partes = Object.fromEntries(FORMATO_DESDE.formatToParts(instante).map((p) => [p.type, p.value]));
+  return { data: `${partes.year}-${partes.month}-${partes.day}`, hora: `${partes.hour}:${partes.minute}` };
+}
+
 /** Pares cidade×tipo dos projetos (para server/compilacao.mjs buscar o estoque). */
-export function paresDosProjetos({ equipe, auditoria, catalogo = CATALOGO }) {
+export function paresDosProjetos({ equipe, auditoria, catalogo = CATALOGO, atribuicoes }) {
   const pares = new Map();
-  for (const { cidadeUf, moduloIds } of projetosDaEquipe(equipe, auditoria, catalogo).values()) {
+  for (const { cidadeUf, moduloIds } of projetosDaEquipe(equipe, auditoria, catalogo, atribuicoes).values()) {
     for (const moduloId of moduloIds) pares.set(chaveDoPar(cidadeUf, moduloId), { cidadeUf, moduloId });
   }
   return [...pares.values()];
@@ -219,6 +239,7 @@ export function filaDaEquipe(entradas) {
  *   catalogo?: { id: number, sigla: string | null, nomeSingular: string }[],
  *   cidadesPorId?: Record<string, { nome: string, uf: string }>,
  *   atualizacoesDiaSemana?: 'auditoria' | 'vazio',
+ *   atribuicoes?: Record<string, { cidadeUf: string, moduloIds: number[], desde: string | null } | null>,
  *   avisar?: (mensagem: string) => void,
  * }} entradas
  */
@@ -231,6 +252,7 @@ export function montarCompilacao({
   catalogo = CATALOGO,
   cidadesPorId = {},
   atualizacoesDiaSemana = 'auditoria',
+  atribuicoes,
   avisar = () => {},
 }) {
   const periodos = calcularPeriodos(agora);
@@ -243,7 +265,8 @@ export function montarCompilacao({
     cidadesPorId,
     atualizacoesDiaSemana,
     avisar,
-    projetos: projetosDaEquipe(equipe, auditoria, catalogo),
+    atribuicoes,
+    projetos: projetosDaEquipe(equipe, auditoria, catalogo, atribuicoes),
   };
   const pessoas = {};
   for (const membro of equipe) {
@@ -254,5 +277,5 @@ export function montarCompilacao({
     periodos: { semana: periodos.semana, mes: periodos.mes },
     pessoas,
   };
-  return { ...dados, fila: filaDaEquipe({ equipe, auditoria, estoque, catalogo, ...dados }) };
+  return { ...dados, fila: filaDaEquipe({ equipe, auditoria, estoque, catalogo, atribuicoes, ...dados }) };
 }

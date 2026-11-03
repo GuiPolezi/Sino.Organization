@@ -266,6 +266,16 @@ export function criarClienteLegislacao({
   }
 
   /**
+   * O último item da lista (a Auditoria vem do mais novo para o mais antigo, então é
+   * o registro mais antigo), em 2 pedidos: o total e a página `total - 1` com 1 item.
+   */
+  async function ultimoItem(controller, filtros = {}) {
+    const total = await contar(controller, filtros);
+    if (total === 0) return null;
+    return (await lerLista(controller, montarQuery(filtros, total - 1, 1))).items[0] ?? null;
+  }
+
+  /**
    * I11: o painel ignora filtro desconhecido em silêncio e devolve tudo. Conta com
    * `filtrosBase` e depois com `filtrosBase + extra`; se o total não diminuiu, o
    * filtro não foi aplicado e dá erro. Se `extra` pode mesmo casar com tudo, use
@@ -280,7 +290,7 @@ export function criarClienteLegislacao({
     return { total, semFiltro };
   }
 
-  return { contar, listarTudo, primeiraPagina, contarComFiltro };
+  return { contar, listarTudo, primeiraPagina, ultimoItem, contarComFiltro };
 }
 
 /** Cliente com as credenciais de LEGISLACAO_USUARIO/LEGISLACAO_SENHA. */

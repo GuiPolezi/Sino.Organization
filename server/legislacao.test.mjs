@@ -63,6 +63,7 @@ for (const controller of ['Usuarios', 'Normas/Get/5', '../Usuarios', 'https://ev
     await assert.rejects(() => cliente.contar(controller), LegislacaoError);
     await assert.rejects(() => cliente.listarTudo(controller), LegislacaoError);
     await assert.rejects(() => cliente.primeiraPagina(controller), LegislacaoError);
+    await assert.rejects(() => cliente.ultimoItem(controller), LegislacaoError);
     assert.equal(f.chamadas.length, 0);
   });
 }
@@ -400,4 +401,23 @@ test('primeiraPagina recusa limit fora de 1 a 200 sem chamar o fetch', async () 
     await assert.rejects(() => cliente.primeiraPagina('Auditoria', {}, { limit }), LegislacaoError);
   }
   assert.equal(f.chamadas.length, 0);
+});
+
+test('ultimoItem pede o total e depois a página total-1 com 1 item', async () => {
+  const f = fetchFalso((url) => {
+    if (url.includes('Account/Login')) return loginOk();
+    const page = new URL(url).searchParams.get('page');
+    return page === '0' ? lista([{ a: 'novo' }], 37) : lista([{ a: 'antigo' }], 37, 36);
+  });
+  const item = await criar(f).ultimoItem('Auditoria', { usuarioId: 900001, cidadeId: 1001 });
+  assert.deepEqual(item, { a: 'antigo' });
+  const leituras = f.chamadas.filter((c) => c.url.includes('/Auditoria/Get')).map((c) => new URL(c.url).searchParams);
+  assert.deepEqual(leituras.map((q) => [q.get('page'), q.get('limit')]), [['0', '1'], ['36', '1']]);
+  assert.ok(leituras.every((q) => q.get('cidadeId') === '1001'));
+});
+
+test('ultimoItem com lista vazia devolve null em 1 pedido', async () => {
+  const f = fetchFalso((url) => (url.includes('Account/Login') ? loginOk() : lista([], 0)));
+  assert.equal(await criar(f).ultimoItem('Auditoria', {}), null);
+  assert.equal(f.chamadas.filter((c) => c.url.includes('/Auditoria/Get')).length, 1);
 });

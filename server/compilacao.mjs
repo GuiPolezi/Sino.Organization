@@ -12,6 +12,7 @@ import { lerEquipe } from '../scripts/lib/compilacao/configuracao.mjs';
 import { calcularPeriodos } from '../scripts/lib/compilacao/periodos.mjs';
 import { chaveDoPar } from '../scripts/lib/compilacao/projeto.mjs';
 import { CATALOGO, catalogoDeModulos, normalizar } from '../scripts/lib/compilacao/tipos.mjs';
+import { decidirProjetos, linhasDoRetrato, repositorioAtribuicoes } from './compilacao-atribuicoes.mjs';
 import { LegislacaoError } from './legislacao.mjs';
 import { SupabaseError } from './supabase.mjs';
 
@@ -167,9 +168,22 @@ export async function buscarCompilacao({
   });
 
   const { idPorCidadeUf, cidadesPorId } = await lerCidades(cliente, avisar);
-  const pares = paresDosProjetos({ equipe, auditoria, catalogo });
+
+  // F3: projeto gravado de cada pessoa (regra dos 2 dias, correção manual, "Desde").
+  const repo = pedirSupabase ? repositorioAtribuicoes(pedirSupabase) : null;
+  const atribuicoes = await decidirProjetos({ repo, cliente, equipe, auditoria, catalogo, idPorCidadeUf, agora, avisar });
+
+  const pares = paresDosProjetos({ equipe, auditoria, catalogo, atribuicoes });
   if (pares.length > MAX_PARES) avisar(`${pares.length} pares cidade×tipo; só os ${MAX_PARES} primeiros têm estoque`);
-  const estoque = await estoqueDosPares(cliente, pares.slice(0, MAX_PARES), idPorCidadeUf, avisar);
+  const comEstoque = pares.slice(0, MAX_PARES);
+  const estoque = await estoqueDosPares(cliente, comEstoque, idPorCidadeUf, avisar);
+
+  // Retrato do estoque do dia (cada busca atualiza a linha; o cron das 23:50 fecha o dia).
+  if (repo && atribuicoes !== undefined) {
+    await repo.gravarRetrato(linhasDoRetrato({ estoque, pares: comEstoque, idPorCidadeUf, hoje, agora })).catch(() => {
+      avisar('não foi possível gravar o retrato diário do estoque');
+    });
+  }
 
   const deAtualizacoes = equipe.filter((m) => m.funcao === 'atualizacoes').map((m) => m.personagem);
   const planilhas = await lerPlanilhas(pedirSupabase, deAtualizacoes).catch(() => {
@@ -187,6 +201,7 @@ export async function buscarCompilacao({
     catalogo,
     cidadesPorId,
     atualizacoesDiaSemana: env.COMPILACAO_ATUALIZACOES_DIA_SEMANA === 'vazio' ? 'vazio' : 'auditoria',
+    atribuicoes,
     avisar,
   });
 }
