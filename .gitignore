@@ -8,3 +8,6 @@ dist
 
 # Documentos do /compilacao com dados reais (nunca no repositório público)
 docs/compilacao-*.md
+
+# Prints e modelos de tela na raiz (têm dados reais): nunca vão para o git
+/*.png

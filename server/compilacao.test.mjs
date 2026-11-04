@@ -21,6 +21,9 @@ const CIDADES = ['A', 'B', 'C', 'D', 'E'].map((letra, i) => ({
 }));
 const cidadeUfDoId = new Map(CIDADES.map((c) => [c.id, c.nomeUf]));
 
+// Normas vinculadas (vinculada = 1) por cidade, inventadas.
+const VINCULADAS = { 1001: 7, 1002: 0, 1003: 12 };
+
 // Cliente falso do Legislação Digital: responde com as fixtures e grava cada pedido.
 function clienteFalso({ auditoria = auditoriaSintetica(), estoque = estoqueSintetico, falhar = () => false } = {}) {
   const pedidos = [];
@@ -43,6 +46,7 @@ function clienteFalso({ auditoria = auditoriaSintetica(), estoque = estoqueSinte
     },
     async contar(controller, filtros = {}) {
       anotar('contar', controller, filtros);
+      if (filtros.vinculada === 1) return VINCULADAS[filtros.cidadeId] ?? 0;
       const e = estoque[`${cidadeUfDoId.get(filtros.cidadeId)}|${filtros.moduloId}`];
       if (!e) return 0;
       if (filtros.versionada === 1) return e.versionadas;
@@ -108,7 +112,7 @@ test('a Auditoria é sempre pedida por pessoa, com o período certo', async () =
 test('o estoque é contado uma vez por par cidade×tipo, com total e versionada 1 e 2', async () => {
   const cliente = clienteFalso();
   await buscar({ cliente });
-  const contagens = cliente.pedidos.filter((p) => p.controller === 'Normas');
+  const contagens = cliente.pedidos.filter((p) => p.controller === 'Normas' && p.filtros.moduloId !== undefined);
   assert.equal(contagens.length, 5 * 3); // A|28, A|24, B|23, B|24, C|28
   assert.deepEqual(new Set(contagens.map((p) => p.filtros.versionada ?? 0)), new Set([0, 1, 2]));
 });
@@ -205,7 +209,61 @@ test(`no máximo ${MAX_PARES} pares cidade×tipo têm estoque por busca`, async 
   const avisos = [];
   const cliente = clienteFalso({ auditoria });
   await buscar({ cliente, avisar: (m) => avisos.push(m) });
-  assert.equal(cliente.pedidos.filter((p) => p.controller === 'Normas').length, MAX_PARES * 3);
+  assert.equal(cliente.pedidos.filter((p) => p.controller === 'Normas' && p.filtros.moduloId !== undefined).length, MAX_PARES * 3);
   assert.ok(avisos.some((m) => m.includes('pares')));
-  assert.ok(cliente.pedidos.length <= 40, `foram ${cliente.pedidos.length}`);
+  // Pior caso: 20 fixos + 6 × 3 do estoque + 4 cidades das vinculadas.
+  assert.ok(cliente.pedidos.length <= 42, `foram ${cliente.pedidos.length}`);
+});
+
+// ---------- normas vinculadas da cidade do projeto (Finalizando) ----------
+
+const vinculadasPedidas = (cliente) => cliente.pedidos.filter((p) => p.controller === 'Normas' && p.filtros.vinculada !== undefined);
+
+test('vinculadas: 1 contagem por cidade de projeto, com vinculada 1 e sem tipo', async () => {
+  const cliente = clienteFalso();
+  await buscar({ cliente });
+  const pedidos = vinculadasPedidas(cliente);
+  // Leonardo e Ramon em A, G.Lopes em B, Laura em C: 3 cidades, 3 pedidos.
+  assert.deepEqual(pedidos.map((p) => p.filtros.cidadeId).sort(), [1001, 1002, 1003]);
+  for (const { metodo, filtros } of pedidos) {
+    assert.equal(metodo, 'contar');
+    assert.deepEqual(Object.keys(filtros).sort(), ['cidadeId', 'vinculada']);
+    assert.equal(filtros.vinculada, 1);
+  }
+});
+
+test('vinculadas: cada pessoa de Projetos leva o número e a cidade do seu projeto (0 é 0)', async () => {
+  const { pessoas } = await buscar();
+  assert.deepEqual(pessoas.leonardo.vinculadas, { valor: 7, cidade: { nome: 'Cidade A', uf: 'XX' } });
+  assert.deepEqual(pessoas.ramon.vinculadas, pessoas.leonardo.vinculadas);
+  assert.deepEqual(pessoas.glopes.vinculadas, { valor: 0, cidade: { nome: 'Cidade B', uf: 'XX' } });
+  assert.equal(pessoas.laura.vinculadas.valor, 12);
+});
+
+test('vinculadas: sem projeto, valor e cidade ficam null', async () => {
+  const { pessoas } = await buscar();
+  for (const id of ['damaris', 'gdressano', 'nathalia']) assert.deepEqual(pessoas[id].vinculadas, { valor: null, cidade: null });
+});
+
+test('vinculadas: a cidade que não respondeu fica "—" com aviso, e o resto segue', async () => {
+  const avisos = [];
+  const cliente = clienteFalso({ falhar: (controller, f) => controller === 'Normas' && f.vinculada === 1 && f.cidadeId === 1001 });
+  const { pessoas } = await buscar({ cliente, avisar: (m) => avisos.push(m) });
+  assert.deepEqual(pessoas.leonardo.vinculadas, { valor: null, cidade: { nome: 'Cidade A', uf: 'XX' } });
+  assert.equal(pessoas.leonardo.projeto.total, 40, 'o estoque não depende das vinculadas');
+  assert.equal(pessoas.laura.vinculadas.valor, 12);
+  assert.ok(avisos.some((m) => m.includes('vinculadas')));
+});
+
+test('vinculadas: cidade fora do cadastro não é pedida e fica "—"', async () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900004] = {
+    versoes: [1, 2, 3].map((n) => registro({ tipo: 'Resolução', numero: n, cidade: 'Cidade Z-XX', data: '2026-11-04', usuario: 900004 })),
+    normas: [],
+    recentes: [],
+  };
+  const cliente = clienteFalso({ auditoria });
+  const { pessoas } = await buscar({ cliente });
+  assert.deepEqual(pessoas.laura.vinculadas, { valor: null, cidade: { nome: 'Cidade Z', uf: 'XX' } });
+  assert.deepEqual(vinculadasPedidas(cliente).map((p) => p.filtros.cidadeId).sort(), [1001, 1002]);
 });

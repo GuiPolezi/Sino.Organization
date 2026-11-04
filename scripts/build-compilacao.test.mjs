@@ -11,7 +11,7 @@ import {
   registro,
 } from './lib/compilacao/compilacao-sintetica.mjs';
 import { ELENCO } from './lib/compilacao/elenco.mjs';
-import { filaDaEquipe, montarCompilacao, paresDosProjetos } from './lib/build-compilacao.mjs';
+import { cidadesDosProjetos, filaDaEquipe, montarCompilacao, paresDosProjetos } from './lib/build-compilacao.mjs';
 import { inferirProjeto } from './lib/compilacao/projeto.mjs';
 
 const equipe = lerEquipe(EQUIPE_CONFIG);
@@ -380,8 +380,34 @@ test('contrato: só números, textos curtos e "null" nos valores; faltantes sem 
 test('contrato: as chaves de cada pessoa são exatamente as do plano', () => {
   assert.deepEqual(Object.keys(pessoa('leonardo')).sort(), [
     'ausente', 'aguardando', 'atividade', 'cidades', 'desde', 'faltantes', 'fontes',
-    'funcao', 'planilha', 'porTipo', 'producao', 'projeto', 'semAtividadeDesde',
+    'funcao', 'planilha', 'porTipo', 'producao', 'projeto', 'semAtividadeDesde', 'vinculadas',
   ].sort());
+});
+
+// ---------- normas vinculadas da cidade do projeto (Finalizando) ----------
+
+test('vinculadas: o número vem da cidade do projeto; sem contagem, "—"', () => {
+  const dados = montar({ vinculadas: { 'Cidade A-XX': 5 } });
+  assert.deepEqual(dados.pessoas.leonardo.vinculadas, { valor: 5, cidade: { nome: 'Cidade A', uf: 'XX' } });
+  assert.deepEqual(dados.pessoas.glopes.vinculadas, { valor: null, cidade: { nome: 'Cidade B', uf: 'XX' } });
+  assert.equal(pessoa('leonardo').vinculadas.valor, null, 'sem vinculadas buscadas, nunca 0');
+});
+
+test('vinculadas: Atualizações e quem está sem projeto ficam com null', () => {
+  const dados = montar({ vinculadas: { 'Cidade A-XX': 5 } });
+  assert.deepEqual(dados.pessoas.damaris.vinculadas, { valor: null, cidade: null });
+  const semAcao = { ...auditoriaSintetica(), 900001: { versoes: [], normas: [], recentes: [] } };
+  assert.deepEqual(pessoa('leonardo', { auditoria: semAcao, vinculadas: { 'Cidade A-XX': 5 } }).vinculadas, { valor: null, cidade: null });
+});
+
+test('vinculadas: valor que não é inteiro >= 0 vira "—"', () => {
+  for (const ruim of [-1, 1.5, '7', null]) {
+    assert.equal(pessoa('leonardo', { vinculadas: { 'Cidade A-XX': ruim } }).vinculadas.valor, null, String(ruim));
+  }
+});
+
+test('cidadesDosProjetos lista cada cidade de projeto uma vez', () => {
+  assert.deepEqual(cidadesDosProjetos({ equipe, auditoria: auditoriaSintetica() }).sort(), ['Cidade A-XX', 'Cidade B-XX', 'Cidade C-XX']);
 });
 
 // ---------- regras do projeto (plano de dados, 4.2 e 4.3) ----------

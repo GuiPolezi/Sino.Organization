@@ -6,6 +6,10 @@
  */
 .card {
   --suave: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Verde-água da situação "Finalizando": da família do oliva, com contraste acima de 4,5:1 no card. */
+  --verde-agua: #1a6e63;
+  /* Terracota das mensagens de falha (contraste acima de 5:1 no card). */
+  --falha: #9c3b2b;
 }
 
 /*
@@ -21,7 +25,13 @@
 /* ---------- Responsabilidade atual ---------- */
 
 .responsabilidade {
+  position: relative;
   container-type: inline-size;
+}
+
+/* Com a caixa do "Alterar" aberta, a seção fica acima das de baixo (cada uma tem a sua camada da entrada). */
+.responsabilidade:has([aria-expanded='true']) {
+  z-index: 2;
 }
 
 .linhaTitulo {
@@ -59,8 +69,45 @@
   }
 }
 
+/* A situação à esquerda (quando há) e a última alteração à direita, na mesma linha. */
+.rodapeResponsabilidade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 8px;
+}
+
+.situacao {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--color-ink);
+  animation: entrarDeLado 0.6s var(--suave) 0.35s both;
+}
+
+.situacao b {
+  font-weight: var(--weight-bold);
+}
+
+.situacao[data-tom='finalizando'] span {
+  color: var(--verde-agua);
+}
+
+.situacao[data-tom='semNormas'] span {
+  color: var(--neutro-pequeno);
+}
+
+@keyframes entrarDeLado {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
 .alteracao {
-  margin: 8px 0 0;
+  margin: 0 0 0 auto;
   font-size: 0.6875rem;
   font-weight: var(--weight-bold);
   text-align: right;
@@ -72,6 +119,217 @@
   from {
     opacity: 0;
   }
+}
+
+/* A troca não salvou: o porquê, logo abaixo, até sumir sozinho. */
+.falha {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.3;
+  color: var(--falha);
+  animation: surgirFalha 0.4s var(--suave) both;
+}
+
+@keyframes surgirFalha {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ---------- "Alterar" e a caixa das responsabilidades ---------- */
+
+.seletor {
+  position: relative;
+  flex: none;
+}
+
+.alterar {
+  display: inline-grid;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1.5px solid var(--color-olive-dark);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-white) 35%, transparent);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--color-olive-dark) 22%, transparent);
+  color: var(--color-olive-dark);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.3s var(--suave);
+}
+
+/* O texto e, invisível na mesma célula, "Salvando…": o botão não muda de largura ao salvar. */
+.alterar > span,
+.alterar::after {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+
+.alterar > span {
+  animation: aparecer 0.3s ease both;
+}
+
+.alterar::after {
+  content: 'Salvando…';
+  visibility: hidden;
+}
+
+.alterar:not([aria-disabled='true']):hover,
+.alterar[aria-expanded='true'] {
+  background: var(--color-olive-dark);
+  color: var(--color-cream);
+  transform: translateY(-1px);
+}
+
+.alterar:not([aria-disabled='true']):active {
+  box-shadow: none;
+  transform: translateY(1px);
+}
+
+.alterar[aria-disabled='true'] {
+  cursor: progress;
+  animation: pulsar 1.2s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* As opções abrem logo abaixo do botão, alinhadas à direita dele. */
+.caixa {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 3;
+  min-width: 13.5rem;
+  margin: 0;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--color-cream);
+  box-shadow:
+    0 0 0 1px var(--linha),
+    0 18px 40px color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
+  list-style: none;
+  transform-origin: top right;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.96);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s var(--suave),
+    visibility 0s linear 0.25s;
+}
+
+.caixa[data-aberta='true'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.22s ease,
+    transform 0.32s var(--suave),
+    visibility 0s;
+}
+
+.caixa button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--neutro-pequeno);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.3s var(--suave);
+}
+
+.caixa[data-aberta='true'] button {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s, 0s, calc(var(--ordem) * 35ms + 40ms), calc(var(--ordem) * 35ms + 40ms);
+}
+
+.caixa button:hover,
+.caixa button:focus-visible {
+  background: var(--fundo-suave);
+  color: var(--color-ink);
+}
+
+/* Dentro da caixa, o fundo da opção já mostra o foco: o contorno fica rente. */
+.caixa button:focus-visible {
+  outline-offset: -2px;
+}
+
+.caixa button[aria-checked='true'] {
+  color: var(--color-ink);
+}
+
+/* "Projetos Novos" e, embaixo, menor, a situação com o ponto da cor dela. */
+.opcao {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detalhe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  font-weight: var(--weight-regular);
+  color: var(--neutro-pequeno);
+}
+
+.detalhe::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.detalhe[data-tom='finalizando'] {
+  color: var(--verde-agua);
+}
+
+.caixa svg {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: var(--color-olive);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+
+.caixa [aria-checked='true'] svg {
+  opacity: 1;
 }
 
 /* ---------- Trabalhando em ---------- */
@@ -357,6 +615,212 @@
   color: var(--color-ink);
 }
 
+/* ---------- Troca da seção Normas (Normas, Finalizando) ---------- */
+
+/*
+ * Troca.jsx: o conteúdo que sai fica por cima, solto, e se apaga; o que entra
+ * sobe. A altura anima de um ao outro (data-altura), cortando só o que passar
+ * da borda nesse meio-tempo.
+ */
+.troca {
+  position: relative;
+}
+
+/* flow-root: a altura medida de cada conteúdo inclui as margens de dentro (a troca termina sem pulo). */
+.troca > div {
+  display: flow-root;
+}
+
+.troca[data-altura='true'] {
+  overflow: clip;
+  overflow-clip-margin: 1.25rem;
+  transition: height var(--duracao-troca, 0.52s) var(--suave);
+}
+
+.troca .sai {
+  position: absolute;
+  inset: 0 0 auto;
+  pointer-events: none;
+  animation: sair 0.32s ease both;
+}
+
+/* O que sai não refaz a própria entrada. */
+.troca .sai > * {
+  animation: none;
+}
+
+.troca .entra > * {
+  animation: entrarTroca 0.6s var(--suave) 0.08s both;
+}
+
+@keyframes sair {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.98);
+  }
+}
+
+@keyframes entrarTroca {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(10px);
+  }
+}
+
+/* ---------- Normas desativada (Sem normas) ---------- */
+
+.normas {
+  position: relative;
+}
+
+.conteudoNormas {
+  transition:
+    filter 0.7s var(--suave),
+    opacity 0.7s var(--suave),
+    transform 0.7s var(--suave);
+}
+
+/* O título fica dentro do conteúdo (para desfocar junto): o espaço de "section > .secao" vem para cá. */
+.normas .conteudoNormas > h3 {
+  margin-bottom: 12px;
+}
+
+/* Desfocada e um pouco apagada, sem clique (inert). */
+.conteudoNormas[data-desativada='true'] {
+  filter: blur(3.5px) saturate(0.85);
+  opacity: 0.68;
+  transform: scale(0.985);
+  user-select: none;
+}
+
+/* O aviso por cima, num véu claro que se desfaz nas bordas. */
+.desativado {
+  position: absolute;
+  inset: -0.5rem -0.25rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 0 0.5rem 16%;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.5s ease,
+    visibility 0s linear 0.5s;
+}
+
+.desativado::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse 75% 60% at 50% 42%,
+    color-mix(in srgb, var(--color-cream) 78%, transparent) 0%,
+    color-mix(in srgb, var(--color-cream) 40%, transparent) 55%,
+    transparent 100%
+  );
+}
+
+.desativado[data-ativo='true'] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.6s ease 0.1s,
+    visibility 0s;
+}
+
+.desativado > div {
+  max-width: 19rem;
+  text-align: left;
+  transform: translateY(14px);
+  transition: transform 0.7s var(--suave);
+}
+
+.desativado[data-ativo='true'] > div {
+  transform: none;
+  transition-delay: 0.12s;
+}
+
+.carimbo {
+  position: relative;
+  display: inline-block;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  font-size: clamp(2.125rem, 12.4cqi, 3rem);
+  font-weight: var(--weight-black);
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--color-olive-dark);
+  text-shadow:
+    0 1px 0 var(--color-cream),
+    0 0 22px var(--color-cream);
+}
+
+/* O traço embaixo da palavra, que se desenha da esquerda depois que ela chega. */
+.carimbo::after {
+  content: '';
+  position: absolute;
+  left: 0.04em;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-olive-dark);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--color-olive) 35%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s var(--suave);
+}
+
+.desativado[data-ativo='true'] .carimbo::after {
+  transform: none;
+  transition-delay: 0.35s;
+}
+
+.motivo {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--color-ink);
+}
+
+/* ---------- Normas vinculadas (Finalizando) ---------- */
+
+.vinculadas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.vinculadas strong {
+  font-size: clamp(4rem, 26cqi, 6.25rem);
+  font-weight: var(--weight-black);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--color-olive-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.vinculadas > span {
+  font-size: clamp(1.375rem, 7cqi, 1.75rem);
+  line-height: 1.1;
+  color: var(--color-ink);
+}
+
+.legendaVinculadas {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: var(--weight-bold);
+  text-align: center;
+  color: var(--neutro-pequeno);
+}
+
 /* ---------- Atividade recente ---------- */
 
 .atividade {
@@ -582,11 +1046,24 @@
   .verMais {
     min-height: 2.5rem;
   }
+
+  .alterar {
+    min-height: 2.5rem;
+  }
+
+  .caixa button {
+    min-height: 2.75rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .letra,
   .alteracao,
+  .situacao,
+  .falha,
+  .alterar[aria-disabled='true'],
+  .alterar > span,
+  .troca .entra > *,
   .linhaDeitada,
   .linhaEmPe,
   .atividade dl > div {
@@ -599,7 +1076,14 @@
   .sinal::before,
   .sinal::after,
   .pilula,
-  .periodos button {
+  .periodos button,
+  .alterar,
+  .caixa,
+  .caixa button,
+  .conteudoNormas,
+  .desativado,
+  .desativado > div,
+  .carimbo::after {
     transition: none;
   }
 

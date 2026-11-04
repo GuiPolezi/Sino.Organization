@@ -4,13 +4,16 @@ import EstadoCarregamento from '../../Suporte/card/EstadoCarregamento.jsx';
 import useAtalhos from '../../Suporte/card/useAtalhos.js';
 import { hojeEmBrasilia } from '../../Suporte/mappers/atendimentos.js';
 import { useEquipe } from '../../Suporte/store.js';
-import { atuacaoDe, trabalhandoEm } from '../atuacao.js';
-import { useCompilacao, usePessoaCompilacao } from '../store.js';
+import { alterarResponsabilidade } from '../api/responsabilidades.js';
+import { atuacaoDe, naResponsabilidade, trabalhandoEm } from '../atuacao.js';
+import { useCompilacao, usePessoaCompilacao, useResponsabilidadeSalva, useResponsabilidades } from '../store.js';
 import AtividadeRecente from './AtividadeRecente.jsx';
 import styles from './CardCompilador.module.css';
 import Cidades from './Cidades.jsx';
 import Normas from './Normas.jsx';
 import Responsabilidade from './Responsabilidade.jsx';
+import Troca from './Troca.jsx';
+import Vinculadas from './Vinculadas.jsx';
 
 const primeiroNome = (nome) => nome.split(' ')[0];
 
@@ -18,6 +21,9 @@ const primeiroNome = (nome) => nome.split(' ')[0];
  * Card de quem foi selecionado em /compilacao: a casca do card do técnico do
  * suporte com o que é da compilação (a responsabilidade, onde trabalha, as normas
  * por período e a última atividade), com os números do servidor (/api/compilacao).
+ * A responsabilidade que vale é a escolhida pelo "Alterar" (salva no servidor),
+ * ou a configurada; ela decide o que o card mostra: em Projetos Novos -
+ * Finalizando, só as normas vinculadas; em Sem normas, a seção Normas desativada.
  */
 export default function CardCompilador() {
   const tecnicos = useEquipe((s) => s.tecnicos);
@@ -32,10 +38,14 @@ export default function CardCompilador() {
   const carregado = useCompilacao((s) => s.dados !== null);
   const referencia = useCompilacao((s) => s.dados?.referencia);
   const geradoEm = useCompilacao((s) => s.geradoEm);
+  const salva = useResponsabilidadeSalva(pessoa?.id);
+  const salvando = useResponsabilidades((s) => (pessoa ? s.salvando[pessoa.id] === true : false));
+  const falha = useResponsabilidades((s) => (pessoa ? (s.falhas[pessoa.id] ?? null) : null));
   if (!pessoa) return null;
 
   const hoje = hojeEmBrasilia();
-  const atuacao = atuacaoDe(numeros);
+  const atuacao = atuacaoDe(numeros, salva);
+  const vista = naResponsabilidade(numeros, salva);
   const nomeDe = (id) => primeiroNome(tecnicos.find((t) => t.id === id)?.nome ?? id);
 
   return (
@@ -72,10 +82,29 @@ export default function CardCompilador() {
       )}
       {atuacao && (
         <>
-          <Responsabilidade atuacao={atuacao} />
-          <Cidades {...trabalhandoEm(numeros)} />
-          <Normas pessoa={numeros} referencia={referencia} hoje={hoje} geradoEm={geradoEm} nomeDe={nomeDe} />
-          <AtividadeRecente pessoa={numeros} />
+          <Responsabilidade
+            atuacao={atuacao}
+            salvando={salvando}
+            falha={falha}
+            aoEscolher={(chave) => alterarResponsabilidade(pessoa.id, chave)}
+          />
+          <Cidades {...trabalhandoEm(vista)} />
+          {/* Normas e Sem normas são a mesma seção (só desfoca); Finalizando troca por outra. */}
+          <Troca chave={atuacao.normas === 'vinculadas' ? 'vinculadas' : 'normas'}>
+            {atuacao.normas === 'vinculadas' ? (
+              <Vinculadas pessoa={vista} />
+            ) : (
+              <Normas
+                pessoa={vista}
+                referencia={referencia}
+                hoje={hoje}
+                geradoEm={geradoEm}
+                nomeDe={nomeDe}
+                desativada={atuacao.normas === 'desativada'}
+              />
+            )}
+          </Troca>
+          <AtividadeRecente pessoa={vista} />
         </>
       )}
 

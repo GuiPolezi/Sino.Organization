@@ -5,6 +5,7 @@ import { acompanharComplementos } from '../Suporte/api/acompanharComplementos.js
 import { configurarQuadro } from '../Suporte/quadro/posicao.js';
 import { configurarCena, useEquipe } from '../Suporte/store.js';
 import { buscarCompilacao } from './api/compilacao.js';
+import { acompanharResponsabilidades } from './api/responsabilidades.js';
 import CardCompilador from './card/CardCompilador.jsx';
 import CardQuadroCompilacao from './card/CardQuadroCompilacao.jsx';
 import * as cafe from './cena/cafe.js';
@@ -52,8 +53,10 @@ function marcarAusentes(pessoas) {
  * Os números completam os cards, o Quadro e a folha. Até chegarem, os cards dizem
  * que estão carregando; se a busca falhar, mostram o erro com "Tentar de novo".
  * Com a página aberta, a busca se repete a cada 15 minutos (o cache do servidor).
+ * As responsabilidades trocadas pelo "Alterar" vêm à parte, a cada minuto.
  */
 function buscarNumeros() {
+  const pararResponsabilidades = acompanharResponsabilidades();
   const parar = acompanharComplementos({
     buscar: buscarCompilacao,
     aoReceber: (resposta) => {
@@ -63,6 +66,7 @@ function buscarNumeros() {
   });
   return () => {
     parar();
+    pararResponsabilidades();
     useCompilacao.getState().limpar();
   };
 }

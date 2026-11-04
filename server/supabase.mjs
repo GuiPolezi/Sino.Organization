@@ -28,7 +28,15 @@ export function criarClienteSupabase({ url, chave }) {
       throw new SupabaseError('Não foi possível conectar ao Supabase.');
     });
     if (resposta.status === 409) throw new SupabaseConflito('O registro já existe.');
-    if (!resposta.ok) throw new SupabaseError(`O Supabase respondeu HTTP ${resposta.status}.`);
+    // `status` e `codigo` (o "code" do PostgREST, ex.: PGRST205 = tabela que não
+    // existe) deixam quem chamou reconhecer o erro. A mensagem do banco não sai daqui.
+    if (!resposta.ok) {
+      const codigo = await resposta
+        .json()
+        .then((corpo) => (typeof corpo?.code === 'string' ? corpo.code : null))
+        .catch(() => null);
+      throw Object.assign(new SupabaseError(`O Supabase respondeu HTTP ${resposta.status}.`), { status: resposta.status, codigo });
+    }
     const texto = await resposta.text();
     return texto ? JSON.parse(texto) : null;
   };

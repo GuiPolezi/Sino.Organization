@@ -90,6 +90,14 @@ function atividadeRecente(entrada) {
 
 const vazio = () => ({ hoje: null, semana: null, mes: null, tudo: null });
 
+// Normas vinculadas (todos os tipos) da cidade do projeto: o número do "Finalizando".
+// Sem projeto, ou sem a contagem, fica "—".
+function vinculadasDoProjeto(projeto, vinculadas) {
+  if (!projeto) return { valor: null, cidade: null };
+  const valor = vinculadas && Object.hasOwn(vinculadas, projeto.cidadeUf) ? vinculadas[projeto.cidadeUf] : null;
+  return { valor: Number.isInteger(valor) && valor >= 0 ? valor : null, cidade: separarCidadeUf(projeto.cidadeUf) };
+}
+
 function pessoaDeProjetos(membro, ctx) {
   const entrada = ctx.auditoria?.[membro.usuarioId];
   const sistema = producaoDoSistema(entrada, ctx.periodos, ctx.catalogo, ctx.avisar);
@@ -123,6 +131,7 @@ function pessoaDeProjetos(membro, ctx) {
     ...ausencia(entrada, ctx.periodos.hoje),
     cidades: projeto ? [projeto.cidade] : [],
     projeto,
+    vinculadas: vinculadasDoProjeto(inferido, ctx.vinculadas),
     producao,
     fontes,
     porTipo,
@@ -169,6 +178,7 @@ function pessoaDeAtualizacoes(membro, ctx) {
     ...ausencia(entrada, ctx.periodos.hoje),
     cidades: resumo?.carteira ?? [],
     projeto: null,
+    vinculadas: { valor: null, cidade: null },
     producao,
     fontes,
     porTipo,
@@ -218,6 +228,11 @@ export function paresDosProjetos({ equipe, auditoria, catalogo = CATALOGO, atrib
   return [...pares.values()];
 }
 
+/** Cidades dos projetos, cada uma uma vez (para contar as normas vinculadas). */
+export function cidadesDosProjetos({ equipe, auditoria, catalogo = CATALOGO, atribuicoes }) {
+  return [...new Set([...projetosDaEquipe(equipe, auditoria, catalogo, atribuicoes).values()].map((p) => p.cidadeUf))];
+}
+
 /**
  * Fila da equipe: Projetos soma cada par cidade×tipo uma vez (I6); Atualizações
  * soma o déficit de quem tem planilha. Pares sem estoque válido ficam de fora.
@@ -248,6 +263,7 @@ export function filaDaEquipe(entradas) {
  *   atualizacoesDiaSemana?: 'auditoria' | 'vazio',
  *   atribuicoes?: Record<string, { cidadeUf: string, moduloIds: number[], desde: string | null } | null>,
  *   historico?: Record<string, { total: number, porBalde: Record<string, number> }>,
+ *   vinculadas?: Record<string, number>,
  *   avisar?: (mensagem: string) => void,
  * }} entradas
  */
@@ -262,6 +278,7 @@ export function montarCompilacao({
   atualizacoesDiaSemana = 'auditoria',
   atribuicoes,
   historico = {},
+  vinculadas = {},
   avisar = () => {},
 }) {
   const periodos = calcularPeriodos(agora);
@@ -276,6 +293,7 @@ export function montarCompilacao({
     avisar,
     atribuicoes,
     historico,
+    vinculadas,
     projetos: projetosDaEquipe(equipe, auditoria, catalogo, atribuicoes),
   };
   const pessoas = {};

@@ -7,11 +7,16 @@
 // no servidor: as respostas levam apenas os dados já filtrados.
 import { ClientesError } from '../scripts/lib/build-clients.mjs';
 import { TeamError } from '../scripts/lib/build-team.mjs';
-import { CompilacaoError } from '../scripts/lib/compilacao/configuracao.mjs';
+import { CompilacaoError, lerEquipe } from '../scripts/lib/compilacao/configuracao.mjs';
 import { LicencaError } from '../scripts/lib/licenca.mjs';
 import { MilldeskError } from '../scripts/lib/milldesk.mjs';
 import { armazemMemoria, criarCache } from './cache.mjs';
 import { obterChamados, renovarJanelasAntigas } from './chamados.mjs';
+import {
+  criarServicoResponsabilidades,
+  repositorioResponsabilidades,
+  responsabilidadesMemoria,
+} from './compilacao-responsabilidades.mjs';
 import { FONTES } from './fontes.mjs';
 import { LegislacaoError } from './legislacao.mjs';
 import { criarServicoReunioes, reunioesMemoria } from './reunioes.mjs';
@@ -36,8 +41,10 @@ const ERROS_SEGUROS = [
 const ehSeguro = (erro) => ERROS_SEGUROS.some((Tipo) => erro instanceof Tipo);
 const mensagemDe = (erro) => (ehSeguro(erro) ? erro.message : 'Erro inesperado no servidor.');
 
-// Corpo máximo aceito (uma reunião tem bem menos que isso).
+// Corpo máximo aceito, em bytes (uma reunião tem bem menos que isso).
 const CORPO_MAX = 20_000;
+// A troca de responsabilidade é só { "responsabilidade": "..." }.
+const CORPO_MAX_RESPONSABILIDADE = 1_000;
 
 // Supabase quando configurado; senão tudo em memória (só para desenvolvimento).
 // Exportado para os scripts de manutenção (ex.: scripts/seed-chamados.mjs).
@@ -52,6 +59,9 @@ export function obterServicos() {
       armazem,
       cache: criarCache({ armazem, mensagemDe }),
       reunioes: criarServicoReunioes(pedir ? reunioesSupabase(pedir) : reunioesMemoria()),
+      responsabilidades: criarServicoResponsabilidades(pedir ? repositorioResponsabilidades(pedir) : responsabilidadesMemoria(), {
+        equipe: () => lerEquipe(process.env.COMPILACAO_EQUIPE),
+      }),
     };
   }
   return servicos;
@@ -59,13 +69,14 @@ export function obterServicos() {
 
 export { mensagemDe };
 
-const json = (corpo, status = 200) =>
+const json = (corpo, status = 200, cabecalhos = {}) =>
   new Response(status === 204 ? null : JSON.stringify(corpo), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
       'x-robots-tag': 'noindex',
+      ...cabecalhos,
     },
   });
 
@@ -133,9 +144,9 @@ async function responderCronCompilacao(request) {
 
 // ---------- Reuniões ----------
 
-async function lerCorpo(request) {
+async function lerCorpo(request, max = CORPO_MAX) {
   const texto = await request.text();
-  if (texto.length > CORPO_MAX) return { erro: json({ erro: 'Pedido grande demais.' }, 413) };
+  if (new TextEncoder().encode(texto).length > max) return { erro: json({ erro: 'Pedido grande demais.' }, 413) };
   try {
     return { dados: JSON.parse(texto) };
   } catch {
@@ -175,6 +186,28 @@ const editarReuniao = comServico('reuniao', async (servico, request, id) => {
 
 const apagarReuniao = comServico('reuniao', async (servico, _request, id) => responderResultado(await servico.apagar(id)));
 
+// ---------- Responsabilidades do /compilacao (ver server/compilacao-responsabilidades.mjs) ----------
+
+async function listarResponsabilidades() {
+  try {
+    return json(await obterServicos().responsabilidades.listar());
+  } catch (erro) {
+    return erroInterno('responsabilidades', erro);
+  }
+}
+
+async function alterarResponsabilidade(request, personagem) {
+  const { dados, erro } = await lerCorpo(request, CORPO_MAX_RESPONSABILIDADE);
+  if (erro?.status === 400) return json({ erros: { responsabilidade: 'O corpo do pedido não é JSON.' } }, 400);
+  if (erro) return erro;
+  try {
+    const { status, corpo, esperarSegundos } = await obterServicos().responsabilidades.alterar(personagem, dados);
+    return json(corpo, status, esperarSegundos ? { 'retry-after': String(esperarSegundos) } : {});
+  } catch (erro) {
+    return erroInterno('responsabilidade', erro);
+  }
+}
+
 // ---------- Roteamento ----------
 
 const ROTAS = [
@@ -183,6 +216,9 @@ const ROTAS = [
   { caminho: /^\/api\/atendimentos$/, GET: () => responderFonte('atendimentos') },
   { caminho: /^\/api\/clientes$/, GET: () => responderFonte('clientes') },
   { caminho: /^\/api\/compilacao$/, GET: () => responderFonte('compilacao') },
+  { caminho: /^\/api\/compilacao\/responsabilidades$/, GET: listarResponsabilidades },
+  // Só letras minúsculas: os ids do elenco (e nada para decodeURIComponent recusar).
+  { caminho: /^\/api\/compilacao\/responsabilidades\/([a-z]+)$/, PUT: alterarResponsabilidade },
   { caminho: /^\/api\/chamados$/, GET: responderChamados },
   { caminho: /^\/api\/cron\/chamados$/, GET: responderCronChamados },
   { caminho: /^\/api\/cron\/compilacao$/, GET: responderCronCompilacao },

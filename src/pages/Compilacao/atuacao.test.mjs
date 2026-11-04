@@ -10,15 +10,23 @@ import {
   atividadeDe,
   atuacaoDe,
   barraDoProjeto,
+  chaveEfetiva,
   comMais,
   diaEMes,
+  ehResponsabilidade,
+  lerResponsabilidades,
+  mensagemDeFalha,
   mesCurto,
+  naResponsabilidade,
   nomeDaCidade,
   nomeDoMes,
   normasDoPeriodo,
   numeroOuTraco,
+  OPCOES_DE_RESPONSABILIDADE,
   rotuloDataHora,
+  tempoDaFalha,
   trabalhandoEm,
+  vinculadasDe,
 } from './atuacao.js';
 import { APARENCIAS_COMPILACAO, EQUIPE_COMPILACAO } from './equipe.js';
 import { REFERENCIA, pessoaDeAtualizacoes, pessoaDeProjetos } from './respostas-teste.mjs';
@@ -43,7 +51,13 @@ test('os períodos são Todo o Tempo, Mês, Semana e Hoje, e o card abre no Mês
 
 test('Projetos: "Desde" do projeto e "Trabalhando em" com cidade e tipo', () => {
   const pessoa = pessoaDeProjetos({ projeto: { ...pessoaDeProjetos().projeto, tipos: ['Leis Ordinárias', 'Leis Complementares'] } });
-  assert.deepEqual(atuacaoDe(pessoa), { responsabilidade: 'projetos', rotulo: 'Projetos Novos', linha: 'Desde: 20/10 - 08:15' });
+  assert.deepEqual(atuacaoDe(pessoa), {
+    responsabilidade: 'projetos',
+    rotulo: 'Projetos Novos',
+    situacao: null,
+    normas: 'normal',
+    linha: 'Desde: 20/10 - 08:15',
+  });
   assert.deepEqual(trabalhandoEm(pessoa), { atual: 'Cidade A - XX · Leis Ordinárias + Leis Complementares', outras: [] });
   assert.equal(atuacaoDe(pessoaDeProjetos({ desde: null })).linha, 'Desde: —');
   assert.deepEqual(trabalhandoEm(pessoaDeProjetos({ projeto: null })), { atual: '—', outras: [] });
@@ -141,4 +155,142 @@ test('rótulos: cidade, data e hora, mês, números com "—"', () => {
   assert.equal(comMais(0), '+0');
   assert.equal(comMais(null), '—');
   assert.deepEqual(agoraEmBrasilia(Date.parse('2026-11-04T02:30:00Z')), { data: '2026-11-03', hora: '23:30' });
+});
+
+// 13:50Z = 10:50 em Brasília.
+const ALTERADA_EM = '2026-10-30T13:50:00.000Z';
+
+test('as quatro opções do "Alterar", na ordem e com as chaves do servidor', () => {
+  assert.deepEqual(
+    OPCOES_DE_RESPONSABILIDADE.map(({ chave, rotulo }) => [chave, rotulo]),
+    [
+      ['atualizacoes', 'Atualizações'],
+      ['projetos', 'Projetos Novos'],
+      ['projetos_finalizando', 'Projetos Novos - Finalizando'],
+      ['projetos_sem_normas', 'Projetos Novos - Sem normas'],
+    ],
+  );
+});
+
+test('responsabilidade que vale: a salva; sem ela (ou inválida), a configurada', () => {
+  assert.equal(chaveEfetiva(pessoaDeProjetos(), null), 'projetos');
+  assert.equal(chaveEfetiva(pessoaDeProjetos(), { chave: 'projetos_finalizando' }), 'projetos_finalizando');
+  assert.equal(chaveEfetiva(pessoaDeAtualizacoes(), { chave: 'outra' }), 'atualizacoes');
+  assert.equal(chaveEfetiva({ funcao: 'outra' }, null), null);
+  assert.equal(chaveEfetiva(null, null), null);
+});
+
+test('salva: "Última Alteração" em Brasília, a situação e a seção de normas', () => {
+  const finalizando = atuacaoDe(pessoaDeProjetos(), { chave: 'projetos_finalizando', alteradaEm: ALTERADA_EM });
+  assert.deepEqual(finalizando, {
+    responsabilidade: 'projetos_finalizando',
+    rotulo: 'Projetos Novos',
+    situacao: { texto: 'Finalizando', tom: 'finalizando' },
+    normas: 'vinculadas',
+    linha: 'Última Alteração: 30/10 - 10:50',
+  });
+  const semNormas = atuacaoDe(pessoaDeProjetos(), { chave: 'projetos_sem_normas', alteradaEm: ALTERADA_EM });
+  assert.deepEqual(semNormas.situacao, { texto: 'Sem normas', tom: 'semNormas' });
+  assert.equal(semNormas.normas, 'desativada');
+  assert.equal(atuacaoDe(pessoaDeAtualizacoes(), { chave: 'atualizacoes', alteradaEm: ALTERADA_EM }).linha, 'Última Alteração: 30/10 - 10:50');
+  // Data que não é data: a linha de sempre.
+  assert.equal(atuacaoDe(pessoaDeProjetos(), { chave: 'projetos_finalizando', alteradaEm: 'x' }).linha, 'Desde: 20/10 - 08:15');
+});
+
+test('trocar de grupo não quebra: o card mostra "—" no que é do outro grupo', () => {
+  const paraProjetos = naResponsabilidade(pessoaDeAtualizacoes(), { chave: 'projetos_finalizando' });
+  assert.equal(paraProjetos.funcao, 'projetos');
+  assert.equal(paraProjetos.responsabilidade, 'projetos_finalizando');
+  assert.deepEqual(trabalhandoEm(paraProjetos), { atual: '—', outras: [] });
+  assert.equal(aguardandoDe(paraProjetos).valor, null);
+  assert.equal(barraDoProjeto(paraProjetos), null);
+  assert.equal(vinculadasDe(paraProjetos).valor, null);
+  assert.equal(atuacaoDe(pessoaDeAtualizacoes(), { chave: 'projetos', alteradaEm: null }).linha, 'Desde: —');
+
+  const paraAtualizacoes = naResponsabilidade(pessoaDeProjetos(), { chave: 'atualizacoes' });
+  assert.equal(paraAtualizacoes.funcao, 'atualizacoes');
+  assert.equal(aguardandoDe(paraAtualizacoes).valor, null);
+  assert.equal(atuacaoDe(pessoaDeProjetos(), { chave: 'atualizacoes' }).linha, 'Planilha: —');
+  // A produção é da pessoa no sistema: continua valendo.
+  assert.equal(normasDoPeriodo(paraAtualizacoes, 'mes', doDia).total, 40);
+  // Sem troca de grupo, nada some.
+  assert.equal(naResponsabilidade(pessoaDeProjetos(), { chave: 'projetos_sem_normas' }).projeto.total, 404);
+  assert.equal(naResponsabilidade(null, { chave: 'projetos' }), null);
+});
+
+test('vinculadas: o número da cidade do projeto, ou "—" com "sem dado"', () => {
+  assert.deepEqual(vinculadasDe(pessoaDeProjetos()), { valor: 270, rotulo: 'Vinculadas', legenda: '' });
+  assert.deepEqual(vinculadasDe(pessoaDeAtualizacoes()), { valor: null, rotulo: 'Vinculadas', legenda: 'sem dado' });
+  assert.equal(vinculadasDe(pessoaDeProjetos({ vinculadas: { valor: 1, cidade: null } })).rotulo, 'Vinculada');
+  assert.equal(vinculadasDe(pessoaDeProjetos({ vinculadas: { valor: 0, cidade: null } })).valor, 0);
+  assert.equal(vinculadasDe(pessoaDeProjetos({ vinculadas: undefined })).valor, null);
+});
+
+test('GET das responsabilidades: só as escolhas com chave conhecida', () => {
+  assert.deepEqual(
+    lerResponsabilidades({
+      responsabilidades: {
+        glopes: { chave: 'projetos_finalizando', alteradaEm: ALTERADA_EM },
+        laura: { chave: 'inventada', alteradaEm: ALTERADA_EM },
+        ramon: { chave: 'atualizacoes' },
+      },
+    }),
+    { glopes: { chave: 'projetos_finalizando', alteradaEm: ALTERADA_EM }, ramon: { chave: 'atualizacoes', alteradaEm: null } },
+  );
+  assert.deepEqual(lerResponsabilidades(null), {});
+  assert.deepEqual(lerResponsabilidades({ aviso: 'x' }), {});
+});
+
+test('falha ao salvar: espera no 429, servidor sendo preparado no 503, o resto genérico', () => {
+  assert.equal(mensagemDeFalha({ status: 429 }), 'Aguarde um instante e tente de novo.');
+  // 429: a mensagem do servidor ('cedo' ou 'lotado'), se for uma string curta.
+  const cedo = 'Essa responsabilidade acabou de mudar. Espere alguns segundos e tente de novo.';
+  const lotado = 'Muitas trocas agora. Espere um minuto e tente de novo.';
+  assert.equal(mensagemDeFalha({ status: 429, erro: cedo }), cedo);
+  assert.equal(mensagemDeFalha({ status: 429, erro: `  ${lotado} ` }), lotado);
+  assert.equal(mensagemDeFalha({ status: 429, erro: 'x'.repeat(120) }), 'x'.repeat(120));
+  for (const erro of ['x'.repeat(121), '   ', '', 42, null, { texto: cedo }]) {
+    assert.equal(mensagemDeFalha({ status: 429, erro }), 'Aguarde um instante e tente de novo.');
+  }
+  // Nos outros status, a do servidor nunca aparece.
+  assert.equal(mensagemDeFalha({ status: 503, erro: cedo }), 'Ainda não dá para salvar: o servidor está sendo preparado.');
+  assert.equal(mensagemDeFalha({ status: 400, erro: cedo }), 'Não deu para salvar. Tente de novo.');
+  assert.equal(mensagemDeFalha({ status: 503 }), 'Ainda não dá para salvar: o servidor está sendo preparado.');
+  for (const status of [0, 400, 404, 502]) assert.equal(mensagemDeFalha({ status }), 'Não deu para salvar. Tente de novo.');
+});
+
+test('chaves herdadas do objeto ("constructor", "__proto__") não valem como responsabilidade', () => {
+  for (const chave of ['constructor', '__proto__', 'toString', 'hasOwnProperty']) {
+    assert.equal(ehResponsabilidade(chave), false, chave);
+    assert.equal(chaveEfetiva(pessoaDeProjetos(), { chave }), 'projetos', chave);
+    assert.equal(atuacaoDe(pessoaDeProjetos(), { chave, alteradaEm: ALTERADA_EM }).linha, 'Desde: 20/10 - 08:15', chave);
+  }
+  assert.equal(chaveEfetiva({ funcao: 'constructor' }, null), null);
+  assert.equal(ehResponsabilidade(undefined), false);
+  assert.equal(ehResponsabilidade('projetos_finalizando'), true);
+  assert.deepEqual(
+    lerResponsabilidades({
+      responsabilidades: {
+        glopes: { chave: 'constructor', alteradaEm: ALTERADA_EM },
+        laura: { chave: '__proto__', alteradaEm: ALTERADA_EM },
+        ramon: { chave: 'projetos', alteradaEm: ALTERADA_EM },
+      },
+    }),
+    { ramon: { chave: 'projetos', alteradaEm: ALTERADA_EM } },
+  );
+});
+
+test('a mensagem de falha fica 6 s, ou o Retry-After se for maior, até 60 s', () => {
+  assert.equal(tempoDaFalha(null), 6000);
+  assert.equal(tempoDaFalha(undefined), 6000);
+  assert.equal(tempoDaFalha('3'), 6000); // 'cedo'
+  assert.equal(tempoDaFalha('60'), 60000); // 'lotado'
+  assert.equal(tempoDaFalha('20'), 20000);
+  assert.equal(tempoDaFalha('3600'), 60000);
+  assert.equal(tempoDaFalha('abc'), 6000);
+  assert.equal(tempoDaFalha('-5'), 6000);
+  assert.equal(tempoDaFalha('1.5'), 6000);
+  const agora = Date.parse('2026-11-04T15:00:00Z');
+  assert.equal(tempoDaFalha('Wed, 04 Nov 2026 15:00:30 GMT', agora), 30000);
+  assert.equal(tempoDaFalha('Wed, 04 Nov 2026 14:00:00 GMT', agora), 6000);
 });

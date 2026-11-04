@@ -7,17 +7,108 @@
  * Regra de vazio: 0 só quando a fonte respondeu 0; null vira "—" (sem dado, não
  * se aplica, a fonte não respondeu). Nunca "+—".
  *
- * Responsabilidades (fixas por configuração no servidor):
- *   atualizacoes  mantém em dia as normas das cidades da carteira (Hoje, Semana e
- *                 Mês pelo sistema; Todo o Tempo, carteira e aguardando pela planilha)
- *   projetos      monta a base de uma cidade nova (cidade e tipo(s) pelo sistema)
+ * Responsabilidades. A configurada no servidor (`pessoa.funcao`) é uma das duas
+ * primeiras; qualquer pessoa da página pode trocar pelo "Alterar", e a escolha
+ * salva (/api/compilacao/responsabilidades) vale no lugar da configurada:
+ *   atualizacoes          mantém em dia as normas das cidades da carteira (Hoje, Semana
+ *                         e Mês pelo sistema; Todo o Tempo, carteira e aguardando pela planilha)
+ *   projetos              monta a base de uma cidade nova (cidade e tipo(s) pelo sistema)
+ *   projetos_finalizando  fechando o projeto: as ações não contam, o card mostra as vinculadas
+ *   projetos_sem_normas   sem normas para compilar: a seção Normas fica desativada
  */
 import { TIPOS_DE_NORMA } from './dados.js';
 
+/**
+ * palavra: a palavra grande do card; grupo: de qual das duas configuradas ela é;
+ * situacao: a linha "Situação" (tom: a cor); normas: como a seção Normas aparece.
+ */
 export const RESPONSABILIDADES = {
-  atualizacoes: { rotulo: 'Atualizações' },
-  projetos: { rotulo: 'Projetos Novos' },
+  atualizacoes: { rotulo: 'Atualizações', palavra: 'Atualizações', grupo: 'atualizacoes', situacao: null, normas: 'normal' },
+  projetos: { rotulo: 'Projetos Novos', palavra: 'Projetos Novos', grupo: 'projetos', situacao: null, normas: 'normal' },
+  projetos_finalizando: {
+    rotulo: 'Projetos Novos - Finalizando',
+    palavra: 'Projetos Novos',
+    grupo: 'projetos',
+    situacao: { texto: 'Finalizando', tom: 'finalizando' },
+    normas: 'vinculadas',
+  },
+  projetos_sem_normas: {
+    rotulo: 'Projetos Novos - Sem normas',
+    palavra: 'Projetos Novos',
+    grupo: 'projetos',
+    situacao: { texto: 'Sem normas', tom: 'semNormas' },
+    normas: 'desativada',
+  },
 };
+
+/** As opções do "Alterar", na ordem da caixa. */
+export const OPCOES_DE_RESPONSABILIDADE = Object.entries(RESPONSABILIDADES).map(([chave, opcao]) => ({ chave, ...opcao }));
+
+/** Se é uma das chaves de RESPONSABILIDADES (só as próprias: "constructor", "__proto__" etc. não). */
+export const ehResponsabilidade = (chave) => typeof chave === 'string' && Object.hasOwn(RESPONSABILIDADES, chave);
+
+// As duas que o servidor configura.
+const CONFIGURADAS = ['atualizacoes', 'projetos'];
+
+/**
+ * A responsabilidade que vale: a escolha salva; sem ela, a configurada.
+ * @param {object | null} pessoa a pessoa da resposta do servidor
+ * @param {{ chave: string, alteradaEm?: string } | null} [salva]
+ * @returns {string | null}
+ */
+export function chaveEfetiva(pessoa, salva) {
+  if (ehResponsabilidade(salva?.chave)) return salva.chave;
+  return CONFIGURADAS.includes(pessoa?.funcao) ? pessoa.funcao : null;
+}
+
+/**
+ * A pessoa como o card a mostra na responsabilidade que vale: `funcao` vira o
+ * grupo dela, e `responsabilidade`, a chave. Quem foi para o outro grupo (de
+ * Atualizações para um dos Projetos, ou o contrário) perde o que é só do grupo
+ * configurado (projeto, "desde", planilha, aguardando): o card mostra "—" ali.
+ *
+ * @param {object | null} pessoa
+ * @param {{ chave: string } | null} [salva]
+ */
+export function naResponsabilidade(pessoa, salva) {
+  const chave = chaveEfetiva(pessoa, salva);
+  if (!pessoa || !chave) return null;
+  const { grupo } = RESPONSABILIDADES[chave];
+  if (grupo === pessoa.funcao) return { ...pessoa, responsabilidade: chave };
+  return { ...pessoa, funcao: grupo, responsabilidade: chave, desde: null, planilha: null, projeto: null, aguardando: null };
+}
+
+/**
+ * Só as escolhas válidas da resposta de GET /api/compilacao/responsabilidades.
+ * @param {unknown} corpo
+ * @returns {Record<string, { chave: string, alteradaEm: string | null }>}
+ */
+export function lerResponsabilidades(corpo) {
+  const lista = corpo?.responsabilidades;
+  if (!lista || typeof lista !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(lista)
+      .filter(([, valor]) => ehResponsabilidade(valor?.chave))
+      .map(([personagem, { chave, alteradaEm }]) => [personagem, { chave, alteradaEm: alteradaEm ?? null }]),
+  );
+}
+
+const ERRO_CURTO = 120;
+
+/**
+ * O que dizer quando salvar a troca falhou. No 429 vale a mensagem do servidor,
+ * se for curta (ele diz se a troca foi agora há pouco ou se há trocas demais);
+ * nos outros, a mensagem do servidor (técnica) não aparece: quem chama a deixa no console.
+ * @param {{ status: number, erro?: unknown }} falha status 0: sem resposta (rede)
+ */
+export function mensagemDeFalha({ status, erro }) {
+  if (status === 429) {
+    const doServidor = typeof erro === 'string' ? erro.trim() : '';
+    return doServidor && doServidor.length <= ERRO_CURTO ? doServidor : 'Aguarde um instante e tente de novo.';
+  }
+  if (status === 503) return 'Ainda não dá para salvar: o servidor está sendo preparado.';
+  return 'Não deu para salvar. Tente de novo.';
+}
 
 /** "Piracicaba - SP" (sem UF, só o nome). */
 export const nomeDaCidade = ({ nome, uf }) => (uf ? `${nome} - ${uf}` : nome);
@@ -75,26 +166,66 @@ const diaDoIso = (iso) => {
   return Number.isNaN(instante.getTime()) ? null : diaEMes(agoraEmBrasilia(instante.getTime()).data);
 };
 
+// "2026-10-30T13:50:00.000Z" -> "30/10 - 10:50" em Brasília.
+const dataHoraDoIso = (iso) => {
+  const instante = new Date(iso ?? '');
+  return Number.isNaN(instante.getTime()) ? null : rotuloDataHora(agoraEmBrasilia(instante.getTime()));
+};
+
 /**
- * A responsabilidade da pessoa e a linha abaixo dela.
- * Projetos: "Desde: DD/MM - HH:MM" (começo do projeto atual).
+ * A responsabilidade que vale, a situação (nos Projetos que têm uma) e a linha
+ * da direita. Com uma escolha salva: "Última Alteração: DD/MM - HH:MM". Sem ela,
+ * Projetos: "Desde: DD/MM - HH:MM" (começo do projeto atual);
  * Atualizações: "Planilha de {mês} · importada em DD/MM".
  *
  * @param {object | null} pessoa a pessoa da resposta do servidor
+ * @param {{ chave: string, alteradaEm?: string | null } | null} [salva] a escolha salva, se houver
  */
-export function atuacaoDe(pessoa) {
-  if (!pessoa || !RESPONSABILIDADES[pessoa.funcao]) return null;
-  const responsabilidade = pessoa.funcao;
+export function atuacaoDe(pessoa, salva = null) {
+  const vista = naResponsabilidade(pessoa, salva);
+  if (!vista) return null;
+  const { palavra, situacao, normas } = RESPONSABILIDADES[vista.responsabilidade];
+  const alterada = ehResponsabilidade(salva?.chave) ? dataHoraDoIso(salva.alteradaEm) : null;
   let linha;
-  if (responsabilidade === 'projetos') {
-    linha = `Desde: ${pessoa.desde ? rotuloDataHora(pessoa.desde) : '—'}`;
-  } else if (pessoa.planilha) {
-    const importada = diaDoIso(pessoa.planilha.importadaEm);
-    linha = `Planilha de ${nomeDoMes(pessoa.planilha.mes)}${importada ? ` · importada em ${importada}` : ''}`;
+  if (alterada) {
+    linha = `Última Alteração: ${alterada}`;
+  } else if (vista.funcao === 'projetos') {
+    linha = `Desde: ${vista.desde ? rotuloDataHora(vista.desde) : '—'}`;
+  } else if (vista.planilha) {
+    const importada = diaDoIso(vista.planilha.importadaEm);
+    linha = `Planilha de ${nomeDoMes(vista.planilha.mes)}${importada ? ` · importada em ${importada}` : ''}`;
   } else {
     linha = 'Planilha: —';
   }
-  return { responsabilidade, rotulo: RESPONSABILIDADES[responsabilidade].rotulo, linha };
+  return { responsabilidade: vista.responsabilidade, rotulo: palavra, situacao, normas, linha };
+}
+
+const FALHA_MINIMA_MS = 6_000;
+const FALHA_MAXIMA_MS = 60_000;
+
+/**
+ * Quanto tempo a mensagem de falha fica na tela: 6 s, ou o Retry-After do
+ * servidor se for maior (até 60 s). Aceita segundos ou uma data HTTP.
+ * @param {string | null | undefined} retryAfter o cabeçalho, como veio
+ * @param {number} [agora] ms desde 1970 (para a data HTTP)
+ */
+export function tempoDaFalha(retryAfter, agora = Date.now()) {
+  const texto = String(retryAfter ?? '').trim();
+  let ms = 0;
+  if (/^\d+$/.test(texto)) ms = Number(texto) * 1000;
+  else if (texto && !Number.isNaN(Date.parse(texto))) ms = Date.parse(texto) - agora;
+  return Math.min(FALHA_MAXIMA_MS, Math.max(FALHA_MINIMA_MS, ms));
+}
+
+/**
+ * "Normas Vinculadas" de quem está finalizando: as normas vinculadas da cidade
+ * do projeto (o número grande do card).
+ * @param {object | null} pessoa
+ * @returns {{ valor: number | null, rotulo: string, legenda: string }}
+ */
+export function vinculadasDe(pessoa) {
+  const valor = typeof pessoa?.vinculadas?.valor === 'number' ? pessoa.vinculadas.valor : null;
+  return { valor, rotulo: valor === 1 ? 'Vinculada' : 'Vinculadas', legenda: valor === null ? 'sem dado' : '' };
 }
 
 /**

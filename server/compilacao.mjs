@@ -4,11 +4,12 @@
 //
 // Custo de uma busca (~35 pedidos ao sistema): tipos e cidades (2), por pessoa
 // as versões novas do período (7, uma página de 2.000 cada no uso normal) e a 1ª
-// página da Auditoria (7), as Normas recentes de quem faz Projetos (4) e 3
-// contagens por par cidade×tipo (no máximo MAX_PARES pares, ou seja, 18).
+// página da Auditoria (7), as Normas recentes de quem faz Projetos (4), 3
+// contagens por par cidade×tipo (no máximo MAX_PARES pares, ou seja, 18) e 1
+// contagem de normas vinculadas por cidade de projeto (no máximo 4).
 // No Supabase, mais ~4 pedidos: o histórico do Todo o Tempo de Projetos (F6).
 // Os avisos vão para o log só com contagens e ids públicos de personagem.
-import { montarCompilacao, paresDosProjetos } from '../scripts/lib/build-compilacao.mjs';
+import { cidadesDosProjetos, montarCompilacao, paresDosProjetos } from '../scripts/lib/build-compilacao.mjs';
 import { lerEquipe } from '../scripts/lib/compilacao/configuracao.mjs';
 import { calcularPeriodos } from '../scripts/lib/compilacao/periodos.mjs';
 import { chaveDoPar } from '../scripts/lib/compilacao/projeto.mjs';
@@ -25,7 +26,8 @@ const PAGINA_RECENTES = 50;
 const LINHAS_POR_PEDIDO = 1000;
 const MAX_LINHAS = 50_000;
 // Teto de pares cidade×tipo com estoque por busca: 20 pedidos fixos + 6 × 3 = 38,
-// dentro do limite de 40 (hoje são 5 pares).
+// mais 1 por cidade de projeto (vinculadas, até 4): no pior caso 42 (hoje são 5
+// pares em 3 cidades, 38 pedidos).
 export const MAX_PARES = 6;
 
 const diasAntes = (data, dias) => new Date(Date.parse(`${data}T00:00:00Z`) - dias * 86_400_000).toISOString().slice(0, 10);
@@ -106,6 +108,27 @@ async function estoqueDosPares(cliente, pares, idPorCidadeUf, avisar) {
   return estoque;
 }
 
+// Normas vinculadas (vinculada = 1, todos os tipos) de cada cidade de projeto, para o
+// "Finalizando". 1 pedido por cidade; a que não responder fica "—".
+async function vinculadasDasCidades(cliente, cidades, idPorCidadeUf, avisar) {
+  const vinculadas = {};
+  await Promise.all(
+    cidades.map(async (cidadeUf) => {
+      const cidadeId = idPorCidadeUf.get(normalizar(cidadeUf));
+      if (!cidadeId) {
+        avisar('cidade de um projeto não está no cadastro de Cidades; vinculadas ficam "—"');
+        return;
+      }
+      try {
+        vinculadas[cidadeUf] = await cliente.contar('Normas', { cidadeId, vinculada: 1 });
+      } catch {
+        avisar('normas vinculadas de uma cidade de projeto não responderam');
+      }
+    }),
+  );
+  return vinculadas;
+}
+
 async function lerTodas(pedir, caminho) {
   const linhas = [];
   for (let offset = 0; offset < MAX_LINHAS; offset += LINHAS_POR_PEDIDO) {
@@ -178,7 +201,11 @@ export async function buscarCompilacao({
   const pares = paresDosProjetos({ equipe, auditoria, catalogo, atribuicoes });
   if (pares.length > MAX_PARES) avisar(`${pares.length} pares cidade×tipo; só os ${MAX_PARES} primeiros têm estoque`);
   const comEstoque = pares.slice(0, MAX_PARES);
-  const estoque = await estoqueDosPares(cliente, comEstoque, idPorCidadeUf, avisar);
+  const cidades = cidadesDosProjetos({ equipe, auditoria, catalogo, atribuicoes });
+  const [estoque, vinculadas] = await Promise.all([
+    estoqueDosPares(cliente, comEstoque, idPorCidadeUf, avisar),
+    vinculadasDasCidades(cliente, cidades, idPorCidadeUf, avisar),
+  ]);
 
   // Retrato do estoque do dia (cada busca atualiza a linha; o cron das 23:50 fecha o dia).
   if (repo && atribuicoes !== undefined) {
@@ -218,6 +245,7 @@ export async function buscarCompilacao({
     atualizacoesDiaSemana: env.COMPILACAO_ATUALIZACOES_DIA_SEMANA === 'vazio' ? 'vazio' : 'auditoria',
     atribuicoes,
     historico,
+    vinculadas,
     avisar,
   });
 }
