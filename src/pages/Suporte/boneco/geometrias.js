@@ -58,8 +58,9 @@ const MEIO_RETO_CORPO = 0.18;
 // vértices ficam na superfície do tronco (o trecho reto e, acima dele, a cúpula
 // da cápsula), um pouco por fora; larga em cima, rente ao queixo, e fecha em
 // ponta embaixo. `topo` e `base` são alturas a partir do centro do tronco, e
-// `abertura`, o meio ângulo do V no topo.
-function criarDecote({ topo, base, abertura }) {
+// `abertura`, o meio ângulo do V no topo. `centro` gira o V para um lado (as pontas
+// da gola da camisa social) e `folga`, quanto ele fica para fora do tronco.
+function criarDecote({ topo, base, abertura, centro = 0, folga = 0.006 }) {
   const LINHAS = 16;
   const COLUNAS = 12;
   const posicoes = [];
@@ -69,9 +70,9 @@ function criarDecote({ topo, base, abertura }) {
     const y = topo + (base - topo) * t;
     const meia = abertura * (1 - t);
     const acima = Math.max(0, y - MEIO_RETO_CORPO);
-    const raio = Math.sqrt(Math.max(0, RAIO_CORPO ** 2 - acima ** 2)) + 0.006;
+    const raio = Math.sqrt(Math.max(0, RAIO_CORPO ** 2 - acima ** 2)) + folga;
     for (let i = 0; i <= COLUNAS; i++) {
-      const giro = -meia + (2 * meia * i) / COLUNAS;
+      const giro = centro - meia + (2 * meia * i) / COLUNAS;
       posicoes.push(raio * Math.sin(giro), y, raio * Math.cos(giro));
     }
   }
@@ -208,6 +209,14 @@ export const G = {
   // Roupa social: o V da camisa e os botões do blazer.
   decote: criarDecote({ topo: 0.36, base: 0.09, abertura: 0.5 }),
   botao: new THREE.SphereGeometry(0.022, 10, 8),
+  // Blusa: o decote em V, mais raso que o da roupa social, mostrando a pele.
+  decoteBlusa: criarDecote({ topo: 0.37, base: 0.2, abertura: 0.34 }),
+  // Camisa social (sem blazer): as duas pontas da gola, uma de cada lado do pescoço,
+  // e os botões menores da carreira do meio.
+  // A gola fica logo abaixo do queixo: mais alta, a cabeça a esconderia.
+  golaPontaE: criarDecote({ topo: 0.31, base: 0.16, abertura: 0.14, centro: 0.15, folga: 0.012 }),
+  golaPontaD: criarDecote({ topo: 0.31, base: 0.16, abertura: 0.14, centro: -0.15, folga: 0.012 }),
+  botaoCamisa: new THREE.SphereGeometry(0.016, 10, 8),
   anel: new THREE.TorusGeometry(0.55, 0.035, 10, 48),
   hit: new THREE.CylinderGeometry(0.5, 0.5, 2.1, 10),
 };

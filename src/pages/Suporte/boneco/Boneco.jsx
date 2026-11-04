@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
-import { MathUtils, Vector3 } from 'three';
+import { Color, DoubleSide, MathUtils, Vector3 } from 'three';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe, temBochechas } from './aparencia.js';
@@ -283,6 +283,25 @@ function RoupaSocial() {
   );
 }
 
+// Blusa: a camisa (aparencia.camisa) é a blusa, com o decote em V mostrando a pele.
+function Blusa({ material }) {
+  return <mesh geometry={G.decoteBlusa} material={material} position-y={0.86} />;
+}
+
+// Camisa social sem blazer: a camisa (aparencia.camisa) com as pontas da gola, num
+// tom mais claro dela, e uma carreira de botões brancos no meio do peito.
+function CamisaSocial({ material }) {
+  return (
+    <>
+      <mesh geometry={G.golaPontaE} material={material} position-y={0.86} />
+      <mesh geometry={G.golaPontaD} material={material} position-y={0.86} />
+      {[1.01, 0.9, 0.79, 0.68].map((y) => (
+        <mesh key={y} geometry={G.botaoCamisa} material={CORDAO} position={[0, y, 0.338]} />
+      ))}
+    </>
+  );
+}
+
 // Moletom com capuz: o capuz caído nas costas, a gola e os dois cordões na frente.
 function Moletom({ material }) {
   return (
@@ -334,6 +353,13 @@ function AcessorioCabeca({ tipo, materialBone }) {
   return null;
 }
 
+// A gola da camisa social: a cor da camisa clareada, para se destacar dela.
+function golaDaCamisa(cor) {
+  const material = Object.assign(clay(cor), { side: DoubleSide });
+  material.color.lerp(new Color('#FFFFFF'), 0.45);
+  return material;
+}
+
 /** Materiais de uma aparência, descartados quando ela muda ou quando quem a usa sai de cena. */
 export function useMateriais(aparencia) {
   const materiais = useMemo(
@@ -346,6 +372,10 @@ export function useMateriais(aparencia) {
       mechas: aparencia.cabelo.mechas ? clay(aparencia.cabelo.mechas) : null,
       olhos: aparencia.olhos ? clay(aparencia.olhos) : null,
       bone: aparencia.bone ? clay(aparencia.bone) : null,
+      // Decote da blusa (pele) e pontas da gola da camisa social (camisa): dos dois
+      // lados, como o V da roupa social, para nunca sumirem pelo sentido dos triângulos.
+      decoteBlusa: aparencia.blusa ? Object.assign(clay(aparencia.pele), { side: DoubleSide }) : null,
+      golaCamisa: aparencia.camisaSocial ? golaDaCamisa(aparencia.camisa) : null,
       // A barba curta é rala: da cor do cabelo, mas deixa a pele aparecer.
       barbaRala:
         aparencia.barba === 'curta'
@@ -396,6 +426,8 @@ export function Figura({ aparencia, materiais, partes = {}, aceno = false, naMao
       {aparencia.logo && <mesh geometry={G.logo} material={LOGO} position-y={0.99} rotation-y={0.47} />}
       {aparencia.moletom && <Moletom material={materiais.camisa} />}
       {aparencia.social && <RoupaSocial />}
+      {aparencia.blusa && <Blusa material={materiais.decoteBlusa} />}
+      {aparencia.camisaSocial && <CamisaSocial material={materiais.golaCamisa} />}
       {aparencia.acessorio === 'gravata' && (
         <mesh geometry={G.gravata} material={ESCURO} position={[0, 0.93, 0.33]} rotation-x={-0.12} />
       )}

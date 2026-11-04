@@ -32,6 +32,8 @@
  * @property {boolean} [logo]  logo da empresa no peito esquerdo da camisa
  * @property {boolean} [moletom]  a camisa vira um moletom com capuz, da mesma cor
  * @property {boolean} [social]  roupa social: a camisa vira o blazer, com o V da camisa branca e botões
+ * @property {boolean} [blusa]   blusa feminina: a camisa ganha um decote em V que mostra a pele
+ * @property {boolean} [camisaSocial]  camisa social sem blazer: pontas de gola e botões brancos no meio
  */
 
 export {};

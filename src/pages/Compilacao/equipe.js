@@ -12,7 +12,11 @@ import { mapearTecnico } from '../Suporte/mappers/equipe.js';
 const PRETO = '#17130F';
 const CASTANHO_ESCURO = '#2B1E16';
 const LOIRO = '#C9A26B';
-const LOIRO_ESCURO = '#A8834F';
+const CASTANHO = '#4A3020';
+// Cores das roupas de quem não usa o uniforme: claras o bastante para as iniciais
+// escuras do avatar do card.
+const LAVANDA = '#B79CE0';
+const AZUL_CAMISA = '#A9C3E3';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
 const PESSOAS = [
@@ -38,13 +42,14 @@ export const APARENCIAS_COMPILACAO = {
     barba: 'curta',
     altura: 1.06,
   },
-  // Pele clara, óculos, sem barba, cabelo médio loiro escuro com degradê e o uniforme da Sino.
+  // Pele clara, óculos, sem barba, cabelo médio castanho escuro com degradê e camisa
+  // social azul-clara (sem o uniforme).
   ramon: {
     pele: PELES[0],
-    camisa: UNIFORME,
-    logo: true,
+    camisa: AZUL_CAMISA,
+    camisaSocial: true,
     calca: CALCAS[2],
-    cabelo: { estilo: 'degradeMedio', cor: LOIRO_ESCURO },
+    cabelo: { estilo: 'degradeMedio', cor: CASTANHO },
     acessorio: 'oculos',
   },
   // Cabelo curto e loiro, óculos (sem fone) e só bigode (loiro, a cor do cabelo), sem barba.
@@ -81,10 +86,11 @@ export const APARENCIAS_COMPILACAO = {
     altura: 0.97,
   },
   // Cabelo preto, longo e sem franja; olhos pretos (sem cor de olhos, ficam os escuros).
+  // Sem uniforme: blusa lavanda com decote em V.
   laura: {
     pele: PELES[0],
-    camisa: UNIFORME,
-    logo: true,
+    camisa: LAVANDA,
+    blusa: true,
     calca: CALCAS[3],
     cabelo: { estilo: 'compridoSemFranja', cor: PRETO },
     acessorio: 'nenhum',
