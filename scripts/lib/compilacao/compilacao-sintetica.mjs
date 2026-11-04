@@ -60,22 +60,43 @@ export const versoesSinteticas = {
     v(900003, { tipo: 'Decreto Municipal', numero: 9, cidade: 'Cidade B-XX', data: '2026-11-04' }),
   ],
   900004: [v(900004, { numero: 30, cidade: 'Cidade C-XX', data: '2026-11-04' })],
+};
+
+const n = (usuario, extra) => registro({ usuario, modulo: 'Normas', tipo: 'Lei Ordinária', ...extra });
+
+/**
+ * Atualizações: inclusões em Normas (ação 1) de cada pessoa, da mais nova para a
+ * mais antiga, como a Auditoria devolve, e o total de todo o tempo da lista.
+ * A última de cada lista já é de antes do período (corta a paginação).
+ */
+export const normasIncluidasSinteticas = {
   900005: [
-    v(900005, { numero: 40, cidade: 'Cidade D-XX', data: '2026-11-04' }),
-    v(900005, { numero: 41, cidade: 'Cidade D-XX', data: '2026-11-04' }),
-    v(900005, { numero: 42, cidade: 'Cidade D-XX', data: '2026-11-03' }),
+    n(900005, { numero: 40, cidade: 'Cidade D-XX', data: '2026-11-04', hora: '11:00' }),
+    n(900005, { descricao: 'Decreto Municipal nº 41', cidade: 'Cidade D-XX', data: '2026-11-04' }), // sem ano, como na Auditoria
+    n(900005, { numero: 42, cidade: 'Cidade D-XX', data: '2026-11-03' }),
+    n(900005, { tipo: 'Lei Complementar', numero: 43, cidade: 'Cidade E-XX', data: '2026-10-30' }),
+    n(900005, { numero: 44, cidade: 'Cidade E-XX', data: '2026-10-01' }),
   ],
-  900006: [v(900006, { numero: 50, cidade: 'Cidade E-XX', data: '2026-11-02' })],
+  900006: [
+    n(900006, { numero: 50, cidade: 'Cidade E-XX', data: '2026-11-02' }),
+    n(900006, { numero: 51, cidade: 'Cidade E-XX', data: '2026-10-05' }),
+  ],
   900007: [],
 };
+export const normasIncluidasTotais = { 900005: 250, 900006: 120, 900007: 0 };
+
+// Projetos: versões e normas da janela. Atualizações: inclusões em Normas e o total.
+const listasDaPessoa = (id) =>
+  EQUIPE_CONFIG[id].funcao === 'atualizacoes'
+    ? { normasIncluidas: [...normasIncluidasSinteticas[id]], normasIncluidasTotal: normasIncluidasTotais[id] }
+    : { versoes: [...versoesSinteticas[id]], normas: [] }; // cópia: um teste pode mexer sem afetar os outros
 
 export const auditoriaSintetica = () =>
   Object.fromEntries(
     Object.keys(EQUIPE_CONFIG).map((id) => [
       id,
       {
-        versoes: [...versoesSinteticas[id]], // cópia: um teste pode mexer sem afetar os outros
-        normas: [],
+        ...listasDaPessoa(id),
         recentes: [
           registro({ usuario: Number(id), modulo: 'Usuários', descricao: 'Texto fora da lista', data: '2026-11-04', hora: '17:00' }),
           registro({ usuario: Number(id), modulo: 'Arquivos', descricao: `Arquivo ${'x'.repeat(200)}`, data: '2026-11-04', hora: '09:30' }),

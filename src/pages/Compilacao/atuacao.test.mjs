@@ -294,3 +294,15 @@ test('a mensagem de falha fica 6 s, ou o Retry-After se for maior, até 60 s', (
   assert.equal(tempoDaFalha('Wed, 04 Nov 2026 15:00:30 GMT', agora), 30000);
   assert.equal(tempoDaFalha('Wed, 04 Nov 2026 14:00:00 GMT', agora), 6000);
 });
+
+test('Atualizações: Todo o Tempo pelo sistema só com o total (tipos "—")', () => {
+  const pessoa = pessoaDeAtualizacoes({
+    producao: { hoje: 2, semana: 9, mes: 30, tudo: 250 },
+    fontes: { hoje: 'sistema', semana: 'sistema', mes: 'sistema', tudo: 'sistema' },
+    porTipo: { ...pessoaDeAtualizacoes().porTipo, mes: { leis: 20, decretos: 10, resolucoes: 0, portarias: 0, complementares: 0, emendas: 0, outros: 0 }, tudo: null },
+  });
+  const tudo = normasDoPeriodo(pessoa, 'tudo', doDia);
+  assert.deepEqual([tudo.total, tudo.legenda], [250, 'pelo sistema']);
+  assert.ok(tudo.porTipo.every(({ valor }) => valor === null));
+  assert.equal(normasDoPeriodo(pessoa, 'mes', doDia).legenda, 'pelo sistema');
+});

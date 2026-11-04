@@ -403,6 +403,25 @@ test('primeiraPagina recusa limit fora de 1 a 200 sem chamar o fetch', async () 
   assert.equal(f.chamadas.length, 0);
 });
 
+test('pagina pede a página e o limit pedidos e devolve os itens e o total', async () => {
+  const f = fetchFalso((url) => (url.includes('Account/Login') ? loginOk() : lista([{ a: 1 }], 4321, 2)));
+  const resultado = await criar(f).pagina('Auditoria', { usuarioId: 900001, acao: 1 }, { page: 2, limit: 2000 });
+  assert.deepEqual(resultado, { items: [{ a: 1 }], total: 4321 });
+  const leituras = f.chamadas.filter((c) => c.url.includes('/Auditoria/Get')).map((c) => new URL(c.url).searchParams);
+  assert.equal(leituras.length, 1);
+  assert.deepEqual([leituras[0].get('page'), leituras[0].get('limit'), leituras[0].get('acao')], ['2', '2000', '1']);
+});
+
+test('pagina recusa page ou limit inválidos sem chamar o fetch', async () => {
+  const f = fetchFalso(roteiro);
+  const cliente = criar(f);
+  for (const opcoes of [{ limit: 0 }, { limit: 2001 }, { limit: 1.5 }, { page: -1 }, { page: '1' }]) {
+    await assert.rejects(() => cliente.pagina('Auditoria', {}, opcoes), LegislacaoError);
+  }
+  await assert.rejects(() => cliente.pagina('Usuarios'), LegislacaoError);
+  assert.equal(f.chamadas.length, 0);
+});
+
 test('ultimoItem pede o total e depois a página total-1 com 1 item', async () => {
   const f = fetchFalso((url) => {
     if (url.includes('Account/Login')) return loginOk();

@@ -22,13 +22,13 @@ const somar = (linhas, campo) => linhas.reduce((total, l) => total + l[campo], 0
 // hífen, ponto e apóstrofo. Anotação solta na célula ("…; cadastrar só AM") não passa.
 const NOME_DE_CIDADE = /^[\p{L}][\p{L} .'-]{1,39}$/u;
 
-// Cidades ativas da aba, sem repetir, na ordem da ação mais recente da pessoa
+// Cidades ativas da aba, sem repetir, na ordem da ação mais recente da pessoa (`acoes`)
 // (as sem ação vão para o fim). O nome vem do sistema quando há cidade_id; sem
 // cadastro, o da planilha só entra com UF válida e com cara de nome de cidade
 // (a página é pública: texto livre da planilha não vai para ela).
-function carteira(linhas, cidadesPorId, versoes, avisar) {
+function carteira(linhas, cidadesPorId, acoes, avisar) {
   const ultimaAcao = new Map();
-  for (const item of versoes ?? []) {
+  for (const item of acoes ?? []) {
     if (typeof item?.cidadeUf !== 'string') continue;
     const chave = normalizar(item.cidadeUf);
     const instante = instanteDoItem(item);
@@ -62,7 +62,7 @@ function carteira(linhas, cidadesPorId, versoes, avisar) {
  * Resumo da pessoa, ou null quando as planilhas não foram lidas ou ela não tem
  * nenhuma aba que confere. `referencia` = hoje (AAAA-MM-DD).
  */
-export function resumirPlanilhas(personagem, planilhas, referencia, { cidadesPorId, versoes, avisar = () => {} } = {}) {
+export function resumirPlanilhas(personagem, planilhas, referencia, { cidadesPorId, acoes, avisar = () => {} } = {}) {
   if (!planilhas) return null;
   const abas = (planilhas.abas ?? []).filter((a) => a.personagem === personagem && a.titulo_confere === true);
   if (abas.length === 0) return null;
@@ -86,6 +86,6 @@ export function resumirPlanilhas(personagem, planilhas, referencia, { cidadesPor
     porTipoTudo: porBalde(linhas),
     aguardando: { valor: somar(daBase, 'deficit'), fonte: 'planilha', mes: textoDoMes(base) },
     planilha: { mes: textoDoMes(base), importadaEm: base.importado_em ? new Date(base.importado_em).toISOString() : null },
-    carteira: carteira(daBase, cidadesPorId, versoes, avisar),
+    carteira: carteira(daBase, cidadesPorId, acoes, avisar),
   };
 }

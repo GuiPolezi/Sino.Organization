@@ -124,6 +124,8 @@ test('I1/I2: a soma dos tipos é o total, por pessoa e período', () => {
     for (const periodo of ['hoje', 'semana', 'mes', 'tudo']) {
       if (p.producao[periodo] === null) {
         assert.equal(p.porTipo[periodo], null);
+      } else if (p.funcao === 'atualizacoes' && periodo === 'tudo') {
+        assert.equal(p.porTipo.tudo, null); // Todo o Tempo de Atualizações: só o total (1 contagem)
       } else {
         assert.equal(soma(p.porTipo[periodo]), p.producao[periodo], `${periodo}`);
       }
@@ -135,8 +137,9 @@ test('I13: normas distintas nunca passam do número de versões', () => {
   const auditoria = auditoriaSintetica();
   const dados = montar({ auditoria });
   // O Mês vem do sistema para as 7 pessoas.
-  for (const [id, { personagem }] of Object.entries(EQUIPE_CONFIG)) {
-    assert.ok(dados.pessoas[personagem].producao.mes <= auditoria[id].versoes.length);
+  for (const [id, { personagem, funcao }] of Object.entries(EQUIPE_CONFIG)) {
+    const lista = funcao === 'atualizacoes' ? auditoria[id].normasIncluidas : auditoria[id].versoes;
+    assert.ok(dados.pessoas[personagem].producao.mes <= lista.length);
   }
   assert.ok(pessoa('leonardo').producao.hoje < 4, 'a norma com 2 versões vale 1');
 });
@@ -231,68 +234,129 @@ test('dado da pessoa que não foi buscado fica "—", nunca 0', () => {
 
 // ---------- Atualizações ----------
 
-test('Atualizações: o Mês atual vem do sistema, mesmo sem a aba do mês; aguardando da aba mais recente', () => {
+test('Atualizações: Hoje, Semana e Mês são as inclusões em Normas da pessoa, pelo sistema', () => {
   const p = pessoa('damaris');
-  assert.equal(p.producao.mes, 3);
-  assert.equal(p.fontes.mes, 'sistema');
+  assert.deepEqual([p.producao.hoje, p.producao.semana, p.producao.mes], [2, 3, 3]);
+  assert.deepEqual([p.fontes.hoje, p.fontes.semana, p.fontes.mes], ['sistema', 'sistema', 'sistema']);
+  // O tipo sai do começo da descrição, com ou sem o ano no número.
+  assert.equal(p.porTipo.hoje.leis, 1);
+  assert.equal(p.porTipo.hoje.decretos, 1);
   assert.equal(soma(p.porTipo.mes), 3);
-  assert.deepEqual(p.aguardando, { valor: 3, fonte: 'planilha', mes: '2026-10' });
-  assert.deepEqual(p.planilha, { mes: '2026-10', importadaEm: '2026-11-01T12:00:00.000Z' });
 });
 
-test('Atualizações: Todo o Tempo soma as abas que conferem (a de outra pessoa fica fora)', () => {
+test('Atualizações: Todo o Tempo é o total de inclusões em Normas do sistema; os tipos ficam "—"', () => {
   const p = pessoa('damaris');
-  assert.equal(p.producao.tudo, 22); // 4 (set) + 18 (out); a aba de agosto tem título de outra pessoa
-  assert.equal(p.fontes.tudo, 'planilha');
-  assert.equal(p.porTipo.tudo.leis, 15);
-  assert.equal(p.porTipo.tudo.resolucoes, 5);
-  assert.equal(p.porTipo.tudo.outros, 2);
+  assert.equal(p.producao.tudo, 250);
+  assert.equal(p.fontes.tudo, 'sistema');
+  assert.equal(p.porTipo.tudo, null);
+});
+
+test('Atualizações: os números de normas não vêm da planilha (com ou sem ela, são os mesmos)', () => {
+  const com = pessoa('gdressano');
+  const sem = pessoa('gdressano', { planilhas: null });
+  assert.deepEqual(com.producao, sem.producao);
+  assert.deepEqual(com.producao, { hoje: 0, semana: 1, mes: 1, tudo: 120 });
+  assert.ok(Object.values(com.fontes).every((f) => f === 'sistema'));
+});
+
+test('Atualizações: cada inclusão é uma linha da Auditoria e conta 1, como no painel', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900006].normasIncluidas.unshift(
+    registro({ modulo: 'Normas', tipo: 'Lei Ordinária', numero: 50, cidade: 'Cidade E-XX', data: '2026-11-04', usuario: 900006 }),
+  );
+  const p = pessoa('gdressano', { auditoria });
+  assert.deepEqual([p.producao.hoje, p.producao.mes], [1, 2]);
+});
+
+test('Atualizações: versões e ações que não são inclusão em Normas não contam', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900006].normasIncluidas.unshift(
+    registro({ modulo: 'Versões', numero: 60, data: '2026-11-04', usuario: 900006 }),
+    registro({ modulo: 'Normas', acao: 2, numero: 61, data: '2026-11-04', usuario: 900006 }),
+  );
+  auditoria[900006].versoes = [registro({ modulo: 'Versões', numero: 62, data: '2026-11-04', usuario: 900006 })];
+  assert.deepEqual(pessoa('gdressano', { auditoria }).producao, { hoje: 0, semana: 1, mes: 1, tudo: 120 });
+});
+
+test('Atualizações: tipo desconhecido vai para Outros e a soma fecha', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900006].normasIncluidas.unshift(
+    registro({ modulo: 'Normas', descricao: 'Instrução normativa nº 3', data: '2026-11-04', usuario: 900006 }),
+  );
+  const p = pessoa('gdressano', { auditoria });
+  assert.equal(p.porTipo.hoje.outros, 1);
+  assert.equal(soma(p.porTipo.mes), p.producao.mes);
+});
+
+test('Atualizações: sem o total de todo o tempo, só o Todo o Tempo fica "—"', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900005].normasIncluidasTotal = null;
+  const p = pessoa('damaris', { auditoria });
+  assert.deepEqual([p.producao.mes, p.producao.tudo, p.fontes.tudo], [3, null, null]);
+});
+
+test('Atualizações: Todo o Tempo menor que o Mês fica "—", com aviso', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900005].normasIncluidasTotal = 2;
+  const avisos = [];
+  const p = pessoa('damaris', { auditoria, avisar: (m) => avisos.push(m) });
+  assert.deepEqual([p.producao.mes, p.producao.tudo], [3, null]);
+  assert.ok(avisos.some((m) => m.includes('damaris')));
+});
+
+test('Atualizações sem a Auditoria (não respondeu): todos os números ficam "—", nunca 0', () => {
+  const auditoria = auditoriaSintetica();
+  delete auditoria[900005];
+  const p = pessoa('damaris', { auditoria });
+  assert.deepEqual(p.producao, { hoje: null, semana: null, mes: null, tudo: null });
+  assert.deepEqual(p.fontes, { hoje: null, semana: null, mes: null, tudo: null });
+});
+
+test('Atualizações: lista no formato antigo (só versões) não vira número', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900005] = { versoes: [registro({ data: '2026-11-04', usuario: 900005 })], normas: [], recentes: [] };
+  assert.deepEqual(pessoa('damaris', { auditoria }).producao, { hoje: null, semana: null, mes: null, tudo: null });
+});
+
+test('Atualizações sem nenhuma inclusão: 0 é 0 (o sistema respondeu)', () => {
+  const p = pessoa('nathalia');
+  assert.deepEqual(p.producao, { hoje: 0, semana: 0, mes: 0, tudo: 0 });
+  assert.equal(p.fontes.mes, 'sistema');
+});
+
+test('D12 opção B por configuração: Hoje e Semana de Atualizações ficam "—"; Mês e Todo o Tempo seguem do sistema', () => {
+  const p = pessoa('damaris', { atualizacoesDiaSemana: 'vazio' });
+  assert.deepEqual([p.producao.hoje, p.producao.semana], [null, null]);
+  assert.deepEqual([p.fontes.hoje, p.fontes.semana], [null, null]);
+  assert.equal(p.porTipo.hoje, null);
+  assert.deepEqual([p.producao.mes, p.fontes.mes, p.producao.tudo, p.fontes.tudo], [3, 'sistema', 250, 'sistema']);
+});
+
+test('Atualizações: carteira e aguardando continuam da planilha (aba do mês ou a mais recente)', () => {
+  const damaris = pessoa('damaris');
+  assert.deepEqual(damaris.aguardando, { valor: 3, fonte: 'planilha', mes: '2026-10' });
+  assert.deepEqual(damaris.planilha, { mes: '2026-10', importadaEm: '2026-11-01T12:00:00.000Z' });
+  const gdressano = pessoa('gdressano');
+  assert.deepEqual(gdressano.aguardando, { valor: 4, fonte: 'planilha', mes: '2026-11' });
+  assert.equal(gdressano.cidades.length, 2);
 });
 
 test('Atualizações: a carteira são as cidades ativas da aba, sem as que saíram', () => {
   assert.deepEqual(pessoa('damaris').cidades.map((c) => c.nome).sort(), ['cidade d', 'cidade e']);
 });
 
-test('Atualizações com a aba do mês: o Mês continua do sistema; aguardando = déficit da aba', () => {
-  assert.deepEqual([pessoa('gdressano').producao.mes, pessoa('gdressano').fontes.mes], [1, 'sistema']);
-  // Só sem o sistema (opção "vazio") o Mês é o das compiladas da aba.
-  const p = pessoa('gdressano', { atualizacoesDiaSemana: 'vazio' });
-  assert.equal(p.producao.mes, 10);
-  assert.equal(p.fontes.mes, 'planilha');
-  assert.equal(p.producao.tudo, 30);
-  assert.equal(p.porTipo.mes.leis, 7);
-  assert.equal(p.porTipo.mes.resolucoes, 3);
-  assert.deepEqual(p.aguardando, { valor: 4, fonte: 'planilha', mes: '2026-11' });
-  assert.equal(p.planilha.mes, '2026-11');
-  assert.equal(p.cidades.length, 2);
-});
-
-test('Atualizações: hoje e semana vêm da Auditoria, com a fonte "sistema" (D12 opção A)', () => {
-  const p = pessoa('damaris');
-  assert.deepEqual([p.producao.hoje, p.producao.semana], [2, 3]);
-  assert.deepEqual([p.fontes.hoje, p.fontes.semana], ['sistema', 'sistema']);
-  assert.equal(soma(p.porTipo.semana), 3);
-});
-
-test('D12 opção B por configuração: hoje e semana de Atualizações ficam "—"', () => {
-  const p = pessoa('damaris', { atualizacoesDiaSemana: 'vazio' });
-  assert.deepEqual([p.producao.hoje, p.producao.semana], [null, null]);
-  assert.deepEqual([p.fontes.hoje, p.fontes.semana], [null, null]);
-  assert.equal(p.porTipo.hoje, null);
-});
-
-test('Atualizações sem nenhuma aba: tudo e aguardando ficam "—"; o Mês segue do sistema (0 é 0)', () => {
+test('Atualizações sem nenhuma aba: carteira e aguardando ficam "—"', () => {
   const p = pessoa('nathalia');
-  assert.deepEqual([p.producao.mes, p.fontes.mes, p.producao.tudo], [0, 'sistema', null]);
   assert.deepEqual(p.aguardando, { valor: null, fonte: null });
   assert.equal(p.planilha, null);
   assert.deepEqual(p.cidades, []);
 });
 
-test('Atualizações: planilhas ainda não lidas (null) dão "—", não zero', () => {
+test('Atualizações: planilhas ainda não lidas (null) deixam carteira e aguardando "—", não zero', () => {
   const p = pessoa('damaris', { planilhas: null });
-  assert.equal(p.producao.tudo, null);
-  assert.equal(pessoa('damaris', { planilhas: null, atualizacoesDiaSemana: 'vazio' }).producao.mes, null);
+  assert.deepEqual(p.aguardando, { valor: null, fonte: null });
+  assert.deepEqual(p.cidades, []);
+  assert.equal(p.producao.mes, 3);
 });
 
 test('o projeto de Atualizações não existe', () => {
@@ -488,22 +552,30 @@ test('carteira: nome da cidade vem do cadastro quando há cidade_id', () => {
 
 test('carteira: a cidade com ação mais recente vem primeiro', () => {
   const auditoria = auditoriaSintetica();
-  auditoria[900006].versoes = [
-    registro({ cidade: 'cidade h-XX', data: '2026-11-04', usuario: 900006 }),
-    registro({ cidade: 'cidade g-XX', data: '2026-11-03', usuario: 900006 }),
+  auditoria[900006].normasIncluidas = [
+    registro({ modulo: 'Normas', cidade: 'cidade h-XX', data: '2026-11-04', usuario: 900006 }),
+    registro({ modulo: 'Normas', cidade: 'cidade g-XX', data: '2026-11-03', usuario: 900006 }),
   ];
   assert.deepEqual(pessoa('gdressano', { auditoria }).cidades.map((c) => c.nome), ['cidade h', 'cidade g']);
 });
 
-test('linha de planilha fora do formato deixa a pessoa sem números de planilha (nunca chuta)', () => {
+test('linha de planilha fora do formato deixa a pessoa sem carteira e aguardando (nunca chuta); as normas seguem', () => {
   const planilhas = {
     abas: planilhasSinteticas.abas,
     linhas: [...planilhasSinteticas.linhas, { personagem: 'gdressano', ano: 2026, mes: 11, balde: 'leis', compiladas: -1, deficit: 0 }],
   };
   const avisos = [];
-  const p = pessoa('gdressano', { planilhas, atualizacoesDiaSemana: 'vazio', avisar: (m) => avisos.push(m) });
-  assert.deepEqual([p.producao.mes, p.producao.tudo, p.aguardando.valor], [null, null, null]);
+  const p = pessoa('gdressano', { planilhas, avisar: (m) => avisos.push(m) });
+  assert.deepEqual([p.aguardando.valor, p.cidades.length], [null, 0]);
+  assert.deepEqual([p.producao.mes, p.producao.tudo], [1, 120]);
   assert.equal(avisos.length, 1);
+});
+
+test('carteira: a ordem também usa as ações recentes de qualquer módulo', () => {
+  const auditoria = auditoriaSintetica();
+  auditoria[900006].normasIncluidas = [registro({ modulo: 'Normas', cidade: 'cidade g-XX', data: '2026-11-03', usuario: 900006 })];
+  auditoria[900006].recentes = [registro({ modulo: 'Arquivos', cidade: 'cidade h-XX', data: '2026-11-04', usuario: 900006 })];
+  assert.deepEqual(pessoa('gdressano', { auditoria }).cidades.map((c) => c.nome), ['cidade h', 'cidade g']);
 });
 
 // ---------- ausência por dias úteis ----------

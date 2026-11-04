@@ -10,8 +10,8 @@
  * Responsabilidades. A configurada no servidor (`pessoa.funcao`) é uma das duas
  * primeiras; qualquer pessoa da página pode trocar pelo "Alterar", e a escolha
  * salva (/api/compilacao/responsabilidades) vale no lugar da configurada:
- *   atualizacoes          mantém em dia as normas das cidades da carteira (Hoje, Semana
- *                         e Mês pelo sistema; Todo o Tempo, carteira e aguardando pela planilha)
+ *   atualizacoes          mantém em dia as normas das cidades da carteira (normas pelo
+ *                         sistema, inclusões em Normas; carteira e aguardando pela planilha)
  *   projetos              monta a base de uma cidade nova (cidade e tipo(s) pelo sistema)
  *   projetos_finalizando  fechando o projeto: as ações não contam, o card mostra as vinculadas
  *   projetos_sem_normas   sem normas para compilar: a seção Normas fica desativada

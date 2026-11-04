@@ -2,16 +2,18 @@
 // server/legislacao.mjs) e as planilhas importadas no Supabase, e entrega tudo a
 // scripts/lib/build-compilacao.mjs, que monta a resposta pública.
 //
-// Custo de uma busca (~35 pedidos ao sistema): tipos e cidades (2), por pessoa
-// as versões novas do período (7, uma página de 2.000 cada no uso normal) e a 1ª
-// página da Auditoria (7), as Normas recentes de quem faz Projetos (4), 3
-// contagens por par cidade×tipo (no máximo MAX_PARES pares, ou seja, 18) e 1
-// contagem de normas vinculadas por cidade de projeto (no máximo 4).
+// Custo de uma busca (~38 pedidos ao sistema): tipos e cidades (2), por pessoa
+// uma página de 2.000 no uso normal (7: as versões novas do período de quem faz
+// Projetos; as inclusões em Normas, com o total de todo o tempo, de quem faz
+// Atualizações) e a 1ª página da Auditoria (7), as Normas recentes de quem faz
+// Projetos (4), 3 contagens por par cidade×tipo (no máximo MAX_PARES pares, ou
+// seja, 18) e 1 contagem de normas vinculadas por cidade de projeto (no máximo 4).
 // No Supabase, mais ~4 pedidos: o histórico do Todo o Tempo de Projetos (F6).
 // Os avisos vão para o log só com contagens e ids públicos de personagem.
 import { cidadesDosProjetos, montarCompilacao, paresDosProjetos } from '../scripts/lib/build-compilacao.mjs';
 import { lerEquipe } from '../scripts/lib/compilacao/configuracao.mjs';
 import { calcularPeriodos } from '../scripts/lib/compilacao/periodos.mjs';
+import { dataDoItem, instanteDoItem, itensEntre } from '../scripts/lib/compilacao/itens.mjs';
 import { chaveDoPar } from '../scripts/lib/compilacao/projeto.mjs';
 import { CATALOGO, catalogoDeModulos, normalizar } from '../scripts/lib/compilacao/tipos.mjs';
 import { decidirProjetos, linhasDoRetrato, repositorioAtribuicoes } from './compilacao-atribuicoes.mjs';
@@ -22,6 +24,11 @@ import { SupabaseError } from './supabase.mjs';
 // Janela para cidade/tipo do projeto e "sem atividade": cobre 10 dias úteis.
 export const JANELA_DIAS = 16;
 const PAGINA_RECENTES = 50;
+// Inclusões em Normas de Atualizações: páginas de 2.000; 5 páginas = 10.000 no
+// período (cerca de 5 semanas), bem acima do que a equipe faz.
+const PAGINA_NORMAS = 2000;
+export const MAX_PAGINAS_NORMAS = 5;
+const INICIO_DE_TUDO = '2000-01-01';
 // O PostgREST do Supabase devolve no máximo 1.000 linhas por pedido.
 const LINHAS_POR_PEDIDO = 1000;
 const MAX_LINHAS = 50_000;
@@ -41,11 +48,50 @@ export function conferirUmaPessoa(listas) {
   }
 }
 
-// Versões: só as inclusões (acao=1), que são a produção. Hoje, Semana e Mês vêm
-// daqui para todas as pessoas, então a busca vai desde o começo do mês (ou da
-// semana ou da janela, o que vier antes).
-async function auditoriaDaPessoa(cliente, membro, { inicioVersoes: dataInicial, inicioJanela, hoje }) {
+// A Auditoria vem da ação mais nova para a mais antiga: lista em ordem se cada
+// item não é mais novo que o anterior.
+const emOrdemDecrescente = (itens) => itens.every((item, i) => i === 0 || instanteDoItem(item) <= instanteDoItem(itens[i - 1]));
+
+// Atualizações: inclusões em Normas (acao=1) da pessoa, que são a produção dela.
+// Desde 2000 até hoje, a 1ª página (2.000) traz o total de todo o tempo e, no uso
+// normal, o período inteiro: 1 pedido. Segue de página em página até passar do
+// começo do período. Se a ordem não for a esperada, lê só o período e o Todo o
+// Tempo fica "—". (Só dataFinal, sem dataInicial, o painel devolve 0.)
+async function inclusoesDeNormas(cliente, pessoa, { inicio, hoje, avisar, personagem }) {
+  const filtro = { ...pessoa, modulo: 'Normas', acao: 1 };
+  const todoOTempo = { ...filtro, dataInicial: INICIO_DE_TUDO, dataFinal: hoje };
+  const itens = [];
+  let total = null;
+  for (let page = 0; ; page += 1) {
+    if (page >= MAX_PAGINAS_NORMAS) {
+      throw new LegislacaoError('Inclusões em Normas demais no período (Auditoria).');
+    }
+    const lista = await cliente.pagina('Auditoria', todoOTempo, { page, limit: PAGINA_NORMAS });
+    total ??= lista.total;
+    itens.push(...lista.items);
+    const maisAntiga = dataDoItem(lista.items.at(-1));
+    if (lista.items.length === 0 || itens.length >= lista.total || (maisAntiga && maisAntiga < inicio)) break;
+  }
+  conferirUmaPessoa([itens]);
+  if (!emOrdemDecrescente(itens)) {
+    avisar(`a Auditoria de ${personagem} veio fora de ordem; o Todo o Tempo fica "—"`);
+    const doPeriodo = await cliente.listarTudo('Auditoria', { ...filtro, dataInicial: inicio, dataFinal: hoje });
+    return { normasIncluidas: doPeriodo, normasIncluidasTotal: null };
+  }
+  return { normasIncluidas: itensEntre(itens, inicio, hoje), normasIncluidasTotal: total };
+}
+
+// Projetos: versões, só as inclusões (acao=1), que são a produção. Hoje, Semana e
+// Mês vêm daqui, então a busca vai desde o começo do mês (ou da semana ou da
+// janela, o que vier antes). Atualizações: inclusões em Normas, desde o mesmo dia.
+async function auditoriaDaPessoa(cliente, membro, { inicioVersoes: dataInicial, inicioJanela, hoje, avisar }) {
   const pessoa = { usuarioId: membro.usuarioId };
+  if (membro.funcao === 'atualizacoes') {
+    const normas = await inclusoesDeNormas(cliente, pessoa, { inicio: dataInicial, hoje, avisar, personagem: membro.personagem });
+    const recentes = await cliente.primeiraPagina('Auditoria', pessoa, { limit: PAGINA_RECENTES });
+    conferirUmaPessoa([normas.normasIncluidas, recentes]);
+    return { ...normas, recentes };
+  }
   const versoes = await cliente.listarTudo('Auditoria', { ...pessoa, modulo: 'Versões', acao: 1, dataInicial, dataFinal: hoje });
   const normas =
     membro.funcao === 'projetos'
@@ -160,7 +206,7 @@ export async function lerPlanilhas(pedir, personagens) {
 /**
  * Busca tudo e devolve os `dados` de /api/compilacao.
  * @param {{
- *   cliente: { contar: Function, listarTudo: Function, primeiraPagina: Function },
+ *   cliente: { contar: Function, listarTudo: Function, primeiraPagina: Function, pagina: Function },
  *   pedirSupabase?: ((caminho: string) => Promise<unknown>) | null,
  *   env?: Record<string, string | undefined>,
  *   agora?: Date,
@@ -182,7 +228,7 @@ export async function buscarCompilacao({
   const { catalogo, doSistema: catalogoDoSistema } = await lerCatalogo(cliente, avisar);
 
   const resultados = await Promise.allSettled(
-    equipe.map((membro) => auditoriaDaPessoa(cliente, membro, { inicioVersoes, inicioJanela, hoje })),
+    equipe.map((membro) => auditoriaDaPessoa(cliente, membro, { inicioVersoes, inicioJanela, hoje, avisar })),
   );
   // Sem nenhuma pessoa (login recusado, sistema fora): erro, e o cache antigo continua.
   if (resultados.every((r) => r.status === 'rejected')) throw resultados[0].reason;

@@ -265,6 +265,14 @@ export function criarClienteLegislacao({
     return (await lerLista(controller, montarQuery(filtros, 0, limit))).items;
   }
 
+  /** Uma página (`page` desde 0, `limit` de 1 a 2.000), com o total: { items, total }. */
+  async function pagina(controller, filtros = {}, { page = 0, limit = 2000 } = {}) {
+    const valido = Number.isInteger(page) && page >= 0 && Number.isInteger(limit) && limit >= 1 && limit <= 2000;
+    if (!valido) throw new LegislacaoError('Página inválida para o Legislação Digital.');
+    const { items, total } = await lerLista(controller, montarQuery(filtros, page, limit));
+    return { items, total };
+  }
+
   /**
    * O último item da lista (a Auditoria vem do mais novo para o mais antigo, então é
    * o registro mais antigo), em 2 pedidos: o total e a página `total - 1` com 1 item.
@@ -290,7 +298,7 @@ export function criarClienteLegislacao({
     return { total, semFiltro };
   }
 
-  return { contar, listarTudo, primeiraPagina, ultimoItem, contarComFiltro };
+  return { contar, listarTudo, primeiraPagina, pagina, ultimoItem, contarComFiltro };
 }
 
 /** Cliente com as credenciais de LEGISLACAO_USUARIO/LEGISLACAO_SENHA. */

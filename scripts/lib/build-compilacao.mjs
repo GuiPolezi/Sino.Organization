@@ -19,7 +19,7 @@ import { normasComBalde } from './compilacao/normas-distintas.mjs';
 import { calcularPeriodos } from './compilacao/periodos.mjs';
 import { chaveDoPar, colegasNoPar, estoqueFecha, inferirProjeto, projetoPublico } from './compilacao/projeto.mjs';
 import { resumirPlanilhas } from './compilacao/resumo-planilhas.mjs';
-import { BALDES, CATALOGO } from './compilacao/tipos.mjs';
+import { BALDES, CATALOGO, baldeDoModulo, tipoDaDescricao } from './compilacao/tipos.mjs';
 
 // Dias úteis sem ação para "sem atividade desde" e para "ausente".
 const UTEIS_SEM_ATIVIDADE = 2;
@@ -61,9 +61,31 @@ function producaoDoSistema(entrada, periodos, catalogo, avisar) {
   return resultado;
 }
 
+// Atualizações: cada inclusão em Normas (Auditoria, ação 1) da pessoa é uma norma
+// cadastrada e conta 1, como no painel. O tipo sai do começo da descrição (com ou
+// sem o ano no número); desconhecido vai para "Outros". Todo o Tempo é o total da
+// lista (o sistema já devolve filtrado), sem quebra por tipo. null sem a lista.
+function producaoDeNormas(entrada, periodos, catalogo) {
+  if (!Array.isArray(entrada?.normasIncluidas)) return null;
+  const inclusoes = entrada.normasIncluidas.filter((i) => ehDoModulo(i, 'Normas') && ehInclusao(i));
+  const janelas = { hoje: { inicio: periodos.hoje, fim: periodos.hoje }, semana: periodos.semana, mes: periodos.mes };
+  const resultado = {};
+  for (const periodo of PERIODOS_DO_SISTEMA) {
+    const porBalde = Object.fromEntries(BALDES.map((b) => [b, 0]));
+    const doPeriodo = itensEntre(inclusoes, janelas[periodo].inicio, janelas[periodo].fim);
+    for (const item of doPeriodo) porBalde[baldeDoModulo(tipoDaDescricao(item.descricao, catalogo))] += 1;
+    resultado[periodo] = { total: doPeriodo.length, porBalde };
+  }
+  const total = entrada.normasIncluidasTotal;
+  resultado.todoOTempo = Number.isInteger(total) && total >= 0 ? total : null;
+  return resultado;
+}
+
 function ausencia(entrada, hoje) {
   if (!entrada) return { ausente: false, semAtividadeDesde: null };
-  const datas = [...(entrada.versoes ?? []), ...(entrada.normas ?? []), ...(entrada.recentes ?? [])]
+  const listas = [entrada.versoes, entrada.normas, entrada.normasIncluidas, entrada.recentes];
+  const datas = listas
+    .flatMap((lista) => lista ?? [])
     .map(dataDoItem)
     .filter((d) => d && d <= hoje);
   if (datas.length === 0) return { ausente: true, semAtividadeDesde: null };
@@ -143,33 +165,32 @@ function pessoaDeProjetos(membro, ctx) {
 
 function pessoaDeAtualizacoes(membro, ctx) {
   const entrada = ctx.auditoria?.[membro.usuarioId];
-  const sistema = ctx.atualizacoesDiaSemana === 'auditoria' ? producaoDoSistema(entrada, ctx.periodos, ctx.catalogo, ctx.avisar) : null;
+  const sistema = producaoDeNormas(entrada, ctx.periodos, ctx.catalogo);
   const resumo = resumirPlanilhas(membro.personagem, ctx.planilhas, ctx.periodos.hoje, {
     cidadesPorId: ctx.cidadesPorId,
-    versoes: entrada?.versoes,
+    acoes: [...(entrada?.normasIncluidas ?? []), ...(entrada?.recentes ?? [])],
     avisar: ctx.avisar,
   });
   const producao = vazio();
   const fontes = vazio();
   const porTipo = vazio();
-  // Hoje, Semana e o Mês atual vêm do sistema (decisão de 04/11: o Mês da planilha
-  // ficava "—" até a aba do mês ser importada). A planilha fica com o Todo o Tempo,
-  // a carteira e o aguardando. Só sem o sistema (opção "vazio") o Mês é da planilha.
+  // Os números de normas vêm todos do sistema (decisão do líder, 04/11: inclusões
+  // em Normas na Auditoria da pessoa). A planilha fica só com a carteira e o
+  // aguardando (DÉFICIT). Com a opção "vazio", Hoje e Semana ficam "—".
   if (sistema) {
-    for (const p of PERIODOS_DO_SISTEMA) {
-      producao[p] = sistema[p].distintas;
+    const periodos = ctx.atualizacoesDiaSemana === 'vazio' ? ['mes'] : PERIODOS_DO_SISTEMA;
+    for (const p of periodos) {
+      producao[p] = sistema[p].total;
       fontes[p] = 'sistema';
       porTipo[p] = sistema[p].porBalde;
     }
-  } else if (resumo?.mes != null) {
-    producao.mes = resumo.mes;
-    fontes.mes = 'planilha';
-    porTipo.mes = resumo.porTipoMes;
-  }
-  if (resumo) {
-    producao.tudo = resumo.tudo;
-    fontes.tudo = 'planilha';
-    porTipo.tudo = resumo.porTipoTudo;
+    // I3: Todo o Tempo >= Mês (as duas contas são da mesma lista).
+    if (sistema.todoOTempo !== null && sistema.todoOTempo >= sistema.mes.total) {
+      producao.tudo = sistema.todoOTempo;
+      fontes.tudo = 'sistema';
+    } else if (sistema.todoOTempo !== null) {
+      ctx.avisar(`Todo o Tempo de ${membro.personagem} menor que o Mês; fica "—"`);
+    }
   }
   return {
     funcao: 'atualizacoes',
