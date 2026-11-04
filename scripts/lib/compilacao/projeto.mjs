@@ -92,16 +92,30 @@ export function inferirProjeto(entrada, catalogo = CATALOGO) {
 
 export const chaveDoPar = (cidadeUf, moduloId) => `${cidadeUf}|${moduloId}`;
 
-// I4: inteiros >= 0 e versionadas + não versionadas = total.
+// I4: inteiros >= 0 e versionadas + não versionadas = total (números brutos do sistema).
 export function estoqueFecha(e) {
   const inteiros = [e?.total, e?.versionadas, e?.naoVersionadas].every((n) => Number.isInteger(n) && n >= 0);
   return inteiros && e.versionadas + e.naoVersionadas === e.total;
 }
 
-/** Estoque somado dos tipos do projeto; null se faltar algum tipo ou algum não fechar (I4). */
+/**
+ * Aguardando do par (de um estoque que fecha): as sem versão menos as ignoradas
+ * (ver compilacao/ignoradas.mjs). null se as ignoradas não vieram ou não cabem:
+ * nunca o número bruto, que contaria normas que não serão compiladas.
+ */
+export function aguardandoDoPar(e) {
+  const ok = Number.isInteger(e?.ignoradas) && e.ignoradas >= 0 && e.ignoradas <= e.naoVersionadas;
+  return ok ? e.naoVersionadas - e.ignoradas : null;
+}
+
+/**
+ * Estoque somado dos tipos do projeto; null se faltar algum tipo ou algum não fechar
+ * (I4). Se algum tipo vier sem as ignoradas, só aguardando e ignoradas ficam null.
+ */
 export function estoqueDoProjeto(projeto, estoque, avisar = () => {}) {
   if (!projeto || projeto.moduloIds.length === 0) return null;
-  const soma = { total: 0, compiladas: 0, aguardando: 0 };
+  const soma = { total: 0, compiladas: 0, aguardando: 0, ignoradas: 0 };
+  let semIgnoradas = false;
   for (const id of projeto.moduloIds) {
     const e = estoque?.[chaveDoPar(projeto.cidadeUf, id)];
     if (!e) return null;
@@ -111,7 +125,16 @@ export function estoqueDoProjeto(projeto, estoque, avisar = () => {}) {
     }
     soma.total += e.total;
     soma.compiladas += e.versionadas;
-    soma.aguardando += e.naoVersionadas;
+    const aguardando = aguardandoDoPar(e);
+    if (aguardando === null) semIgnoradas = true;
+    else {
+      soma.aguardando += aguardando;
+      soma.ignoradas += e.ignoradas;
+    }
+  }
+  if (semIgnoradas) {
+    avisar('normas ignoradas de um par do projeto não vieram; o aguardando fica "—"');
+    return { ...soma, aguardando: null, ignoradas: null };
   }
   return soma;
 }
@@ -125,6 +148,7 @@ export function projetoPublico(projeto, estoque, compartilhadaCom, { catalogo = 
     total: numeros?.total ?? null,
     compiladas: numeros?.compiladas ?? null,
     aguardando: numeros?.aguardando ?? null,
+    ignoradas: numeros?.ignoradas ?? null,
     compartilhadaCom,
   };
 }

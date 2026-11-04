@@ -157,16 +157,66 @@ test('o projeto vem da Auditoria recente: cidade e tipo dominante', () => {
     total: 40,
     compiladas: 30,
     aguardando: 10,
+    ignoradas: 0,
     compartilhadaCom: [],
   });
   assert.deepEqual(cidades, [{ nome: 'Cidade A', uf: 'XX' }]);
 });
 
-test('I4: compiladas + aguardando = total no projeto', () => {
+test('I4: compiladas + aguardando + ignoradas = total no projeto', () => {
+  const estoque = { ...estoqueSintetico, 'Cidade A-XX|24': { total: 60, versionadas: 20, naoVersionadas: 40, ignoradas: 6 } };
   for (const id of ['leonardo', 'ramon', 'glopes', 'laura']) {
-    const { projeto } = pessoa(id);
-    assert.equal(projeto.compiladas + projeto.aguardando, projeto.total, id);
+    const { projeto } = pessoa(id, { estoque });
+    assert.equal(projeto.compiladas + projeto.aguardando + projeto.ignoradas, projeto.total, id);
   }
+});
+
+// ---------- normas ignoradas (Eficácia prejudicada, Finanças e orçamento público, arquivo ilegível) ----------
+
+test('Projetos: o aguardando desconta as normas ignoradas, e o projeto diz quantas foram', () => {
+  const estoque = { ...estoqueSintetico, 'Cidade A-XX|28': { total: 40, versionadas: 30, naoVersionadas: 10, ignoradas: 3 } };
+  const p = pessoa('leonardo', { estoque });
+  assert.deepEqual([p.projeto.total, p.projeto.compiladas, p.projeto.aguardando, p.projeto.ignoradas], [40, 30, 7, 3]);
+  assert.deepEqual(p.aguardando, { valor: 7, fonte: 'normas' });
+});
+
+test('Projetos: com vários tipos, as ignoradas são somadas por tipo', () => {
+  const estoque = {
+    ...estoqueSintetico,
+    'Cidade B-XX|23': { total: 50, versionadas: 30, naoVersionadas: 20, ignoradas: 5 },
+    'Cidade B-XX|24': { total: 30, versionadas: 10, naoVersionadas: 20, ignoradas: 2 },
+  };
+  const { projeto } = pessoa('glopes', { estoque });
+  assert.deepEqual([projeto.total, projeto.compiladas, projeto.aguardando, projeto.ignoradas], [80, 40, 33, 7]);
+});
+
+test('Projetos: todas as sem versão ignoradas dá aguardando 0 (zero de verdade)', () => {
+  const estoque = { ...estoqueSintetico, 'Cidade A-XX|28': { total: 40, versionadas: 30, naoVersionadas: 10, ignoradas: 10 } };
+  assert.deepEqual(pessoa('leonardo', { estoque }).aguardando, { valor: 0, fonte: 'normas' });
+});
+
+test('Projetos: ignoradas que não vieram ou fora do formato deixam o aguardando "—", nunca o número bruto', () => {
+  for (const ignoradas of [undefined, null, -1, 11, 1.5, '3']) {
+    const estoque = { ...estoqueSintetico, 'Cidade A-XX|28': { total: 40, versionadas: 30, naoVersionadas: 10, ignoradas } };
+    const p = pessoa('leonardo', { estoque });
+    assert.deepEqual([p.projeto.aguardando, p.projeto.ignoradas], [null, null], String(ignoradas));
+    assert.deepEqual(p.aguardando, { valor: null, fonte: null }, String(ignoradas));
+    // O estoque bruto fecha: total e compiladas continuam.
+    assert.deepEqual([p.projeto.total, p.projeto.compiladas], [40, 30], String(ignoradas));
+  }
+});
+
+test('Projetos: se um dos tipos não trouxe as ignoradas, o aguardando do projeto todo fica "—"', () => {
+  const estoque = { ...estoqueSintetico, 'Cidade B-XX|24': { total: 30, versionadas: 10, naoVersionadas: 20 } };
+  const { projeto } = pessoa('glopes', { estoque });
+  assert.deepEqual([projeto.total, projeto.compiladas, projeto.aguardando, projeto.ignoradas], [80, 40, null, null]);
+});
+
+test('fila da equipe: Projetos soma o aguardando já sem as ignoradas; par sem ignoradas válidas fica fora', () => {
+  const comIgnoradas = { ...estoqueSintetico, 'Cidade A-XX|24': { total: 60, versionadas: 20, naoVersionadas: 40, ignoradas: 25 } };
+  assert.equal(filaDaEquipe(entradas({ estoque: comIgnoradas })).projetos, 80); // 105 - 25
+  const semIgnoradas = { ...estoqueSintetico, 'Cidade A-XX|24': { total: 60, versionadas: 20, naoVersionadas: 40 } };
+  assert.equal(filaDaEquipe(entradas({ estoque: semIgnoradas })).projetos, 65); // 105 - 40
 });
 
 test('tipo misturado: entram os tipos com 20% ou mais e o estoque é somado', () => {
@@ -183,7 +233,7 @@ test('I4: estoque que não fecha deixa os números do projeto em branco', () => 
   const estoque = { ...estoqueSintetico, 'Cidade A-XX|28': { total: 40, versionadas: 30, naoVersionadas: 11 } };
   const p = pessoa('leonardo', { estoque });
   assert.equal(p.projeto.cidade.nome, 'Cidade A');
-  assert.deepEqual([p.projeto.total, p.projeto.compiladas, p.projeto.aguardando], [null, null, null]);
+  assert.deepEqual([p.projeto.total, p.projeto.compiladas, p.projeto.aguardando, p.projeto.ignoradas], [null, null, null, null]);
   assert.deepEqual(p.aguardando, { valor: null, fonte: null });
 });
 

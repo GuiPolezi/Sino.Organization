@@ -6,8 +6,9 @@
 // uma página de 2.000 no uso normal (7: as versões novas do período de quem faz
 // Projetos; as inclusões em Normas, com o total de todo o tempo, de quem faz
 // Atualizações) e a 1ª página da Auditoria (7), as Normas recentes de quem faz
-// Projetos (4), 3 contagens por par cidade×tipo (no máximo MAX_PARES pares, ou
-// seja, 18) e 1 contagem de normas vinculadas por cidade de projeto (no máximo 4).
+// Projetos (4), por par cidade×tipo 2 contagens e a lista das sem versão, 1 página
+// de 2.000 no uso normal (no máximo MAX_PARES pares, ou seja, 18), e 1 contagem de
+// normas vinculadas por cidade de projeto (no máximo 4).
 // No Supabase, mais ~4 pedidos: o histórico do Todo o Tempo de Projetos (F6).
 // Os avisos vão para o log só com contagens e ids públicos de personagem.
 import { cidadesDosProjetos, montarCompilacao, paresDosProjetos } from '../scripts/lib/build-compilacao.mjs';
@@ -15,6 +16,7 @@ import { lerEquipe } from '../scripts/lib/compilacao/configuracao.mjs';
 import { calcularPeriodos } from '../scripts/lib/compilacao/periodos.mjs';
 import { dataDoItem, instanteDoItem, itensEntre } from '../scripts/lib/compilacao/itens.mjs';
 import { chaveDoPar } from '../scripts/lib/compilacao/projeto.mjs';
+import { contarIgnoradas, normaNoFormato } from '../scripts/lib/compilacao/ignoradas.mjs';
 import { CATALOGO, catalogoDeModulos, normalizar } from '../scripts/lib/compilacao/tipos.mjs';
 import { decidirProjetos, linhasDoRetrato, repositorioAtribuicoes } from './compilacao-atribuicoes.mjs';
 import { repositorioHistorico, todoOTempoDosProjetos } from './compilacao-historico.mjs';
@@ -33,9 +35,14 @@ const INICIO_DE_TUDO = '2000-01-01';
 const LINHAS_POR_PEDIDO = 1000;
 const MAX_LINHAS = 50_000;
 // Teto de pares cidade×tipo com estoque por busca: 20 pedidos fixos + 6 × 3 = 38,
-// mais 1 por cidade de projeto (vinculadas, até 4): no pior caso 42 (hoje são 5
-// pares em 3 cidades, 38 pedidos).
+// mais 1 por cidade de projeto (vinculadas, até 4): 42 com até 2.000 sem versão por
+// par (hoje são 5 pares em 3 cidades, 38 pedidos).
 export const MAX_PARES = 6;
+// Lista das sem versão de um par: páginas de 2.000, no máximo 3 (6.000 normas por
+// par). Cada página a mais é 1 pedido: no pior caso, 20 + 6 × (2 + 3) + 4 = 54.
+// Acima do teto, o par fica "—".
+const PAGINA_SEM_VERSAO = 2000;
+export const MAX_PAGINAS_SEM_VERSAO = 3;
 
 const diasAntes = (data, dias) => new Date(Date.parse(`${data}T00:00:00Z`) - dias * 86_400_000).toISOString().slice(0, 10);
 
@@ -131,6 +138,33 @@ async function lerCidades(cliente, avisar) {
   return { idPorCidadeUf, cidadesPorId };
 }
 
+// As normas sem versão (versionada = 2) do par, página a página, com o total que o
+// sistema dá. Lista incompleta, com norma repetida (a lista mudou no meio) ou fora do
+// formato que a regra das ignoradas lê é erro: o par fica "—", nunca com um número chutado.
+async function normasSemVersao(cliente, filtro) {
+  const ids = new Set();
+  const normas = [];
+  let total = null;
+  for (let page = 0; total === null || normas.length < total; page += 1) {
+    const lista = await cliente.pagina('Normas', { ...filtro, versionada: 2 }, { page, limit: PAGINA_SEM_VERSAO });
+    total ??= lista.total;
+    if (total > MAX_PAGINAS_SEM_VERSAO * PAGINA_SEM_VERSAO) {
+      throw new LegislacaoError('Normas sem versão demais num par cidade×tipo.');
+    }
+    if (lista.items.length === 0) break;
+    for (const norma of lista.items) {
+      if (!normaNoFormato(norma) || ids.has(norma.id)) throw new LegislacaoError('Lista de normas sem versão fora do esperado.');
+      ids.add(norma.id);
+      normas.push(norma);
+    }
+  }
+  if (normas.length !== total) throw new LegislacaoError('Lista de normas sem versão incompleta.');
+  return normas;
+}
+
+// Por par: total e versionadas em 2 contagens; as sem versão pela lista, que dá o
+// número bruto (naoVersionadas, para a checagem I4) e as que não serão compiladas
+// (ignoradas: Eficácia prejudicada, Finanças e orçamento público, arquivo ilegível).
 async function estoqueDosPares(cliente, pares, idPorCidadeUf, avisar) {
   const estoque = {};
   for (const { cidadeUf, moduloId } of pares) {
@@ -141,12 +175,13 @@ async function estoqueDosPares(cliente, pares, idPorCidadeUf, avisar) {
     }
     const filtro = { cidadeId, moduloId };
     try {
-      const [total, versionadas, naoVersionadas] = await Promise.all([
+      const [total, versionadas, semVersao] = await Promise.all([
         cliente.contar('Normas', filtro),
         cliente.contar('Normas', { ...filtro, versionada: 1 }),
-        cliente.contar('Normas', { ...filtro, versionada: 2 }),
+        normasSemVersao(cliente, filtro),
       ]);
-      estoque[chaveDoPar(cidadeUf, moduloId)] = { total, versionadas, naoVersionadas };
+      const { ignoradas } = contarIgnoradas(semVersao);
+      estoque[chaveDoPar(cidadeUf, moduloId)] = { total, versionadas, naoVersionadas: semVersao.length, ignoradas };
     } catch {
       avisar('estoque de um par cidade×tipo não respondeu');
     }

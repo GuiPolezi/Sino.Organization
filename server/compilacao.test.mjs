@@ -9,7 +9,7 @@ import {
   registro,
 } from '../scripts/lib/compilacao/compilacao-sintetica.mjs';
 import { CompilacaoError } from '../scripts/lib/compilacao/configuracao.mjs';
-import { MAX_PAGINAS_NORMAS, MAX_PARES, buscarCompilacao, lerPlanilhas } from './compilacao.mjs';
+import { MAX_PAGINAS_NORMAS, MAX_PAGINAS_SEM_VERSAO, MAX_PARES, buscarCompilacao, lerPlanilhas } from './compilacao.mjs';
 import { LegislacaoError } from './legislacao.mjs';
 
 // Cadastro de cidades inventado: ids 1001-1009, "Cidade A-XX" etc.
@@ -24,8 +24,25 @@ const cidadeUfDoId = new Map(CIDADES.map((c) => [c.id, c.nomeUf]));
 // Normas vinculadas (vinculada = 1) por cidade, inventadas.
 const VINCULADAS = { 1001: 7, 1002: 0, 1003: 12 };
 
+// Norma sem versão inventada, no formato da listagem de Normas/Get (só os campos da regra).
+const normaSemVersao = (id, extra = {}) => ({
+  id,
+  situacaoSingular: 'Não consta revogação expressa',
+  eficaciaPrejudicada: false,
+  classificacao: 'Assunto inventado',
+  observacoes: null,
+  ementaAssunto: 'Ementa inventada.',
+  ...extra,
+});
+// Lista sem versão de cada par: as primeiras `ignoradas` com "Eficácia prejudicada".
+const listaDoEstoque = (e, base) =>
+  Array.from({ length: e.naoVersionadas }, (_, i) =>
+    normaSemVersao(base + i, i < (e.ignoradas ?? 0) ? { situacaoSingular: 'Eficácia prejudicada' } : {}),
+  );
+
 // Cliente falso do Legislação Digital: responde com as fixtures e grava cada pedido.
-function clienteFalso({ auditoria = auditoriaSintetica(), estoque = estoqueSintetico, falhar = () => false } = {}) {
+// `semVersao` troca a lista sem versão de um par ("Cidade A-XX|28") por { items, total? }.
+function clienteFalso({ auditoria = auditoriaSintetica(), estoque = estoqueSintetico, semVersao = {}, falhar = () => false } = {}) {
   const pedidos = [];
   const anotar = (metodo, controller, filtros, opcoes) => {
     pedidos.push({ metodo, controller, filtros, opcoes });
@@ -41,9 +58,16 @@ function clienteFalso({ auditoria = auditoriaSintetica(), estoque = estoqueSinte
       if (filtros.modulo === 'Normas') return (filtros.acao === 1 ? entrada.normasIncluidas : entrada.normas) ?? [];
       return entrada.versoes ?? [];
     },
-    // Uma página da lista de inclusões em Normas (Atualizações), da mais nova para a mais antiga.
+    // Normas: uma página da lista sem versão de um par. Auditoria: uma página da lista
+    // de inclusões em Normas (Atualizações), da mais nova para a mais antiga.
     async pagina(controller, filtros = {}, { page = 0, limit = 2000 } = {}) {
       anotar('pagina', controller, filtros, { page, limit });
+      if (controller === 'Normas') {
+        const chave = `${cidadeUfDoId.get(filtros.cidadeId)}|${filtros.moduloId}`;
+        const e = estoque[chave] ?? { naoVersionadas: 0 };
+        const { items = listaDoEstoque(e, filtros.cidadeId * 100_000), total = items.length } = semVersao[chave] ?? {};
+        return { items: items.slice(page * limit, (page + 1) * limit), total };
+      }
       const entrada = auditoria[filtros.usuarioId] ?? {};
       const itens = entrada.normasIncluidas ?? [];
       return { items: itens.slice(page * limit, (page + 1) * limit), total: entrada.normasIncluidasTotal ?? itens.length };
@@ -121,12 +145,86 @@ test('a Auditoria é sempre pedida por pessoa, com o período certo', async () =
   assert.deepEqual(inclusoes.map((p) => String(p.filtros.usuarioId)).sort(), ['900005', '900006', '900007']);
 });
 
-test('o estoque é contado uma vez por par cidade×tipo, com total e versionada 1 e 2', async () => {
+test('o estoque de cada par cidade×tipo: contagens do total e da versionada 1, e a lista da versionada 2', async () => {
   const cliente = clienteFalso();
   await buscar({ cliente });
-  const contagens = cliente.pedidos.filter((p) => p.controller === 'Normas' && p.filtros.moduloId !== undefined);
-  assert.equal(contagens.length, 5 * 3); // A|28, A|24, B|23, B|24, C|28
-  assert.deepEqual(new Set(contagens.map((p) => p.filtros.versionada ?? 0)), new Set([0, 1, 2]));
+  const doEstoque = cliente.pedidos.filter((p) => p.controller === 'Normas' && p.filtros.moduloId !== undefined);
+  assert.equal(doEstoque.length, 5 * 3); // A|28, A|24, B|23, B|24, C|28
+  const contagens = doEstoque.filter((p) => p.metodo === 'contar');
+  assert.deepEqual(contagens.map((p) => p.filtros.versionada ?? 0).sort(), [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
+  const listas = doEstoque.filter((p) => p.metodo === 'pagina');
+  assert.equal(listas.length, 5);
+  assert.ok(listas.every((p) => p.filtros.versionada === 2 && p.opcoes.page === 0 && p.opcoes.limit === 2000));
+  assert.ok(listas.every((p) => Object.keys(p.filtros).sort().join() === 'cidadeId,moduloId,versionada'));
+});
+
+// ---------- normas ignoradas no aguardando de Projetos Novos ----------
+
+const paginasDoPar = (cliente, cidadeId, moduloId) =>
+  cliente.pedidos.filter((p) => p.metodo === 'pagina' && p.controller === 'Normas' && p.filtros.cidadeId === cidadeId && p.filtros.moduloId === moduloId);
+
+test('as normas ignoradas saem do aguardando: situação, classificação e arquivo ilegível, cada uma uma vez', async () => {
+  const items = [
+    normaSemVersao(1),
+    normaSemVersao(2, { situacaoSingular: 'Eficácia prejudicada' }),
+    normaSemVersao(3, { classificacao: 'Finanças e orçamento público' }),
+    normaSemVersao(4, { situacaoSingular: 'Eficácia prejudicada', classificacao: 'Finanças e orçamento público' }),
+    normaSemVersao(5, { observacoes: 'PDF ilegível' }),
+    normaSemVersao(6, { classificacao: 'Finanças e orçamento' }), // sem "público": continua
+    ...Array.from({ length: 4 }, (_, i) => normaSemVersao(7 + i)),
+  ];
+  const dados = await buscar({ cliente: clienteFalso({ semVersao: { 'Cidade A-XX|28': { items } } }) });
+  const { leonardo } = dados.pessoas;
+  assert.deepEqual(
+    [leonardo.projeto.total, leonardo.projeto.compiladas, leonardo.projeto.aguardando, leonardo.projeto.ignoradas],
+    [40, 30, 6, 4],
+  );
+  assert.deepEqual(leonardo.aguardando, { valor: 6, fonte: 'normas' });
+  assert.equal(dados.fila.projetos, 105 - 4);
+});
+
+test('lista sem versão com mais de 2.000 segue de página em página', async () => {
+  const estoque = { ...estoqueSintetico, 'Cidade A-XX|28': { total: 4530, versionadas: 30, naoVersionadas: 4500, ignoradas: 2100 } };
+  const cliente = clienteFalso({ estoque });
+  const dados = await buscar({ cliente });
+  assert.deepEqual(paginasDoPar(cliente, 1001, 28).map((p) => p.opcoes.page), [0, 1, 2]);
+  assert.deepEqual([dados.pessoas.leonardo.projeto.aguardando, dados.pessoas.leonardo.projeto.ignoradas], [2400, 2100]);
+});
+
+test(`lista sem versão com mais de ${MAX_PAGINAS_SEM_VERSAO} páginas não é lida: o par fica "—", com aviso`, async () => {
+  const naoVersionadas = MAX_PAGINAS_SEM_VERSAO * 2000 + 1;
+  const estoque = { ...estoqueSintetico, 'Cidade A-XX|28': { total: naoVersionadas + 30, versionadas: 30, naoVersionadas, ignoradas: 0 } };
+  const cliente = clienteFalso({ estoque });
+  const avisos = [];
+  const dados = await buscar({ cliente, avisar: (m) => avisos.push(m) });
+  assert.equal(paginasDoPar(cliente, 1001, 28).length, 1, 'para na 1ª página, que já traz o total');
+  assert.deepEqual([dados.pessoas.leonardo.projeto.total, dados.pessoas.leonardo.aguardando.valor], [null, null]);
+  assert.ok(avisos.some((m) => m.includes('estoque')));
+  assert.equal(dados.pessoas.glopes.projeto.aguardando, 40, 'os outros pares seguem');
+});
+
+test('lista sem versão incompleta, com norma repetida ou fora do formato deixa o par "—", nunca um número chutado', async () => {
+  const dez = Array.from({ length: 10 }, (_, i) => normaSemVersao(i + 1));
+  const { situacaoSingular: _, ...semSituacao } = normaSemVersao(10);
+  const casos = {
+    incompleta: { items: dez.slice(0, 9), total: 10 },
+    repetida: { items: [...dez.slice(0, 9), normaSemVersao(1)] },
+    foraDoFormato: { items: [...dez.slice(0, 9), semSituacao] },
+    itemNulo: { items: [...dez.slice(0, 9), null] },
+  };
+  for (const [caso, lista] of Object.entries(casos)) {
+    const dados = await buscar({ cliente: clienteFalso({ semVersao: { 'Cidade A-XX|28': lista } }) });
+    assert.deepEqual([dados.pessoas.leonardo.projeto.total, dados.pessoas.leonardo.aguardando.valor], [null, null], caso);
+    assert.equal(dados.pessoas.glopes.projeto.aguardando, 40, caso);
+  }
+});
+
+test('falha na lista sem versão de um par deixa só aquele projeto "—" (nunca 0)', async () => {
+  const falhar = (controller, f) => controller === 'Normas' && f.versionada === 2 && f.cidadeId === 1001 && f.moduloId === 28;
+  const dados = await buscar({ cliente: clienteFalso({ falhar }) });
+  assert.deepEqual([dados.pessoas.leonardo.projeto.total, dados.pessoas.leonardo.aguardando.valor], [null, null]);
+  assert.equal(dados.pessoas.ramon.projeto.aguardando, 40);
+  assert.equal(dados.fila.projetos, 105 - 10);
 });
 
 test('pessoa cuja Auditoria trouxe ações de outra pessoa (filtro ignorado) fica "—"', async () => {
@@ -299,7 +397,7 @@ test(`no máximo ${MAX_PARES} pares cidade×tipo têm estoque por busca`, async 
   await buscar({ cliente, avisar: (m) => avisos.push(m) });
   assert.equal(cliente.pedidos.filter((p) => p.controller === 'Normas' && p.filtros.moduloId !== undefined).length, MAX_PARES * 3);
   assert.ok(avisos.some((m) => m.includes('pares')));
-  // Pior caso: 20 fixos + 6 × 3 do estoque + 4 cidades das vinculadas.
+  // Com até 2.000 sem versão por par: 20 fixos + 6 × 3 do estoque + 4 cidades das vinculadas.
   assert.ok(cliente.pedidos.length <= 42, `foram ${cliente.pedidos.length}`);
 });
 

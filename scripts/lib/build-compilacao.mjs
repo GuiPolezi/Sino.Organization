@@ -17,7 +17,7 @@ import {
 } from './compilacao/itens.mjs';
 import { normasComBalde } from './compilacao/normas-distintas.mjs';
 import { calcularPeriodos } from './compilacao/periodos.mjs';
-import { chaveDoPar, colegasNoPar, estoqueFecha, inferirProjeto, projetoPublico } from './compilacao/projeto.mjs';
+import { aguardandoDoPar, chaveDoPar, colegasNoPar, estoqueFecha, inferirProjeto, projetoPublico } from './compilacao/projeto.mjs';
 import { resumirPlanilhas } from './compilacao/resumo-planilhas.mjs';
 import { BALDES, CATALOGO, baldeDoModulo, tipoDaDescricao } from './compilacao/tipos.mjs';
 
@@ -255,8 +255,9 @@ export function cidadesDosProjetos({ equipe, auditoria, catalogo = CATALOGO, atr
 }
 
 /**
- * Fila da equipe: Projetos soma cada par cidade×tipo uma vez (I6); Atualizações
- * soma o déficit de quem tem planilha. Pares sem estoque válido ficam de fora.
+ * Fila da equipe: Projetos soma o aguardando (sem versão menos as ignoradas) de cada
+ * par cidade×tipo uma vez (I6); Atualizações soma o déficit de quem tem planilha.
+ * Pares sem estoque válido ou sem as ignoradas ficam de fora.
  */
 export function filaDaEquipe(entradas) {
   const dados = entradas.pessoas ? entradas : montarCompilacao(entradas);
@@ -264,7 +265,8 @@ export function filaDaEquipe(entradas) {
   let projetos = 0;
   for (const chave of pares.keys()) {
     const e = entradas.estoque?.[chave];
-    if (e && estoqueFecha(e)) projetos += e.naoVersionadas;
+    const aguardando = e && estoqueFecha(e) ? aguardandoDoPar(e) : null;
+    if (aguardando !== null) projetos += aguardando;
   }
   const atualizacoes = Object.values(dados.pessoas)
     .filter((p) => p.funcao === 'atualizacoes' && p.aguardando.valor !== null)
@@ -277,7 +279,7 @@ export function filaDaEquipe(entradas) {
  *   equipe: { usuarioId: string, personagem: string, funcao: 'projetos' | 'atualizacoes' }[],
  *   agora: Date,
  *   auditoria?: Record<string, { versoes?: object[], normas?: object[], recentes?: object[] }>,
- *   estoque?: Record<string, { total: number, versionadas: number, naoVersionadas: number }>,
+ *   estoque?: Record<string, { total: number, versionadas: number, naoVersionadas: number, ignoradas: number }>,
  *   planilhas?: { abas: object[], linhas: object[] } | null,
  *   catalogo?: { id: number, sigla: string | null, nomeSingular: string }[],
  *   cidadesPorId?: Record<string, { nome: string, uf: string }>,

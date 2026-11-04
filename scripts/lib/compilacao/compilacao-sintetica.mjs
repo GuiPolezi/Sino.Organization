@@ -105,13 +105,16 @@ export const auditoriaSintetica = () =>
     ]),
   );
 
-/** Estoque por cidade×tipo: versionadas (1) + não versionadas (2) = total. */
+/**
+ * Estoque por cidade×tipo: versionadas (1) + não versionadas (2) = total; `ignoradas`
+ * são as sem versão que não serão compiladas (fora do aguardando).
+ */
 export const estoqueSintetico = {
-  'Cidade A-XX|28': { total: 40, versionadas: 30, naoVersionadas: 10 },
-  'Cidade A-XX|24': { total: 60, versionadas: 20, naoVersionadas: 40 },
-  'Cidade B-XX|23': { total: 50, versionadas: 30, naoVersionadas: 20 },
-  'Cidade B-XX|24': { total: 30, versionadas: 10, naoVersionadas: 20 },
-  'Cidade C-XX|28': { total: 20, versionadas: 5, naoVersionadas: 15 },
+  'Cidade A-XX|28': { total: 40, versionadas: 30, naoVersionadas: 10, ignoradas: 0 },
+  'Cidade A-XX|24': { total: 60, versionadas: 20, naoVersionadas: 40, ignoradas: 0 },
+  'Cidade B-XX|23': { total: 50, versionadas: 30, naoVersionadas: 20, ignoradas: 0 },
+  'Cidade B-XX|24': { total: 30, versionadas: 10, naoVersionadas: 20, ignoradas: 0 },
+  'Cidade C-XX|28': { total: 20, versionadas: 5, naoVersionadas: 15, ignoradas: 0 },
 };
 
 const aba = (personagem, ano, mes, extra = {}) => ({
