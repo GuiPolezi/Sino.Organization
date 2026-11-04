@@ -256,15 +256,67 @@
   font-size: 1.625rem;
 }
 
-/* Continua creme cheio sobre o oliva (contraste acima de 4,5:1), só que menor. */
+/*
+ * Continua creme cheio sobre o oliva (contraste acima de 4,5:1), só que menor.
+ * min-content: a legenda nunca fica mais estreita que a palavra mais longa
+ * ("aguardando"); sem espaço ao lado do número, ela desce para baixo dele.
+ */
 .painel .fila small {
-  min-width: 3rem;
+  min-width: min-content;
   font-size: 0.5625rem;
 }
 
 @container quadro (max-width: 21.99rem) {
   .painel .fila {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Ainda mais estreito (celular de 320px): o título não cabe ao lado dos totais, que descem para baixo dele, numa linha só. */
+@container quadro (max-width: 18.99rem) {
+  .totais {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .periodos {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    align-items: end;
+    column-gap: 22px;
+  }
+
+  .mes {
+    grid-column: auto;
+  }
+}
+
+/*
+ * Celular deitado: o painel tem duas colunas (CardTecnico.module.css, .duasColunas),
+ * mas as medidas em cqi e as consultas acima olham a largura do painel inteiro.
+ * Na coluna, os totais descem para baixo do título, que fica menor.
+ */
+@media (max-height: 480px) and (min-width: 560px) {
+  .totais {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .manchete h3 {
+    font-size: 1.75rem;
+  }
+
+  .periodos {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    align-items: end;
+    column-gap: 22px;
+  }
+
+  .mes {
+    grid-column: auto;
+  }
+
+  .mes dd {
+    font-size: 2.25rem;
   }
 }
 
@@ -315,4 +367,32 @@
   font-size: 0.5625rem;
   line-height: 1.25;
   opacity: 0.85;
+}
+
+/*
+ * No celular (painel estreito, ou o diálogo largo do celular deitado), nenhum
+ * texto abaixo de 10px (o do anel) ou 11px (o resto). No fim, para vencer as regras acima.
+ */
+@container quadro (max-width: 21.99rem) {
+  .anel small {
+    font-size: 0.625rem;
+  }
+
+  .painel .fila small,
+  .painel .fila .legendaFila,
+  .periodos dd.parcial {
+    font-size: 0.6875rem;
+  }
+}
+
+@media (max-width: 760px), (max-height: 480px) {
+  .anel small {
+    font-size: 0.625rem;
+  }
+
+  .painel .fila small,
+  .painel .fila .legendaFila,
+  .periodos dd.parcial {
+    font-size: 0.6875rem;
+  }
 }

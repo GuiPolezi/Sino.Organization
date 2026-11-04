@@ -2,7 +2,7 @@
  * Card do desenvolvedor. O esqueleto (posição, fundo, cabeçalho, navegação) vem
  * de CardTecnico.module.css; aqui fica só o que é deste card. Os tamanhos grandes
  * são em cqi (1% da largura útil do card), para a composição do design ser a
- * mesma no desktop e no bottom sheet do mobile.
+ * mesma no desktop e no diálogo das telas estreitas.
  */
 .card {
   /* Números grandes, estrela e colunas do gráfico. */
@@ -63,9 +63,11 @@
 /* Título da seção à esquerda e período à direita. */
 .cabecalhoSecao {
   display: flex;
+  /* Num card estreito (celular de 320px), o seletor de período desce para baixo do título. */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
 }
 
 /* Período: rótulo, pílula e o menu que abre por baixo dela. */
@@ -449,6 +451,14 @@
   font-size: 0.875rem;
   line-height: 1.35;
   color: var(--neutro-pequeno);
+}
+
+/* Toque (e o diálogo do celular, CardTecnico.module.css): período e categorias com 40px de altura. */
+@media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
+  .periodoBotao,
+  .categorias button {
+    min-height: 2.5rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

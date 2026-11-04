@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { Color, DoubleSide, MathUtils, Vector3 } from 'three';
+import { cardEmDialogo } from '../card/modoDialogo.js';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
 import { aparenciaDe, temBochechas } from './aparencia.js';
@@ -16,8 +17,6 @@ const ACENO = 2.55;
 
 // Folga mínima, em px, entre a etiqueta do nome e a borda da tela.
 const FOLGA_ETIQUETA = 8;
-// Abaixo desta largura o card é um bottom sheet (CardTecnico.module.css).
-const LARGURA_ESTREITA = 760;
 const pontoEtiqueta = new Vector3();
 
 /*
@@ -40,7 +39,8 @@ const posicaoDentroDaTela = (etiqueta) => (objeto, camera, size) => {
   const medida = etiqueta.medida;
   if (!el || medida?.el !== el) return [x, y];
 
-  const card = size.width > LARGURA_ESTREITA ? el.closest('main')?.querySelector(':scope > aside') : null;
+  // Com o card em diálogo no centro (card/modoDialogo.js), ele não está à direita para a etiqueta evitar.
+  const card = cardEmDialogo(size) ? null : el.closest('main')?.querySelector(':scope > aside');
   const direita = card ? Math.min(size.width, card.getBoundingClientRect().left) : size.width;
   const meiaLargura = Math.min(medida.largura / 2 + FOLGA_ETIQUETA, direita / 2);
   const meiaAltura = Math.min(medida.altura / 2 + FOLGA_ETIQUETA, size.height / 2);

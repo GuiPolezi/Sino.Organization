@@ -159,7 +159,7 @@ export default function CardQuadroCompilacao() {
   const destaque = ranking[0]?.normasMes > 0 ? ranking[0] : null;
 
   return (
-    <aside className={`${card.card} ${quadro.quadro} ${styles.painel}`} aria-label="Quadro da equipe: visão geral">
+    <aside className={`${card.card} ${card.duasColunas} ${quadro.quadro} ${styles.painel}`} aria-label="Quadro da equipe: visão geral">
       <header className={card.topo}>
         <div className={`${card.avatar} ${quadro.avatar}`} aria-hidden="true">
           {/* Uma folha com linhas escritas: o quadro geral que a estátua segura. */}

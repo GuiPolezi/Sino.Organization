@@ -40,7 +40,7 @@ export default function CardCompilador() {
 
   return (
     // A key refaz as animações de entrada ao trocar de pessoa.
-    <aside key={pessoa.id} className={`${base.card} ${styles.card}`} aria-label={`Informações de ${pessoa.nome}`}>
+    <aside key={pessoa.id} className={`${base.card} ${base.duasColunas} ${styles.card}`} aria-label={`Informações de ${pessoa.nome}`}>
       <header className={base.topo}>
         <div className={base.avatar} style={{ '--cor-avatar': aparenciaDe(pessoa.id).camisa }} aria-hidden="true">
           {pessoa.avatarIniciais}

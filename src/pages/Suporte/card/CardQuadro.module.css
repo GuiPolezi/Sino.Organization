@@ -379,6 +379,13 @@
   }
 }
 
+/* Toque (e o diálogo do celular, CardTecnico.module.css): linhas do ranking com 40px de altura. */
+@media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
+  .ranking button {
+    min-height: 2.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .estrela,
   .dias b,

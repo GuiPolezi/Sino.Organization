@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { aparenciaDe } from './boneco/aparencia.js';
 import CardQuadro from './card/CardQuadro.jsx';
 import CardTecnico from './card/CardTecnico.jsx';
@@ -21,9 +21,19 @@ function webglDisponivel() {
 function Elenco({ tecnicos, selecionado, rotulo }) {
   const selecionar = useEquipe((s) => s.selecionar);
   const setHover = useEquipe((s) => s.setHover);
+  const lista = useRef(null);
+
+  // Elenco maior que a tela: rola de lado até deixar quem foi escolhido no meio (só o elenco, a página não).
+  useEffect(() => {
+    const nav = lista.current;
+    const ativo = nav?.querySelector('[aria-pressed="true"]');
+    if (!ativo || nav.scrollWidth <= nav.clientWidth) return;
+    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    nav.scrollTo({ left: ativo.offsetLeft - (nav.clientWidth - ativo.offsetWidth) / 2, behavior: suave ? 'smooth' : 'auto' });
+  }, [selecionado]);
 
   return (
-    <nav className={styles.elenco} aria-label={rotulo}>
+    <nav ref={lista} className={styles.elenco} aria-label={rotulo}>
       {tecnicos.map(({ id, nome }) => (
         <button
           key={id}
@@ -114,7 +124,10 @@ export default function PaginaEquipe({
   const selecionado = useEquipe((s) => s.selecionado);
   const painel = useEquipe((s) => s.painel);
   const abrirQuadro = useEquipe((s) => s.abrirQuadro);
+  const selecionar = useEquipe((s) => s.selecionar);
+  const fecharPainel = useEquipe((s) => s.fecharPainel);
   const [temWebgl] = useState(webglDisponivel);
+  const cardAberto = Boolean(selecionado || painel);
 
   useEffect(() => {
     let ativo = true;
@@ -138,7 +151,7 @@ export default function PaginaEquipe({
     };
   }, [buscarEquipe, aoCarregar]);
 
-  const classes = [styles.palco, (selecionado || painel) && styles.comCard, !temWebgl && styles.plano]
+  const classes = [styles.palco, cardAberto && styles.comCard, !temWebgl && styles.plano]
     .filter(Boolean)
     .join(' ');
 
@@ -152,7 +165,13 @@ export default function PaginaEquipe({
         <a className={styles.voltar} href="/">
           ← sino.org
         </a>
-        <h1 className={tituloCompacto ? `${styles.titulo} ${styles.tituloCompacto}` : styles.titulo}>{titulo}</h1>
+        {/* --letras: o título encolhe para caber na tela e, com um card aberto ao lado, antes dele (Suporte.module.css). */}
+        <h1
+          className={tituloCompacto ? `${styles.titulo} ${styles.tituloCompacto}` : styles.titulo}
+          style={{ '--letras': titulo.length }}
+        >
+          {titulo}
+        </h1>
         <p className={tituloCompacto ? `${styles.subtitulo} ${styles.subtituloCompacto}` : styles.subtitulo}>{subtitulo}</p>
         {selo}
         {erro && (
@@ -178,6 +197,10 @@ export default function PaginaEquipe({
         <ListaTecnicos tecnicos={tecnicos} selecionado={selecionado} rotulo={rotuloElenco} />
       )}
 
+      {/* Só aparece nas telas estreitas (Suporte.module.css); o botão de fechar e o Esc continuam valendo. */}
+      {cardAberto && (
+        <div className={styles.veu} aria-hidden="true" onClick={() => (selecionado ? selecionar(null) : fecharPainel())} />
+      )}
       <Card />
       {PainelQuadro && <PainelQuadro />}
     </main>

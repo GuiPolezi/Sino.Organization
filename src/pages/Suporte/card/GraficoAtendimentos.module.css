@@ -213,6 +213,22 @@
   color: var(--color-olive-dark);
 }
 
+/*
+ * Toque (e o diálogo do celular): as setas da semana ganham uma área de toque
+ * invisível de 40px, sem mudar o desenho da pílula.
+ */
+@media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
+  .seletor button {
+    position: relative;
+  }
+
+  .seletor button::after {
+    content: '';
+    position: absolute;
+    inset: -7px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .semana,
   .barra,

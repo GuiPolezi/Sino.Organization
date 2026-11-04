@@ -3,6 +3,8 @@
   --margem: clamp(16px, 4vw, 48px);
   /* Largura do card no desktop; cada página pode trocar (PaginaEquipe). */
   --largura-card: 24rem;
+  /* Largura livre para o título; com um card aberto ao lado, só a parte antes dele. */
+  --livre: calc(100vw - var(--margem) * 2);
 
   position: relative;
   height: 100svh;
@@ -47,12 +49,18 @@
   border-radius: 2px;
 }
 
+/*
+ * O título cabe na largura livre (--livre): cada letra (Inter black) tem perto
+ * de 0,6em, e --letras é o tamanho do título (PaginaEquipe). Assim
+ * "Desenvolvimento" não passa da tela num celular nem entra embaixo do card.
+ */
 .titulo {
-  font-size: clamp(2.5rem, 9vw, 6rem);
+  font-size: min(clamp(2.5rem, 9vw, 6rem), var(--livre) / (var(--letras, 10) * 0.6));
   font-weight: var(--weight-black);
   line-height: 0.9;
   letter-spacing: -0.005em;
   color: var(--color-white);
+  transition: font-size 0.25s ease;
 }
 
 /* Título que é uma frase (o de uma reunião): menor, para não tomar a tela. */
@@ -99,6 +107,9 @@
   backdrop-filter: blur(10px);
   overflow-x: auto;
   scrollbar-width: none;
+  /* Rolando de lado, cada nome para inteiro na borda. */
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 6px;
   transform: translateX(-50%);
   /* left entra na transição: com o card aberto, o elenco desliza até a esquerda em vez de pular. */
   transition:
@@ -109,6 +120,64 @@
 
 .elenco:empty {
   display: none;
+}
+
+/*
+ * Elenco maior que a tela: as bordas esmaecem do lado em que ainda há nomes,
+ * para ficar claro que ele rola. A linha do tempo é a rolagem do próprio elenco;
+ * se ele não rola, ela fica inativa e as bordas ficam inteiras (0px).
+ */
+@property --esmaecer-esq {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --esmaecer-dir {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@supports (animation-timeline: scroll()) {
+  .elenco {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--esmaecer-esq),
+      #000 calc(100% - var(--esmaecer-dir)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--esmaecer-esq),
+      #000 calc(100% - var(--esmaecer-dir)),
+      transparent
+    );
+    animation: esmaecerBordas linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+@keyframes esmaecerBordas {
+  0% {
+    --esmaecer-esq: 0px;
+    --esmaecer-dir: 32px;
+  }
+
+  8% {
+    --esmaecer-esq: 32px;
+  }
+
+  92% {
+    --esmaecer-dir: 32px;
+  }
+
+  100% {
+    --esmaecer-esq: 32px;
+    --esmaecer-dir: 0px;
+  }
 }
 
 .elenco button {
@@ -123,6 +192,14 @@
   font-weight: var(--weight-bold);
   line-height: 1;
   cursor: pointer;
+  scroll-snap-align: start;
+}
+
+/* Toque (e o diálogo, que é o modo do celular): botões de pelo menos 40px de altura. */
+@media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
+  .elenco button {
+    min-height: 2.5rem;
+  }
 }
 
 .elenco button:hover {
@@ -219,8 +296,33 @@
   color: var(--color-cream-muted);
 }
 
-/* Mobile: com o bottom sheet aberto, título e elenco saem da frente. */
-@media (max-width: 760px) {
+/* Véu atrás do card nas telas estreitas: escurece a cena e, num toque, fecha o card. */
+.veu {
+  display: none;
+}
+
+@keyframes escurecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * Telas estreitas ou baixas: o card é um diálogo no centro (CardTecnico.module.css,
+ * card/modoDialogo.js); título e elenco saem da frente. Fecha-se pelo X preso no
+ * alto do card, por um toque no véu ou pelo Esc; as setas do card trocam de pessoa.
+ */
+@media (max-width: 760px), (max-height: 480px) {
+  .comCard .veu {
+    position: fixed;
+    inset: 0;
+    /* Acima das etiquetas de nome dos bonecos (zIndexRange até 15) e abaixo do card (20). */
+    z-index: 18;
+    display: block;
+    background: color-mix(in srgb, var(--color-olive-dark) 45%, transparent);
+    animation: escurecer 0.28s ease both;
+  }
+
   .comCard .cabecalho {
     opacity: 0;
   }
@@ -236,8 +338,19 @@
   }
 }
 
-/* Desktop com card aberto: o elenco vai para a esquerda, fora de baixo do card. */
-@media (min-width: 761px) {
+/*
+ * Card aberto ao lado (fora do modo diálogo): o elenco vai para a esquerda, fora
+ * de baixo do card, e o título e o subtítulo cabem antes dele (--livre).
+ */
+@media (min-width: 761px) and (min-height: 481px) {
+  .comCard {
+    --livre: calc(100vw - var(--largura-card) - clamp(16px, 3vw, 40px) - var(--margem) - 24px);
+  }
+
+  .comCard .cabecalho {
+    max-width: min(26rem, var(--livre));
+  }
+
   .comCard .elenco {
     left: var(--margem);
     max-width: calc(100% - var(--largura-card) - 6.25rem);
@@ -251,7 +364,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cabecalho,
-  .elenco {
+  .elenco,
+  .titulo {
     transition: none;
+  }
+
+  .veu {
+    animation: none;
   }
 }

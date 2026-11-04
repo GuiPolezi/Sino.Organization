@@ -1,11 +1,10 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { cardEmDialogo } from '../card/modoDialogo.js';
 import { CONFIG_QUADRO, QUADRO } from '../quadro/posicao.js';
 import { CENA, passoDoFrame, posicoes, useEquipe } from '../store.js';
 
-// Mesma largura em que o card vira bottom sheet (CardTecnico.module.css).
-const LARGURA_ESTREITA = 760;
 const { clamp } = THREE.MathUtils;
 
 // Câmera de "diorama" que se aproxima suavemente do técnico selecionado ou do quadro da equipe.
@@ -18,7 +17,8 @@ export default function CameraRig() {
   useFrame((_, delta) => {
     const dt = passoDoFrame(delta);
     const aspecto = size.width / size.height;
-    const estreito = size.width < LARGURA_ESTREITA;
+    // Com o card no centro (tela estreita ou baixa), o enquadramento é o "estreito".
+    const estreito = cardEmDialogo(size);
     // Afasta a câmera em telas altas, para a área inteira continuar visível; um tapete maior (CENA.recuo) afasta mais.
     const recuo =
       CENA.recuo *
@@ -28,18 +28,18 @@ export default function CameraRig() {
 
     // O card de uma categoria (/desenvolvimento) sai do quadro: a câmera continua nele.
     if (painel) {
-      // No desktop o quadro fica à esquerda do painel. No mobile a câmera recua, para o
-      // quadro caber na largura, e olha para baixo dele, para ele subir acima do bottom sheet.
-      // Cada página pode trocar o enquadramento (CONFIG_QUADRO.foco).
+      // No desktop o quadro fica à esquerda do painel. Com o diálogo, a câmera recua,
+      // para o quadro caber na largura, atrás do diálogo. Cada página pode trocar o
+      // enquadramento (CONFIG_QUADRO.foco).
       const foco = estreito ? CONFIG_QUADRO.foco.estreito : CONFIG_QUADRO.foco.largo;
       alvoPos.current.set(QUADRO.x + foco.dx, foco.y, QUADRO.z + foco.z);
       alvoOlhar.current.set(QUADRO.x + foco.dx, foco.olhar, QUADRO.z);
     } else if (pos) {
-      // No desktop o boneco fica à esquerda do card. No mobile a câmera olha para baixo
-      // dele, para ele subir acima do bottom sheet (que ocupa até 62% da altura).
+      // No desktop o boneco fica à esquerda do card. Com o card em diálogo no centro,
+      // a câmera recua e deixa o boneco no meio, atrás dele.
       const dx = estreito ? 0 : 1.35;
       alvoPos.current.set(pos.x + dx, estreito ? 3.2 : 2.7, pos.z + (estreito ? 11 : 7.2));
-      alvoOlhar.current.set(pos.x + dx, estreito ? -1.1 : 1.0, pos.z);
+      alvoOlhar.current.set(pos.x + dx, 1.0, pos.z);
     } else {
       alvoPos.current.set(0, 6.2 * recuo, 14 * recuo);
       alvoOlhar.current.set(0, 0.4, 0.3);

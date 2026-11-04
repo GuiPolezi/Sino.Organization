@@ -9,7 +9,7 @@ import useAtalhos from './useAtalhos.js';
 
 function Atendimentos({ totais }) {
   return (
-    <section className={styles.surge} style={{ '--ordem': 1 }}>
+    <section className={`${styles.atendimentos} ${styles.surge}`} style={{ '--ordem': 1 }}>
       <h3 className={styles.secao}>Atendimentos</h3>
       <dl className={styles.blocos}>
         <div>
@@ -51,7 +51,7 @@ function Tickets({ atribuidos }) {
 
 /*
  * Card com os dados do técnico selecionado. Overlay HTML fora do <Canvas>:
- * lateral no desktop e bottom sheet no mobile. As seções de atendimentos só
+ * lateral no desktop e diálogo no centro nas telas estreitas. As seções de atendimentos só
  * aparecem para quem tem esses dados (api/atendimentosTecnico.js).
  */
 export default function CardTecnico() {
@@ -70,7 +70,7 @@ export default function CardTecnico() {
 
   return (
     // A key refaz as animações de entrada ao trocar de técnico.
-    <aside key={tecnico.id} className={styles.card} aria-label={`Informações de ${tecnico.nome}`}>
+    <aside key={tecnico.id} className={`${styles.card} ${styles.duasColunas}`} aria-label={`Informações de ${tecnico.nome}`}>
       <header className={styles.topo}>
         <div
           className={styles.avatar}

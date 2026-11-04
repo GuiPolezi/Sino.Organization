@@ -41,7 +41,7 @@ export const CONFIG_QUADRO = {
   /*
    * Onde a câmera para com o painel aberto (cena/CameraRig.jsx), a partir do quadro:
    * dx para o lado, y e z da câmera e a altura para onde ela olha. `largo` vale
-   * com o painel ao lado; `estreito`, com ele embaixo (bottom sheet, no mobile).
+   * com o painel ao lado; `estreito`, com ele no centro da tela (diálogo, nas telas estreitas).
    */
   foco: {
     largo: { dx: 0.45, y: 5.2, z: 7.2, olhar: 1.6 },

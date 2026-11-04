@@ -151,7 +151,7 @@ export default function CardQuadro() {
   const destaque = ranking[0]?.atendimentosMes > 0 ? ranking[0] : null;
 
   return (
-    <aside className={`${card.card} ${styles.quadro}`} aria-label="Quadro da equipe: visão geral">
+    <aside className={`${card.card} ${card.duasColunas} ${styles.quadro}`} aria-label="Quadro da equipe: visão geral">
       <header className={card.topo}>
         <div className={`${card.avatar} ${styles.avatar}`} aria-hidden="true">
           <svg viewBox="0 0 26 26" focusable="false">

@@ -3,7 +3,7 @@
  * botão de fechar, rodapé) vem de CardTecnico.module.css e o ícone dourado, de
  * ../../Suporte/card/CardQuadro.module.css; aqui fica o resto do design. Os
  * tamanhos grandes são em cqi (1% da largura útil do painel), para a composição
- * ser a mesma no desktop e no bottom sheet do mobile.
+ * ser a mesma no desktop e no diálogo das telas estreitas.
  */
 .painel {
   --verde-noite: #283618;
@@ -275,6 +275,19 @@
 @media (prefers-reduced-motion: no-preference) {
   .desempenho[data-esperando] :is(.chamada, .categorias li) {
     opacity: 0;
+  }
+}
+
+/*
+ * Toque (e o diálogo do celular): pílulas com 40px de altura. inline-flex
+ * centraliza o rótulo também nas cópias em <span> (o marcador mede a altura).
+ */
+@media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
+  .pilula {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.5rem;
   }
 }
 

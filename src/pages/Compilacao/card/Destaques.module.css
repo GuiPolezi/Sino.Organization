@@ -301,6 +301,18 @@
   transform: scale(1.35);
 }
 
+/* Toque (e o diálogo): setas e pontos com 40px de altura de toque. */
+@media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
+  .seta {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .ponto {
+    height: 2.5rem;
+  }
+}
+
 @keyframes crescer {
   from {
     transform: scaleY(0);
