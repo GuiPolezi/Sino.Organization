@@ -5,3 +5,6 @@ dist
 
 # Planilhas da equipe (dados reais): nunca vão para o git
 *.xlsx
+
+# Documentos do /compilacao com dados reais (nunca no repositório público)
+docs/compilacao-*.md

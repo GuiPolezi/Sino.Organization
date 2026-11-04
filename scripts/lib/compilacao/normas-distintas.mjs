@@ -57,3 +57,24 @@ export function agruparPorBalde(itens, catalogo = CATALOGO) {
   }
   return { distintas: vistas.size, porBalde, naoReconhecidas, versoes: lista.length };
 }
+
+/**
+ * Cada norma distinta da lista, com o balde e a primeira data em que apareceu:
+ * Map<chave, { balde, data }>. A mesma regra dos períodos (I13): sem tipo ou
+ * número/ano reconhecido, conta uma vez por texto (cidade + descrição) em "outros";
+ * item sem descrição em texto não conta. Base do Mês e do Todo o Tempo (F6).
+ */
+export function normasComBalde(itens, catalogo = CATALOGO, dataDe = () => null) {
+  const normas = new Map();
+  for (const item of Array.isArray(itens) ? itens : []) {
+    const reconhecida = chaveDaNorma(item, catalogo);
+    if (!reconhecida && typeof item?.descricao !== 'string') continue;
+    const chave = reconhecida ?? `?|${item.cidadeUf ?? ''}|${normalizar(item.descricao)}`;
+    const balde = reconhecida ? baldeDoModulo(tipoDaDescricao(item.descricao, catalogo)) : 'outros';
+    const data = dataDe(item);
+    const antes = normas.get(chave);
+    if (!antes) normas.set(chave, { balde, data });
+    else if (data && (!antes.data || data < antes.data)) normas.set(chave, { ...antes, data });
+  }
+  return normas;
+}

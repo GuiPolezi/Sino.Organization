@@ -15,17 +15,24 @@ import {
   separarCidadeUf,
   textoPublico,
 } from './compilacao/itens.mjs';
-import { agruparPorBalde, chaveDaNorma } from './compilacao/normas-distintas.mjs';
+import { normasComBalde } from './compilacao/normas-distintas.mjs';
 import { calcularPeriodos } from './compilacao/periodos.mjs';
 import { chaveDoPar, colegasNoPar, estoqueFecha, inferirProjeto, projetoPublico } from './compilacao/projeto.mjs';
 import { resumirPlanilhas } from './compilacao/resumo-planilhas.mjs';
-import { CATALOGO, normalizar } from './compilacao/tipos.mjs';
+import { BALDES, CATALOGO } from './compilacao/tipos.mjs';
 
 // Dias úteis sem ação para "sem atividade desde" e para "ausente".
 const UTEIS_SEM_ATIVIDADE = 2;
 const UTEIS_AUSENTE = 10;
 
 const PERIODOS_DO_SISTEMA = ['hoje', 'semana', 'mes'];
+
+/** Quantas normas em cada balde: { leis, decretos, ..., outros }. */
+export function somarPorBalde(normas) {
+  const porBalde = Object.fromEntries(BALDES.map((b) => [b, 0]));
+  for (const { balde } of normas.values()) porBalde[balde] += 1;
+  return porBalde;
+}
 
 // Dias de segunda a sexta depois de `de` até `ate` (AAAA-MM-DD), parando em `limite`.
 function diasUteisEntre(de, ate, limite = UTEIS_AUSENTE) {
@@ -38,29 +45,18 @@ function diasUteisEntre(de, ate, limite = UTEIS_AUSENTE) {
   return uteis;
 }
 
-// I13: versão sem tipo ou número/ano reconhecido conta em "Outros", uma vez por
-// texto (cidade + descrição), já que não dá para saber o número da norma.
-function semPadraoDistintas(itens, catalogo) {
-  const textos = new Set();
-  for (const item of itens) {
-    if (chaveDaNorma(item, catalogo) || typeof item?.descricao !== 'string') continue;
-    textos.add(`${item.cidadeUf ?? ''}|${normalizar(item.descricao)}`);
-  }
-  return textos.size;
-}
-
-// Normas distintas com versão nova (Versões, ação 1) em cada período.
+// Normas distintas com versão nova (Versões, ação 1) em cada período. Versão sem
+// tipo ou número/ano reconhecido conta em "Outros", uma vez por texto (I13).
 function producaoDoSistema(entrada, periodos, catalogo, avisar) {
   if (!entrada) return null;
   const inclusoes = (entrada.versoes ?? []).filter((i) => ehDoModulo(i, 'Versões') && ehInclusao(i));
   const janelas = { hoje: { inicio: periodos.hoje, fim: periodos.hoje }, semana: periodos.semana, mes: periodos.mes };
   const resultado = {};
   for (const periodo of PERIODOS_DO_SISTEMA) {
-    const doPeriodo = itensEntre(inclusoes, janelas[periodo].inicio, janelas[periodo].fim);
-    const { distintas, porBalde, naoReconhecidas } = agruparPorBalde(doPeriodo, catalogo);
-    const semPadrao = naoReconhecidas > 0 ? semPadraoDistintas(doPeriodo, catalogo) : 0;
-    if (naoReconhecidas > 0) avisar(`${naoReconhecidas} versão(ões) sem tipo/número reconhecido (${periodo}); contam em Outros`);
-    resultado[periodo] = { distintas: distintas + semPadrao, porBalde: { ...porBalde, outros: porBalde.outros + semPadrao } };
+    const normas = normasComBalde(itensEntre(inclusoes, janelas[periodo].inicio, janelas[periodo].fim), catalogo);
+    const semPadrao = [...normas.keys()].filter((chave) => chave.startsWith('?|')).length;
+    if (semPadrao > 0) avisar(`${semPadrao} norma(s) sem tipo/número reconhecido (${periodo}); contam em Outros`);
+    resultado[periodo] = { distintas: normas.size, porBalde: somarPorBalde(normas) };
   }
   return resultado;
 }
@@ -109,6 +105,15 @@ function pessoaDeProjetos(membro, ctx) {
       producao[p] = sistema[p].distintas;
       fontes[p] = 'sistema';
       porTipo[p] = sistema[p].porBalde;
+    }
+    // F6: o histórico já inclui as versões desta busca, então Todo o Tempo >= Mês (I3).
+    const tudo = ctx.historico?.[membro.personagem];
+    if (tudo && tudo.total >= sistema.mes.distintas) {
+      producao.tudo = tudo.total;
+      fontes.tudo = 'sistema';
+      porTipo.tudo = tudo.porBalde;
+    } else if (tudo) {
+      ctx.avisar(`Todo o Tempo de ${membro.personagem} menor que o Mês; fica "—"`);
     }
   }
   return {
@@ -240,6 +245,7 @@ export function filaDaEquipe(entradas) {
  *   cidadesPorId?: Record<string, { nome: string, uf: string }>,
  *   atualizacoesDiaSemana?: 'auditoria' | 'vazio',
  *   atribuicoes?: Record<string, { cidadeUf: string, moduloIds: number[], desde: string | null } | null>,
+ *   historico?: Record<string, { total: number, porBalde: Record<string, number> }>,
  *   avisar?: (mensagem: string) => void,
  * }} entradas
  */
@@ -253,6 +259,7 @@ export function montarCompilacao({
   cidadesPorId = {},
   atualizacoesDiaSemana = 'auditoria',
   atribuicoes,
+  historico = {},
   avisar = () => {},
 }) {
   const periodos = calcularPeriodos(agora);
@@ -266,6 +273,7 @@ export function montarCompilacao({
     atualizacoesDiaSemana,
     avisar,
     atribuicoes,
+    historico,
     projetos: projetosDaEquipe(equipe, auditoria, catalogo, atribuicoes),
   };
   const pessoas = {};

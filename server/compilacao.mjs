@@ -6,6 +6,7 @@
 // as versões novas do período (7, uma página de 2.000 cada no uso normal) e a 1ª
 // página da Auditoria (7), as Normas recentes de quem faz Projetos (4) e 3
 // contagens por par cidade×tipo (no máximo MAX_PARES pares, ou seja, 18).
+// No Supabase, mais ~4 pedidos: o histórico do Todo o Tempo de Projetos (F6).
 // Os avisos vão para o log só com contagens e ids públicos de personagem.
 import { montarCompilacao, paresDosProjetos } from '../scripts/lib/build-compilacao.mjs';
 import { lerEquipe } from '../scripts/lib/compilacao/configuracao.mjs';
@@ -13,6 +14,7 @@ import { calcularPeriodos } from '../scripts/lib/compilacao/periodos.mjs';
 import { chaveDoPar } from '../scripts/lib/compilacao/projeto.mjs';
 import { CATALOGO, catalogoDeModulos, normalizar } from '../scripts/lib/compilacao/tipos.mjs';
 import { decidirProjetos, linhasDoRetrato, repositorioAtribuicoes } from './compilacao-atribuicoes.mjs';
+import { repositorioHistorico, todoOTempoDosProjetos } from './compilacao-historico.mjs';
 import { LegislacaoError } from './legislacao.mjs';
 import { SupabaseError } from './supabase.mjs';
 
@@ -30,7 +32,7 @@ const diasAntes = (data, dias) => new Date(Date.parse(`${data}T00:00:00Z`) - dia
 
 // I11 na Auditoria: se o painel ignorasse o filtro de pessoa, viriam ações de
 // várias pessoas. O login só é comparado aqui; nunca sai deste módulo.
-function conferirUmaPessoa(listas) {
+export function conferirUmaPessoa(listas) {
   const logins = new Set(listas.flat().map((item) => item?.usuarioLogin).filter(Boolean));
   if (logins.size > 1) {
     throw new LegislacaoError('O filtro de pessoa não foi aplicado pelo Legislação Digital (Auditoria).');
@@ -52,15 +54,16 @@ async function auditoriaDaPessoa(cliente, membro, { inicioProjetos, inicioAtuali
   return { versoes, normas, recentes };
 }
 
-async function lerCatalogo(cliente, avisar) {
+// `doSistema` = false quando valeu o catálogo fixo (o Todo o Tempo depende dele).
+export async function lerCatalogo(cliente, avisar) {
   try {
     const catalogo = catalogoDeModulos(await cliente.listarTudo('ModulosNorma'));
-    if (catalogo.length > 0) return catalogo;
+    if (catalogo.length > 0) return { catalogo, doSistema: true };
     avisar('ModulosNorma veio vazio; usando o catálogo fixo');
   } catch {
     avisar('ModulosNorma não respondeu; usando o catálogo fixo');
   }
-  return CATALOGO;
+  return { catalogo: CATALOGO, doSistema: false };
 }
 
 // "Cidade A-SP" -> id (só para os pedidos de estoque) e id -> { nome, uf } (nomes da carteira).
@@ -154,7 +157,7 @@ export async function buscarCompilacao({
   const inicioProjetos = [semana.inicio, mes.inicio, inicioJanela].sort()[0];
   const inicioAtualizacoes = [semana.inicio, inicioJanela].sort()[0];
 
-  const catalogo = await lerCatalogo(cliente, avisar);
+  const { catalogo, doSistema: catalogoDoSistema } = await lerCatalogo(cliente, avisar);
 
   const resultados = await Promise.allSettled(
     equipe.map((membro) => auditoriaDaPessoa(cliente, membro, { inicioProjetos, inicioAtualizacoes, inicioJanela, hoje })),
@@ -185,6 +188,19 @@ export async function buscarCompilacao({
     });
   }
 
+  // F6: Todo o Tempo de Projetos pelo histórico (grava a janela desta busca e lê os totais).
+  const historico = await todoOTempoDosProjetos({
+    repo: pedirSupabase ? repositorioHistorico(pedirSupabase) : null,
+    equipe,
+    auditoria,
+    catalogo,
+    catalogoDoSistema,
+    hoje,
+    inicioVersoes: inicioProjetos,
+    agora,
+    avisar,
+  });
+
   const deAtualizacoes = equipe.filter((m) => m.funcao === 'atualizacoes').map((m) => m.personagem);
   const planilhas = await lerPlanilhas(pedirSupabase, deAtualizacoes).catch(() => {
     avisar('as planilhas do Supabase não responderam');
@@ -202,6 +218,7 @@ export async function buscarCompilacao({
     cidadesPorId,
     atualizacoesDiaSemana: env.COMPILACAO_ATUALIZACOES_DIA_SEMANA === 'vazio' ? 'vazio' : 'auditoria',
     atribuicoes,
+    historico,
     avisar,
   });
 }

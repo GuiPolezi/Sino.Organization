@@ -22,7 +22,7 @@
     "test:chamados": "node --test src/pages/Desenvolvimento/mappers/chamados.test.mjs",
     "test:chamados-sync": "node --test scripts/build-chamados.test.mjs",
     "test:licencas": "node --test src/pages/Licencas/mappers/licencas.test.mjs scripts/build-licencas.test.mjs",
-    "test:compilacao": "node --test server/legislacao.test.mjs server/compilacao.test.mjs server/compilacao-atribuicoes.test.mjs scripts/lib/compilacao/atribuicao.test.mjs scripts/build-compilacao.test.mjs scripts/lib/compilacao/tipos.test.mjs scripts/lib/compilacao/normas-distintas.test.mjs scripts/lib/compilacao/periodos.test.mjs",
+    "test:compilacao": "node --test server/legislacao.test.mjs server/compilacao.test.mjs server/compilacao-atribuicoes.test.mjs server/compilacao-historico.test.mjs scripts/lib/compilacao/atribuicao.test.mjs scripts/build-compilacao.test.mjs scripts/lib/compilacao/tipos.test.mjs scripts/lib/compilacao/normas-distintas.test.mjs scripts/lib/compilacao/periodos.test.mjs",
     "test:api": "node --test server/cache.test.mjs server/reunioes.test.mjs server/chamados.test.mjs server/cron-compilacao.test.mjs",
     "test:reunioes": "node --test src/components/Hero/reunioes/reunioes.test.mjs src/components/Hero/reunioes/periodos.test.mjs src/components/Hero/reunioes/selecao/favo.test.mjs"
   },
