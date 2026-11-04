@@ -6,6 +6,8 @@
   --color-olive-dark: #3b4726; /* elementos decorativos, linhas, sombras */
   --color-mint: #b0dac9; /* balões e detalhes da seção Sistemas */
   --color-ink: #11140c; /* texto sobre o mint */
+  /* Verde-água da situação "Finalizando" de /compilacao (card da pessoa e Fila do Quadro). */
+  --color-finalizando: #1a6e63;
 
   /* Variações por opacidade (sempre a partir da paleta) */
   --color-cream-muted: color-mix(in srgb, var(--color-cream) 55%, transparent);

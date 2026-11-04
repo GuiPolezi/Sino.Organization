@@ -152,6 +152,12 @@ export default function CardQuadro() {
 
   return (
     <aside className={`${card.card} ${card.duasColunas} ${styles.quadro}`} aria-label="Quadro da equipe: visão geral">
+      {/* Antes do cabeçalho: assim o X flutua no canto quando o card rola (CardTecnico.module.css). */}
+      <button type="button" className={card.fechar} aria-label="Fechar" onClick={fechar}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
       <header className={card.topo}>
         <div className={`${card.avatar} ${styles.avatar}`} aria-hidden="true">
           <svg viewBox="0 0 26 26" focusable="false">
@@ -166,11 +172,6 @@ export default function CardQuadro() {
             {totalTecnicos} {totalTecnicos === 1 ? 'técnico' : 'técnicos'}
           </p>
         </div>
-        <button type="button" className={card.fechar} aria-label="Fechar" onClick={fechar}>
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
       </header>
 
       <EstadoCarregamento dados="atendimentos" />

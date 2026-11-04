@@ -6,9 +6,11 @@
   --linha: color-mix(in srgb, var(--color-olive) 22%, transparent);
   --fundo-suave: color-mix(in srgb, var(--color-olive) 10%, transparent);
   --fundo-card: color-mix(in srgb, var(--color-cream) 90%, transparent);
-  /* Respiro interno; o cabeçalho fixo (.topo) usa os mesmos valores. */
   --respiro-y: 1.375rem;
   --respiro-x: 1.375rem;
+  /* Vão entre as partes do card e tamanho do X (o X flutuante usa os dois). */
+  --vao: 1.125rem;
+  --tamanho-fechar: 2.25rem;
 
   position: fixed;
   top: 50%;
@@ -16,7 +18,7 @@
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 1.125rem;
+  gap: var(--vao);
   width: min(var(--largura-card, 24rem), calc(100% - 32px));
   max-height: calc(100svh - 48px);
   padding: var(--respiro-y) var(--respiro-x);
@@ -70,51 +72,42 @@
 }
 
 /*
- * O cabeçalho (nome e botão de fechar) fica preso no alto enquanto o resto do
- * card rola. As margens negativas o esticam até as bordas do card, e o padding
- * devolve o conteúdo ao lugar de antes: parado, o card fica igual. Só quando ele
- * é o primeiro filho (no card de uma categoria há o "voltar" acima).
+ * O cabeçalho rola junto com o resto do card; só o X fica à vista, flutuando no
+ * canto. Parado, ele está onde sempre esteve, ao lado do nome: a margem negativa
+ * devolve a altura dele e o vão do card (--vao), e o cabeçalho sobe para a mesma
+ * linha. Só quando o X vem antes do cabeçalho (no card de uma categoria há o
+ * "voltar" acima, e o X fica dentro do cabeçalho).
  */
-.card > .topo:first-child {
+.card > .fechar:first-child {
   position: sticky;
-  /* O sticky conta a partir do miolo do card (dentro do padding): o negativo o leva até a borda. */
-  top: calc(var(--respiro-y) * -1);
-  z-index: 1;
-  margin: calc(var(--respiro-y) * -1) calc(var(--respiro-x) * -1) -0.625rem;
-  padding: var(--respiro-y) var(--respiro-x) 0.625rem;
+  /* O sticky conta a partir do miolo do card (dentro do padding): fica na altura de sempre. */
+  top: 0;
+  z-index: 2;
+  flex: none;
+  align-self: flex-end;
+  margin-bottom: calc((var(--tamanho-fechar) + var(--vao)) * -1);
 }
 
-/* Fundo do cabeçalho preso, para o conteúdo que rola passar por baixo sem se misturar ao nome. */
-.card > .topo:first-child::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-bottom: 1px solid var(--linha);
-  /* Opaco: o que rola por baixo não aparece através do nome. */
-  background: var(--color-cream);
+/* O cabeçalho deixa à direita o lugar do X. */
+.card > .fechar:first-child + .topo {
+  grid-template-columns: auto 1fr;
+  padding-right: calc(var(--tamanho-fechar) + 0.875rem);
 }
 
-/*
- * Onde dá, o fundo só aparece depois que o card começa a rolar: parado, nada muda.
- * Num card que não rola a linha do tempo fica inativa e vale a opacidade 0 daqui.
- */
+/* Onde dá, o X ganha uma sombra leve só depois que o card começa a rolar: parado, nada muda. */
 @supports (animation-timeline: scroll()) {
-  .card > .topo:first-child::before {
-    opacity: 0;
-    animation: fixarTopo linear both;
+  .card > .fechar:first-child {
+    animation: flutuarFechar linear both;
     animation-timeline: scroll(nearest block);
     animation-range: 0 1.5rem;
   }
 }
 
-@keyframes fixarTopo {
-  from {
-    opacity: 0;
-  }
-
+@keyframes flutuarFechar {
   to {
-    opacity: 1;
+    box-shadow:
+      0 6px 16px color-mix(in srgb, var(--color-olive-dark) 26%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-white) 70%, transparent);
   }
 }
 
@@ -159,19 +152,20 @@
 .fechar {
   display: grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: var(--tamanho-fechar, 2.25rem);
+  height: var(--tamanho-fechar, 2.25rem);
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-olive) 12%, transparent);
+  /* Opaco (o tom de sempre sobre o creme): flutuando, o que rola por baixo não aparece através dele. */
+  background: color-mix(in srgb, var(--color-olive) 12%, var(--color-cream));
   color: var(--color-olive);
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .fechar:hover {
-  background: color-mix(in srgb, var(--color-olive) 22%, transparent);
+  background: color-mix(in srgb, var(--color-olive) 22%, var(--color-cream));
 }
 
 .fechar svg {
@@ -438,7 +432,7 @@ section > .secao {
 /* Celular pequeno (até 360px): menos espaço entre as partes, para caber mais de uma vez. */
 @media (max-width: 360px) {
   .card {
-    gap: 0.875rem;
+    --vao: 0.875rem;
   }
 }
 
@@ -453,16 +447,30 @@ section > .secao {
   .card.duasColunas {
     --respiro-y: 1rem;
     --respiro-x: 1.25rem;
+    --vao: 1rem;
 
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
-    gap: 1rem 1.5rem;
+    gap: var(--vao) 1.5rem;
     width: min(44rem, calc(100% - 24px - var(--seguro-esq) - var(--seguro-dir)));
   }
 
   .duasColunas > :is(header, nav, footer, .estado) {
     grid-column: 1 / -1;
+  }
+
+  /* Na grade, o X divide a primeira linha com o cabeçalho, no alto dela, sem margem negativa. */
+  .duasColunas > .fechar:first-child {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    align-self: start;
+    justify-self: end;
+    margin-bottom: 0;
+  }
+
+  .duasColunas > .fechar:first-child + .topo {
+    grid-row: 1;
   }
 
   .duasColunas > .pill {
@@ -492,9 +500,8 @@ section > .secao {
 
 /* Toque (e o diálogo, que é o modo do celular): botões de pelo menos 40px. */
 @media (max-width: 760px), (max-height: 480px), (pointer: coarse) {
-  .fechar {
-    width: 2.5rem;
-    height: 2.5rem;
+  .card {
+    --tamanho-fechar: 2.5rem;
   }
 
   .nav button {

@@ -71,6 +71,12 @@ export default function CardTecnico() {
   return (
     // A key refaz as animações de entrada ao trocar de técnico.
     <aside key={tecnico.id} className={`${styles.card} ${styles.duasColunas}`} aria-label={`Informações de ${tecnico.nome}`}>
+      {/* Antes do cabeçalho: assim o X flutua no canto quando o card rola (CardTecnico.module.css). */}
+      <button type="button" className={styles.fechar} aria-label="Fechar" onClick={() => selecionar(null)}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
       <header className={styles.topo}>
         <div
           className={styles.avatar}
@@ -83,11 +89,6 @@ export default function CardTecnico() {
           <h2>{tecnico.nome}</h2>
           {tecnico.funcao && <p>{tecnico.funcao}</p>}
         </div>
-        <button type="button" className={styles.fechar} aria-label="Fechar" onClick={() => selecionar(null)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
       </header>
 
       {tecnico.ausente && (

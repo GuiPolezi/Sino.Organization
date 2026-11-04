@@ -5,8 +5,9 @@ import EstadoCarregamento from '../../Suporte/card/EstadoCarregamento.jsx';
 import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
 import useFecharComEsc from '../../Suporte/card/useFecharComEsc.js';
 import { useEquipe } from '../../Suporte/store.js';
+import { chaveEfetiva, faixaDaFila } from '../atuacao.js';
 import { rotuloParcial } from '../resumo.js';
-import { useCompilacao } from '../store.js';
+import { useCompilacao, useResponsabilidades } from '../store.js';
 import { useResumo } from '../useResumo.js';
 import styles from './CardQuadroCompilacao.module.css';
 import Destaques from './Destaques.jsx';
@@ -111,29 +112,55 @@ function PorTipo({ tipos }) {
   );
 }
 
+/*
+ * Duas faixas cruzadas em X, como fita de interdição, por cima de uma fila parada
+ * (Projetos Novos - Sem normas ou Finalizando). A de baixo é só a fita; a de cima
+ * leva o texto inteiro no meio, onde as duas se cruzam. Só enfeite: quem usa
+ * leitor de tela ouve a situação no texto escondido do item.
+ */
+function Faixas({ texto }) {
+  return (
+    <span className={styles.faixas} aria-hidden="true">
+      <span className={styles.fita} />
+      <span className={`${styles.fita} ${styles.fitaDeCima}`}>
+        <span>{texto}</span>
+      </span>
+    </span>
+  );
+}
+
 // Quantas normas aguardam compilação na fila de cada pessoa, com a fonte embaixo
 // (o projeto, ou o déficit da planilha). Fila dividida aparece marcada nas duas pessoas.
+// Em Sem normas e Finalizando, o item ganha as faixas, e muda assim que o "Alterar" troca.
 function Filas({ ranking }) {
+  const pessoas = useCompilacao((s) => s.dados?.pessoas);
+  const salvas = useResponsabilidades((s) => s.salvas);
   const nomeDe = (id) => primeiroNome(ranking.find((p) => p.id === id)?.nome ?? id);
   return (
     <section className={card.surge} style={{ '--ordem': 2 }}>
       <h3 className={styles.secao}>Fila</h3>
       <ul className={`${quadro.tickets} ${styles.fila}`}>
-        {ranking.map(({ id, nome, emFila, legendaFila, divididaCom }) => (
-          <li key={id}>
-            <h4>Fila de {primeiroNome(nome)}</h4>
-            <p>
-              <strong>
-                <Numero valor={emFila} />
-              </strong>
-              <small>{emFila === 1 ? 'Norma aguardando' : 'Normas aguardando'}</small>
-            </p>
-            <span className={styles.legendaFila}>
-              {legendaFila}
-              {divididaCom.length > 0 && ` · dividida com ${divididaCom.map(nomeDe).join(' e ')}`}
-            </span>
-          </li>
-        ))}
+        {ranking.map(({ id, nome, emFila, legendaFila, divididaCom }) => {
+          const faixa = faixaDaFila(chaveEfetiva(pessoas?.[id] ?? null, salvas[id]));
+          return (
+            <li key={id} className={faixa ? styles.parada : undefined} data-tom={faixa?.tom}>
+              <h4>Fila de {primeiroNome(nome)}</h4>
+              {faixa && <span className="sr-only">Situação: {faixa.rotulo}.</span>}
+              <p>
+                <strong>
+                  <Numero valor={emFila} />
+                </strong>
+                <small>{emFila === 1 ? 'Norma aguardando' : 'Normas aguardando'}</small>
+              </p>
+              <span className={styles.legendaFila}>
+                {legendaFila}
+                {divididaCom.length > 0 && ` · dividida com ${divididaCom.map(nomeDe).join(' e ')}`}
+              </span>
+              {/* A key refaz a entrada das faixas quando a situação troca. */}
+              {faixa && <Faixas key={faixa.tom} texto={faixa.texto} />}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -160,6 +187,12 @@ export default function CardQuadroCompilacao() {
 
   return (
     <aside className={`${card.card} ${card.duasColunas} ${quadro.quadro} ${styles.painel}`} aria-label="Quadro da equipe: visão geral">
+      {/* Antes do cabeçalho: assim o X flutua no canto quando o card rola (CardTecnico.module.css). */}
+      <button type="button" className={card.fechar} aria-label="Fechar" onClick={fechar}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
       <header className={card.topo}>
         <div className={`${card.avatar} ${quadro.avatar}`} aria-hidden="true">
           {/* Uma folha com linhas escritas: o quadro geral que a estátua segura. */}
@@ -175,11 +208,6 @@ export default function CardQuadroCompilacao() {
             {totalCompiladores} {totalCompiladores === 1 ? 'pessoa' : 'pessoas'}
           </p>
         </div>
-        <button type="button" className={card.fechar} aria-label="Fechar" onClick={fechar}>
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
       </header>
 
       {!resumo.carregado && <EstadoCarregamento dados="números da compilação" />}

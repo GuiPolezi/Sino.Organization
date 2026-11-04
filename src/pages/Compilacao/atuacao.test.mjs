@@ -14,6 +14,8 @@ import {
   comMais,
   diaEMes,
   ehResponsabilidade,
+  faixaDaFila,
+  ignoradasDe,
   lerResponsabilidades,
   mensagemDeFalha,
   mesCurto,
@@ -305,4 +307,41 @@ test('Atualizações: Todo o Tempo pelo sistema só com o total (tipos "—")', 
   assert.deepEqual([tudo.total, tudo.legenda], [250, 'pelo sistema']);
   assert.ok(tudo.porTipo.every(({ valor }) => valor === null));
   assert.equal(normasDoPeriodo(pessoa, 'mes', doDia).legenda, 'pelo sistema');
+});
+
+test('Fila do Quadro: faixas só em Sem normas e Finalizando, a partir da responsabilidade que vale', () => {
+  assert.deepEqual(faixaDaFila('projetos_sem_normas'), { tom: 'semNormas', texto: 'Sem Normas', rotulo: 'Projetos Novos - Sem normas' });
+  assert.deepEqual(faixaDaFila('projetos_finalizando'), {
+    tom: 'finalizando',
+    texto: 'Finalizando',
+    rotulo: 'Projetos Novos - Finalizando',
+  });
+  for (const chave of ['atualizacoes', 'projetos', null, undefined, '', 'outra', 'constructor', '__proto__', 'toString']) {
+    assert.equal(faixaDaFila(chave), null, String(chave));
+  }
+  // A troca pelo "Alterar" vale no lugar da configurada; uma escolha inválida, não.
+  assert.equal(faixaDaFila(chaveEfetiva(pessoaDeAtualizacoes(), { chave: 'projetos_sem_normas' }))?.tom, 'semNormas');
+  assert.equal(faixaDaFila(chaveEfetiva(null, { chave: 'projetos_finalizando' }))?.tom, 'finalizando');
+  assert.equal(faixaDaFila(chaveEfetiva(pessoaDeProjetos(), { chave: 'outra' })), null);
+  assert.equal(faixaDaFila(chaveEfetiva(pessoaDeProjetos(), null)), null);
+});
+
+test('normas ignoradas: só em Projetos e com um inteiro acima de zero', () => {
+  const comIgnoradas = (ignoradas, extra = {}) => pessoaDeProjetos({ projeto: { ...pessoaDeProjetos().projeto, ignoradas }, ...extra });
+  const motivo = 'Não entram na fila: eficácia prejudicada, finanças e orçamento público, ou arquivo ilegível/corrompido.';
+  assert.deepEqual(ignoradasDe(comIgnoradas(501)), { valor: 501, texto: '501 normas ignoradas', motivo });
+  assert.equal(ignoradasDe(comIgnoradas(1)).texto, '1 norma ignorada');
+  assert.equal(ignoradasDe(comIgnoradas(12345)).texto, '12.345 normas ignoradas');
+  for (const valor of [0, null, undefined, -3, 2.5, '501', Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.equal(ignoradasDe(comIgnoradas(valor)), null, String(valor));
+  }
+  // Sem o campo, sem projeto, fora de Projetos ou sem pessoa: nada.
+  assert.equal(ignoradasDe(pessoaDeProjetos()), null);
+  assert.equal(ignoradasDe(pessoaDeProjetos({ projeto: null })), null);
+  assert.equal(ignoradasDe(comIgnoradas(501, { funcao: 'atualizacoes' })), null);
+  assert.equal(ignoradasDe(null), null);
+  // Quem foi para Atualizações pelo "Alterar" não mostra as ignoradas do projeto; quem veio para Projetos não tem projeto.
+  assert.equal(ignoradasDe(naResponsabilidade(comIgnoradas(501), { chave: 'atualizacoes' })), null);
+  assert.equal(ignoradasDe(naResponsabilidade(pessoaDeAtualizacoes(), { chave: 'projetos' })), null);
+  assert.equal(ignoradasDe(naResponsabilidade(comIgnoradas(501), { chave: 'projetos_sem_normas' }))?.valor, 501);
 });

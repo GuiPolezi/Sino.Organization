@@ -14,7 +14,8 @@
   --facil: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   container-type: inline-size;
-  gap: 1.375rem;
+  /* O vão entre as partes (o gap é o do CardTecnico, que o X flutuante também usa). */
+  --vao: 1.375rem;
 }
 
 /* ── Cabeçalho: ícone e título maiores que os do painel do suporte ── */

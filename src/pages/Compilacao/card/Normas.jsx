@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import base from '../../Suporte/card/CardTecnico.module.css';
 import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
-import { PERIODOS, PERIODO_INICIAL, aguardandoDe, barraDoProjeto, normasDoPeriodo, numeroOuTraco } from '../atuacao.js';
+import { PERIODOS, PERIODO_INICIAL, aguardandoDe, barraDoProjeto, ignoradasDe, normasDoPeriodo, numeroOuTraco } from '../atuacao.js';
 import styles from './CardCompilador.module.css';
 import Numero from './Numero.jsx';
 
@@ -84,6 +84,7 @@ export default function Normas({ pessoa, referencia, hoje, geradoEm, nomeDe, des
   const grade = porTipo.filter(({ chave }) => chave !== 'outros');
   const outros = porTipo.find(({ chave }) => chave === 'outros');
   const aguardando = aguardandoDe(pessoa);
+  const ignoradas = ignoradasDe(pessoa);
   const barra = barraDoProjeto(pessoa);
 
   return (
@@ -136,6 +137,17 @@ export default function Normas({ pessoa, referencia, hoje, geradoEm, nomeDe, des
           {aguardando.legenda}
           {aguardando.divididaCom.length > 0 && ` · dividida com ${aguardando.divididaCom.map(nomeDe).join(' e ')}`}
         </p>
+        {/* As que ficam fora da fila: o motivo no title (mouse) e, inteiro, para o leitor de tela. */}
+        {ignoradas && (
+          <p className={styles.ignoradas}>
+            <span title={ignoradas.motivo} aria-hidden="true">
+              {ignoradas.texto}
+            </span>
+            <span className="sr-only">
+              {ignoradas.texto}. {ignoradas.motivo}
+            </span>
+          </p>
+        )}
 
         {barra && (
           <div className={styles.barra}>

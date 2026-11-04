@@ -61,6 +61,25 @@ export function chaveEfetiva(pessoa, salva) {
   return CONFIGURADAS.includes(pessoa?.funcao) ? pessoa.funcao : null;
 }
 
+// O texto da faixa de cima da Fila, por responsabilidade: curto, para caber inteiro no item.
+const TEXTO_DAS_FAIXAS = {
+  projetos_sem_normas: 'Sem Normas',
+  projetos_finalizando: 'Finalizando',
+};
+
+/**
+ * As faixas cruzadas do item da Fila no Quadro: só em Projetos Novos - Sem normas
+ * e em Projetos Novos - Finalizando; nas outras, null.
+ * tom: a cor (a mesma da "Situação" do card); texto: o das faixas; rotulo: o que o leitor de tela diz.
+ * @param {string | null | undefined} chave a responsabilidade que vale (chaveEfetiva)
+ * @returns {{ tom: string, texto: string, rotulo: string } | null}
+ */
+export function faixaDaFila(chave) {
+  if (!ehResponsabilidade(chave) || !Object.hasOwn(TEXTO_DAS_FAIXAS, chave)) return null;
+  const { rotulo, situacao } = RESPONSABILIDADES[chave];
+  return { tom: situacao.tom, texto: TEXTO_DAS_FAIXAS[chave], rotulo };
+}
+
 /**
  * A pessoa como o card a mostra na responsabilidade que vale: `funcao` vira o
  * grupo dela, e `responsabilidade`, a chave. Quem foi para o outro grupo (de
@@ -300,6 +319,24 @@ export function aguardandoDe(pessoa) {
   if (pessoa?.funcao === 'projetos') return { valor, legenda: 'no projeto', divididaCom };
   const mes = pessoa?.aguardando?.mes;
   return { valor, legenda: mes ? `déficit · planilha de ${nomeDoMes(mes)}` : 'déficit da planilha', divididaCom: [] };
+}
+
+// Por que as ignoradas não contam no "aguardando" (scripts/lib/compilacao/ignoradas.mjs).
+const MOTIVO_DAS_IGNORADAS =
+  'Não entram na fila: eficácia prejudicada, finanças e orçamento público, ou arquivo ilegível/corrompido.';
+
+/**
+ * "501 normas ignoradas", embaixo do "Aguardando Compilação" de Projetos Novos:
+ * as normas do projeto que ficam fora da fila. null fora de Projetos, sem o
+ * número (o servidor manda null quando não sabe) ou com zero.
+ * @param {object | null} pessoa
+ * @returns {{ valor: number, texto: string, motivo: string } | null}
+ */
+export function ignoradasDe(pessoa) {
+  const valor = pessoa?.funcao === 'projetos' ? pessoa.projeto?.ignoradas : null;
+  if (!Number.isInteger(valor) || valor <= 0) return null;
+  const texto = `${valor.toLocaleString('pt-BR')} ${valor === 1 ? 'norma ignorada' : 'normas ignoradas'}`;
+  return { valor, texto, motivo: MOTIVO_DAS_IGNORADAS };
 }
 
 /**

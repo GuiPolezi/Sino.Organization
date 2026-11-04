@@ -148,6 +148,12 @@ export default function CardDesenvolvedor() {
   return (
     // A key refaz as animações de entrada ao trocar de pessoa.
     <aside key={tecnico.id} className={`${card.card} ${styles.card}`} aria-label={`Informações de ${tecnico.nome}`}>
+      {/* Antes do cabeçalho: assim o X flutua no canto quando o card rola (CardTecnico.module.css). */}
+      <button type="button" className={card.fechar} aria-label="Fechar" onClick={() => selecionar(null)}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
       <header className={card.topo}>
         <div className={styles.avatar} style={{ '--cor-avatar': aparenciaDe(tecnico.id).camisa }} aria-hidden="true">
           {tecnico.avatarIniciais}
@@ -156,11 +162,6 @@ export default function CardDesenvolvedor() {
           <h2>{tecnico.nome}</h2>
           {tecnico.funcao && <p>{tecnico.funcao}</p>}
         </div>
-        <button type="button" className={card.fechar} aria-label="Fechar" onClick={() => selecionar(null)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
       </header>
 
       {tecnico.ausente && (
