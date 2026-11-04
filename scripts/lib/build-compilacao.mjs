@@ -143,14 +143,16 @@ function pessoaDeAtualizacoes(membro, ctx) {
   const producao = vazio();
   const fontes = vazio();
   const porTipo = vazio();
+  // Hoje, Semana e o Mês atual vêm do sistema (decisão de 04/11: o Mês da planilha
+  // ficava "—" até a aba do mês ser importada). A planilha fica com o Todo o Tempo,
+  // a carteira e o aguardando. Só sem o sistema (opção "vazio") o Mês é da planilha.
   if (sistema) {
-    for (const p of ['hoje', 'semana']) {
+    for (const p of PERIODOS_DO_SISTEMA) {
       producao[p] = sistema[p].distintas;
       fontes[p] = 'sistema';
       porTipo[p] = sistema[p].porBalde;
     }
-  }
-  if (resumo?.mes != null) {
+  } else if (resumo?.mes != null) {
     producao.mes = resumo.mes;
     fontes.mes = 'planilha';
     porTipo.mes = resumo.porTipoMes;

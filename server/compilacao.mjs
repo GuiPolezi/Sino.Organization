@@ -39,11 +39,11 @@ export function conferirUmaPessoa(listas) {
   }
 }
 
-// Versões: só as inclusões (acao=1), que são a produção. Quem faz Atualizações tem
-// o Mês pela planilha: para essas pessoas basta a semana e a janela recente.
-async function auditoriaDaPessoa(cliente, membro, { inicioProjetos, inicioAtualizacoes, inicioJanela, hoje }) {
+// Versões: só as inclusões (acao=1), que são a produção. Hoje, Semana e Mês vêm
+// daqui para todas as pessoas, então a busca vai desde o começo do mês (ou da
+// semana ou da janela, o que vier antes).
+async function auditoriaDaPessoa(cliente, membro, { inicioVersoes: dataInicial, inicioJanela, hoje }) {
   const pessoa = { usuarioId: membro.usuarioId };
-  const dataInicial = membro.funcao === 'projetos' ? inicioProjetos : inicioAtualizacoes;
   const versoes = await cliente.listarTudo('Auditoria', { ...pessoa, modulo: 'Versões', acao: 1, dataInicial, dataFinal: hoje });
   const normas =
     membro.funcao === 'projetos'
@@ -154,13 +154,12 @@ export async function buscarCompilacao({
   const equipe = lerEquipe(env.COMPILACAO_EQUIPE);
   const { hoje, semana, mes } = calcularPeriodos(agora);
   const inicioJanela = diasAntes(hoje, JANELA_DIAS);
-  const inicioProjetos = [semana.inicio, mes.inicio, inicioJanela].sort()[0];
-  const inicioAtualizacoes = [semana.inicio, inicioJanela].sort()[0];
+  const inicioVersoes = [semana.inicio, mes.inicio, inicioJanela].sort()[0];
 
   const { catalogo, doSistema: catalogoDoSistema } = await lerCatalogo(cliente, avisar);
 
   const resultados = await Promise.allSettled(
-    equipe.map((membro) => auditoriaDaPessoa(cliente, membro, { inicioProjetos, inicioAtualizacoes, inicioJanela, hoje })),
+    equipe.map((membro) => auditoriaDaPessoa(cliente, membro, { inicioVersoes, inicioJanela, hoje })),
   );
   // Sem nenhuma pessoa (login recusado, sistema fora): erro, e o cache antigo continua.
   if (resultados.every((r) => r.status === 'rejected')) throw resultados[0].reason;
@@ -196,7 +195,7 @@ export async function buscarCompilacao({
     catalogo,
     catalogoDoSistema,
     hoje,
-    inicioVersoes: inicioProjetos,
+    inicioVersoes,
     agora,
     avisar,
   });

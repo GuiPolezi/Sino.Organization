@@ -28,6 +28,7 @@ export const pessoaDeProjetos = (extra = {}) => ({
   ...extra,
 });
 
+// Mês "—": o caso em que o sistema não respondeu para o Mês (no normal, vem "pelo sistema").
 export const pessoaDeAtualizacoes = (extra = {}) => ({
   funcao: 'atualizacoes',
   desde: null,

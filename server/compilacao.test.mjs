@@ -79,8 +79,9 @@ test('monta as 7 pessoas com os números do sistema e das planilhas', async () =
     [dados.pessoas.leonardo.projeto.total, dados.pessoas.leonardo.projeto.compiladas, dados.pessoas.leonardo.projeto.aguardando],
     [40, 30, 10],
   );
-  assert.equal(dados.pessoas.gdressano.producao.mes, 10);
-  assert.equal(dados.pessoas.gdressano.fontes.mes, 'planilha');
+  assert.deepEqual([dados.pessoas.gdressano.producao.mes, dados.pessoas.gdressano.fontes.mes], [1, 'sistema']);
+  assert.equal(dados.pessoas.gdressano.producao.tudo, 30);
+  assert.equal(dados.pessoas.gdressano.fontes.tudo, 'planilha');
 });
 
 test('fica dentro do limite de pedidos por busca (≤ 40) e só lê as rotas permitidas', async () => {
@@ -131,9 +132,9 @@ test('sem a configuração da equipe, erro seguro de configuração', async () =
   await assert.rejects(() => buscar({ env: {} }), CompilacaoError);
 });
 
-test('sem Supabase, Atualizações fica com Mês e Todo o Tempo "—" e Projetos segue', async () => {
+test('sem Supabase, Atualizações fica com Todo o Tempo "—" (o Mês é do sistema) e Projetos segue', async () => {
   const dados = await buscar({ pedirSupabase: null });
-  assert.deepEqual([dados.pessoas.gdressano.producao.mes, dados.pessoas.gdressano.producao.tudo], [null, null]);
+  assert.deepEqual([dados.pessoas.gdressano.producao.mes, dados.pessoas.gdressano.producao.tudo], [1, null]);
   assert.equal(dados.pessoas.leonardo.producao.mes, 6);
 });
 
@@ -184,13 +185,13 @@ test('lerPlanilhas sem Supabase devolve null; sem ninguém de Atualizações, li
   assert.equal(pedir.caminhos.length, 0);
 });
 
-test('no fim do mês, Atualizações não pede o mês inteiro (o Mês delas vem da planilha)', async () => {
+test('no fim do mês, todos pedem o mês inteiro (o Mês vem do sistema para todos)', async () => {
   const cliente = clienteFalso();
   await buscar({ cliente, agora: new Date('2026-11-25T15:00:00Z') });
   const versoes = cliente.pedidos.filter((p) => p.controller === 'Auditoria' && p.filtros.modulo === 'Versões');
   const inicio = (id) => versoes.find((p) => String(p.filtros.usuarioId) === id).filtros.dataInicial;
   assert.equal(inicio('900001'), '2026-11-01'); // Projetos: o mês
-  assert.equal(inicio('900005'), '2026-11-09'); // Atualizações: a janela de 16 dias (antes da semana)
+  assert.equal(inicio('900005'), '2026-11-01'); // Atualizações: também o mês
 });
 
 test(`no máximo ${MAX_PARES} pares cidade×tipo têm estoque por busca`, async () => {

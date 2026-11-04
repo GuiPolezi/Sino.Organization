@@ -93,26 +93,28 @@ for (const membro of equipe.filter((m) => m.funcao === 'projetos')) {
 }
 anotar();
 
-anotar(`## Atualizações: compiladas do mês (planilha) × Auditoria`);
+anotar(`## Atualizações: Mês (sistema) × lista direta, e a planilha para comparar`);
 anotar();
 const planilhas = pedirSoLeitura
   ? await pedirSoLeitura(
       `/compilacao_planilhas?select=personagem,compiladas&ano=eq.${ANO_MES}&mes=eq.${NUM_MES}&limit=1000`,
     )
   : null;
-anotar(`| Pessoa | Mês rota | Σ linhas da aba | Auditoria (distintas) | Razão | Situação |`);
+anotar(`| Pessoa | Mês rota | Mês direta | Σ linhas da aba | Planilha ÷ sistema | Situação |`);
 anotar(`|---|---|---|---|---|---|`);
 for (const membro of equipe.filter((m) => m.funcao === 'atualizacoes')) {
   const rota = doMes.pessoas[membro.personagem]?.producao.mes ?? null;
   const soma = Array.isArray(planilhas)
     ? planilhas.filter((l) => l.personagem === membro.personagem).reduce((a, l) => a + (l.compiladas ?? 0), 0)
     : null;
-  const auditoria = distintas(await versoesDe(membro, `${MES}-01`, FIM_DO_MES));
-  const razao = rota !== null && auditoria > 0 ? rota / auditoria : null;
+  const direta = distintas(await versoesDe(membro, `${MES}-01`, FIM_DO_MES));
+  // A planilha só serve de referência (D10): fora da faixa é aviso, não diferença.
+  const razao = soma !== null && direta > 0 ? soma / direta : null;
   const naFaixa = razao === null || (razao >= FAIXA[0] && razao <= FAIXA[1]);
-  const ok = rota === soma && naFaixa;
+  const ok = rota === direta;
   if (!ok) diferencas += 1;
-  anotar(`| ${membro.personagem} | ${rota ?? '—'} | ${soma ?? '—'} | ${auditoria} | ${razao === null ? '—' : razao.toFixed(2)} | ${ok ? 'ok' : rota === soma ? 'fora da faixa' : 'DIFERENTE'} |`);
+  const situacao = !ok ? 'DIFERENTE' : naFaixa ? 'ok' : 'ok (planilha fora da faixa)';
+  anotar(`| ${membro.personagem} | ${rota ?? '—'} | ${direta} | ${soma ?? '—'} | ${razao === null ? '—' : razao.toFixed(2)} | ${situacao} |`);
 }
 anotar();
 

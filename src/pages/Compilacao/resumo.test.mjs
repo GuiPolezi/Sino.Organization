@@ -16,7 +16,7 @@ const dados = {
   pessoas: {
     leonardo: pessoaDeProjetos(),
     ramon: pessoaDeProjetos({ producao: { hoje: 1, semana: 5, mes: 90, tudo: null }, porTipo: { ...pessoaDeProjetos().porTipo, mes: { leis: 0, decretos: 0, resolucoes: 0, portarias: 0, complementares: 85, emendas: 0, outros: 5 } } }),
-    damaris: pessoaDeAtualizacoes(), // Mês "—" (aba do mês não importada)
+    damaris: pessoaDeAtualizacoes(), // Mês "—" (o sistema não respondeu)
   },
 };
 

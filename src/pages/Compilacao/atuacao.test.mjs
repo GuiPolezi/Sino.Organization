@@ -77,7 +77,8 @@ test('"—" não é 0: sem número, total e tipos ficam null com o motivo', () =
   assert.equal(tudo.total, null);
   assert.equal(tudo.legenda, 'ainda sem histórico');
   assert.ok(tudo.porTipo.every(({ valor }) => valor === null));
-  assert.equal(normasDoPeriodo(pessoaDeAtualizacoes(), 'mes', doDia).legenda, 'planilha do mês ainda não importada');
+  // O Mês de Atualizações vem do sistema: "—" só quando ele não respondeu.
+  assert.equal(normasDoPeriodo(pessoaDeAtualizacoes(), 'mes', doDia).legenda, 'sem dado');
   // F6: com o histórico carregado, o Todo o Tempo de Projetos tem número e fonte.
   const comHistorico = pessoaDeProjetos({
     producao: { hoje: 3, semana: 12, mes: 40, tudo: 900 },

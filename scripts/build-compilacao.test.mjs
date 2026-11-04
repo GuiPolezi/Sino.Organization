@@ -134,9 +134,8 @@ test('I1/I2: a soma dos tipos é o total, por pessoa e período', () => {
 test('I13: normas distintas nunca passam do número de versões', () => {
   const auditoria = auditoriaSintetica();
   const dados = montar({ auditoria });
-  // Só onde o Mês vem do sistema (Projetos); em Atualizações o Mês é da planilha.
-  for (const [id, { personagem, funcao }] of Object.entries(EQUIPE_CONFIG)) {
-    if (funcao !== 'projetos') continue;
+  // O Mês vem do sistema para as 7 pessoas.
+  for (const [id, { personagem }] of Object.entries(EQUIPE_CONFIG)) {
     assert.ok(dados.pessoas[personagem].producao.mes <= auditoria[id].versoes.length);
   }
   assert.ok(pessoa('leonardo').producao.hoje < 4, 'a norma com 2 versões vale 1');
@@ -232,11 +231,11 @@ test('dado da pessoa que não foi buscado fica "—", nunca 0', () => {
 
 // ---------- Atualizações ----------
 
-test('Atualizações sem a aba do mês: mês "—" e aguardando da aba mais recente com o mês', () => {
+test('Atualizações: o Mês atual vem do sistema, mesmo sem a aba do mês; aguardando da aba mais recente', () => {
   const p = pessoa('damaris');
-  assert.equal(p.producao.mes, null);
-  assert.equal(p.fontes.mes, null);
-  assert.equal(p.porTipo.mes, null);
+  assert.equal(p.producao.mes, 3);
+  assert.equal(p.fontes.mes, 'sistema');
+  assert.equal(soma(p.porTipo.mes), 3);
   assert.deepEqual(p.aguardando, { valor: 3, fonte: 'planilha', mes: '2026-10' });
   assert.deepEqual(p.planilha, { mes: '2026-10', importadaEm: '2026-11-01T12:00:00.000Z' });
 });
@@ -254,8 +253,10 @@ test('Atualizações: a carteira são as cidades ativas da aba, sem as que saír
   assert.deepEqual(pessoa('damaris').cidades.map((c) => c.nome).sort(), ['cidade d', 'cidade e']);
 });
 
-test('Atualizações com a aba do mês: mês = compiladas da aba e aguardando = déficit dela', () => {
-  const p = pessoa('gdressano');
+test('Atualizações com a aba do mês: o Mês continua do sistema; aguardando = déficit da aba', () => {
+  assert.deepEqual([pessoa('gdressano').producao.mes, pessoa('gdressano').fontes.mes], [1, 'sistema']);
+  // Só sem o sistema (opção "vazio") o Mês é o das compiladas da aba.
+  const p = pessoa('gdressano', { atualizacoesDiaSemana: 'vazio' });
   assert.equal(p.producao.mes, 10);
   assert.equal(p.fontes.mes, 'planilha');
   assert.equal(p.producao.tudo, 30);
@@ -280,9 +281,9 @@ test('D12 opção B por configuração: hoje e semana de Atualizações ficam "�
   assert.equal(p.porTipo.hoje, null);
 });
 
-test('Atualizações sem nenhuma aba: mês, tudo e aguardando ficam "—"', () => {
+test('Atualizações sem nenhuma aba: tudo e aguardando ficam "—"; o Mês segue do sistema (0 é 0)', () => {
   const p = pessoa('nathalia');
-  assert.deepEqual([p.producao.mes, p.producao.tudo], [null, null]);
+  assert.deepEqual([p.producao.mes, p.fontes.mes, p.producao.tudo], [0, 'sistema', null]);
   assert.deepEqual(p.aguardando, { valor: null, fonte: null });
   assert.equal(p.planilha, null);
   assert.deepEqual(p.cidades, []);
@@ -290,7 +291,8 @@ test('Atualizações sem nenhuma aba: mês, tudo e aguardando ficam "—"', () =
 
 test('Atualizações: planilhas ainda não lidas (null) dão "—", não zero', () => {
   const p = pessoa('damaris', { planilhas: null });
-  assert.deepEqual([p.producao.mes, p.producao.tudo], [null, null]);
+  assert.equal(p.producao.tudo, null);
+  assert.equal(pessoa('damaris', { planilhas: null, atualizacoesDiaSemana: 'vazio' }).producao.mes, null);
 });
 
 test('o projeto de Atualizações não existe', () => {
@@ -473,7 +475,7 @@ test('linha de planilha fora do formato deixa a pessoa sem números de planilha 
     linhas: [...planilhasSinteticas.linhas, { personagem: 'gdressano', ano: 2026, mes: 11, balde: 'leis', compiladas: -1, deficit: 0 }],
   };
   const avisos = [];
-  const p = pessoa('gdressano', { planilhas, avisar: (m) => avisos.push(m) });
+  const p = pessoa('gdressano', { planilhas, atualizacoesDiaSemana: 'vazio', avisar: (m) => avisos.push(m) });
   assert.deepEqual([p.producao.mes, p.producao.tudo, p.aguardando.valor], [null, null, null]);
   assert.equal(avisos.length, 1);
 });

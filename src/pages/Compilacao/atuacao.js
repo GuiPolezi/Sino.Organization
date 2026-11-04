@@ -5,10 +5,11 @@
  * atividade mais recente. Aqui só se traduz para a tela: as contas são do servidor.
  *
  * Regra de vazio: 0 só quando a fonte respondeu 0; null vira "—" (sem dado, não
- * se aplica, aba da planilha não importada). Nunca "+—".
+ * se aplica, a fonte não respondeu). Nunca "+—".
  *
  * Responsabilidades (fixas por configuração no servidor):
- *   atualizacoes  mantém em dia as normas das cidades da carteira (pela planilha)
+ *   atualizacoes  mantém em dia as normas das cidades da carteira (Hoje, Semana e
+ *                 Mês pelo sistema; Todo o Tempo, carteira e aguardando pela planilha)
  *   projetos      monta a base de uma cidade nova (cidade e tipo(s) pelo sistema)
  */
 import { TIPOS_DE_NORMA } from './dados.js';
@@ -129,7 +130,6 @@ const LEGENDA_DA_FONTE = { sistema: 'pelo sistema', planilha: 'pela planilha' };
 function semDado(pessoa, periodo, deOutroDia) {
   if (deOutroDia) return 'aguardando os números de hoje';
   if (pessoa?.funcao === 'projetos' && periodo === 'tudo') return 'ainda sem histórico';
-  if (pessoa?.funcao === 'atualizacoes' && periodo === 'mes') return 'planilha do mês ainda não importada';
   return 'sem dado';
 }
 
