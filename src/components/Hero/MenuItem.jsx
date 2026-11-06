@@ -3,13 +3,11 @@ import styles from './MenusNav.module.css';
 
 /*
  * Um item dos menus: link de página, botão de modal ou, se ainda não foi
- * desenvolvido, um texto apagado que troca para "EM BREVE". Os itens prontos
- * abrem um banner com foto atrás do nome (hover, foco por teclado e a
- * apresentação do botão "Menus").
+ * desenvolvido, um texto apagado que troca por "EM BREVE" no hover/foco.
  * Os `data-menu` são os alvos das animações (menusAnimations.js).
  */
 export default function MenuItem({ item, handlers, soonHandlers, onOpenModal }) {
-  const { label, href, modal, banner } = item;
+  const { label, href, modal } = item;
 
   if (isSoon(item)) {
     return (
@@ -40,20 +38,9 @@ export default function MenuItem({ item, handlers, soonHandlers, onOpenModal }) 
   }
 
   const content = (
-    <>
-      <span className={styles.banner} data-menu="banner" aria-hidden="true">
-        {banner && (
-          <span
-            className={styles.bannerImage}
-            data-menu="banner-image"
-            style={{ backgroundImage: `url("${banner}")` }}
-          />
-        )}
-      </span>
-      <span className={styles.label} data-menu="label">
-        {label}
-      </span>
-    </>
+    <span className={styles.label} data-menu="label">
+      {label}
+    </span>
   );
   const common = {
     className: styles.item,
@@ -67,7 +54,7 @@ export default function MenuItem({ item, handlers, soonHandlers, onOpenModal }) 
       <button
         type="button"
         aria-haspopup="dialog"
-        onClick={(event) => onOpenModal(event, modal)}
+        onClick={() => onOpenModal(modal)}
         {...common}
       >
         {content}

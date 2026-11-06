@@ -2,17 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MEDIA, matches } from '../../utils/media.js';
+import ImageReveal from './ImageReveal.jsx';
 import MenuItem from './MenuItem.jsx';
 import MenusButton from './MenusButton.jsx';
 import ReunioesModal from './ReunioesModal.jsx';
 import { menus } from './menus.js';
-import {
-  buildTour,
-  closeBanner,
-  hideSoonLabels,
-  openBanner,
-  rollSoon,
-} from './menusAnimations.js';
+import { buildTour, hideSoonLabels, rollSoon } from './menusAnimations.js';
 import styles from './MenusNav.module.css';
 
 // Itens sem página própria abrem um destes modais (chave = `modal` em menus.js).
@@ -36,10 +31,9 @@ const isKeyboardFocus = (element) => {
 
 export default function MenusNav() {
   const root = useRef(null);
+  const reveal = useRef(null);
   const tour = useRef(null);
   const soonTimer = useRef(null);
-  // Botão que abriu o modal com mouse/toque: ao fechar, o <dialog> devolve o foco a ele.
-  const pointerOpener = useRef(null);
   const [touring, setTouring] = useState(false);
   const [openModal, setOpenModal] = useState(null);
   const Modal = openModal ? MODALS[openModal] : null;
@@ -47,26 +41,27 @@ export default function MenusNav() {
   const { contextSafe } = useGSAP(() => hideSoonLabels(root.current), { scope: root });
 
   useEffect(() => {
-    // Pré-carrega para a foto do banner já estar pronta no primeiro hover.
+    // Pré-carrega para a imagem já estar pronta no primeiro hover.
     if (!matches(MEDIA.hover)) return;
     menus.forEach(({ items }) =>
-      items.forEach(({ banner }) => {
-        if (banner) new Image().src = banner;
+      items.forEach(({ image }) => {
+        if (image) new Image().src = image;
       }),
     );
   }, []);
 
   useEffect(() => {
     // Ao voltar de outra página pelo histórico (bfcache), a home volta congelada
-    // com o banner do clique aberto, sem o mouseleave: fecha em quem não está em uso.
+    // com a imagem do clique à mostra, sem o mouseleave: esconde se ninguém está em cima.
     const restore = (event) => {
       if (!event.persisted || !root.current) return;
       // No toque o :hover fica grudado no último item tocado: lá ele não conta.
-      const canHover = matches(MEDIA.hover);
-      root.current.querySelectorAll('[data-menu="item"]').forEach((item) => {
-        const isHovered = canHover && item.matches(':hover');
-        if (!isHovered && !isKeyboardFocus(item)) closeBanner(item, { reduced: true });
-      });
+      const hovered =
+        matches(MEDIA.hover) &&
+        [...root.current.querySelectorAll('[data-menu="item"]')].some((item) =>
+          item.matches(':hover'),
+        );
+      if (!hovered) reveal.current?.hide();
     };
     window.addEventListener('pageshow', restore);
     return () => window.removeEventListener('pageshow', restore);
@@ -75,10 +70,7 @@ export default function MenusNav() {
   const playTour = contextSafe(() => {
     if (tour.current?.isActive()) return;
     tour.current?.kill();
-    // O tour anima o mesmo nome que o banner desloca: fecha qualquer banner aberto.
-    root.current
-      .querySelectorAll('[data-menu="item"]')
-      .forEach((item) => closeBanner(item, { reduced: true }));
+    reveal.current?.hide();
     tour.current = buildTour(root.current, {
       reduced: isReduced(),
       onComplete: () => setTouring(false),
@@ -86,9 +78,6 @@ export default function MenusNav() {
     setTouring(true);
     tour.current.play();
   });
-
-  const emphasize = contextSafe((item) => openBanner(item, { reduced: isReduced() }));
-  const relax = contextSafe((item) => closeBanner(item, { reduced: isReduced() }));
 
   const rollTo = contextSafe((item, show) => {
     soonTimer.current?.kill();
@@ -102,19 +91,6 @@ export default function MenusNav() {
     );
   });
 
-  const itemHandlers = {
-    onMouseEnter: (event) => {
-      // No toque, o mouseenter emulado deixaria o banner aberto depois do toque.
-      if (matches(MEDIA.hover)) emphasize(event.currentTarget);
-    },
-    onMouseLeave: (event) => relax(event.currentTarget),
-    // Foco por teclado abre o banner; o foco do clique (ou o que o <dialog> devolve
-    // ao fechar) não, senão ele fica aberto sem o mouse em cima.
-    onFocus: (event) => isKeyboardFocus(event.currentTarget) && emphasize(event.currentTarget),
-    onBlur: (event) => relax(event.currentTarget),
-  };
-
-  // Item "em breve": sem banner, o nome só troca por "EM BREVE".
   const soonHandlers = {
     onMouseEnter: (event) => matches(MEDIA.hover) && rollTo(event.currentTarget, true),
     onMouseLeave: (event) => rollTo(event.currentTarget, false),
@@ -123,23 +99,26 @@ export default function MenusNav() {
     onClick: (event) => !matches(MEDIA.hover) && tapSoon(event.currentTarget),
   };
 
-  const handleOpenModal = (event, modal) => {
-    relax(event.currentTarget);
-    // detail 0 = clique gerado por Enter/Espaço (teclado).
-    pointerOpener.current = event.detail > 0 ? event.currentTarget : null;
+  // Hover: um quadro com a imagem do item acompanha o cursor (só com mouse;
+  // no toque, o mouseenter emulado deixaria a imagem presa depois do toque).
+  const itemHandlers = (image) => ({
+    onMouseEnter: (event) => {
+      if (matches(MEDIA.hover)) reveal.current?.show(image, event.clientX, event.clientY);
+    },
+    onMouseMove: (event) => {
+      if (matches(MEDIA.hover)) reveal.current?.move(event.clientX, event.clientY);
+    },
+    onMouseLeave: () => {
+      if (matches(MEDIA.hover)) reveal.current?.hide();
+    },
+  });
+
+  const handleOpenModal = (modal) => {
+    reveal.current?.hide();
     setOpenModal(modal);
   };
 
-  const handleCloseModal = () => {
-    // Aberto com mouse/toque: o foco devolvido (até por Esc) não reabre o banner,
-    // a menos que o mouse esteja em cima dele.
-    const opener = pointerOpener.current;
-    pointerOpener.current = null;
-    if (opener && !(matches(MEDIA.hover) && opener.matches(':hover'))) {
-      closeBanner(opener, { reduced: true });
-    }
-    setOpenModal(null);
-  };
+  const handleCloseModal = () => setOpenModal(null);
 
   return (
     <nav ref={root} className={styles.nav} aria-label="Menus">
@@ -174,7 +153,7 @@ export default function MenusNav() {
                 <li key={item.label}>
                   <MenuItem
                     item={item}
-                    handlers={itemHandlers}
+                    handlers={itemHandlers(item.image)}
                     soonHandlers={soonHandlers}
                     onOpenModal={handleOpenModal}
                   />
@@ -185,6 +164,7 @@ export default function MenusNav() {
         ))}
       </div>
 
+      <ImageReveal ref={reveal} />
       {Modal && <Modal onClose={handleCloseModal} />}
     </nav>
   );
