@@ -1,5 +1,7 @@
 import gsap from 'gsap';
+import { getYearsSince } from '../../utils/getYearsSince.js';
 
+const COUNT_DURATION = 2;
 const CARD_POP_DURATION = 1.3;
 // Espera máxima pela imagem do card antes de iniciar a entrada.
 const IMAGE_WAIT_MS = 1000;
@@ -16,6 +18,7 @@ const AT = {
   card: 0.5,
   title: 0.85,
   shape: 1,
+  counter: 1.1,
   info: 1.3,
 };
 
@@ -29,6 +32,7 @@ const SCROLL_SMOOTHING = 0.6;
 // O anel anda o bastante para revelar, no painel seguinte, a metade escondida.
 const PARALLAX = {
   shape: 0.045,
+  counter: -0.04,
 };
 
 const addMenus = (tl, q) =>
@@ -79,8 +83,33 @@ const addCard = (tl, q) =>
       AT.info,
     );
 
+// Número e textos sobem; o número conta de 0 até os anos de história.
+const addCounter = (tl, q, countEl) => {
+  const counter = { value: 0 };
+  return tl
+    .from(
+      [...q('[data-intro="counter-number"]'), ...q('[data-intro="counter-text"]')],
+      { autoAlpha: 0, y: 24, duration: 1, ease: 'power3.out', stagger: 0.1 },
+      AT.counter,
+    )
+    .to(
+      counter,
+      {
+        value: getYearsSince(),
+        duration: COUNT_DURATION,
+        ease: 'power3.out',
+        snap: { value: 1 },
+        onUpdate: () => {
+          countEl.textContent = counter.value;
+        },
+      },
+      AT.counter,
+    );
+};
+
 export function playIntro(scope) {
   const q = gsap.utils.selector(scope);
+  const countEl = q('[data-intro="count"]')[0];
   const cardImage = q('[data-intro="card-image"]')[0];
   const tl = gsap.timeline({
     paused: true,
@@ -99,16 +128,20 @@ export function playIntro(scope) {
     if (!reverted) tl.play();
   });
 
+  countEl.textContent = 0;
   addMenus(tl, q);
   addCard(tl, q);
+  addCounter(tl, q, countEl);
   tl.from(
     q('[data-intro="shape"]'),
     { autoAlpha: 0, xPercent: 18, yPercent: 18, duration: 1.4, ease: 'power3.out' },
     AT.shape,
   );
 
+  // O texto do contador é escrito fora do React: devolve o valor final no revert.
   return () => {
     reverted = true;
+    countEl.textContent = getYearsSince();
   };
 }
 

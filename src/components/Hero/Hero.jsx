@@ -7,6 +7,7 @@ import CompanyCard from './CompanyCard.jsx';
 import DecorShape from './DecorShape.jsx';
 import MenusNav from './MenusNav.jsx';
 import { TrackContext } from './TrackContext.js';
+import YearsCounter from './YearsCounter.jsx';
 import {
   playIntro,
   playReducedIntro,
@@ -56,8 +57,9 @@ export default function Hero({ children }) {
 
           <div className={styles.content}>
             <MenusNav />
-            <div className={styles.card}>
+            <div className={styles.bottom}>
               <CompanyCard titleId={TITLE_ID} />
+              <YearsCounter />
             </div>
           </div>
         </section>

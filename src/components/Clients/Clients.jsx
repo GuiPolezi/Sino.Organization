@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { buscarDados } from '../../api/buscarApi.js';
+import { useNearOrIdle } from '../../hooks/useNearOrIdle.js';
 import { MEDIA, matches } from '../../utils/media.js';
 import BrazilMap from './BrazilMap.jsx';
 import { STATES } from './brazilMap.js';
@@ -97,9 +98,14 @@ function PainelClientes({ PLACES, STATS, CLIENT_STATES, CLIENT_UFS }) {
   const [viewUf, setViewUf] = useState(null);
 
   const places = viewUf ? PLACES.filter(({ uf }) => uf === viewUf) : PLACES;
+  // Montar estas animações custa caro (recalcula o estilo do mapa várias vezes):
+  // feito junto com a entrada da home, ela travava. Por isso esperam a seção
+  // chegar perto da tela ou o navegador ficar ocioso.
+  const ready = useNearOrIdle(root);
 
   useGSAP(
     () => {
+      if (!ready) return;
       const mm = gsap.matchMedia();
 
       mm.add(MEDIA.motion, () => {
@@ -108,21 +114,24 @@ function PainelClientes({ PLACES, STATS, CLIENT_STATES, CLIENT_UFS }) {
       });
       mm.add(`${MEDIA.hover} and ${MEDIA.motion}`, () => setupTilt(root.current));
     },
-    { scope: root },
+    { scope: root, dependencies: [ready] },
   );
 
   // Refeito a cada troca de recorte: os pinos mudam e o mapa "nasce" de novo.
   const { contextSafe } = useGSAP(
     () => {
+      // Antes do retorno: uma troca de recorte feita antes de `ready` não pode
+      // deixar o mapa bloqueado para novos cliques.
+      isSwitching.current = false;
+      if (!ready) return;
       const mm = gsap.matchMedia();
 
       mm.add(MEDIA.motion, () => {
         playPins(root.current);
         if (hasSwitched.current) playViewEnter(root.current);
       });
-      isSwitching.current = false;
     },
-    { scope: root, dependencies: [viewUf], revertOnUpdate: true },
+    { scope: root, dependencies: [viewUf, ready], revertOnUpdate: true },
   );
 
   const changeView = contextSafe((uf) => {

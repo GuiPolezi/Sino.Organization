@@ -34,8 +34,11 @@
   gap: 2.5rem;
 }
 
-/* No celular o card fica no fim do painel, depois dos menus. */
-.card {
+/* No celular o card e o contador de anos ficam no fim do painel, depois dos menus. */
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
   margin-top: auto;
 }
 
@@ -51,10 +54,14 @@
     position: static;
   }
 
-  .card {
+  /* Contador de anos ao lado do card, alinhado pela base. */
+  .bottom {
     position: absolute;
     left: calc(var(--u) * 1.875);
     bottom: calc(var(--u) * 1.46);
+    flex-direction: row;
+    align-items: flex-end;
+    gap: calc(var(--u) * 3);
     margin-top: 0;
   }
 }
