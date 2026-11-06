@@ -1,4 +1,4 @@
-// Configuração única dos menus da home: troque `image` aqui quando tiver as imagens finais.
+// Configuração única dos menus da home.
 // Item sem `href` nem `modal` ainda não foi desenvolvido: aparece apagado, com "EM BREVE".
 
 import imgDesenvolvimento from '../../assets/images/dev.png';
@@ -7,29 +7,56 @@ import imgCompilacao from '../../assets/images/juiz.png';
 import imgLicencas from '../../assets/images/license.png';
 import imgReuniao from '../../assets/images/meeting.png';
 
+/*
+ * Fotos dos banners do hover: salve em src/assets/images/menus/ com o nome do
+ * item (licencas, dev, suporte, compilacao, reunioes; embreve para os itens
+ * ainda não desenvolvidos), em jpg, png, webp ou avif. Enquanto a foto não
+ * existir, o banner usa a imagem provisória.
+ */
+// Só os nomes esperados: outra imagem salva na pasta não entra no build.
+const BANNER_FILES = import.meta.glob(
+  '../../assets/images/menus/{licencas,dev,suporte,compilacao,reunioes,embreve}.{jpg,jpeg,png,webp,avif}',
+  { eager: true, import: 'default' },
+);
+
+const bannerFor = (name, fallback) => {
+  const match = Object.entries(BANNER_FILES).find(
+    ([path]) => path.split('/').pop().replace(/\.\w+$/, '') === name,
+  );
+  return match ? match[1] : fallback;
+};
+
 export const menus = [
   {
     title: 'Sistemas',
-    items: [{ label: 'Licenças', href: '/licencas', image: imgLicencas }],
+    items: [
+      { label: 'Licenças', href: '/licencas', banner: bannerFor('licencas', imgLicencas) },
+    ],
   },
   {
     title: 'Setores',
     items: [
       {
         label: 'Dev.',
-        name: 'Desenvolvimento',
         href: '/desenvolvimento',
-        image: imgDesenvolvimento,
+        banner: bannerFor('dev', imgDesenvolvimento),
       },
-      { label: 'Suporte', href: '/suporte', image: imgSuporte },
-      { label: 'Compilação', href: '/compilacao', image: imgCompilacao },
-      { label: 'Digitalização' },
+      { label: 'Suporte', href: '/suporte', banner: bannerFor('suporte', imgSuporte) },
+      {
+        label: 'Compilação',
+        href: '/compilacao',
+        banner: bannerFor('compilacao', imgCompilacao),
+      },
+      // Item "em breve": o banner é a arte cinza com o "EM BREVE" (sem provisória).
+      { label: 'Digitalização', banner: bannerFor('embreve', null) },
     ],
   },
   {
     title: 'Utils',
     // Sem `href`: abre um modal (ver `MODALS` em MenusNav.jsx).
-    items: [{ label: 'Reuniões', modal: 'reunioes', image: imgReuniao }],
+    items: [
+      { label: 'Reuniões', modal: 'reunioes', banner: bannerFor('reunioes', imgReuniao) },
+    ],
   },
 ];
 

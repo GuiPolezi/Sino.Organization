@@ -10,6 +10,8 @@
   --color-finalizando: #1a6e63;
   /* Cinza-azulado do vidro do botão "Menus" da home. */
   --color-glass: #b0c7cf;
+  /* Fundo do banner dos menus "em breve" enquanto a arte carrega. */
+  --color-soon: #969c8b;
 
   /* Variações por opacidade (sempre a partir da paleta) */
   --color-cream-muted: color-mix(in srgb, var(--color-cream) 55%, transparent);

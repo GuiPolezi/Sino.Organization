@@ -49,17 +49,120 @@ export function rollSoon(item, show, { reduced = false } = {}) {
     .to(soon, { yPercent: show ? 0 : 100, opacity: show ? 1 : 0 }, 0);
 }
 
-// Linha sob o item: entra pela esquerda e sai pela direita.
-export function drawUnderline(item, show) {
-  const line = pick(item, 'underline');
-  if (!line) return null;
-  gsap.set(line, { transformOrigin: show ? 'left center' : 'right center' });
-  return gsap.to(line, {
-    scaleX: show ? 1 : 0,
-    duration: show ? 0.6 : 0.45,
-    ease: show ? 'expo.out' : 'power3.inOut',
-    overwrite: 'auto',
-  });
+/*
+ * Banner do hover: abre a partir do centro do item, a foto dá um leve zoom
+ * para trás e o nome desliza e encolhe até o canto superior esquerdo.
+ * As medidas vêm do CSS do banner: `padding` = posição do nome dentro dele,
+ * `font-size` = tamanho final do nome. O padding também é a distância mínima
+ * entre o banner e a borda do painel (12px na arte).
+ */
+const bannerTimelines = new WeakMap();
+// Abertura do recorte (0 = fechado, 1 = aberto), por banner.
+const reveals = new WeakMap();
+
+const revealOf = (banner) => {
+  if (!reveals.has(banner)) reveals.set(banner, { value: 0 });
+  return reveals.get(banner);
+};
+
+const applyReveal = (banner, value) => {
+  const y = (1 - value) * 42;
+  const x = (1 - value) * 50;
+  banner.style.clipPath = `inset(${y}% ${x}% ${y}% ${x}%)`;
+  banner.style.visibility = value > 0 ? 'visible' : 'hidden';
+};
+
+// Onde o banner e o nome terminam, a partir das posições sem transformação.
+function measureBanner(item, banner, label) {
+  const bannerStyle = getComputedStyle(banner);
+  const padX = parseFloat(bannerStyle.paddingLeft);
+  const padY = parseFloat(bannerStyle.paddingTop);
+  const width = banner.offsetWidth;
+  const height = banner.offsetHeight;
+  const bounds = (item.closest('nav') ?? document.documentElement).getBoundingClientRect();
+  const itemRect = item.getBoundingClientRect();
+  const labelRect = label.getBoundingClientRect();
+
+  const centerX = itemRect.left + itemRect.width / 2;
+  const centerY = itemRect.top + itemRect.height / 2;
+  const naturalLeft = centerX - width / 2;
+  const minLeft = bounds.left + padX;
+  const maxLeft = bounds.right - padX - width;
+  // Painel mais estreito que o banner com a margem: centraliza no painel.
+  const left =
+    maxLeft < minLeft
+      ? bounds.left + (bounds.width - width) / 2
+      : gsap.utils.clamp(minLeft, maxLeft, naturalLeft);
+
+  // O nome pode estar no meio de outra animação: desconta o deslocamento atual.
+  const labelLeft = labelRect.left - gsap.getProperty(label, 'x');
+  const labelTop = labelRect.top - gsap.getProperty(label, 'y');
+
+  return {
+    shift: left - naturalLeft,
+    x: left + padX - labelLeft,
+    y: centerY - height / 2 + padY - labelTop,
+    scale: parseFloat(bannerStyle.fontSize) / parseFloat(getComputedStyle(label).fontSize),
+  };
+}
+
+const startBannerTimeline = (item, vars) => {
+  bannerTimelines.get(item)?.kill();
+  const tl = gsap.timeline(vars);
+  bannerTimelines.set(item, tl);
+  return tl;
+};
+
+export function openBanner(item, { reduced = false } = {}) {
+  const banner = pick(item, 'banner');
+  const label = pick(item, 'label');
+  if (!banner || !label) return null;
+
+  const image = pick(item, 'banner-image');
+  const lit = pick(item, 'name-lit');
+  const state = revealOf(banner);
+  const { shift, x, y, scale } = measureBanner(item, banner, label);
+  const time = reduced ? 0 : 1;
+
+  // Acima dos vizinhos: o banner (95px) é um pouco mais alto que o espaço entre itens.
+  gsap.set(item, { zIndex: 2 });
+  gsap.set(banner, { x: shift });
+
+  const tl = startBannerTimeline(item, { defaults: { ease: 'expo.out' } })
+    .to(
+      state,
+      { value: 1, duration: 0.75 * time, onUpdate: () => applyReveal(banner, state.value) },
+      0,
+    )
+    .to(label, { x, y, scale, transformOrigin: '0 0', duration: 0.7 * time }, 0);
+
+  if (image) tl.fromTo(image, { scale: 1.2 }, { scale: 1, duration: 1.2 * time }, 0);
+  if (lit) tl.to(lit, { opacity: 1, duration: 0.4 * time, ease: 'power2.out' }, 0.1 * time);
+  return tl;
+}
+
+export function closeBanner(item, { reduced = false } = {}) {
+  const banner = pick(item, 'banner');
+  const label = pick(item, 'label');
+  if (!banner || !label) return null;
+
+  const lit = pick(item, 'name-lit');
+  const state = revealOf(banner);
+  const time = reduced ? 0 : 1;
+
+  const tl = startBannerTimeline(item, {
+    defaults: { ease: 'power3.inOut' },
+    onComplete: () => gsap.set(item, { clearProps: 'zIndex' }),
+  })
+    .to(
+      state,
+      { value: 0, duration: 0.5 * time, onUpdate: () => applyReveal(banner, state.value) },
+      0,
+    )
+    .to(label, { x: 0, y: 0, scale: 1, duration: 0.55 * time }, 0);
+
+  if (lit) tl.to(lit, { opacity: 0, duration: 0.3 * time }, 0);
+  return tl;
 }
 
 // Centro vertical do elemento, relativo ao topo da coluna.
@@ -85,7 +188,12 @@ function waveItem(item, reduced) {
   const label = pick(item, 'label');
   const line = pick(item, 'underline');
   return tl
-    .to(label, { scale: ITEM_SCALE, duration: 0.4, ease: 'power3.out' }, 0)
+    // Origem no centro: o banner do hover deixa o nome com origem no canto.
+    .to(
+      label,
+      { scale: ITEM_SCALE, transformOrigin: '50% 50%', duration: 0.4, ease: 'power3.out' },
+      0,
+    )
     .to(label, { scale: 1, duration: 0.8, ease: 'power3.inOut' }, 0.4)
     .set(line, { transformOrigin: 'left center' }, 0.05)
     .to(line, { scaleX: 1, duration: 0.5, ease: 'expo.out' }, 0.05)

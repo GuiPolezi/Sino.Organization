@@ -9,6 +9,12 @@
   --dash: 10px;
   --dash-gap: 11px;
   --dash-color: color-mix(in srgb, var(--color-olive-dark) 85%, transparent);
+  /* Banner do hover fora do desktop (só abre por foco de teclado, sem hover no toque). */
+  --banner-width: min(30rem, calc(100vw - 2rem));
+  --banner-height: 6.5rem;
+  --banner-pad-x: 0.875rem;
+  --banner-pad-y: 0.625rem;
+  --banner-label-size: 1.125rem;
 
   position: relative;
   display: flex;
@@ -90,6 +96,7 @@
 }
 
 .item {
+  position: relative;
   display: block;
   /* Reset para o <button> dos itens que abrem modal ficar igual ao link. */
   margin: 0;
@@ -124,7 +131,57 @@
 
 .label {
   position: relative;
+  z-index: 1;
   display: inline-block;
+}
+
+/*
+ * Banner do hover, centrado no item (o JS só o desloca para não passar da
+ * borda). `padding` e `font-size` são lidos pelo JS: são a posição e o tamanho
+ * do nome dentro do banner (menusAnimations.js). Começa fechado pelo recorte.
+ */
+.banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--banner-width);
+  height: var(--banner-height);
+  margin: calc(var(--banner-height) / -2) 0 0 calc(var(--banner-width) / -2);
+  padding: var(--banner-pad-y) var(--banner-pad-x);
+  overflow: hidden;
+  background: var(--color-olive-dark);
+  font-size: var(--banner-label-size);
+  clip-path: inset(42% 50% 42% 50%);
+  visibility: hidden;
+}
+
+/* Sombra à esquerda, para o nome ser lido sobre a foto. */
+.banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-olive-dark) 72%, transparent) 0%,
+    color-mix(in srgb, var(--color-olive-dark) 28%, transparent) 32%,
+    transparent 58%
+  );
+}
+
+.bannerImage {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+}
+
+/* "Em breve": a arte cinza com o aviso (embreve.png), sem a sombra das fotos. */
+.bannerSoon {
+  background: var(--color-soon);
+}
+
+.bannerSoon::after {
+  content: none;
 }
 
 .underline {
@@ -153,8 +210,17 @@
 }
 
 .name {
+  position: relative;
   display: block;
   color: color-mix(in srgb, var(--color-olive-dark) 27%, var(--color-olive));
+}
+
+/* Nome claro sobre o banner cinza; aceso pelo hover. */
+.nameLit {
+  position: absolute;
+  inset: 0;
+  color: var(--color-cream);
+  opacity: 0;
 }
 
 .soonText {
@@ -177,6 +243,12 @@
     --item-gap: calc(var(--u) * 3.37);
     --dash: calc(var(--u) * 1.11);
     --dash-gap: calc(var(--u) * 1.18);
+    /* Banner do hover: 530×115px na arte de 1440px, nome de 22px a 16px/12px do canto. */
+    --banner-width: calc(var(--u) * 36.8);
+    --banner-height: calc(var(--u) * 8);
+    --banner-pad-x: calc(var(--u) * 1.1);
+    --banner-pad-y: calc(var(--u) * 0.85);
+    --banner-label-size: calc(var(--u) * 1.5);
   }
 
   /* Na arte, as divisórias ficam a 476px e 1006px. */

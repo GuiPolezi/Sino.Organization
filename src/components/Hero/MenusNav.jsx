@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { MEDIA, matches } from '../../utils/media.js';
-import ImageReveal from './ImageReveal.jsx';
 import MenuItem from './MenuItem.jsx';
 import MenusButton from './MenusButton.jsx';
 import ReunioesModal from './ReunioesModal.jsx';
 import { menus } from './menus.js';
-import { buildTour, drawUnderline, hideSoonLabels, rollSoon } from './menusAnimations.js';
+import {
+  buildTour,
+  closeBanner,
+  hideSoonLabels,
+  openBanner,
+  rollSoon,
+} from './menusAnimations.js';
 import styles from './MenusNav.module.css';
 
 // Itens sem página própria abrem um destes modais (chave = `modal` em menus.js).
@@ -15,7 +20,7 @@ const MODALS = {
   reunioes: ReunioesModal,
 };
 
-// No toque não há hover: o "EM BREVE" aparece no toque e some sozinho.
+// No toque não há hover (nem banner): o "EM BREVE" aparece no toque e some sozinho.
 const SOON_TAP_HOLD = 1.6;
 
 const isReduced = () => matches(MEDIA.reducedMotion);
@@ -31,7 +36,6 @@ const isKeyboardFocus = (element) => {
 
 export default function MenusNav() {
   const root = useRef(null);
-  const reveal = useRef(null);
   const tour = useRef(null);
   const soonTimer = useRef(null);
   // Botão que abriu o modal com mouse/toque: ao fechar, o <dialog> devolve o foco a ele.
@@ -43,29 +47,26 @@ export default function MenusNav() {
   const { contextSafe } = useGSAP(() => hideSoonLabels(root.current), { scope: root });
 
   useEffect(() => {
-    // Pré-carrega para a imagem já estar pronta no primeiro hover.
+    // Pré-carrega para a foto do banner já estar pronta no primeiro hover.
     if (!matches(MEDIA.hover)) return;
     menus.forEach(({ items }) =>
-      items.forEach(({ image }) => {
-        if (image) new Image().src = image;
+      items.forEach(({ banner }) => {
+        if (banner) new Image().src = banner;
       }),
     );
   }, []);
 
   useEffect(() => {
     // Ao voltar de outra página pelo histórico (bfcache), a home volta congelada
-    // no destaque do clique, sem o mouseleave: desfaz em quem não está em uso.
+    // com o banner do clique aberto, sem o mouseleave: fecha em quem não está em uso.
     const restore = (event) => {
       if (!event.persisted || !root.current) return;
       // No toque o :hover fica grudado no último item tocado: lá ele não conta.
       const canHover = matches(MEDIA.hover);
-      let hovered = false;
       root.current.querySelectorAll('[data-menu="item"]').forEach((item) => {
         const isHovered = canHover && item.matches(':hover');
-        hovered ||= isHovered;
-        if (!isHovered && !isKeyboardFocus(item)) drawUnderline(item, false);
+        if (!isHovered && !isKeyboardFocus(item)) closeBanner(item, { reduced: true });
       });
-      if (!hovered) reveal.current?.hide();
     };
     window.addEventListener('pageshow', restore);
     return () => window.removeEventListener('pageshow', restore);
@@ -74,7 +75,10 @@ export default function MenusNav() {
   const playTour = contextSafe(() => {
     if (tour.current?.isActive()) return;
     tour.current?.kill();
-    reveal.current?.hide();
+    // O tour anima o mesmo nome que o banner desloca: fecha qualquer banner aberto.
+    root.current
+      .querySelectorAll('[data-menu="item"]')
+      .forEach((item) => closeBanner(item, { reduced: true }));
     tour.current = buildTour(root.current, {
       reduced: isReduced(),
       onComplete: () => setTouring(false),
@@ -83,66 +87,48 @@ export default function MenusNav() {
     tour.current.play();
   });
 
-  const emphasize = contextSafe((item) => {
-    if (!isReduced()) drawUnderline(item, true);
-  });
-  const relax = contextSafe((item) => drawUnderline(item, false));
-
-  const rollTo = contextSafe((item, show) => {
-    soonTimer.current?.kill();
-    rollSoon(item, show, { reduced: isReduced() });
-  });
+  const emphasize = contextSafe((item) => openBanner(item, { reduced: isReduced() }));
+  const relax = contextSafe((item) => closeBanner(item, { reduced: isReduced() }));
 
   const tapSoon = contextSafe((item) => {
-    rollTo(item, true);
+    soonTimer.current?.kill();
+    rollSoon(item, true, { reduced: isReduced() });
     soonTimer.current = gsap.delayedCall(SOON_TAP_HOLD, () =>
       rollSoon(item, false, { reduced: isReduced() }),
     );
   });
 
+  const itemHandlers = {
+    onMouseEnter: (event) => {
+      // No toque, o mouseenter emulado deixaria o banner aberto depois do toque.
+      if (matches(MEDIA.hover)) emphasize(event.currentTarget);
+    },
+    onMouseLeave: (event) => relax(event.currentTarget),
+    // Foco por teclado abre o banner; o foco do clique (ou o que o <dialog> devolve
+    // ao fechar) não, senão ele fica aberto sem o mouse em cima.
+    onFocus: (event) => isKeyboardFocus(event.currentTarget) && emphasize(event.currentTarget),
+    onBlur: (event) => relax(event.currentTarget),
+  };
+
   const soonHandlers = {
-    onMouseEnter: (event) => matches(MEDIA.hover) && rollTo(event.currentTarget, true),
-    onMouseLeave: (event) => rollTo(event.currentTarget, false),
-    onFocus: (event) => isKeyboardFocus(event.currentTarget) && rollTo(event.currentTarget, true),
-    onBlur: (event) => rollTo(event.currentTarget, false),
+    ...itemHandlers,
     onClick: (event) => !matches(MEDIA.hover) && tapSoon(event.currentTarget),
   };
 
-  const itemHandlers = (image) => ({
-    onMouseEnter: (event) => {
-      // No toque, o mouseenter emulado deixaria o item destacado depois do toque.
-      if (!matches(MEDIA.hover)) return;
-      emphasize(event.currentTarget);
-      reveal.current?.show(image, event.clientX, event.clientY);
-    },
-    onMouseMove: (event) => {
-      if (matches(MEDIA.hover)) reveal.current?.move(event.clientX, event.clientY);
-    },
-    onMouseLeave: (event) => {
-      relax(event.currentTarget);
-      if (matches(MEDIA.hover)) reveal.current?.hide();
-    },
-    // Foco por teclado destaca; o foco do clique (ou o que o <dialog> devolve ao
-    // fechar) não, senão o item fica sublinhado sem o mouse em cima.
-    onFocus: (event) => isKeyboardFocus(event.currentTarget) && emphasize(event.currentTarget),
-    onBlur: (event) => relax(event.currentTarget),
-  });
-
   const handleOpenModal = (event, modal) => {
     relax(event.currentTarget);
-    reveal.current?.hide();
     // detail 0 = clique gerado por Enter/Espaço (teclado).
     pointerOpener.current = event.detail > 0 ? event.currentTarget : null;
     setOpenModal(modal);
   };
 
   const handleCloseModal = () => {
-    // Aberto com mouse/toque: o foco devolvido (até por Esc) não deixa o item destacado,
+    // Aberto com mouse/toque: o foco devolvido (até por Esc) não reabre o banner,
     // a menos que o mouse esteja em cima dele.
     const opener = pointerOpener.current;
     pointerOpener.current = null;
     if (opener && !(matches(MEDIA.hover) && opener.matches(':hover'))) {
-      drawUnderline(opener, false);
+      closeBanner(opener, { reduced: true });
     }
     setOpenModal(null);
   };
@@ -180,7 +166,7 @@ export default function MenusNav() {
                 <li key={item.label}>
                   <MenuItem
                     item={item}
-                    handlers={itemHandlers(item.image)}
+                    handlers={itemHandlers}
                     soonHandlers={soonHandlers}
                     onOpenModal={handleOpenModal}
                   />
@@ -191,7 +177,6 @@ export default function MenusNav() {
         ))}
       </div>
 
-      <ImageReveal ref={reveal} />
       {Modal && <Modal onClose={handleCloseModal} />}
     </nav>
   );
