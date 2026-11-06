@@ -686,7 +686,7 @@ export function gorroDe(id) {
 |---|---|
 | Suporte | `roberto` classico · `fabio` luxo · `guilherme-p` trico (cacheado com mechas: os cachos escapam por baixo) · `luiz` elfo (careca) |
 | Desenvolvimento | `adriano` caido · `antonio` mini (deixa o headset à mostra) · `arnaldo` bengala · `caique` classico · `donizeti` trico (volumoso) · `eduardo` elfo · `guilherme-a` casa (cachinhos) · `gustavo` luxo · `ketlyn` mini (comprido) · `rafael` caido (até o ombro) |
-| Compilação | `leonardo` classico · `ramon` elfo · `gdressano` bengala · `glopes` mini (coque samurai à mostra) · `nathalia` luxo · `laura` caido · `damaris` trico (cacheado longo) |
+| Compilação | `leonardo` classico · `ramon` elfo · `gdressano` bengala · `glopes` mini (coque samurai à mostra) · `nathalia` luxo · `laura` caido · `damaris` trico (comprido liso) |
 
 - **Suporte e Compilação:** nenhum estilo se repete.
 - **Desenvolvimento:** 10 pessoas e 8 estilos; repetem só `classico`, `caido` e `mini`, sempre em pessoas

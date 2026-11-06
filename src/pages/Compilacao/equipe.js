@@ -96,7 +96,8 @@ export const APARENCIAS_COMPILACAO = {
     acessorio: 'nenhum',
     altura: 0.94,
   },
-  // Pele morena mais clara, cabelo cacheado longo e preto, sem óculos, e roupa social
+  // Pele morena mais clara, cabelo liso, comprido e preto (sem as mechas dos lados
+  // do rosto), sem óculos, e roupa social
   // (blazer azul-ardósia sobre a camisa branca, sem o uniforme; o tom é claro o
   // bastante para as iniciais escuras do avatar do card continuarem legíveis).
   damaris: {
@@ -104,7 +105,7 @@ export const APARENCIAS_COMPILACAO = {
     camisa: '#6A7FA8',
     social: true,
     calca: CALCAS[4],
-    cabelo: { estilo: 'cacheadoLongo', cor: PRETO },
+    cabelo: { estilo: 'comprido', cor: PRETO, semLaterais: true },
     acessorio: 'nenhum',
     altura: 0.96,
   },

@@ -114,7 +114,13 @@ const NENHUM_CACHO = [];
 const peca = (ajuste, chave, padrao) => (ajuste && Object.hasOwn(ajuste, chave) ? ajuste[chave] : padrao);
 
 // `ajuste`: o cabelo sob o gorro de Natal. Indefinido, o desenho é o de sempre.
-function Cabelo({ estilo, material, materialMechas, materialDegrade, ajuste }) {
+// `semLaterais`: no comprido, tira as mechas dos lados do rosto.
+function Cabelo({ estilo, material, materialMechas, materialDegrade, ajuste, semLaterais = false }) {
+  const laterais = semLaterais
+    ? null
+    : LADOS.map((lado) => (
+        <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
+      ));
   if (estilo === 'curto') return <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />;
   // Degradê: cheio em cima, sumindo nas laterais e na nuca (geometrias.js).
   if (estilo === 'degrade') {
@@ -175,9 +181,7 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade, ajuste }) {
       <>
         <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.55} scale={1.03} />
         <mesh geometry={G.rabo} material={material} {...rabo} />
-        {LADOS.map((lado) => (
-          <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
-        ))}
+        {laterais}
       </>
     );
   }
@@ -189,9 +193,7 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade, ajuste }) {
       <>
         <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.72} scale={1.03} />
         <mesh geometry={G.rabo} material={material} {...rabo} />
-        {LADOS.map((lado) => (
-          <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
-        ))}
+        {laterais}
       </>
     );
   }
@@ -492,6 +494,7 @@ export function Figura({ id, aparencia, materiais, partes = {}, aceno = false, n
           materialMechas={materiais.mechas ?? materiais.cabelo}
           materialDegrade={materiais.degrade}
           ajuste={sobGorro}
+          semLaterais={aparencia.cabelo.semLaterais}
         />
         <Barba estilo={aparencia.barba} material={materiais.barbaRala ?? materiais.cabelo} />
         <AcessorioCabeca

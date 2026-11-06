@@ -23,7 +23,8 @@
  * @property {string} pele    hex
  * @property {string} camisa  hex
  * @property {string} calca   hex
- * @property {{ estilo: EstiloCabelo, cor: string, mechas?: string }} cabelo  mechas: cor das luzes
+ * @property {{ estilo: EstiloCabelo, cor: string, mechas?: string, semLaterais?: boolean }} cabelo  mechas: cor das luzes;
+ *   semLaterais: no comprido (com ou sem franja), sem as mechas que caem dos lados do rosto
  * @property {'nenhum' | 'oculos' | 'headset' | 'bone' | 'maleta' | 'gravata'} acessorio
  * @property {'nenhuma' | 'bigode' | 'cavanhaque' | 'fechada' | 'curta' | 'grande'} [barba]  usa a cor do cabelo
  * @property {string} [olhos]  hex; escuros quando ausente
