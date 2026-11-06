@@ -10,11 +10,13 @@
  */
 import { useLayoutEffect, useMemo } from 'react';
 import { ContactShadows } from '@react-three/drei';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
 import { PALETA } from '../../Suporte/cena/paleta.js';
 import { useEquipe } from '../../Suporte/store.js';
 import { useReuniao } from '../store.js';
 import { G, HabilitarCamada } from './comum.js';
 import { configurarLugares } from './lugares.js';
+import NatalReuniao from './natal/NatalReuniao.jsx';
 import Mobilia from './Mobilia.jsx';
 import Paisagem from './Paisagem.jsx';
 import ParedeVidro from './ParedeVidro.jsx';
@@ -48,6 +50,7 @@ export default function CenarioReuniao() {
       <Paisagem tema={tema} />
       <ParedeVidro />
       <Mobilia plano={plano} luminariaAcesa={tema.luminaria} />
+      {NATAL_ATIVO && <NatalReuniao tema={tema} />}
 
       {/* Fica em y = 0 (como em Suporte/cena/Cenario.jsx): deslocado, o desfoque sai vazio. */}
       <ContactShadows scale={ESCALA_SOMBRA} resolution={512} blur={2.2} opacity={0.45} far={2.6} color={PALETA.olivaEscuro} />

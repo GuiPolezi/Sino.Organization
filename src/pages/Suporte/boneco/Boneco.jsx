@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { Color, DoubleSide, MathUtils, Vector3 } from 'three';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
+import { cabeloSobGorro } from '../../../tema/natal/gorros/encaixe.js';
+import Gorro from '../../../tema/natal/gorros/Gorro.jsx';
 import { cardEmDialogo } from '../card/modoDialogo.js';
 import { PALETA } from '../cena/paleta.js';
 import { useEquipe } from '../store.js';
@@ -96,7 +99,22 @@ const CACHINHOS = espalharCachos([
 // Duas a cada cinco mechas recebem a cor das luzes, sem formar fileiras.
 const temLuzes = (indice) => indice % 5 === 1 || indice % 5 === 3;
 
-function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
+// Peças que um gorro pode mover ou esconder (tema/natal/gorros/encaixe.js); estas são as de sempre.
+const TOPETE_MEDIO = { position: [0, 0.25, 0.03], scale: [1.6, 0.7, 1.8] };
+const COQUE = { position: [0, 0.34, -0.14] };
+const PE_DO_COQUE = { position: [0, 0.335, -0.13], 'rotation-x': -0.5 };
+const COQUE_SAMURAI = { position: [0, 0.42, -0.17], scale: [1.05, 0.95, 1.05] };
+const TOPETE_VOLUMOSO = { position: [0, 0.32, 0.19], scale: [1.05, 0.6, 0.85] };
+const TOPETE = { position: [0, 0.3, 0.2], scale: [1.2, 0.9, 1.1] };
+const MOICANO = { position: [0, 0.3, -0.04], 'rotation-x': Math.PI / 2 - 0.25, scale: [1, 1, 1.6] };
+const RABO_LONGO = { position: [0, -0.14, -0.2], scale: [1.15, 1, 0.55] };
+const RABO_COMPRIDO = { position: [0, -0.32, -0.3], scale: [1.25, 1.5, 0.5] };
+const NENHUM_CACHO = [];
+// Sem ajuste, a peça de sempre; com ele, a do ajuste (null = escondida).
+const peca = (ajuste, chave, padrao) => (ajuste && Object.hasOwn(ajuste, chave) ? ajuste[chave] : padrao);
+
+// `ajuste`: o cabelo sob o gorro de Natal. Indefinido, o desenho é o de sempre.
+function Cabelo({ estilo, material, materialMechas, materialDegrade, ajuste }) {
   if (estilo === 'curto') return <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />;
   // Degradê: cheio em cima, sumindo nas laterais e na nuca (geometrias.js).
   if (estilo === 'degrade') {
@@ -108,38 +126,43 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
   // Degradê com o alto médio: o mesmo degradê nas laterais e na nuca, com mais
   // cabelo em cima (um volume achatado no alto da cabeça).
   if (estilo === 'degradeMedio') {
+    const topete = peca(ajuste, 'topete', TOPETE_MEDIO);
     return (
       <>
         <mesh geometry={G.degrade} material={materialDegrade} rotation-x={-0.35} />
-        <mesh geometry={G.topete} material={material} position={[0, 0.25, 0.03]} scale={[1.6, 0.7, 1.8]} />
+        {topete && <mesh geometry={G.topete} material={material} {...topete} />}
       </>
     );
   }
   if (estilo === 'raspado') return <mesh geometry={G.cabeloRaspado} material={material} rotation-x={-0.3} />;
   if (estilo === 'coque') {
+    const coque = peca(ajuste, 'coque', COQUE);
     return (
       <>
         <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.3} />
-        <mesh geometry={G.coque} material={material} position={[0, 0.34, -0.14]} />
+        {coque && <mesh geometry={G.coque} material={material} {...coque} />}
       </>
     );
   }
   // Samurai: cabelo grande puxado para trás, sem franja, cobrindo até a nuca, e
   // preso num coque alto no topo de trás da cabeça.
   if (estilo === 'samurai') {
+    const pe = peca(ajuste, 'peDoCoque', PE_DO_COQUE);
+    const coque = peca(ajuste, 'coque', COQUE_SAMURAI);
     return (
       <>
         <mesh geometry={G.cabeloPuxado} material={material} rotation-x={-0.62} />
-        <mesh geometry={G.peDoCoque} material={material} position={[0, 0.335, -0.13]} rotation-x={-0.5} />
-        <mesh geometry={G.coque} material={material} position={[0, 0.42, -0.17]} scale={[1.05, 0.95, 1.05]} />
+        {pe && <mesh geometry={G.peDoCoque} material={material} {...pe} />}
+        {coque && <mesh geometry={G.coque} material={material} {...coque} />}
       </>
     );
   }
   if (estilo === 'longo') {
+    const rabo = peca(ajuste, 'rabo', RABO_LONGO);
     return (
       <>
         <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.4} />
-        <mesh geometry={G.rabo} material={material} position={[0, -0.14, -0.2]} scale={[1.15, 1, 0.55]} />
+        <mesh geometry={G.rabo} material={material} {...rabo} />
       </>
     );
   }
@@ -147,10 +170,11 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
   // ficar curta, com o cabelo descendo pelas costas até perto da cintura e uma
   // mecha de cada lado do rosto caindo no ombro.
   if (estilo === 'comprido') {
+    const rabo = peca(ajuste, 'rabo', RABO_COMPRIDO);
     return (
       <>
         <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.55} scale={1.03} />
-        <mesh geometry={G.rabo} material={material} position={[0, -0.32, -0.3]} scale={[1.25, 1.5, 0.5]} />
+        <mesh geometry={G.rabo} material={material} {...rabo} />
         {LADOS.map((lado) => (
           <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
         ))}
@@ -160,10 +184,11 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
   // Comprido sem franja: o mesmo do comprido, com o topo bem inclinado para trás,
   // para a linha do cabelo ficar acima da testa (sem franja nenhuma).
   if (estilo === 'compridoSemFranja') {
+    const rabo = peca(ajuste, 'rabo', RABO_COMPRIDO);
     return (
       <>
         <mesh geometry={G.cabeloLongo} material={material} rotation-x={-0.72} scale={1.03} />
-        <mesh geometry={G.rabo} material={material} position={[0, -0.32, -0.3]} scale={[1.25, 1.5, 0.5]} />
+        <mesh geometry={G.rabo} material={material} {...rabo} />
         {LADOS.map((lado) => (
           <mesh key={lado} geometry={G.mechaLateral} material={material} position={[0.3 * lado, -0.16, -0.02]} />
         ))}
@@ -181,52 +206,51 @@ function Cabelo({ estilo, material, materialMechas, materialDegrade }) {
     );
   }
   if (estilo === 'volumoso') {
+    const topete = peca(ajuste, 'topete', TOPETE_VOLUMOSO);
     return (
       <>
         <mesh geometry={G.cabeloVolumoso} material={material} rotation-x={-0.35} />
-        <mesh geometry={G.topete} material={material} position={[0, 0.32, 0.19]} scale={[1.05, 0.6, 0.85]} />
+        {topete && <mesh geometry={G.topete} material={material} {...topete} />}
       </>
     );
   }
   if (estilo === 'topete') {
+    const topete = peca(ajuste, 'topete', TOPETE);
     return (
       <>
         <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />
-        <mesh geometry={G.topete} material={material} position={[0, 0.3, 0.2]} scale={[1.2, 0.9, 1.1]} />
+        {topete && <mesh geometry={G.topete} material={material} {...topete} />}
       </>
     );
   }
+  // Sob o gorro, os cachos do alto (índices da lista) somem.
+  const ocultos = ajuste?.cachosOcultos ?? NENHUM_CACHO;
   if (estilo === 'cacheado' || estilo === 'cacheadoLongo') {
-    return (estilo === 'cacheado' ? CACHOS : CACHOS_LONGOS).map((posicao, indice) => (
-      <mesh
-        key={indice}
-        geometry={G.cacho}
-        material={temLuzes(indice) ? materialMechas : material}
-        position={posicao}
-      />
-    ));
+    return (estilo === 'cacheado' ? CACHOS : CACHOS_LONGOS).map((posicao, indice) =>
+      ocultos.includes(indice) ? null : (
+        <mesh
+          key={indice}
+          geometry={G.cacho}
+          material={temLuzes(indice) ? materialMechas : material}
+          position={posicao}
+        />
+      ),
+    );
   }
   // Sobre a base do curto, para não aparecer couro entre os cachinhos.
   if (estilo === 'cachinhos') {
     return (
       <>
         <mesh geometry={G.cabeloCurto} material={material} rotation-x={-0.35} />
-        {CACHINHOS.map((posicao, indice) => (
-          <mesh key={indice} geometry={G.cachinho} material={material} position={posicao} />
-        ))}
+        {CACHINHOS.map((posicao, indice) =>
+          ocultos.includes(indice) ? null : <mesh key={indice} geometry={G.cachinho} material={material} position={posicao} />,
+        )}
       </>
     );
   }
   if (estilo === 'moicano') {
-    return (
-      <mesh
-        geometry={G.moicano}
-        material={material}
-        position={[0, 0.3, -0.04]}
-        rotation-x={Math.PI / 2 - 0.25}
-        scale={[1, 1, 1.6]}
-      />
-    );
+    const crista = peca(ajuste, 'moicano', MOICANO);
+    return crista && <mesh geometry={G.moicano} material={material} {...crista} />;
   }
   return null;
 }
@@ -315,8 +339,8 @@ function Moletom({ material }) {
   );
 }
 
-// Acessórios presos à cabeça; maleta e gravata ficam no corpo.
-function AcessorioCabeca({ tipo, materialBone }) {
+// Acessórios presos à cabeça; maleta e gravata ficam no corpo. `semArco`: sob o gorro, o arco do headset some.
+function AcessorioCabeca({ tipo, materialBone, semArco = false }) {
   if (tipo === 'oculos') {
     return (
       <>
@@ -329,7 +353,7 @@ function AcessorioCabeca({ tipo, materialBone }) {
   if (tipo === 'headset') {
     return (
       <>
-        <mesh geometry={G.arco} material={ESCURO} />
+        {!semArco && <mesh geometry={G.arco} material={ESCURO} />}
         <mesh geometry={G.concha} material={ESCURO} position={[-0.36, 0, 0]} rotation-z={Math.PI / 2} />
         <mesh geometry={G.concha} material={ESCURO} position={[0.36, 0, 0]} rotation-z={Math.PI / 2} />
         <mesh
@@ -403,13 +427,15 @@ export function useMateriais(aparencia) {
  * retrato (Retratos.jsx).
  *
  * @param {object} props
+ * @param {string} [props.id] quem é: escolhe o gorro de Natal
  * @param {ReturnType<typeof aparenciaDe>} props.aparencia
  * @param {ReturnType<typeof useMateriais>} props.materiais
  * @param {object} [props.partes]
  * @param {boolean} [props.aceno]
  * @param {import('react').ReactNode} [props.naMao] o que vai na mão direita (a xícara de /compilacao)
  */
-export function Figura({ aparencia, materiais, partes = {}, aceno = false, naMao = null }) {
+export function Figura({ id, aparencia, materiais, partes = {}, aceno = false, naMao = null }) {
+  const sobGorro = useMemo(() => (NATAL_ATIVO && id ? cabeloSobGorro(id, aparencia) : undefined), [id, aparencia]);
   return (
     <group ref={partes.corpo}>
       {/* Pernas (pivô no quadril) */}
@@ -465,9 +491,15 @@ export function Figura({ aparencia, materiais, partes = {}, aceno = false, naMao
           material={materiais.cabelo}
           materialMechas={materiais.mechas ?? materiais.cabelo}
           materialDegrade={materiais.degrade}
+          ajuste={sobGorro}
         />
         <Barba estilo={aparencia.barba} material={materiais.barbaRala ?? materiais.cabelo} />
-        <AcessorioCabeca tipo={aparencia.acessorio} materialBone={materiais.bone ?? materiais.camisa} />
+        <AcessorioCabeca
+          tipo={sobGorro?.semBone ? 'nenhum' : aparencia.acessorio}
+          materialBone={materiais.bone ?? materiais.camisa}
+          semArco={sobGorro?.semArco}
+        />
+        {NATAL_ATIVO && id && <Gorro id={id} aparencia={aparencia} />}
       </group>
     </group>
   );
@@ -526,6 +558,7 @@ export default function Boneco({ tecnico }) {
       />
 
       <Figura
+        id={id}
         aparencia={aparencia}
         materiais={materiais}
         partes={partes}

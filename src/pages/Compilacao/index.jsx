@@ -4,6 +4,8 @@ import PaginaEquipe from '../Suporte/PaginaEquipe.jsx';
 import { acompanharComplementos } from '../Suporte/api/acompanharComplementos.js';
 import { configurarQuadro } from '../Suporte/quadro/posicao.js';
 import { configurarCena, useEquipe } from '../Suporte/store.js';
+import { NATAL_ATIVO } from '../../tema/natal.js';
+import { configurarNatal } from '../../tema/natal/cenario.js';
 import { buscarCompilacao } from './api/compilacao.js';
 import { acompanharResponsabilidades } from './api/responsabilidades.js';
 import CardCompilador from './card/CardCompilador.jsx';
@@ -12,6 +14,7 @@ import * as cafe from './cena/cafe.js';
 import CenarioCompilacao from './cena/CenarioCompilacao.jsx';
 import EstatuaTemis from './cena/EstatuaTemis.jsx';
 import { aplicarPlanta } from './cena/lugares.js';
+import { NATAL_COMPILACAO } from './cena/natal/configNatal.js';
 import { CENA_COMPILACAO, QUADRO_COMPILACAO } from './cena/planta.js';
 import Xicara from './cena/Xicara.jsx';
 import { APARENCIAS_COMPILACAO, buscarEquipe } from './equipe.js';
@@ -30,6 +33,7 @@ import { useCompilacao } from './store.js';
 configurarCena(CENA_COMPILACAO);
 aplicarPlanta(false);
 configurarQuadro(QUADRO_COMPILACAO);
+if (NATAL_ATIVO) configurarNatal(NATAL_COMPILACAO);
 registrarAparencias(APARENCIAS_COMPILACAO);
 configurarExtra({
   criar: cafe.criar,

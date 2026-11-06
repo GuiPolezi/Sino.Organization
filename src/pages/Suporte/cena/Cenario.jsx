@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { ContactShadows } from '@react-three/drei';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
+import NatalCenario from '../../../tema/natal/NatalCenario.jsx';
 import { CENA } from '../store.js';
 import { PALETA } from './paleta.js';
 
@@ -36,6 +38,7 @@ export default function Cenario({ area }) {
         far={2.6}
         color={PALETA.olivaEscuro}
       />
+      {NATAL_ATIVO && <NatalCenario area={area} />}
     </group>
   );
 }

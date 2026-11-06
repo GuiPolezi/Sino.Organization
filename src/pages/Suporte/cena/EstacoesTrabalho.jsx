@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { ESTACOES } from '../boneco/estacoes.js';
 import { clay } from '../boneco/geometrias.js';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
+import EnfeitesEstacao from './natal/EnfeitesEstacao.jsx';
 
 const CORES = {
   madeira: '#DDBE98',
@@ -68,6 +70,8 @@ function Estacao({ estacao, indice, materiais: M }) {
         <mesh geometry={G.cilindro} material={M.escuro} position={[0, 0.26, 0]} scale={[0.06, 0.46, 0.06]} />
         <mesh geometry={G.cilindro} material={M.escuro} position={[0, 0.03, 0]} scale={[0.46, 0.04, 0.46]} />
       </group>
+
+      {NATAL_ATIVO && <EnfeitesEstacao indice={indice} />}
     </group>
   );
 }

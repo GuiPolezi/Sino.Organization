@@ -4,6 +4,8 @@ import PaginaEquipe from '../Suporte/PaginaEquipe.jsx';
 import { acompanharComplementos } from '../Suporte/api/acompanharComplementos.js';
 import { configurarQuadro } from '../Suporte/quadro/posicao.js';
 import { configurarCena, useEquipe } from '../Suporte/store.js';
+import { NATAL_ATIVO } from '../../tema/natal.js';
+import { configurarNatal } from '../../tema/natal/cenario.js';
 import { buscarChamados } from './api/chamados.js';
 import { buscarEquipe, buscarExMembros } from './api/equipe.js';
 import { APARENCIAS_DEV } from './aparencias.js';
@@ -11,6 +13,7 @@ import CardDesenvolvedor from './card/CardDesenvolvedor.jsx';
 import CardQuadro from './card/CardQuadro.jsx';
 import EstacoesDesenvolvimento from './cena/EstacoesDesenvolvimento.jsx';
 import { CENA_DEV, CORREDOR_DEV, basesDasMesas } from './cena/estacoes.js';
+import { NATAL_DEV } from './cena/natal/configNatal.js';
 import QuadroDesenvolvimento from './quadro/QuadroDesenvolvimento.jsx';
 
 /*
@@ -26,6 +29,7 @@ import QuadroDesenvolvimento from './quadro/QuadroDesenvolvimento.jsx';
 configurarCena(CENA_DEV);
 definirEstacoes(basesDasMesas(false));
 configurarQuadro({ corredorPaisagem: CORREDOR_DEV });
+if (NATAL_ATIVO) configurarNatal(NATAL_DEV);
 registrarAparencias(APARENCIAS_DEV);
 
 /*

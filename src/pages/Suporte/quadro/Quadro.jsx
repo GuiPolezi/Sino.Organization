@@ -9,6 +9,8 @@ import { MOVIMENTO, passoDoFrame, useEquipe } from '../store.js';
 import { CONFIG_QUADRO, QUADRO, atualizarObstaculos, posicionarQuadro, removerQuadro } from './posicao.js';
 import { texturaFolhaPautada, texturaPapelRasgado, texturaPostIt, texturaQuadroBranco } from './texturas.js';
 import styles from './Quadro.module.css';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
+import EnfeiteQuadro from './natal/EnfeiteQuadro.jsx';
 
 /** @import { AnotacoesQuadro } from './texturas.js' */
 
@@ -322,6 +324,7 @@ export default function Quadro({ area, anotacoes }) {
         <Cavalete materiais={M} />
         <Painel materiais={M} fundo={texturas.fundo} />
         <Anotacoes texturas={texturas.anotacoes} materiais={M} />
+        {NATAL_ATIVO && <EnfeiteQuadro />}
       </group>
 
       {/* Losango dourado: indica que dá para clicar. */}

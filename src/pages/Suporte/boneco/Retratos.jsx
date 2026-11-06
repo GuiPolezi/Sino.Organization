@@ -150,7 +150,7 @@ function Pose({ chave, id, cena, camera, alvo }) {
       <hemisphereLight args={['#FFF7F0', '#B9B2C9', 1.1]} />
       <directionalLight position={[2.5, 4, 5]} intensity={1.25} />
       <directionalLight position={[-3, 2, -2]} intensity={0.5} color="#C9D6FF" />
-      <Figura aparencia={aparencia} materiais={materiais} aceno />
+      <Figura id={id} aparencia={aparencia} materiais={materiais} aceno />
     </>,
     cena,
   );

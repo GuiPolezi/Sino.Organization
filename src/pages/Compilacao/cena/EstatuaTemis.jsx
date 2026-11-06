@@ -8,10 +8,12 @@ import '@fontsource/caveat/latin-700.css';
 import { CONFIG_QUADRO, QUADRO, atualizarObstaculos, posicionarQuadro, removerQuadro } from '../../Suporte/quadro/posicao.js';
 import { novaTextura } from '../../Suporte/quadro/texturas.js';
 import { MOVIMENTO, passoDoFrame, useEquipe } from '../../Suporte/store.js';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
 import styles from '../../Suporte/quadro/Quadro.module.css';
 import { primeirosLugares } from '../destaques.js';
 import { useResumo } from '../useResumo.js';
 import { texturaFolhaTemis } from './folha.js';
+import NatalTemis from './natal/NatalTemis.jsx';
 
 const OURO = '#FFC23D';
 const { damp } = THREE.MathUtils;
@@ -414,6 +416,7 @@ export default function EstatuaTemis({ area }) {
         <Espada M={M} />
         <MaoNaFolha M={M} />
         <Folha M={M} textura={textura} folha={folha} />
+        {NATAL_ATIVO && <NatalTemis />}
       </group>
 
       {/* Losango dourado: indica que dá para clicar. */}

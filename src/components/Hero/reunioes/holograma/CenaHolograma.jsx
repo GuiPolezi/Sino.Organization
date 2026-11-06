@@ -4,7 +4,9 @@ import * as THREE from 'three';
 import { APARENCIAS_DEV } from '../../../../pages/Desenvolvimento/aparencias.js';
 import { aparenciaDe, registrarAparencias } from '../../../../pages/Suporte/boneco/aparencia.js';
 import { Figura, useMateriais } from '../../../../pages/Suporte/boneco/Boneco.jsx';
+import { NATAL_ATIVO } from '../../../../tema/natal.js';
 import { criarUniformes, holografar, materialProfundidade } from './holoMaterial.js';
+import FlocosHolograficos from './natal/FlocosHolograficos.jsx';
 import Projetor, { TOPO_DISCO } from './Projetor.jsx';
 
 // Na home cabem as duas equipes: suporte (já registrada) e desenvolvimento.
@@ -187,7 +189,7 @@ function BonecoHolografico({ chave, id, saindo, atraso, onSaiu, onVisivel, tempo
   });
 
   // A Figura não muda depois de montada: as cópias de material aplicadas ficam.
-  const figura = useMemo(() => <Figura aparencia={aparencia} materiais={materiais} />, [aparencia, materiais]);
+  const figura = useMemo(() => <Figura id={id} aparencia={aparencia} materiais={materiais} />, [id, aparencia, materiais]);
   return <group ref={grupo}>{figura}</group>;
 }
 
@@ -264,6 +266,7 @@ function Palco({ pessoaId, reduzido, onPronto }) {
       <directionalLight position={[2.5, 4, 5]} intensity={1.2} />
       <directionalLight position={[-3, 2, -3]} intensity={0.9} color="#9FF5EA" />
       <Projetor tempo={tempo} energia={energia} />
+      {NATAL_ATIVO && <FlocosHolograficos tempo={tempo} energia={energia} />}
       <group ref={flutuante}>
         <group ref={giratorio} rotation-y={TRES_QUARTOS}>
           {elenco.map((item) => (

@@ -10,7 +10,9 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { FORMA_PUFE } from '../../Reuniao/cena/planta.js';
 import { MOVIMENTO } from '../../Suporte/store.js';
+import { NATAL_ATIVO } from '../../../tema/natal.js';
 import { MESA_CAFE } from './planta.js';
+import NatalCafe from './natal/NatalCafe.jsx';
 
 const G = {
   caixa: new THREE.BoxGeometry(1, 1, 1),
@@ -207,6 +209,7 @@ export default function CantoDoCafe({ cafe, pufes }) {
         <group position={[-0.56, altura, -0.18]}>
           <Vaso M={M} />
         </group>
+        {NATAL_ATIVO && <NatalCafe altura={altura} />}
       </group>
 
       {pufes.map((pufe) => (
