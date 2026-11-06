@@ -1,21 +1,22 @@
 import gsap from 'gsap';
-import { getYearsSince } from '../../utils/getYearsSince.js';
 
-const COUNT_DURATION = 2;
 const CARD_POP_DURATION = 1.3;
 // Espera máxima pela imagem do card antes de iniciar a entrada.
 const IMAGE_WAIT_MS = 1000;
 // Deslocamento extra do título: cobre a folga (padding) da máscara de cada linha.
 const TITLE_OFFSET_PERCENT = 165;
 
-// Momento (s) em que cada bloco entra na timeline.
+// Momento (s) em que cada bloco entra na timeline. Os menus abrem a cena de
+// cima para baixo; o card e o anel chegam em seguida.
 const AT = {
-  card: 0,
-  title: 0.35,
-  shape: 0.6,
-  info: 0.8,
-  counter: 0.9,
-  sectors: 1.1,
+  menusButton: 0,
+  menuTitles: 0.15,
+  menuDividers: 0.3,
+  menuItems: 0.4,
+  card: 0.5,
+  title: 0.85,
+  shape: 1,
+  info: 1.3,
 };
 
 // Scroll vertical gasto por pixel de deslocamento horizontal: abaixo de 1,
@@ -28,8 +29,31 @@ const SCROLL_SMOOTHING = 0.6;
 // O anel anda o bastante para revelar, no painel seguinte, a metade escondida.
 const PARALLAX = {
   shape: 0.045,
-  counter: -0.04,
 };
+
+const addMenus = (tl, q) =>
+  tl
+    .from(
+      q('[data-intro="menus-button"]'),
+      { autoAlpha: 0, y: -12, scale: 0.9, duration: 1 },
+      AT.menusButton,
+    )
+    .from(
+      q('[data-intro="menu-title"]'),
+      { autoAlpha: 0, yPercent: 45, duration: 1.1, stagger: 0.12 },
+      AT.menuTitles,
+    )
+    // Um único "scale" serve à linha vertical (desktop) e à horizontal (celular).
+    .from(
+      q('[data-intro="menu-divider"]'),
+      { scale: 0, duration: 1.4, ease: 'expo.inOut', stagger: 0.12 },
+      AT.menuDividers,
+    )
+    .from(
+      q('[data-intro="menu-item"]'),
+      { autoAlpha: 0, y: 24, duration: 1, stagger: 0.06 },
+      AT.menuItems,
+    );
 
 // O card surge inteiro (fundo, imagem e sombra juntos), com um "bounce" na escala.
 const addCard = (tl, q) =>
@@ -55,53 +79,8 @@ const addCard = (tl, q) =>
       AT.info,
     );
 
-const addCounter = (tl, q, countEl) => {
-  const counter = { value: 0 };
-  return tl
-    .from(
-      [
-        ...q('[data-intro="counter-number"]'),
-        ...q('[data-intro="counter-text"]'),
-      ],
-      { autoAlpha: 0, y: 24, duration: 1, ease: 'power3.out', stagger: 0.1 },
-      AT.counter,
-    )
-    .to(
-      counter,
-      {
-        value: getYearsSince(),
-        duration: COUNT_DURATION,
-        ease: 'power3.out',
-        snap: { value: 1 },
-        onUpdate: () => {
-          countEl.textContent = counter.value;
-        },
-      },
-      AT.counter,
-    );
-};
-
-const addSectors = (tl, q) =>
-  tl
-    .from(
-      q('[data-intro="sectors-label"]'),
-      { autoAlpha: 0, y: 16, duration: 0.9, ease: 'power3.out' },
-      AT.sectors,
-    )
-    .from(
-      q('[data-intro="sector"]'),
-      { autoAlpha: 0, y: 28, duration: 1, stagger: 0.1 },
-      AT.sectors + 0.1,
-    )
-    .from(
-      q('[data-intro="sector-line"]'),
-      { scaleX: 0, stagger: 0.1 },
-      AT.sectors + 0.1,
-    );
-
 export function playIntro(scope) {
   const q = gsap.utils.selector(scope);
-  const countEl = q('[data-intro="count"]')[0];
   const cardImage = q('[data-intro="card-image"]')[0];
   const tl = gsap.timeline({
     paused: true,
@@ -120,20 +99,16 @@ export function playIntro(scope) {
     if (!reverted) tl.play();
   });
 
-  countEl.textContent = 0;
+  addMenus(tl, q);
   addCard(tl, q);
-  addCounter(tl, q, countEl);
-  addSectors(tl, q);
   tl.from(
     q('[data-intro="shape"]'),
     { autoAlpha: 0, xPercent: 18, yPercent: 18, duration: 1.4, ease: 'power3.out' },
     AT.shape,
   );
 
-  // O texto do contador é escrito fora do React: devolve o valor final no revert.
   return () => {
     reverted = true;
-    countEl.textContent = getYearsSince();
   };
 }
 

@@ -94,15 +94,16 @@
 }
 
 .address {
-  margin-top: calc(var(--info-gap) * 2.3);
+  margin-top: var(--address-gap, calc(var(--info-gap) * 2.3));
 }
 
 .hours {
-  margin-top: var(--info-gap);
+  margin-top: var(--hours-gap, var(--info-gap));
+  line-height: var(--hours-line-height, 1.2);
 }
 
 .link {
-  margin-top: calc(var(--info-gap) * 2.3);
+  margin-top: var(--link-gap, calc(var(--info-gap) * 2.3));
   color: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -116,16 +117,28 @@
 }
 
 @media (min-width: 1024px) {
+  /* Na arte: 527×275px, título de 60px e textos de 13px. */
   .card {
-    --card-padding-inline: calc(var(--u) * 2.64);
-    --card-padding-block: calc(var(--u) * 1.94);
-    --title-size: clamp(2.75rem, calc(var(--u) * 6.67), 9rem);
-    --info-size: clamp(0.75rem, calc(var(--u) * 1.39), 1.875rem);
-    --info-gap: calc(var(--u) * 0.76);
+    --card-padding-inline: calc(var(--u) * 2.2);
+    --card-padding-block: calc(var(--u) * 2);
+    --title-size: clamp(2.25rem, calc(var(--u) * 4.46), 6.5rem);
+    --info-size: clamp(0.6875rem, calc(var(--u) * 0.975), 1.25rem);
+    --address-gap: calc(var(--u) * 1.1);
+    --hours-gap: calc(var(--u) * 1.94);
+    --hours-line-height: 1.05;
+    --link-gap: calc(var(--u) * 1.25);
 
-    width: calc(var(--u) * 46.6);
-    aspect-ratio: 671 / 368;
+    /* Altura mínima em vez de aspect-ratio: em notebooks pequenos os textos
+       (com tamanho mínimo) cabem e o card cresce, sem cortar o link. */
+    width: calc(var(--u) * 36.6);
+    min-height: calc(var(--u) * 19.1);
+    display: flex;
     flex: none;
+  }
+
+  /* Ocupa o card inteiro, inclusive quando ele cresce além da altura mínima. */
+  .mask {
+    flex: 1;
   }
 
   .shadow {

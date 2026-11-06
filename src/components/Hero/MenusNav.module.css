@@ -1,0 +1,218 @@
+.nav {
+  /* Opacidade do título em repouso; a apresentação volta para ela (menusAnimations.js). */
+  --menu-title-opacity: 0.55;
+  --columns-gap: 2rem;
+  --title-size: clamp(2.5rem, 12vw, 3.75rem);
+  --list-gap-top: 1.5rem;
+  --item-size: clamp(1.5rem, 7.5vw, 2.25rem);
+  --item-gap: 1.25rem;
+  --dash: 10px;
+  --dash-gap: 11px;
+  --dash-color: color-mix(in srgb, var(--color-olive-dark) 85%, transparent);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  margin-top: var(--columns-gap);
+}
+
+.columns[data-touring] {
+  pointer-events: none;
+}
+
+.column {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: 2rem;
+}
+
+/* Linha tracejada entre as colunas (horizontal no celular). */
+.divider {
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--dash-color) 0 var(--dash),
+    transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+  );
+  transform-origin: left center;
+}
+
+/* Luz suave que desce pela coluna durante a apresentação. */
+.beam {
+  position: absolute;
+  top: 0;
+  left: -10%;
+  right: -10%;
+  z-index: -1;
+  height: 8rem;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--color-cream) 12%, transparent),
+    transparent
+  );
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.title {
+  font-size: var(--title-size);
+  font-style: italic;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-olive-dark);
+  opacity: var(--menu-title-opacity);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--item-gap);
+  margin-top: var(--list-gap-top);
+}
+
+.item {
+  display: block;
+  /* Reset para o <button> dos itens que abrem modal ficar igual ao link. */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: var(--item-size);
+  font-weight: var(--weight-black);
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Zera qualquer aparência padrão de link, em todos os estados. */
+.item,
+.item:link,
+.item:visited,
+.item:hover,
+.item:active {
+  color: var(--color-cream);
+  text-decoration: none;
+}
+
+.item:focus-visible {
+  outline: 1px solid var(--color-cream);
+  outline-offset: 8px;
+  border-radius: 2px;
+}
+
+.label {
+  position: relative;
+  display: inline-block;
+}
+
+.underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.16em;
+  height: max(2px, 0.05em);
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* Item ainda não desenvolvido. */
+.soon {
+  cursor: default;
+}
+
+/* Máscara da troca de texto, com folga para o til e a cedilha não serem cortados. */
+.roll {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding-block: 0.22em;
+  margin-block: -0.22em;
+}
+
+.name {
+  display: block;
+  color: color-mix(in srgb, var(--color-olive-dark) 27%, var(--color-olive));
+}
+
+.soonText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--color-cream) 72%, transparent);
+}
+
+@media (min-width: 1024px) {
+  /* Medidas da arte (1440×1024) em u: 1u = 14.4px. */
+  .nav {
+    --columns-gap: calc(var(--u) * 3.74);
+    --title-size: calc(var(--u) * 4.4);
+    --list-gap-top: calc(var(--u) * 3.3);
+    --item-size: calc(var(--u) * 2.78);
+    --item-gap: calc(var(--u) * 3.37);
+    --dash: calc(var(--u) * 1.11);
+    --dash-gap: calc(var(--u) * 1.18);
+  }
+
+  /* Na arte, as divisórias ficam a 476px e 1006px. */
+  .columns {
+    grid-template-columns: 33.06fr 36.8fr 30.14fr;
+  }
+
+  .column {
+    padding-block: 0;
+  }
+
+  /* Centraliza os títulos onde estão na arte (248px e 720px). */
+  .column:nth-child(1) {
+    padding-left: calc(var(--u) * 1.39);
+  }
+
+  .column:nth-child(2) {
+    padding-right: calc(var(--u) * 2.92);
+  }
+
+  .divider {
+    top: calc(var(--u) * 3.06);
+    bottom: calc(var(--u) * -2.08);
+    left: 0;
+    right: auto;
+    width: 1px;
+    height: auto;
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--dash-color) 0 var(--dash),
+      transparent var(--dash) calc(var(--dash) + var(--dash-gap))
+    );
+    transform-origin: center top;
+  }
+
+  .beam {
+    height: calc(var(--u) * 11);
+  }
+}

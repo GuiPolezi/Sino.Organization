@@ -16,11 +16,10 @@
   --panel-padding-top: var(--gutter-mobile);
   --panel-padding-inline: var(--gutter-mobile);
   --panel-padding-bottom: 4rem;
-  --top-gap: 2.5rem;
-  --sectors-gap: 3.5rem;
-  --sectors-indent: 0px;
 
   position: relative;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   padding: var(--panel-padding-top) var(--panel-padding-inline)
     var(--panel-padding-bottom);
@@ -30,38 +29,33 @@
 .content {
   position: relative;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: var(--sectors-gap);
-  padding-left: 0;
+  gap: 2.5rem;
 }
 
-.top {
-  display: flex;
-  flex-direction: column;
-  gap: var(--top-gap);
-  
-}
-
-.content > nav {
-  margin-left: var(--sectors-indent);
+/* No celular o card fica no fim do painel, depois dos menus. */
+.card {
+  margin-top: auto;
 }
 
 @media (min-width: 1024px) {
+  /* Na arte: botão "Menus" a 38px do topo; card a 27px da esquerda e 21px da base. */
   .panel {
-    --panel-padding-top: calc(var(--u) * 2);
-    --panel-padding-inline: calc(var(--u) * 1.67);
+    --panel-padding-top: calc(var(--u) * 2.64);
+    --panel-padding-inline: 0px;
     --panel-padding-bottom: 0px;
-    --counter-inset-right: calc(var(--u) * 7.4);
-    /* 6.5u no design; menos 1.8u que a lista de setores ganhou de altura. */
-    --sectors-gap: calc(var(--u) * 4.7);
-    --sectors-indent: calc(var(--u) * 1.87);
   }
 
-  .top {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding-right: var(--counter-inset-right);
+  .content {
+    position: static;
+  }
+
+  .card {
+    position: absolute;
+    left: calc(var(--u) * 1.875);
+    bottom: calc(var(--u) * 1.46);
+    margin-top: 0;
   }
 }
 

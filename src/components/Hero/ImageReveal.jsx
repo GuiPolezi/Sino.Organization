@@ -26,6 +26,8 @@ export default function ImageReveal({ ref }) {
   // Imagem acima do cursor (sem espaço embaixo). Vale até o próximo `show`,
   // para não ficar pulando de lado enquanto o mouse anda no mesmo item.
   const above = useRef(false);
+  // Mesma ideia na horizontal: sem espaço à direita (coluna Utils), vai para a esquerda.
+  const before = useRef(false);
 
   const { contextSafe } = useGSAP(() => {
     follow.current = {
@@ -35,7 +37,10 @@ export default function ImageReveal({ ref }) {
   });
 
   const move = contextSafe((x, y, { immediate = false } = {}) => {
-    const targetX = x + CURSOR_OFFSET;
+    const width = reveal.current.offsetWidth;
+    const afterX = x + CURSOR_OFFSET;
+    if (afterX + width + VIEWPORT_MARGIN > window.innerWidth) before.current = true;
+    const targetX = before.current ? Math.max(0, x - CURSOR_OFFSET - width) : afterX;
     // Sem espaço embaixo (últimos setores em notebooks), a imagem vai para cima
     // do cursor, como um tooltip, em vez de sair da tela ou cobrir o item.
     const height = reveal.current.offsetHeight;
@@ -51,6 +56,7 @@ export default function ImageReveal({ ref }) {
     timeline.current?.kill();
     img.current.style.backgroundImage = `url("${image}")`;
     above.current = false;
+    before.current = false;
     move(x, y, { immediate: true });
     gsap.set(reveal.current, { opacity: 1 });
 

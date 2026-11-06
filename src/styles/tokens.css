@@ -8,6 +8,8 @@
   --color-ink: #11140c; /* texto sobre o mint */
   /* Verde-água da situação "Finalizando" de /compilacao (card da pessoa e Fila do Quadro). */
   --color-finalizando: #1a6e63;
+  /* Cinza-azulado do vidro do botão "Menus" da home. */
+  --color-glass: #b0c7cf;
 
   /* Variações por opacidade (sempre a partir da paleta) */
   --color-cream-muted: color-mix(in srgb, var(--color-cream) 55%, transparent);

@@ -5,9 +5,8 @@ import { useGSAP } from '@gsap/react';
 import { MEDIA } from '../../utils/media.js';
 import CompanyCard from './CompanyCard.jsx';
 import DecorShape from './DecorShape.jsx';
-import SectorsList from './SectorsList.jsx';
+import MenusNav from './MenusNav.jsx';
 import { TrackContext } from './TrackContext.js';
-import YearsCounter from './YearsCounter.jsx';
 import {
   playIntro,
   playReducedIntro,
@@ -56,11 +55,10 @@ export default function Hero({ children }) {
           <DecorShape />
 
           <div className={styles.content}>
-            <div className={styles.top}>
+            <MenusNav />
+            <div className={styles.card}>
               <CompanyCard titleId={TITLE_ID} />
-              <YearsCounter />
             </div>
-           <SectorsList /> 
           </div>
         </section>
 
