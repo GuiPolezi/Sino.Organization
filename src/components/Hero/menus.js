@@ -9,13 +9,13 @@ import imgReuniao from '../../assets/images/meeting.png';
 
 /*
  * Fotos dos banners do hover: salve em src/assets/images/menus/ com o nome do
- * item (licencas, dev, suporte, compilacao, reunioes; embreve para os itens
- * ainda não desenvolvidos), em jpg, png, webp ou avif. Enquanto a foto não
- * existir, o banner usa a imagem provisória.
+ * item (licencas, dev, suporte, compilacao, reunioes), em jpg, png, webp ou
+ * avif. Enquanto a foto não existir, o banner usa a imagem provisória. Itens
+ * "em breve" não têm banner: só trocam o nome por "EM BREVE".
  */
 // Só os nomes esperados: outra imagem salva na pasta não entra no build.
 const BANNER_FILES = import.meta.glob(
-  '../../assets/images/menus/{licencas,dev,suporte,compilacao,reunioes,embreve}.{jpg,jpeg,png,webp,avif}',
+  '../../assets/images/menus/{licencas,dev,suporte,compilacao,reunioes}.{jpg,jpeg,png,webp,avif}',
   { eager: true, import: 'default' },
 );
 
@@ -47,8 +47,7 @@ export const menus = [
         href: '/compilacao',
         banner: bannerFor('compilacao', imgCompilacao),
       },
-      // Item "em breve": o banner é a arte cinza com o "EM BREVE" (sem provisória).
-      { label: 'Digitalização', banner: bannerFor('embreve', null) },
+      { label: 'Digitalização' },
     ],
   },
   {

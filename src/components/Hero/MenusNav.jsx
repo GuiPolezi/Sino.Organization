@@ -20,7 +20,7 @@ const MODALS = {
   reunioes: ReunioesModal,
 };
 
-// No toque não há hover (nem banner): o "EM BREVE" aparece no toque e some sozinho.
+// No toque não há hover: o "EM BREVE" aparece no toque e some sozinho.
 const SOON_TAP_HOLD = 1.6;
 
 const isReduced = () => matches(MEDIA.reducedMotion);
@@ -90,9 +90,13 @@ export default function MenusNav() {
   const emphasize = contextSafe((item) => openBanner(item, { reduced: isReduced() }));
   const relax = contextSafe((item) => closeBanner(item, { reduced: isReduced() }));
 
-  const tapSoon = contextSafe((item) => {
+  const rollTo = contextSafe((item, show) => {
     soonTimer.current?.kill();
-    rollSoon(item, true, { reduced: isReduced() });
+    rollSoon(item, show, { reduced: isReduced() });
+  });
+
+  const tapSoon = contextSafe((item) => {
+    rollTo(item, true);
     soonTimer.current = gsap.delayedCall(SOON_TAP_HOLD, () =>
       rollSoon(item, false, { reduced: isReduced() }),
     );
@@ -110,8 +114,12 @@ export default function MenusNav() {
     onBlur: (event) => relax(event.currentTarget),
   };
 
+  // Item "em breve": sem banner, o nome só troca por "EM BREVE".
   const soonHandlers = {
-    ...itemHandlers,
+    onMouseEnter: (event) => matches(MEDIA.hover) && rollTo(event.currentTarget, true),
+    onMouseLeave: (event) => rollTo(event.currentTarget, false),
+    onFocus: (event) => isKeyboardFocus(event.currentTarget) && rollTo(event.currentTarget, true),
+    onBlur: (event) => rollTo(event.currentTarget, false),
     onClick: (event) => !matches(MEDIA.hover) && tapSoon(event.currentTarget),
   };
 

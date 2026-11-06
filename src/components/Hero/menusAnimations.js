@@ -1,22 +1,23 @@
 import gsap from 'gsap';
 
 /*
- * Animações dos menus da home: o sublinhado do hover, a troca do nome por
- * "EM BREVE" nos itens ainda não desenvolvidos e a apresentação disparada
- * pelo botão "Menus", que percorre as colunas da esquerda para a direita.
+ * Animações dos menus da home: o banner com foto do hover, a troca do nome
+ * por "EM BREVE" nos itens ainda não desenvolvidos e a apresentação disparada
+ * pelo botão "Menus", que percorre as colunas da esquerda para a direita
+ * abrindo o banner de cada item.
  */
 
 // Opacidade das colunas fora de destaque durante a apresentação.
 const DIM = 0.18;
 const TITLE_SCALE = 1.12;
-const ITEM_SCALE = 1.1;
 
 // Ritmo (s) de cada coluna na apresentação.
 const FOCUS = 0.7; // a coluna acende e as outras apagam
 const WAVE_START = 0.55; // a luz chega ao primeiro item
-const STEP = 0.38; // intervalo entre um item e o próximo
+const STEP = 0.7; // intervalo entre um item e o próximo
 const BEAM_MOVE = 0.45; // trajeto da luz até cada item
-const SETTLE = 0.7; // pausa depois do último item, antes do título voltar
+const BANNER_HOLD = 0.8; // o banner fecha logo depois de o próximo abrir por cima
+const SETTLE = 1; // pausa depois do último item, antes do título voltar
 const SOON_HOLD = 1.1; // quanto tempo o "EM BREVE" fica à mostra
 // Quanto a próxima coluna começa antes de a anterior terminar.
 const OVERLAP = 0.6;
@@ -50,11 +51,11 @@ export function rollSoon(item, show, { reduced = false } = {}) {
 }
 
 /*
- * Banner do hover: abre a partir do centro do item, a foto dá um leve zoom
+ * Banner com foto: abre a partir do centro do item, a foto dá um leve zoom
  * para trás e o nome desliza e encolhe até o canto superior esquerdo.
  * As medidas vêm do CSS do banner: `padding` = posição do nome dentro dele,
  * `font-size` = tamanho final do nome. O padding também é a distância mínima
- * entre o banner e a borda do painel (12px na arte).
+ * entre o banner e a borda do painel.
  */
 const bannerTimelines = new WeakMap();
 // Abertura do recorte (0 = fechado, 1 = aberto), por banner.
@@ -70,6 +71,17 @@ const applyReveal = (banner, value) => {
   const x = (1 - value) * 50;
   banner.style.clipPath = `inset(${y}% ${x}% ${y}% ${x}%)`;
   banner.style.visibility = value > 0 ? 'visible' : 'hidden';
+};
+
+// Tween solto (não herda os `defaults` da timeline): a curva vem por parâmetro.
+const revealTo = (banner, value, duration, ease) => {
+  const state = revealOf(banner);
+  return gsap.to(state, {
+    value,
+    duration,
+    ease,
+    onUpdate: () => applyReveal(banner, state.value),
+  });
 };
 
 // Onde o banner e o nome terminam, a partir das posições sem transformação.
@@ -95,6 +107,7 @@ function measureBanner(item, banner, label) {
       : gsap.utils.clamp(minLeft, maxLeft, naturalLeft);
 
   // O nome pode estar no meio de outra animação: desconta o deslocamento atual.
+  // (Com origem no canto superior esquerdo, a escala não mexe nesse canto.)
   const labelLeft = labelRect.left - gsap.getProperty(label, 'x');
   const labelTop = labelRect.top - gsap.getProperty(label, 'y');
 
@@ -106,64 +119,66 @@ function measureBanner(item, banner, label) {
   };
 }
 
-const startBannerTimeline = (item, vars) => {
-  bannerTimelines.get(item)?.kill();
-  const tl = gsap.timeline(vars);
-  bannerTimelines.set(item, tl);
-  return tl;
-};
-
-export function openBanner(item, { reduced = false } = {}) {
+// Timeline de abertura do banner (sem tocar em nada até ser reproduzida).
+function bannerOpening(item, time = 1) {
   const banner = pick(item, 'banner');
   const label = pick(item, 'label');
   if (!banner || !label) return null;
 
   const image = pick(item, 'banner-image');
-  const lit = pick(item, 'name-lit');
-  const state = revealOf(banner);
   const { shift, x, y, scale } = measureBanner(item, banner, label);
-  const time = reduced ? 0 : 1;
 
-  // Acima dos vizinhos: o banner (95px) é um pouco mais alto que o espaço entre itens.
-  gsap.set(item, { zIndex: 2 });
-  gsap.set(banner, { x: shift });
-
-  const tl = startBannerTimeline(item, { defaults: { ease: 'expo.out' } })
+  // O recorte abre na frente e o nome só desliza depois: assim ele não
+  // aparece encolhido fora do banner no meio da animação.
+  const tl = gsap
+    .timeline({ defaults: { ease: 'expo.out' } })
+    // Acima dos vizinhos: o banner é mais alto que o espaço entre os itens.
+    .set(item, { zIndex: 2 }, 0)
+    .set(banner, { x: shift }, 0)
+    .add(revealTo(banner, 1, 0.7 * time, 'expo.out'), 0)
     .to(
-      state,
-      { value: 1, duration: 0.75 * time, onUpdate: () => applyReveal(banner, state.value) },
-      0,
-    )
-    .to(label, { x, y, scale, transformOrigin: '0 0', duration: 0.7 * time }, 0);
+      label,
+      { x, y, scale, transformOrigin: '0 0', duration: 0.7 * time, ease: 'power4.inOut' },
+      0.05 * time,
+    );
 
-  if (image) tl.fromTo(image, { scale: 1.2 }, { scale: 1, duration: 1.2 * time }, 0);
-  if (lit) tl.to(lit, { opacity: 1, duration: 0.4 * time, ease: 'power2.out' }, 0.1 * time);
+  if (image) {
+    tl.fromTo(
+      image,
+      { scale: 1.2 },
+      { scale: 1, duration: 1.2 * time, immediateRender: false },
+      0,
+    );
+  }
   return tl;
 }
 
-export function closeBanner(item, { reduced = false } = {}) {
+// Timeline de fechamento: o nome volta ao lugar e o recorte fecha logo atrás.
+function bannerClosing(item, time = 1) {
   const banner = pick(item, 'banner');
   const label = pick(item, 'label');
   if (!banner || !label) return null;
 
-  const lit = pick(item, 'name-lit');
-  const state = revealOf(banner);
-  const time = reduced ? 0 : 1;
-
-  const tl = startBannerTimeline(item, {
-    defaults: { ease: 'power3.inOut' },
-    onComplete: () => gsap.set(item, { clearProps: 'zIndex' }),
-  })
-    .to(
-      state,
-      { value: 0, duration: 0.5 * time, onUpdate: () => applyReveal(banner, state.value) },
-      0,
-    )
-    .to(label, { x: 0, y: 0, scale: 1, duration: 0.55 * time }, 0);
-
-  if (lit) tl.to(lit, { opacity: 0, duration: 0.3 * time }, 0);
-  return tl;
+  return gsap
+    .timeline({ defaults: { ease: 'power3.inOut' } })
+    .to(label, { x: 0, y: 0, scale: 1, duration: 0.5 * time }, 0)
+    .add(revealTo(banner, 0, 0.5 * time, 'power3.inOut'), 0.12 * time)
+    .set(item, { clearProps: 'zIndex' });
 }
+
+// Hover/foco: só a última animação de cada item vale.
+const playBanner = (item, tl) => {
+  if (!tl) return null;
+  bannerTimelines.get(item)?.kill();
+  bannerTimelines.set(item, tl);
+  return tl;
+};
+
+export const openBanner = (item, { reduced = false } = {}) =>
+  playBanner(item, bannerOpening(item, reduced ? 0 : 1));
+
+export const closeBanner = (item, { reduced = false } = {}) =>
+  playBanner(item, bannerClosing(item, reduced ? 0 : 1));
 
 // Centro vertical do elemento, relativo ao topo da coluna.
 const centerIn = (el, base) => {
@@ -171,7 +186,7 @@ const centerIn = (el, base) => {
   return rect.top + rect.height / 2 - base.top;
 };
 
-// A luz passa pelo item: ele cresce e volta; o "em breve" mostra o aviso.
+// A luz passa pelo item: o banner abre e fecha; o "em breve" mostra o aviso.
 function waveItem(item, reduced) {
   const tl = gsap.timeline();
 
@@ -183,22 +198,9 @@ function waveItem(item, reduced) {
 
   if (reduced) return tl;
 
-  // A origem do sublinhado troca dentro da timeline: um gsap.set solto aqui
-  // rodaria já na montagem, e a linha entraria pela direita.
-  const label = pick(item, 'label');
-  const line = pick(item, 'underline');
-  return tl
-    // Origem no centro: o banner do hover deixa o nome com origem no canto.
-    .to(
-      label,
-      { scale: ITEM_SCALE, transformOrigin: '50% 50%', duration: 0.4, ease: 'power3.out' },
-      0,
-    )
-    .to(label, { scale: 1, duration: 0.8, ease: 'power3.inOut' }, 0.4)
-    .set(line, { transformOrigin: 'left center' }, 0.05)
-    .to(line, { scaleX: 1, duration: 0.5, ease: 'expo.out' }, 0.05)
-    .set(line, { transformOrigin: 'right center' }, 0.55)
-    .to(line, { scaleX: 0, duration: 0.5, ease: 'power3.inOut' }, 0.55);
+  const opening = bannerOpening(item);
+  if (!opening) return tl;
+  return tl.add(opening, 0).add(bannerClosing(item), BANNER_HOLD);
 }
 
 function focusColumn(column, others, { reduced, titleRest }) {
@@ -243,7 +245,7 @@ function focusColumn(column, others, { reduced, titleRest }) {
 /*
  * Apresentação dos menus. Uma coluna por vez, da esquerda para a direita: as
  * outras apagam, o título cresce e uma luz suave desce pelos itens; cada item
- * cresce quando ela passa. No fim, tudo volta ao normal.
+ * abre o seu banner quando ela passa. No fim, tudo volta ao normal.
  */
 export function buildTour(root, { reduced = false, onComplete } = {}) {
   const columns = pickAll(root, 'column');

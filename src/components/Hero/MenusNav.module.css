@@ -175,26 +175,6 @@
   background-size: cover;
 }
 
-/* "Em breve": a arte cinza com o aviso (embreve.png), sem a sombra das fotos. */
-.bannerSoon {
-  background: var(--color-soon);
-}
-
-.bannerSoon::after {
-  content: none;
-}
-
-.underline {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.16em;
-  height: max(2px, 0.05em);
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: left center;
-}
-
 /* Item ainda não desenvolvido. */
 .soon {
   cursor: default;
@@ -210,17 +190,8 @@
 }
 
 .name {
-  position: relative;
   display: block;
   color: color-mix(in srgb, var(--color-olive-dark) 27%, var(--color-olive));
-}
-
-/* Nome claro sobre o banner cinza; aceso pelo hover. */
-.nameLit {
-  position: absolute;
-  inset: 0;
-  color: var(--color-cream);
-  opacity: 0;
 }
 
 .soonText {

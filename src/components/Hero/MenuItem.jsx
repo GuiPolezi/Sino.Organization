@@ -1,22 +1,11 @@
 import { isSoon } from './menus.js';
 import styles from './MenusNav.module.css';
 
-// Foto do banner; sem foto, o banner fica só com a cor de fundo.
-function BannerImage({ src }) {
-  if (!src) return null;
-  return (
-    <span
-      className={styles.bannerImage}
-      data-menu="banner-image"
-      style={{ backgroundImage: `url("${src}")` }}
-    />
-  );
-}
-
 /*
  * Um item dos menus: link de página, botão de modal ou, se ainda não foi
- * desenvolvido, um texto apagado. No hover (ou foco por teclado) abre um
- * banner atrás do nome, que encolhe para o canto do banner.
+ * desenvolvido, um texto apagado que troca para "EM BREVE". Os itens prontos
+ * abrem um banner com foto atrás do nome (hover, foco por teclado e a
+ * apresentação do botão "Menus").
  * Os `data-menu` são os alvos das animações (menusAnimations.js).
  */
 export default function MenuItem({ item, handlers, soonHandlers, onOpenModal }) {
@@ -36,17 +25,10 @@ export default function MenuItem({ item, handlers, soonHandlers, onOpenModal }) 
         data-intro="menu-item"
         {...soonHandlers}
       >
-        <span className={`${styles.banner} ${styles.bannerSoon}`} data-menu="banner" aria-hidden="true">
-          <BannerImage src={banner} />
-        </span>
         <span className={styles.label} data-menu="label" aria-hidden="true">
           <span className={styles.roll}>
             <span className={styles.name} data-menu="name">
               {label}
-              {/* Versão clara do nome, acesa sobre o banner cinza. */}
-              <span className={styles.nameLit} data-menu="name-lit">
-                {label}
-              </span>
             </span>
             <span className={styles.soonText} data-menu="soon">
               Em breve
@@ -60,11 +42,16 @@ export default function MenuItem({ item, handlers, soonHandlers, onOpenModal }) 
   const content = (
     <>
       <span className={styles.banner} data-menu="banner" aria-hidden="true">
-        <BannerImage src={banner} />
+        {banner && (
+          <span
+            className={styles.bannerImage}
+            data-menu="banner-image"
+            style={{ backgroundImage: `url("${banner}")` }}
+          />
+        )}
       </span>
       <span className={styles.label} data-menu="label">
         {label}
-        <span className={styles.underline} data-menu="underline" aria-hidden="true" />
       </span>
     </>
   );
