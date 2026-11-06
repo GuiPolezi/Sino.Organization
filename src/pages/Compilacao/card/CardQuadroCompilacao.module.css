@@ -1,7 +1,6 @@
 /*
  * O que o painel de /compilacao acrescenta ao do suporte (Suporte/card/CardQuadro.module.css).
- * O painel é um container: os tamanhos acompanham a largura dele (cqi) e, se ele
- * for muito estreito (celular), a fila passa de 3 para 2 colunas.
+ * O painel é um container: os tamanhos acompanham a largura dele (cqi).
  */
 .painel {
   container: quadro / inline-size;
@@ -228,50 +227,6 @@
   }
 }
 
-/*
- * ── Fila: os blocos do suporte, menores, para caberem 3 por linha ──
- * Com .painel na frente, vence o tamanho do quadro do suporte. Só num painel
- * muito estreito (celular) voltam a ser 2 por linha.
- */
-.painel .fila {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.painel .fila li {
-  gap: 6px;
-  padding: 10px 11px 11px;
-  border-radius: 16px;
-}
-
-.painel .fila h4 {
-  font-size: 0.6875rem;
-}
-
-.painel .fila p {
-  gap: 2px 6px;
-}
-
-.painel .fila strong {
-  font-size: 1.625rem;
-}
-
-/*
- * Continua creme cheio sobre o oliva (contraste acima de 4,5:1), só que menor.
- * min-content: a legenda nunca fica mais estreita que a palavra mais longa
- * ("aguardando"); sem espaço ao lado do número, ela desce para baixo dele.
- */
-.painel .fila small {
-  min-width: min-content;
-  font-size: 0.5625rem;
-}
-
-@container quadro (max-width: 21.99rem) {
-  .painel .fila {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* Ainda mais estreito (celular de 320px): o título não cabe ao lado dos totais, que descem para baixo dele, numa linha só. */
 @container quadro (max-width: 18.99rem) {
   .totais {
@@ -298,11 +253,6 @@
 @media (max-height: 480px) and (min-width: 560px) {
   .totais {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* Na coluna, 3 itens por linha ficariam com uns 90px: o nome quebraria em duas linhas. */
-  .painel .fila {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .manchete h3 {
@@ -350,7 +300,7 @@
   }
 }
 
-/* ── Dados do servidor: "parcial", fonte da fila e "Outros" ── */
+/* ── Dados do servidor: "parcial" e "Outros" ── */
 
 /* "parcial · 2 sem dado": algum card ficou fora da soma. */
 .periodos dd.parcial {
@@ -367,193 +317,6 @@
   min-height: 3rem;
 }
 
-/* De onde vem o número da fila ("no projeto · Cidade", "déficit · planilha de out."). */
-.painel .fila .legendaFila {
-  font-size: 0.5625rem;
-  line-height: 1.25;
-  opacity: 0.85;
-}
-
-/*
- * ── Fila parada: Projetos Novos - Sem normas ou Finalizando ──
- * Duas faixas cruzadas em X, como fita de interdição, por cima do item, que
- * continua à vista, só que apagado: o oliva vira um cinza-oliva e o número e a
- * legenda esmaecem. O nome fica de fora das faixas e com contraste cheio
- * (4,8:1 sobre o cinza), para a pessoa continuar reconhecível.
- * O item recorta as faixas nos cantos arredondados. A cor da Finalizando é a da
- * "Situação" do card da pessoa (--color-finalizando, styles/tokens.css).
- * Sem backdrop-filter: dentro do vidro do card, o Chrome o desenha sem os cantos.
- */
-.painel .fila li.parada {
-  /* O respiro do item (o padding de .fila li): as faixas o atravessam até a borda. */
-  --respiro-fila: 11px;
-
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  /* Em grade, para as faixas ocuparem o que vem abaixo do nome (linhas 2 e 3). */
-  display: grid;
-  grid-template-rows: auto auto 1fr;
-  grid-template-columns: minmax(0, 1fr);
-  row-gap: 6px;
-  background: color-mix(in srgb, var(--color-olive) 30%, #77786f);
-  animation: apagarFundo 0.45s ease both;
-}
-
-.painel .fila li.parada > h4 {
-  grid-area: 1 / 1;
-}
-
-.painel .fila li.parada > p {
-  grid-area: 2 / 1;
-}
-
-.painel .fila li.parada > .legendaFila {
-  grid-area: 3 / 1;
-  align-self: start;
-}
-
-/* Embaixo das faixas: apagados, mas à vista (o número, por ser grande, fica acima de 3:1). */
-.painel .fila li.parada > p,
-.painel .fila li.parada > .legendaFila {
-  opacity: 0.65;
-  animation: esmaecer 0.45s ease both;
-}
-
-.parada[data-tom='semNormas'] {
-  --faixa: #d8d8d2;
-  --faixa-texto: #45473f;
-}
-
-.parada[data-tom='finalizando'] {
-  --faixa: var(--color-finalizando);
-  --faixa-texto: var(--color-white);
-}
-
-/*
- * A área das faixas: do fim do nome até as bordas do item (as margens negativas
- * desfazem o respiro). É um contêiner de tamanho: as faixas usam a largura e a
- * altura dela para ir de canto a canto, em qualquer proporção do item.
- */
-.faixas {
-  grid-area: 2 / 1 / -1 / 2;
-  position: relative;
-  z-index: 1;
-  margin: 0 calc(var(--respiro-fila) * -1) calc(var(--respiro-fila) * -1);
-  container: faixas / size;
-  pointer-events: none;
-}
-
-/*
- * Cada faixa: centrada na área e girada. Sem suporte a hypot()/atan2(), fica
- * longa e a 22°; com suporte, vai exatamente de canto a canto (a diagonal),
- * com sobra nas pontas para o item recortar.
- */
-.fita {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.9em;
-  width: 220%;
-  padding: 0.4em 0;
-  background:
-    radial-gradient(circle, color-mix(in srgb, var(--faixa-texto) 38%, transparent) 0 1.1px, transparent 1.6px) center / 12px 100% repeat-x,
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--color-white) 14%, var(--faixa)),
-      var(--faixa) 55%,
-      color-mix(in srgb, var(--color-olive-dark) 8%, var(--faixa))
-    );
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-olive-dark) 32%, transparent);
-  color: var(--faixa-texto);
-  font-size: 0.625rem;
-  font-weight: var(--weight-bold);
-  line-height: 1.2;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  translate: -50% -50%;
-  rotate: 22deg;
-  animation: desenrolar 0.6s var(--suave) 0.08s both;
-}
-
-/* A de baixo é só a fita (com os pontinhos impressos): mantém a altura da de cima. */
-.fita:empty::before {
-  content: '\00a0';
-}
-
-/* A de cima: o texto inteiro no meio, num fundo liso, entre dois pontos. */
-.fitaDeCima {
-  rotate: -22deg;
-  background-size: 0 0, auto;
-  animation-name: desenrolarDeVolta;
-  animation-delay: 0.18s;
-}
-
-.fitaDeCima::before,
-.fitaDeCima::after {
-  content: '•';
-  opacity: 0.6;
-}
-
-@supports (width: hypot(1px, 1px)) and (rotate: atan2(1px, 1px)) {
-  .fita {
-    --sobra: 1.5rem;
-
-    width: calc(hypot(100cqw, 100cqh) + var(--sobra) * 2);
-    rotate: atan2(100cqh, 100cqw);
-  }
-
-  .fitaDeCima {
-    rotate: calc(atan2(100cqh, 100cqw) * -1);
-  }
-}
-
-@keyframes apagarFundo {
-  from {
-    background-color: var(--color-olive);
-  }
-}
-
-@keyframes esmaecer {
-  from {
-    opacity: 1;
-  }
-}
-
-@keyframes desenrolar {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-
-  to {
-    clip-path: inset(0);
-  }
-}
-
-@keyframes desenrolarDeVolta {
-  from {
-    clip-path: inset(0 0 0 100%);
-  }
-
-  to {
-    clip-path: inset(0);
-  }
-}
-
-/* Com .faixas na frente, vence a faixa de cima (que troca o nome da animação). */
-@media (prefers-reduced-motion: reduce) {
-  .painel .fila li.parada,
-  .painel .fila li.parada > p,
-  .painel .fila li.parada > .legendaFila,
-  .faixas > .fita {
-    animation: none;
-  }
-}
-
 /*
  * No celular (painel estreito, ou o diálogo largo do celular deitado), nenhum
  * texto abaixo de 10px (o do anel) ou 11px (o resto). No fim, para vencer as regras acima.
@@ -563,14 +326,7 @@
     font-size: 0.625rem;
   }
 
-  .painel .fila small,
-  .painel .fila .legendaFila,
   .periodos dd.parcial {
-    font-size: 0.6875rem;
-  }
-
-  /* O texto das faixas também: 11px, como o resto. */
-  .fita {
     font-size: 0.6875rem;
   }
 }
@@ -580,14 +336,7 @@
     font-size: 0.625rem;
   }
 
-  .painel .fila small,
-  .painel .fila .legendaFila,
   .periodos dd.parcial {
-    font-size: 0.6875rem;
-  }
-
-  /* O texto das faixas também: 11px, como o resto. */
-  .fita {
     font-size: 0.6875rem;
   }
 }

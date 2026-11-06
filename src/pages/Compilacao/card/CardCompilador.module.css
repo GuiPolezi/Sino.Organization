@@ -595,27 +595,6 @@
   }
 }
 
-.fila {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin: 1.125rem 0 0;
-}
-
-.fila strong {
-  font-size: clamp(1.5rem, 8.9cqi, 2.25rem);
-  font-weight: var(--weight-regular);
-  line-height: 1;
-  color: var(--color-ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.fila > span {
-  font-size: 0.875rem;
-  color: var(--color-ink);
-}
-
 /* ---------- Troca da seção Normas (Normas, Finalizando) ---------- */
 
 /*
@@ -888,24 +867,6 @@
   font-weight: var(--weight-bold);
   text-align: center;
   color: var(--neutro-pequeno);
-}
-
-.fila + .legenda {
-  margin: 4px 0 0;
-}
-
-/* "501 normas ignoradas": discreto, logo abaixo da legenda da fila; o motivo aparece ao passar o mouse. */
-.ignoradas {
-  margin: 2px 0 0;
-  font-size: 0.6875rem;
-  text-align: center;
-  color: var(--neutro-pequeno);
-}
-
-.ignoradas > span[title] {
-  text-decoration: underline dotted color-mix(in srgb, var(--color-olive-dark) 45%, transparent);
-  text-underline-offset: 3px;
-  cursor: help;
 }
 
 /* "Outros" fecha a grade: a soma dos tipos dá o total. */

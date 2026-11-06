@@ -46,7 +46,6 @@ export default function CardCompilador() {
   const hoje = hojeEmBrasilia();
   const atuacao = atuacaoDe(numeros, salva);
   const vista = naResponsabilidade(numeros, salva);
-  const nomeDe = (id) => primeiroNome(tecnicos.find((t) => t.id === id)?.nome ?? id);
 
   return (
     // A key refaz as animações de entrada ao trocar de pessoa.
@@ -100,7 +99,6 @@ export default function CardCompilador() {
                 referencia={referencia}
                 hoje={hoje}
                 geradoEm={geradoEm}
-                nomeDe={nomeDe}
                 desativada={atuacao.normas === 'desativada'}
               />
             )}

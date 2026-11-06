@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import base from '../../Suporte/card/CardTecnico.module.css';
 import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
-import { PERIODOS, PERIODO_INICIAL, aguardandoDe, barraDoProjeto, ignoradasDe, normasDoPeriodo, numeroOuTraco } from '../atuacao.js';
+import { PERIODOS, PERIODO_INICIAL, barraDoProjeto, normasDoPeriodo, numeroOuTraco } from '../atuacao.js';
 import styles from './CardCompilador.module.css';
 import Numero from './Numero.jsx';
 
@@ -62,8 +62,8 @@ function Desativado({ ativo }) {
 
 /**
  * "Normas": o total compilado no período escolhido (com a fonte do número), os
- * tipos (os seis da grade e "Outros"), o que aguarda compilação e, em Projetos
- * Novos, a barra do projeto. Os números contam até o valor novo ao trocar de período.
+ * tipos (os seis da grade e "Outros") e, em Projetos Novos, a barra do projeto.
+ * Os números contam até o valor novo ao trocar de período.
  * Desativada (Sem normas), tudo fica desfocado e sem clique, com o aviso por cima.
  *
  * @param {{
@@ -71,11 +71,10 @@ function Desativado({ ativo }) {
  *   referencia: string | undefined,
  *   hoje: string,
  *   geradoEm: string | null,
- *   nomeDe: (id: string) => string,
  *   desativada?: boolean,
  * }} props
  */
-export default function Normas({ pessoa, referencia, hoje, geradoEm, nomeDe, desativada = false }) {
+export default function Normas({ pessoa, referencia, hoje, geradoEm, desativada = false }) {
   const [periodo, setPeriodo] = useState(PERIODO_INICIAL);
   const { total, legenda, porTipo } = useMemo(
     () => normasDoPeriodo(pessoa, periodo, { referencia, hoje }),
@@ -83,8 +82,6 @@ export default function Normas({ pessoa, referencia, hoje, geradoEm, nomeDe, des
   );
   const grade = porTipo.filter(({ chave }) => chave !== 'outros');
   const outros = porTipo.find(({ chave }) => chave === 'outros');
-  const aguardando = aguardandoDe(pessoa);
-  const ignoradas = ignoradasDe(pessoa);
   const barra = barraDoProjeto(pessoa);
 
   return (
@@ -124,28 +121,6 @@ export default function Normas({ pessoa, referencia, hoje, geradoEm, nomeDe, des
         {outros && (
           <p className={styles.outros}>
             Outros <b>{typeof outros.valor === 'number' ? `+${numeroOuTraco(outros.valor)}` : '—'}</b>
-          </p>
-        )}
-
-        <p className={styles.fila}>
-          <strong>
-            <Numero valor={aguardando.valor} />
-          </strong>
-          <span>Aguardando Compilação</span>
-        </p>
-        <p className={styles.legenda}>
-          {aguardando.legenda}
-          {aguardando.divididaCom.length > 0 && ` · dividida com ${aguardando.divididaCom.map(nomeDe).join(' e ')}`}
-        </p>
-        {/* As que ficam fora da fila: o motivo no title (mouse) e, inteiro, para o leitor de tela. */}
-        {ignoradas && (
-          <p className={styles.ignoradas}>
-            <span title={ignoradas.motivo} aria-hidden="true">
-              {ignoradas.texto}
-            </span>
-            <span className="sr-only">
-              {ignoradas.texto}. {ignoradas.motivo}
-            </span>
           </p>
         )}
 

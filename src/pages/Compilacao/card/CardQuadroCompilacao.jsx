@@ -5,9 +5,8 @@ import EstadoCarregamento from '../../Suporte/card/EstadoCarregamento.jsx';
 import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
 import useFecharComEsc from '../../Suporte/card/useFecharComEsc.js';
 import { useEquipe } from '../../Suporte/store.js';
-import { chaveEfetiva, faixaDaFila } from '../atuacao.js';
 import { rotuloParcial } from '../resumo.js';
-import { useCompilacao, useResponsabilidades } from '../store.js';
+import { useCompilacao } from '../store.js';
 import { useResumo } from '../useResumo.js';
 import styles from './CardQuadroCompilacao.module.css';
 import Destaques from './Destaques.jsx';
@@ -113,63 +112,9 @@ function PorTipo({ tipos }) {
 }
 
 /*
- * Duas faixas cruzadas em X, como fita de interdição, por cima de uma fila parada
- * (Projetos Novos - Sem normas ou Finalizando). A de baixo é só a fita; a de cima
- * leva o texto inteiro no meio, onde as duas se cruzam. Só enfeite: quem usa
- * leitor de tela ouve a situação no texto escondido do item.
- */
-function Faixas({ texto }) {
-  return (
-    <span className={styles.faixas} aria-hidden="true">
-      <span className={styles.fita} />
-      <span className={`${styles.fita} ${styles.fitaDeCima}`}>
-        <span>{texto}</span>
-      </span>
-    </span>
-  );
-}
-
-// Quantas normas aguardam compilação na fila de cada pessoa, com a fonte embaixo
-// (o projeto, ou o déficit da planilha). Fila dividida aparece marcada nas duas pessoas.
-// Em Sem normas e Finalizando, o item ganha as faixas, e muda assim que o "Alterar" troca.
-function Filas({ ranking }) {
-  const pessoas = useCompilacao((s) => s.dados?.pessoas);
-  const salvas = useResponsabilidades((s) => s.salvas);
-  const nomeDe = (id) => primeiroNome(ranking.find((p) => p.id === id)?.nome ?? id);
-  return (
-    <section className={card.surge} style={{ '--ordem': 2 }}>
-      <h3 className={styles.secao}>Fila</h3>
-      <ul className={`${quadro.tickets} ${styles.fila}`}>
-        {ranking.map(({ id, nome, emFila, legendaFila, divididaCom }) => {
-          const faixa = faixaDaFila(chaveEfetiva(pessoas?.[id] ?? null, salvas[id]));
-          return (
-            <li key={id} className={faixa ? styles.parada : undefined} data-tom={faixa?.tom}>
-              <h4>Fila de {primeiroNome(nome)}</h4>
-              {faixa && <span className="sr-only">Situação: {faixa.rotulo}.</span>}
-              <p>
-                <strong>
-                  <Numero valor={emFila} />
-                </strong>
-                <small>{emFila === 1 ? 'Norma aguardando' : 'Normas aguardando'}</small>
-              </p>
-              <span className={styles.legendaFila}>
-                {legendaFila}
-                {divididaCom.length > 0 && ` · dividida com ${divididaCom.map(nomeDe).join(' e ')}`}
-              </span>
-              {/* A key refaz a entrada das faixas quando a situação troca. */}
-              {faixa && <Faixas key={faixa.tom} texto={faixa.texto} />}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-/*
  * Painel "Quadro da equipe" de /compilacao: abre pela estátua de Têmis. Os totais
- * da equipe no mês, na semana e no dia, quem está em destaque, as normas por tipo,
- * a fila de cada um e os destaques (quem ficou em primeiro em cada conta). Tudo é
+ * da equipe no mês, na semana e no dia, quem está em destaque, as normas por tipo
+ * e os destaques (quem ficou em primeiro em cada conta). Tudo é
  * a soma dos cards (resumo.js), com os números do servidor (/api/compilacao).
  */
 export default function CardQuadroCompilacao() {
@@ -215,15 +160,14 @@ export default function CardQuadroCompilacao() {
         <>
           <Totais resumo={resumo} destaque={destaque} />
           <PorTipo tipos={resumo.porTipo} />
-          {ranking.length > 0 && <Filas ranking={ranking} />}
           {ranking.length > 0 && (
-            <section className={card.surge} style={{ '--ordem': 3 }}>
+            <section className={card.surge} style={{ '--ordem': 2 }}>
               <h3 className={styles.secao}>Destaques</h3>
               <Destaques ranking={ranking} tecnicos={tecnicos} />
             </section>
           )}
           {geradoEm && (
-            <footer className={`${card.rodape} ${card.surge}`} style={{ '--ordem': 4 }}>
+            <footer className={`${card.rodape} ${card.surge}`} style={{ '--ordem': 3 }}>
               <span>{rotuloAtualizacao(geradoEm)}</span>
             </footer>
           )}
