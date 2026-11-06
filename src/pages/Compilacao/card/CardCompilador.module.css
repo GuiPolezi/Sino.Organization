@@ -858,7 +858,7 @@
   text-transform: none;
 }
 
-/* ---------- Dados do servidor: legendas, "Outros", barra do projeto ---------- */
+/* ---------- Dados do servidor: legendas e "Outros" ---------- */
 
 /* De onde vem o número ("pelo sistema", "pela planilha") ou por que está "—". */
 .legenda {
@@ -884,43 +884,6 @@
   font-size: 1rem;
   font-weight: var(--weight-regular);
   font-variant-numeric: tabular-nums;
-}
-
-/* "362 de 404 compiladas" no projeto. */
-.barra {
-  margin: 1.125rem 0 0;
-}
-
-.barra p {
-  display: flex;
-  justify-content: space-between;
-  margin: 0 0 6px;
-  font-size: 0.75rem;
-  color: var(--color-ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.barra > div {
-  height: 8px;
-  border-radius: 999px;
-  background: var(--fundo-suave);
-  overflow: hidden;
-}
-
-.barra > div > i {
-  display: block;
-  width: calc(var(--parte) * 1%);
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-olive);
-  transform-origin: left;
-  animation: encher 0.9s var(--suave) 0.3s both;
-}
-
-@keyframes encher {
-  from {
-    transform: scaleX(0);
-  }
 }
 
 /* "Atualizado às 14:05", no pé das normas. */
@@ -1061,9 +1024,5 @@
   .desativado > div,
   .carimbo::after {
     transition: none;
-  }
-
-  .barra > div > i {
-    animation: none;
   }
 }

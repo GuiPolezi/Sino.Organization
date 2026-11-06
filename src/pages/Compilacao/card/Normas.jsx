@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import base from '../../Suporte/card/CardTecnico.module.css';
 import { rotuloAtualizacao } from '../../Suporte/card/rotuloAtualizacao.js';
-import { PERIODOS, PERIODO_INICIAL, barraDoProjeto, normasDoPeriodo, numeroOuTraco } from '../atuacao.js';
+import { PERIODOS, PERIODO_INICIAL, normasDoPeriodo, numeroOuTraco } from '../atuacao.js';
 import styles from './CardCompilador.module.css';
 import Numero from './Numero.jsx';
 
@@ -62,8 +62,7 @@ function Desativado({ ativo }) {
 
 /**
  * "Normas": o total compilado no período escolhido (com a fonte do número), os
- * tipos (os seis da grade e "Outros") e, em Projetos Novos, a barra do projeto.
- * Os números contam até o valor novo ao trocar de período.
+ * tipos (os seis da grade e "Outros"). Os números contam até o valor novo ao trocar de período.
  * Desativada (Sem normas), tudo fica desfocado e sem clique, com o aviso por cima.
  *
  * @param {{
@@ -82,7 +81,6 @@ export default function Normas({ pessoa, referencia, hoje, geradoEm, desativada 
   );
   const grade = porTipo.filter(({ chave }) => chave !== 'outros');
   const outros = porTipo.find(({ chave }) => chave === 'outros');
-  const barra = barraDoProjeto(pessoa);
 
   return (
     <section className={`${base.surge} ${styles.normas}`} style={{ '--ordem': 3 }} aria-label="Normas">
@@ -122,27 +120,6 @@ export default function Normas({ pessoa, referencia, hoje, geradoEm, desativada 
           <p className={styles.outros}>
             Outros <b>{typeof outros.valor === 'number' ? `+${numeroOuTraco(outros.valor)}` : '—'}</b>
           </p>
-        )}
-
-        {barra && (
-          <div className={styles.barra}>
-            <p>
-              <span>
-                {numeroOuTraco(barra.compiladas)} de {numeroOuTraco(barra.total)} compiladas
-              </span>
-              <span>{barra.parte.toLocaleString('pt-BR')}%</span>
-            </p>
-            <div
-              role="progressbar"
-              aria-label="Normas do projeto já compiladas"
-              aria-valuemin={0}
-              aria-valuemax={barra.total}
-              aria-valuenow={barra.compiladas}
-              style={{ '--parte': barra.parte }}
-            >
-              <i />
-            </div>
-          </div>
         )}
 
         {geradoEm && <p className={styles.selo}>{rotuloAtualizacao(geradoEm)}</p>}
