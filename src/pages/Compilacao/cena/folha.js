@@ -3,7 +3,7 @@
  * do quadro das outras equipes (Suporte/quadro/texturas.js): é o quadro geral
  * de /compilacao escrito à mão, com as mesmas seções do painel, na mesma ordem
  * (card/CardQuadroCompilacao.jsx): os totais do mês, da semana e do dia, o
- * destaque, as normas por tipo, a fila de cada um e os destaques. Os números
+ * destaque, as normas por tipo e os destaques. Os números
  * vêm prontos de resumo.js (resumoCompilacao) e destaques.js (primeirosLugares):
  * sem número é "—" (nunca "+—"), e a soma com card faltando leva "parcial".
  *
@@ -15,6 +15,8 @@ import { comMais, numeroOuTraco } from '../atuacao.js';
 
 const PAPEL = '#FBFAF4';
 const OURO = '#C98A12';
+// Lápis claro: o destaque desativado.
+const CINZA = '#9C9BA6';
 const TOPO = 190;
 const LINHA = 36;
 const ESQUERDA = 100;
@@ -27,7 +29,7 @@ const primeiroNome = (nome) => nome.split(' ')[0];
 // O que cada slide de "Destaques" vira na folha.
 const DESTAQUES = [
   { chave: 'compiladas', rotulo: 'compiladas no mês' },
-  { chave: 'fila', rotulo: 'aguardando compilação' },
+  { chave: 'fila', rotulo: 'aguardando compilação', desativado: true },
   { chave: 'cidades', rotulo: 'cidades em atuação' },
 ];
 
@@ -83,9 +85,9 @@ function secao(ctx, texto, y) {
 }
 
 // Texto à esquerda e número à direita, na mesma pauta (as listas da folha).
-function linhaComNumero(ctx, texto, numero, x, y, largura, cor = TINTA.escura) {
+function linhaComNumero(ctx, texto, numero, x, y, largura, cor = TINTA.escura, corDoNumero = TINTA.escura) {
   ctx.textAlign = 'right';
-  ctx.fillStyle = TINTA.escura;
+  ctx.fillStyle = corDoNumero;
   ctx.font = `700 34px ${MAO}`;
   ctx.fillText(numero, x + largura, y);
   const larguraDoNumero = ctx.measureText(numero).width;
@@ -165,25 +167,19 @@ function porTipo(ctx, w, tipos) {
   });
 }
 
-// "Fila": quantas normas esperam na fila de cada pessoa, na ordem do painel.
-function fila(ctx, w, ranking) {
-  secao(ctx, 'fila', pauta(12));
-  const coluna = (w - ESQUERDA - DIREITA - 40) / 2;
-  // Cabem 8 pessoas (4 pautas, 2 colunas); a equipe tem 7.
-  ranking.slice(0, 8).forEach(({ nome, emFila }, i) => {
-    const x = ESQUERDA + (i % 2) * (coluna + 40);
-    const y = pauta(13 + Math.floor(i / 2));
-    linhaComNumero(ctx, primeiroNome(nome), numeroOuTraco(emFila), x, y, coluna);
-  });
-}
-
-// "Destaques": quem ficou em primeiro em cada slide do painel.
+// "Destaques": quem ficou em primeiro em cada slide do painel (o desativado, em cinza).
 function destaques(ctx, w, primeiros) {
-  secao(ctx, 'destaques', pauta(18));
-  DESTAQUES.forEach(({ chave, rotulo }, i) => {
+  secao(ctx, 'destaques', pauta(12));
+  DESTAQUES.forEach(({ chave, rotulo, desativado }, i) => {
+    const y = pauta(13 + i);
+    const largura = w - ESQUERDA - DIREITA;
+    if (desativado) {
+      linhaComNumero(ctx, `★ ${rotulo}`, 'desativado', ESQUERDA, y, largura, CINZA, CINZA);
+      return;
+    }
     const primeiro = primeiros[chave];
     const quem = primeiro ? `${primeiroNome(primeiro.pessoa.nome)} · ${numeroOuTraco(primeiro.valor)}` : '—';
-    linhaComNumero(ctx, `★ ${rotulo}`, quem, ESQUERDA, pauta(19 + i), w - ESQUERDA - DIREITA, TINTA.pincel);
+    linhaComNumero(ctx, `★ ${rotulo}`, quem, ESQUERDA, y, largura, TINTA.pincel);
   });
 }
 
@@ -198,7 +194,6 @@ export function texturaFolhaTemis(resumo, primeiros) {
     totais(ctx, w, resumo);
     if (primeiros.compiladas) destaque(ctx, w, resumo, primeiros.compiladas.pessoa);
     porTipo(ctx, w, resumo.porTipo);
-    if (resumo.ranking.length) fila(ctx, w, resumo.ranking);
     destaques(ctx, w, primeiros);
   });
 }

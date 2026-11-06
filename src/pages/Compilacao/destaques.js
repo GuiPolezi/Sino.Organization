@@ -1,11 +1,13 @@
 /*
  * Os slides de "Destaques" no quadro de /compilacao: cada um mostra só quem ficou
  * em primeiro numa conta (normas do mês, fila, cidades), com a barra dela.
+ * `desativado`: o slide continua na paginação, mas cinza e só com o aviso
+ * "Desativado" (a fila saiu do card e do quadro).
  */
 
 export const SLIDES = [
   { chave: 'compiladas', titulo: 'Normas Compiladas no Mês' },
-  { chave: 'fila', titulo: 'Normas Aguardando Compilação' },
+  { chave: 'fila', titulo: 'Normas Aguardando Compilação', desativado: true },
   { chave: 'cidades', titulo: 'Cidades em Atuação' },
 ];
 

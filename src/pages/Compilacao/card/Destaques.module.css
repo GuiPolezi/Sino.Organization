@@ -221,6 +221,65 @@
   color: var(--neutro-pequeno);
 }
 
+/*
+ * Slide desativado: o título e o quadro em cinza, e no meio o aviso
+ * "Desativado", com o traço que se desenha embaixo (como no card da pessoa).
+ */
+.slide[data-desativado] {
+  --cinza: #77786f;
+}
+
+.slide[data-desativado] .titulo {
+  color: var(--cinza);
+}
+
+.slide[data-desativado] .grafico {
+  border-color: color-mix(in srgb, var(--cinza) 70%, transparent);
+  background-color: #dcdcd6;
+  background-image:
+    linear-gradient(to right, rgb(17 20 12 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(17 20 12 / 0.05) 1px, transparent 1px);
+}
+
+.desativado {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  padding-bottom: 6px;
+  font-size: clamp(1.625rem, 9cqi, 2.375rem);
+  font-weight: var(--weight-black);
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--cinza);
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.desativado::after {
+  content: '';
+  position: absolute;
+  left: 0.04em;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--cinza);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.slide[data-ativo] .desativado {
+  animation: aparecer 0.4s ease 0.15s backwards;
+}
+
+.slide[data-ativo] .desativado::after {
+  transform: none;
+  transition: transform 0.7s var(--suave) 0.35s;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .pessoa:hover .corpo {
     transform: scale(1.03);
@@ -348,6 +407,7 @@
 
   .slide[data-ativo] .barra i,
   .slide[data-ativo] .barra b,
+  .slide[data-ativo] .desativado,
   .slide[data-ativo] .corpo,
   .slide[data-ativo] .iniciais,
   .slide[data-ativo] .balao {
@@ -356,7 +416,8 @@
 
   .corpo,
   .balao,
-  .ponto i {
+  .ponto i,
+  .slide[data-ativo] .desativado::after {
     transition: none;
   }
 }

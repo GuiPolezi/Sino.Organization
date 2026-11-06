@@ -51,10 +51,16 @@ function Grafico({ primeiro }) {
   );
 }
 
+// Slide desativado: o quadro fica cinza, só com o aviso.
+function Desativado() {
+  return <p className={styles.desativado}>Desativado</p>;
+}
+
 /*
  * "Destaques": um slide por conta (normas do mês, fila, cidades), cada um só com
- * quem ficou em primeiro. Os slides ficam empilhados na mesma célula, para o
- * bloco ter sempre a altura do maior e não pular ao trocar.
+ * quem ficou em primeiro (ou cinza e "Desativado", se o slide estiver
+ * desativado). Os slides ficam empilhados na mesma célula, para o bloco ter
+ * sempre a altura do maior e não pular ao trocar.
  */
 export default function Destaques({ ranking, tecnicos }) {
   const [atual, setAtual] = useState(0);
@@ -68,7 +74,7 @@ export default function Destaques({ ranking, tecnicos }) {
   return (
     <div className={styles.destaques} role="region" aria-roledescription="carrossel" aria-label="Destaques">
       <div className={styles.slides}>
-        {SLIDES.map(({ chave, titulo }, i) => {
+        {SLIDES.map(({ chave, titulo, desativado }, i) => {
           const primeiro = primeiros[chave];
           const ativo = i === atual;
           return (
@@ -76,6 +82,7 @@ export default function Destaques({ ranking, tecnicos }) {
               key={chave}
               className={styles.slide}
               data-ativo={ativo || undefined}
+              data-desativado={desativado || undefined}
               inert={!ativo}
               aria-hidden={!ativo}
               aria-roledescription="slide"
@@ -83,7 +90,11 @@ export default function Destaques({ ranking, tecnicos }) {
             >
               <h4 className={styles.titulo}>{titulo}</h4>
               <div className={styles.grafico}>
-                <Grafico primeiro={primeiro && { ...primeiro, pessoa: comPessoa(primeiro.pessoa) ?? primeiro.pessoa }} />
+                {desativado ? (
+                  <Desativado />
+                ) : (
+                  <Grafico primeiro={primeiro && { ...primeiro, pessoa: comPessoa(primeiro.pessoa) ?? primeiro.pessoa }} />
+                )}
               </div>
             </article>
           );
