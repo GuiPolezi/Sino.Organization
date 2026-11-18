@@ -3,21 +3,17 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { MEDIA } from '../../utils/media.js';
-import CompanyCard from './CompanyCard.jsx';
 import DecorShape from './DecorShape.jsx';
-import MenusNav from './MenusNav.jsx';
+import MenuCards from './MenuCards.jsx';
+import WaterRipple from './ripple/WaterRipple.jsx';
 import { TrackContext } from './TrackContext.js';
-import YearsCounter from './YearsCounter.jsx';
-import {
-  playIntro,
-  playReducedIntro,
-  setupHorizontalScroll,
-} from './heroAnimations.js';
+import { playIntro, playReducedIntro, setupHorizontalScroll } from './heroAnimations.js';
 import styles from './Hero.module.css';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const TITLE_ID = 'hero-title';
+const TITLE_LINES = ['Sino', 'Informática'];
 
 /*
  * `children` são os próximos painéis do track horizontal. Uma seção que deva
@@ -53,14 +49,32 @@ export default function Hero({ children }) {
     <div ref={viewport} className={styles.viewport}>
       <div ref={track} className={styles.track}>
         <section ref={panel} className={styles.panel} aria-labelledby={TITLE_ID}>
+          {/* Água sobre o fundo: refrata o título, o divisor e o anel (data-ripple); os cards ficam por cima. */}
+          <WaterRipple painel={panel} />
           <DecorShape />
 
           <div className={styles.content}>
-            <MenusNav />
-            <div className={styles.bottom}>
-              <CompanyCard titleId={TITLE_ID} />
-              <YearsCounter />
-            </div>
+            <header className={styles.header}>
+              <h1 id={TITLE_ID} className={styles.title} aria-label={TITLE_LINES.join(' ')}>
+                {TITLE_LINES.map((line) => (
+                  <span key={line} className={styles.titleLine} aria-hidden="true">
+                    <span className={styles.titleLineInner} data-intro="title-line" data-ripple="texto">
+                      {line}
+                    </span>
+                  </span>
+                ))}
+              </h1>
+
+              {/* Linha, duas barrinhas no centro, linha: o divisor da arte. */}
+              <div className={styles.divider} aria-hidden="true">
+                <span className={`${styles.dividerLine} ${styles.dividerStart}`} data-intro="divider-line" data-ripple="linha" />
+                <span className={styles.dividerMark} data-intro="divider-mark" data-ripple="linha" />
+                <span className={styles.dividerMark} data-intro="divider-mark" data-ripple="linha" />
+                <span className={`${styles.dividerLine} ${styles.dividerEnd}`} data-intro="divider-line" data-ripple="linha" />
+              </div>
+            </header>
+
+            <MenuCards />
           </div>
         </section>
 

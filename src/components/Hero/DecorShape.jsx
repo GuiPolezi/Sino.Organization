@@ -40,6 +40,8 @@ export default function DecorShape({ variant = 'hero' }) {
       <svg
         className={styles.svg}
         data-intro="shape"
+        // A água da home (ripple/WaterRipple.jsx) redesenha o anel refratado.
+        data-ripple="svg"
         viewBox={`${-EXTENT} ${-EXTENT} ${EXTENT * 2} ${EXTENT * 2}`}
         focusable="false"
       >

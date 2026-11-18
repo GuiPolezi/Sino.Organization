@@ -1,25 +1,16 @@
 import gsap from 'gsap';
-import { getYearsSince } from '../../utils/getYearsSince.js';
 
-const COUNT_DURATION = 2;
-const CARD_POP_DURATION = 1.3;
-// Espera máxima pela imagem do card antes de iniciar a entrada.
-const IMAGE_WAIT_MS = 1000;
-// Deslocamento extra do título: cobre a folga (padding) da máscara de cada linha.
-const TITLE_OFFSET_PERCENT = 165;
+// Deslocamento do título: cobre a folga (padding) da máscara de cada linha.
+const TITLE_OFFSET_PERCENT = 120;
 
-// Momento (s) em que cada bloco entra na timeline. Os menus abrem a cena de
-// cima para baixo; o card e o anel chegam em seguida.
+// Momento (s) em que cada bloco entra na timeline: o título abre a cena, o
+// divisor se desenha a partir do centro e os cards chegam em onda.
 const AT = {
-  menusButton: 0,
-  menuTitles: 0.15,
-  menuDividers: 0.3,
-  menuItems: 0.4,
-  card: 0.5,
-  title: 0.85,
-  shape: 1,
-  counter: 1.1,
-  info: 1.3,
+  title: 0,
+  divider: 0.45,
+  cards: 0.6,
+  art: 0.85,
+  shape: 0.7,
 };
 
 // Scroll vertical gasto por pixel de deslocamento horizontal: abaixo de 1,
@@ -32,117 +23,66 @@ const SCROLL_SMOOTHING = 0.6;
 // O anel anda o bastante para revelar, no painel seguinte, a metade escondida.
 const PARALLAX = {
   shape: 0.045,
-  counter: -0.04,
 };
 
-const addMenus = (tl, q) =>
+const addHeader = (tl, q) =>
   tl
-    .from(
-      q('[data-intro="menus-button"]'),
-      { autoAlpha: 0, y: -12, scale: 0.9, duration: 1 },
-      AT.menusButton,
-    )
-    .from(
-      q('[data-intro="menu-title"]'),
-      { autoAlpha: 0, yPercent: 45, duration: 1.1, stagger: 0.12 },
-      AT.menuTitles,
-    )
-    // Um único "scale" serve à linha vertical (desktop) e à horizontal (celular).
-    .from(
-      q('[data-intro="menu-divider"]'),
-      { scale: 0, duration: 1.4, ease: 'expo.inOut', stagger: 0.12 },
-      AT.menuDividers,
-    )
-    .from(
-      q('[data-intro="menu-item"]'),
-      { autoAlpha: 0, y: 24, duration: 1, stagger: 0.06 },
-      AT.menuItems,
-    );
-
-// O card surge inteiro (fundo, imagem e sombra juntos), com um "bounce" na escala.
-const addCard = (tl, q) =>
-  tl
-    .from(
-      q('[data-intro="card"]'),
-      { scale: 0.6, duration: CARD_POP_DURATION, ease: 'elastic.out(1, 0.6)' },
-      AT.card,
-    )
-    .from(
-      q('[data-intro="card"]'),
-      { autoAlpha: 0, duration: 0.25, ease: 'power1.out' },
-      AT.card,
-    )
     .from(
       q('[data-intro="title-line"]'),
-      { yPercent: TITLE_OFFSET_PERCENT, stagger: 0.12 },
+      { yPercent: TITLE_OFFSET_PERCENT, duration: 1.3, stagger: 0.14 },
       AT.title,
     )
     .from(
-      q('[data-intro="card-info"]'),
-      { autoAlpha: 0, y: 16, duration: 0.9, ease: 'power3.out', stagger: 0.08 },
-      AT.info,
+      q('[data-intro="divider-line"]'),
+      { scaleX: 0, duration: 1.4, ease: 'expo.inOut' },
+      AT.divider,
+    )
+    .from(
+      q('[data-intro="divider-mark"]'),
+      { scaleY: 0, duration: 0.8, ease: 'back.out(2)', stagger: 0.08 },
+      AT.divider + 0.2,
     );
 
-// Número e textos sobem; o número conta de 0 até os anos de história.
-const addCounter = (tl, q, countEl) => {
-  const counter = { value: 0 };
-  return tl
+// Os cards sobem em onda (da esquerda para a direita, linha a linha) e os
+// bonecos de cada um brotam logo depois, com um leve "bounce".
+const addCards = (tl, q) =>
+  tl
     .from(
-      [...q('[data-intro="counter-number"]'), ...q('[data-intro="counter-text"]')],
-      { autoAlpha: 0, y: 24, duration: 1, ease: 'power3.out', stagger: 0.1 },
-      AT.counter,
-    )
-    .to(
-      counter,
+      q('[data-intro="card"]'),
       {
-        value: getYearsSince(),
-        duration: COUNT_DURATION,
+        autoAlpha: 0,
+        y: 48,
+        scale: 0.94,
+        duration: 1.1,
         ease: 'power3.out',
-        snap: { value: 1 },
-        onUpdate: () => {
-          countEl.textContent = counter.value;
-        },
+        stagger: { each: 0.08, grid: 'auto', from: 'start' },
       },
-      AT.counter,
+      AT.cards,
+    )
+    .from(
+      q('[data-intro="card-art"]'),
+      {
+        autoAlpha: 0,
+        scale: 0.7,
+        y: 24,
+        duration: 1,
+        ease: 'back.out(1.6)',
+        stagger: { each: 0.08, grid: 'auto', from: 'start' },
+      },
+      AT.art,
     );
-};
 
 export function playIntro(scope) {
   const q = gsap.utils.selector(scope);
-  const countEl = q('[data-intro="count"]')[0];
-  const cardImage = q('[data-intro="card-image"]')[0];
-  const tl = gsap.timeline({
-    paused: true,
-    defaults: { duration: 1.2, ease: 'expo.out' },
-  });
-  let reverted = false;
+  const tl = gsap.timeline({ defaults: { duration: 1.2, ease: 'expo.out' } });
 
-  // Só inicia com a imagem já decodificada, para ela surgir junto com o card.
-  // O timeout garante a entrada mesmo se a imagem demorar ou falhar.
-  const decoded = cardImage?.decode?.().catch(() => {}) ?? Promise.resolve();
-  const timeout = new Promise((resolve) => {
-    setTimeout(resolve, IMAGE_WAIT_MS);
-  });
-
-  Promise.race([decoded, timeout]).then(() => {
-    if (!reverted) tl.play();
-  });
-
-  countEl.textContent = 0;
-  addMenus(tl, q);
-  addCard(tl, q);
-  addCounter(tl, q, countEl);
+  addHeader(tl, q);
+  addCards(tl, q);
   tl.from(
     q('[data-intro="shape"]'),
     { autoAlpha: 0, xPercent: 18, yPercent: 18, duration: 1.4, ease: 'power3.out' },
     AT.shape,
   );
-
-  // O texto do contador é escrito fora do React: devolve o valor final no revert.
-  return () => {
-    reverted = true;
-    countEl.textContent = getYearsSince();
-  };
 }
 
 export function playReducedIntro(scope) {

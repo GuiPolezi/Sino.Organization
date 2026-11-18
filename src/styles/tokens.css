@@ -8,8 +8,8 @@
   --color-ink: #11140c; /* texto sobre o mint */
   /* Verde-água da situação "Finalizando" de /compilacao (card da pessoa e Fila do Quadro). */
   --color-finalizando: #1a6e63;
-  /* Cinza-azulado do vidro do botão "Menus" da home. */
-  --color-glass: #b0c7cf;
+  /* Verde quase preto do título e dos rótulos dos cards da home. */
+  --color-olive-ink: #283818;
 
   /* Variações por opacidade (sempre a partir da paleta) */
   --color-cream-muted: color-mix(in srgb, var(--color-cream) 55%, transparent);
@@ -18,6 +18,7 @@
 
   /* Tipografia */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Libertinus Sans', 'Gill Sans', 'Segoe UI', sans-serif;
   --weight-regular: 400;
   --weight-bold: 700;
   --weight-black: 900;
