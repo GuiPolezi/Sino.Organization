@@ -24,6 +24,10 @@ const ClienteLicenca = lazy(() => import('./pages/Licencas/Cliente.jsx'));
 const REUNIAO = /^\/reunioes\/([a-z0-9-]+)$/;
 const Reuniao = lazy(() => import('./pages/Reuniao/index.jsx'));
 
+// Estúdio das ilustrações dos cards da home (scripts/gerar-ilustracoes-home.mjs).
+// Só no dev: no build, import.meta.env.DEV é false e o chunk nem é gerado.
+const EstudioHome = import.meta.env.DEV ? lazy(() => import('./estudio/EstudioHome.jsx')) : null;
+
 const HOME_PATHS = ['', '/index.html'];
 
 // "/suporte/" e "/Suporte" valem como "/suporte"; "/" vira "".
@@ -45,6 +49,14 @@ function Home() {
 export default function App() {
   const path = currentPath();
   if (HOME_PATHS.includes(path)) return <Home />;
+
+  if (EstudioHome && path === '/estudio-home') {
+    return (
+      <Suspense fallback={null}>
+        <EstudioHome />
+      </Suspense>
+    );
+  }
 
   const reuniao = path.match(REUNIAO);
   if (reuniao) {
