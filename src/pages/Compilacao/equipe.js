@@ -19,7 +19,8 @@ const LAVANDA = '#B79CE0';
 const AZUL_CAMISA = '#A9C3E3';
 
 // No formato que /api/equipes/* devolve, para passar pelo mesmo mapper das outras equipes.
-const PESSOAS = [
+// Exportada também para as reuniões da home (membrosEquipe.js), junto de suporte e desenvolvimento.
+export const PESSOAS_COMPILACAO = [
   { id: 'leonardo', name: 'Leonardo', role: 'Compilador', absent: false },
   { id: 'ramon', name: 'Ramon', role: 'Compilador', absent: false },
   { id: 'gdressano', name: 'G.Dressano', role: 'Compilador', absent: false },
@@ -118,7 +119,7 @@ export const APARENCIAS_COMPILACAO = {
 const iniciaisDe = (nome, padrao) => (nome.includes('.') ? nome.split('.').map((parte) => parte.charAt(0)).join('').toUpperCase() : padrao);
 
 /** @returns {Tecnico[]} */
-export const EQUIPE_COMPILACAO = PESSOAS.map(mapearTecnico).map((pessoa) => ({
+export const EQUIPE_COMPILACAO = PESSOAS_COMPILACAO.map(mapearTecnico).map((pessoa) => ({
   ...pessoa,
   avatarIniciais: iniciaisDe(pessoa.nome, pessoa.avatarIniciais),
 }));

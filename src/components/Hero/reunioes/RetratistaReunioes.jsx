@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
+import { APARENCIAS_COMPILACAO } from '../../../pages/Compilacao/equipe.js';
 import { APARENCIAS_DEV } from '../../../pages/Desenvolvimento/aparencias.js';
 import { registrarAparencias } from '../../../pages/Suporte/boneco/aparencia.js';
 import Retratista, { useRetratos } from '../../../pages/Suporte/boneco/Retratos.jsx';
 import { filaRetratos } from './RetratosReunioes.jsx';
 
-// Na home cabem as duas equipes: suporte (já registrada) e desenvolvimento.
+// Na home cabem as três equipes: suporte (já registrada), desenvolvimento e compilação.
 registrarAparencias(APARENCIAS_DEV);
+registrarAparencias(APARENCIAS_COMPILACAO);
 
 // Canvas mínimo, fora da vista e sem eventos: só serve de estúdio ao Retratista.
 const ESTUDIO = {

@@ -108,7 +108,7 @@ export default function SelecaoPersonagens({ membros, onChange, onFechar, ancora
   const botao = useRef(null);
   const fechando = useRef(false);
   const entrou = useRef(false);
-  // Pessoas das equipes (Suporte e Desenvolvimento), sem repetir, por nome; vêm da API.
+  // Pessoas das equipes (Suporte, Desenvolvimento e Compilação), sem repetir, por nome.
   const PESSOAS = usePessoasDasEquipes();
 
   const adicionados = useMemo(() => new Set(membros.map((m) => chaveMembro(m.nome))), [membros]);

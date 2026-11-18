@@ -1,18 +1,21 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { buscarDados } from '../../../api/buscarApi.js';
+import { PESSOAS_COMPILACAO } from '../../../pages/Compilacao/equipe.js';
 import { chaveMembro } from './reunioes.js';
 
 /*
- * Quem é cada membro de reunião: o boneco da equipe (suporte ou desenvolvimento)
- * se o nome bater, ou um boneco próprio, gerado pelo id do membro. Serve à tela
- * de Reuniões da home e à página do cenário de reunião.
+ * Quem é cada membro de reunião: o boneco da equipe (suporte, desenvolvimento ou
+ * compilação) se o nome bater, ou um boneco próprio, gerado pelo id do membro.
+ * Serve à tela de Reuniões da home e à página do cenário de reunião.
  *
- * As equipes vêm da API do site (/api/equipes/*, que lê o Milldesk) uma vez por
- * carregamento de página. Até chegarem, todo membro aparece com boneco próprio;
- * quem usa `useEquipes()` é renderizado de novo quando elas chegam.
+ * Suporte e desenvolvimento vêm da API do site (/api/equipes/*, que lê o Milldesk)
+ * uma vez por carregamento de página; a compilação é escrita à mão
+ * (pages/Compilacao/equipe.js) e entra junto, quando as outras chegam. Até lá,
+ * todo membro aparece com boneco próprio; quem usa `useEquipes()` é renderizado
+ * de novo quando elas chegam.
  */
 
-let pessoas = []; // suporte + desenvolvimento: { id, name, role, absent }
+let pessoas = []; // suporte + desenvolvimento + compilação: { id, name, role, absent }
 let porNome = new Map();
 let ordenadas = [];
 let carregando = null;
@@ -27,11 +30,11 @@ export function definirEquipes(lista) {
   ouvintes.forEach((avisar) => avisar());
 }
 
-/** Busca as duas equipes (uma vez; se falhar, a próxima chamada tenta de novo). */
+/** Busca as equipes da API e junta a da compilação (uma vez; se falhar, a próxima chamada tenta de novo). */
 export function carregarEquipes() {
   carregando ??= Promise.all([buscarDados('/api/equipes/suporte'), buscarDados('/api/equipes/desenvolvimento')])
     .then(([suporte, desenvolvimento]) => {
-      definirEquipes([...suporte.team, ...desenvolvimento.team]);
+      definirEquipes([...suporte.team, ...desenvolvimento.team, ...PESSOAS_COMPILACAO]);
       return pessoas;
     })
     .catch((erro) => {
@@ -71,9 +74,9 @@ export function identificar(membro) {
   return pessoa ? { id: pessoa.id, cargo: pessoa.role } : { id: membro.id, cargo: null };
 }
 
-// "Ana Maria Souza" → "AS"; "Bia" → "B".
+// "Ana Maria Souza" → "AS"; "Bia" → "B"; o ponto também separa: "G.Lopes" → "GL".
 export function iniciais(nome) {
-  const partes = String(nome ?? '').trim().split(/\s+/).filter(Boolean);
+  const partes = String(nome ?? '').trim().split(/[\s.]+/).filter(Boolean);
   if (!partes.length) return '?';
   const primeira = partes[0][0];
   const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';

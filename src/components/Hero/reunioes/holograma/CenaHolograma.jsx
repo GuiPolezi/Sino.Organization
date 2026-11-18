@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { APARENCIAS_COMPILACAO } from '../../../../pages/Compilacao/equipe.js';
 import { APARENCIAS_DEV } from '../../../../pages/Desenvolvimento/aparencias.js';
 import { aparenciaDe, registrarAparencias } from '../../../../pages/Suporte/boneco/aparencia.js';
 import { Figura, useMateriais } from '../../../../pages/Suporte/boneco/Boneco.jsx';
@@ -9,8 +10,9 @@ import { criarUniformes, holografar, materialProfundidade } from './holoMaterial
 import FlocosHolograficos from './natal/FlocosHolograficos.jsx';
 import Projetor, { TOPO_DISCO } from './Projetor.jsx';
 
-// Na home cabem as duas equipes: suporte (já registrada) e desenvolvimento.
+// Na home cabem as três equipes: suporte (já registrada), desenvolvimento e compilação.
 registrarAparencias(APARENCIAS_DEV);
+registrarAparencias(APARENCIAS_COMPILACAO);
 
 // Altura do boneco em pé (pés no 0, topo do cabelo), antes da escala da aparência.
 const ALTURA_FIGURA = 2.08;

@@ -3,6 +3,7 @@ import { STATUS, statusDe } from '../../components/Hero/reunioes/periodos.js';
 import { carregarEquipes } from '../../components/Hero/reunioes/membrosEquipe.js';
 import { migrarReunioesLocais, obterReuniao } from '../../components/Hero/reunioes/reunioesRepo.js';
 import { useAgora } from '../../components/Hero/reunioes/useAgora.js';
+import { APARENCIAS_COMPILACAO } from '../Compilacao/equipe.js';
 import { APARENCIAS_DEV } from '../Desenvolvimento/aparencias.js';
 import NotFound from '../NotFound/index.jsx';
 import { registrarAparencias } from '../Suporte/boneco/aparencia.js';
@@ -25,12 +26,13 @@ import { subtituloDa, useReuniao } from './store.js';
  * de qualquer boneco nascer (a navegação recarrega o site, então isso não
  * afeta /suporte nem /desenvolvimento): a área da sala, o ritmo de reunião (quase
  * todos sentam e ficam), sem o quadro da equipe no caminho, e a aparência dos
- * desenvolvedores, que também podem ser membros.
+ * desenvolvedores e dos compiladores, que também podem ser membros.
  */
 configurarCena(CENA_REUNIAO);
 configurarRitmo(RITMO_REUNIAO);
 removerQuadro();
 registrarAparencias(APARENCIAS_DEV);
+registrarAparencias(APARENCIAS_COMPILACAO);
 
 // Estável (fora do componente): a cena é memoizada. A paisagem precisa do stencil.
 const CENA = { Cenario: CenarioReuniao, Luzes: LuzesReuniao, gl: { stencil: true } };
