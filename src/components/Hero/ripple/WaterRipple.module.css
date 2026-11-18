@@ -1,0 +1,34 @@
+/* Escondida até o WebGL ter o primeiro quadro (fade pelo GSAP, autoAlpha). */
+.camada {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.camada > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * O painel vira contexto de empilhamento: o z-index -1 da camada fica acima
+ * do fundo dele e abaixo de todo o conteúdo (posicionado ou não).
+ */
+:global([data-ripple-painel]) {
+  isolation: isolate;
+}
+
+/*
+ * Com a água ligada, os originais marcados ficam invisíveis mas seguem no DOM
+ * (leitores de tela, layout). Recorte vazio em vez de opacity/visibility: o
+ * GSAP anima esses dois inline e a camada os lê para redesenhar. Nada de
+ * `filter` ou `transform`: eles viram bloco de contenção dos filhos
+ * absolutos e o anel decorativo pularia de lugar.
+ */
+:global([data-ripple-ativo] [data-ripple]) {
+  clip-path: inset(50%) !important;
+}
