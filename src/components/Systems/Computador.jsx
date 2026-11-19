@@ -24,13 +24,11 @@ const reduzido = () => matches(MEDIA.reducedMotion);
 /*
  * Computador da seção Sistemas: monitor, base, teclado e mouse em CSS, com o
  * wallpaper e os ícones na tela. `appAtivo` (id ou null) diz qual aplicativo
- * deve estar aberto; a troca anima fechando o atual (volta ao ícone dele) e
- * abrindo o próximo (sai do ícone dele). A tela usa o cursor nativo
+ * deve estar aberto; a troca anima fechando o atual e abrindo o próximo. A tela usa o cursor nativo
  * (data-cursor="nativo") e faz o "tic" de clique do Windows antigo.
  */
 export default function Computador({ appAtivo, onAbrir, onFechar }) {
   const tela = useRef(null);
-  const fundo = useRef(null);
   const janela = useRef(null);
   const barra = useRef(null);
   const botoes = useRef({});
@@ -57,11 +55,7 @@ export default function Computador({ appAtivo, onAbrir, onFechar }) {
     const tinhaFoco = janela.current?.contains(document.activeElement);
     animando.current = true;
     animacao.current = fecharApp({
-      tela: tela.current,
       janela: janela.current,
-      botao: icone,
-      fundo: fundo.current,
-      cobreTela: modo !== 'janela',
       reduzido: reduzido(),
       aoTerminar: () => {
         animando.current = false;
@@ -70,7 +64,7 @@ export default function Computador({ appAtivo, onAbrir, onFechar }) {
         setExibido(null);
       },
     });
-  }, [appAtivo, exibido, modo, pulso]);
+  }, [appAtivo, exibido, pulso]);
 
   // A janela acabou de montar: nasce do ícone. Ao desmontar, o foco que estava
   // nela volta para o ícone (só agora, com a lista de ícones fora do `inert`).
@@ -84,10 +78,7 @@ export default function Computador({ appAtivo, onAbrir, onFechar }) {
     if (tela.current.contains(document.activeElement)) janela.current.focus({ preventScroll: true });
     animando.current = true;
     animacao.current = abrirApp({
-      tela: tela.current,
       janela: janela.current,
-      botao: botoes.current[exibido],
-      fundo: fundo.current,
       reduzido: reduzido(),
       aoTerminar: () => {
         animando.current = false;
@@ -154,7 +145,7 @@ export default function Computador({ appAtivo, onAbrir, onFechar }) {
           data-cursor="nativo"
           onPointerDown={tocarClique}
         >
-          <div ref={fundo} className={styles.fundo}>
+          <div className={styles.fundo}>
             <img
               className={styles.wallpaper}
               src={desktop1920}
