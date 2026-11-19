@@ -1,7 +1,9 @@
 .shape {
   --shape-size: 110vw;
-  --shape-right: -62vw;
-  --shape-bottom: -50vw;
+  /* A ponta de baixo entra em Sistemas sem encostar no título e no subtítulo
+     centralizados (folga ≥ 20px, medida de 320 a 1023px, em pé e deitado). */
+  --shape-right: -70vw;
+  --shape-bottom: -35vw;
   --shape-fill: var(--color-olive-dark);
 
   position: absolute;
