@@ -28,15 +28,9 @@ const roundedSquare = ({ half, radius }) => {
 
 const RING_PATH = `${roundedSquare(OUTER)} ${roundedSquare(INNER)}`;
 
-// `variant="systems"` é a continuação do anel no painel seguinte: mostra a
-// metade que a borda da tela esconde no Hero.
-export default function DecorShape({ variant = 'hero' }) {
+export default function DecorShape() {
   return (
-    <div
-      className={`${styles.shape} ${styles[variant]}`}
-      data-parallax="shape"
-      aria-hidden="true"
-    >
+    <div className={styles.shape} aria-hidden="true">
       <svg
         className={styles.svg}
         data-intro="shape"

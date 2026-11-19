@@ -1,17 +1,3 @@
-.viewport {
-  overflow: hidden;
-}
-
-.track {
-  display: flex;
-  flex-direction: column;
-}
-
-.track > * {
-  flex: none;
-  min-height: 100svh;
-}
-
 .panel {
   --panel-padding-top: 2.5rem;
   --panel-padding-inline: var(--gutter-mobile);
@@ -20,6 +6,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 100svh;
   overflow: hidden;
   padding: var(--panel-padding-top) var(--panel-padding-inline)
     var(--panel-padding-bottom);
@@ -134,18 +121,5 @@
 
   .title {
     line-height: 0.98;
-  }
-}
-
-/* Mesma condição de MEDIA.horizontalScroll (src/utils/media.js). */
-@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
-  .track {
-    flex-direction: row;
-    will-change: transform;
-  }
-
-  .track > * {
-    flex: 0 0 100%;
-    height: 100svh;
   }
 }

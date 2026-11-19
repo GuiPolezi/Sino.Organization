@@ -38,9 +38,8 @@ function Home() {
 
   return (
     <main>
-      <Hero>
-        <Systems />
-      </Hero>
+      <Hero />
+      <Systems />
       <Clients />
     </main>
   );

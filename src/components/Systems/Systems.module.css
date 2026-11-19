@@ -1,195 +1,241 @@
-.panel {
-  /* Mesma folga do título do Hero, para a máscara não cortar a tipografia. */
-  --title-mask-bleed: 0.24em;
-  --title-size: clamp(2.25rem, 11vw, 3rem);
-  --subtitle-size: clamp(1rem, 4.4vw, 1.5rem);
-  --balloon-height: 3rem;
-  --balloon-font: 1rem;
-  --balloon-shadow:
-    0 10px 24px color-mix(in srgb, var(--color-olive-dark) 22%, transparent),
-    0 2px 6px color-mix(in srgb, var(--color-olive-dark) 14%, transparent);
+/*
+ * Seção Sistemas (arte do Figma em 1440×1024). `--px` é um px da arte: no
+ * desktop vem de `--u` (cabe na viewport inteira); no celular, o monitor
+ * (795px na arte) ocupa a largura útil da tela.
+ */
+.painel {
+  --px: min(calc((100vw - 2 * var(--gutter-mobile)) / 795), 1px);
+  --titulo: clamp(2.75rem, 13vw, 4.5rem);
+  --subtitulo: clamp(1rem, 4.2vw, 1.375rem);
+  --balao-altura: max(34px, calc(37 * var(--px)));
+  --balao-fonte: max(13px, calc(15.5 * var(--px)));
+  --vidro-borda: color-mix(in srgb, var(--color-cream) 55%, transparent);
+  --vidro-fundo: color-mix(in srgb, var(--color-cream) 17%, transparent);
 
-  position: relative;
-  overflow: hidden;
-  padding: 4rem var(--gutter-mobile) 5rem;
-  background: var(--color-cream);
-  color: var(--color-olive-dark);
-}
-
-.stage {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  overflow: hidden;
+  padding: 4rem var(--gutter-mobile) 4.5rem;
+  background: var(--color-olive);
+  color: var(--color-cream);
 }
 
-.header {
+.palco {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.cabecalho {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.25rem;
   text-align: center;
 }
 
-.title {
-  font-size: var(--title-size);
-  font-weight: var(--weight-black);
+.titulo {
+  font-family: var(--font-display);
+  font-size: var(--titulo);
+  font-weight: var(--weight-bold);
   line-height: 1;
-  color: var(--color-olive);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-olive-ink);
 }
 
-.titleLine {
+/* O título sobe de dentro desta máscara na entrada (animacoes.js). */
+.mascara {
   display: block;
   overflow: hidden;
-  padding-block: var(--title-mask-bleed);
-  margin-block: calc(var(--title-mask-bleed) * -1);
+  padding-block: 0.12em 0.04em;
 }
 
-.titleLineInner {
+.tituloTexto {
   display: block;
   will-change: transform;
 }
 
-.subtitle {
-  margin-top: 1rem;
-  font-size: var(--subtitle-size);
+.subtitulo {
+  max-width: 40ch;
+  font-family: var(--font-display);
+  font-size: var(--subtitulo);
   font-weight: var(--weight-bold);
-  color: color-mix(in srgb, var(--color-olive) 58%, transparent);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--color-olive-ink);
+  text-wrap: balance;
 }
 
-.hub,
-.lines {
-  display: none;
-}
-
-/* Reserva o espaço da tampa, que se projeta acima da base do notebook. */
-.notebook {
-  margin: 38vw 0 16vw;
-}
-
-.balloons {
+/* Balão do slide atual à esquerda; rótulo e pílula de slides à direita. */
+.barra {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.875rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: calc(799 * var(--px));
+  margin-bottom: max(8px, calc(12 * var(--px)));
 }
 
-.balloon {
-  min-width: 10rem;
-  height: var(--balloon-height);
-  padding: 0 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--color-white) 60%, transparent);
+.balao,
+.slides {
+  display: flex;
+  align-items: center;
+  height: var(--balao-altura);
+  border: 1.5px solid var(--vidro-borda);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-mint) 68%, transparent);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
+  background: var(--vidro-fundo);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
   box-shadow:
-    var(--balloon-shadow),
-    inset 0 1px 0 color-mix(in srgb, var(--color-white) 55%, transparent);
-  color: var(--color-ink);
-  font: inherit;
-  font-size: var(--balloon-font);
+    inset 0 1px 0 color-mix(in srgb, var(--color-white) 38%, transparent),
+    0 calc(8 * var(--px)) calc(22 * var(--px))
+      color-mix(in srgb, var(--color-olive-dark) 30%, transparent);
+}
+
+.balao {
+  justify-content: center;
+  min-width: max(88px, calc(103 * var(--px)));
+  padding-inline: max(14px, calc(22 * var(--px)));
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: var(--balao-fonte);
   font-weight: var(--weight-bold);
   white-space: nowrap;
+  color: var(--color-cream);
+}
+
+.balao > span {
+  display: block;
+}
+
+.navegacao {
+  display: flex;
+  align-items: center;
+  gap: max(10px, calc(19 * var(--px)));
+}
+
+.rotulo {
+  font-family: var(--font-display);
+  font-size: max(11px, calc(13.5 * var(--px)));
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-cream) 72%, transparent);
+}
+
+.slides {
+  gap: max(4px, calc(6 * var(--px)));
+  padding-inline: max(6px, calc(10 * var(--px)));
+}
+
+.seta {
+  display: grid;
+  place-items: center;
+  width: max(22px, calc(24 * var(--px)));
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-cream);
   cursor: pointer;
   transition:
-    transform 0.3s ease,
-    background-color 0.3s ease;
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
-.balloon:hover {
-  background: color-mix(in srgb, var(--color-mint) 88%, transparent);
-  transform: scale(1.05);
+.seta svg {
+  width: max(8px, calc(11 * var(--px)));
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.balloon:focus-visible {
-  outline: 2px solid var(--color-olive);
-  outline-offset: 3px;
+.seta:hover:not(:disabled) {
+  transform: scale(1.15);
+}
+
+.seta:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pontos {
+  display: flex;
+  gap: max(5px, calc(8 * var(--px)));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ponto {
+  position: relative;
+  display: block;
+  width: max(8px, calc(12.5 * var(--px)));
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-cream) 42%, var(--color-olive));
+  cursor: pointer;
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ease;
+}
+
+/* Área de toque maior que o ponto. */
+.ponto::before {
+  position: absolute;
+  inset: -6px -3px;
+  content: '';
+}
+
+.ponto:hover {
+  transform: scale(1.2);
+}
+
+.ponto[aria-current] {
+  background: var(--color-olive-ink);
+}
+
+.seta:focus-visible,
+.ponto:focus-visible {
+  outline: 2px solid var(--color-cream);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+@media (max-width: 420px) {
+  .rotulo {
+    display: none;
+  }
 }
 
 @media (min-width: 1024px) {
-  .panel {
-    --title-size: clamp(2rem, calc(var(--u) * 3.33), 4.5rem);
-    --subtitle-size: clamp(0.875rem, calc(var(--u) * 1.67), 2.25rem);
-    --balloon-height: calc(var(--u) * 3.33);
-    --balloon-font: clamp(0.75rem, calc(var(--u) * 1.11), 1.5rem);
-    --balloon-shadow:
-      0 calc(var(--u) * 0.7) calc(var(--u) * 1.7)
-        color-mix(in srgb, var(--color-olive-dark) 22%, transparent),
-      0 calc(var(--u) * 0.15) calc(var(--u) * 0.4)
-        color-mix(in srgb, var(--color-olive-dark) 14%, transparent);
+  /* Posições da arte: título a 55px do topo, subtítulo a 136px, barra a 247px, monitor a 296px. */
+  .painel {
+    --px: calc(var(--u) / 14.4);
+    --titulo: calc(70 * var(--px));
+    --subtitulo: calc(23.5 * var(--px));
 
-    display: grid;
-    place-items: center;
-    padding: 0;
+    padding: calc(46 * var(--px)) 0 calc(16 * var(--px));
   }
 
-  /* A arte inteira (1440×1024) em unidades `--u`; os filhos usam px da arte. */
-  .stage {
-    display: block;
-    flex: none;
-    width: calc(var(--u) * 100);
-    height: calc(var(--u) * 71.11);
+  .cabecalho {
+    gap: calc(14 * var(--px));
+    margin-bottom: calc(80 * var(--px));
   }
 
-  .header {
-    position: absolute;
-    top: calc(var(--u) * 5.6);
-    right: 0;
-    left: 0;
-  }
-
-  .subtitle {
-    margin-top: calc(var(--u) * 2.1);
-  }
-
-  .hub {
-    position: absolute;
-    top: calc(var(--u) * 35.9);
-    left: calc(var(--u) * 41.94);
-    display: block;
-    width: calc(var(--u) * 15);
-    aspect-ratio: 1;
-  }
-
-  .hubPulse {
-    height: 100%;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--color-mint) 26%, var(--color-cream));
-  }
-
-  .lines {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    fill: none;
-    stroke: var(--color-mint);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    pointer-events: none;
-  }
-
-  .lines line {
-    vector-effect: non-scaling-stroke;
-  }
-
-  .notebook {
-    position: absolute;
-    top: calc(var(--u) * 43.4);
-    left: calc(var(--u) * 26.3);
-    margin: 0;
-  }
-
-  .balloons {
-    display: block;
-  }
-
-  .item {
-    position: absolute;
-    top: calc(var(--y) / 14.4 * var(--u));
-    left: calc(var(--x) / 14.4 * var(--u));
-  }
-
-  .balloon {
-    min-width: calc(var(--u) * 12.99);
-    padding: 0 calc(var(--u) * 1.6);
+  .subtitulo {
+    max-width: none;
+    line-height: 1.2;
   }
 }

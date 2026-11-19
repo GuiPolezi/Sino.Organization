@@ -1,43 +1,45 @@
-// Coordenadas em px na arte (1440×1024): `position` é o canto superior
-// esquerdo do balão e `line` é o tracejado que liga o notebook a ele.
-// Os textos do modal são provisórios, até o conteúdo final chegar.
-export const SYSTEMS = [
+/*
+ * Aplicativos da área de trabalho do computador da seção Sistemas.
+ *
+ * Os ícones e os nomes já vêm desenhados no wallpaper (desktop-*.webp, 1920×1080);
+ * `area` é o retângulo clicável de cada um, em px dessa imagem (ícone + nome).
+ * Como a tela tem a mesma proporção do wallpaper (16:9), a área vira % e
+ * acompanha a tela em qualquer tamanho.
+ */
+export const WALLPAPER = { largura: 1920, altura: 1080 };
+
+export const APPS = [
   {
-    id: 'sapl',
-    label: 'SAPL',
-    title: 'Sistema de Apoio ao Processo Legislativo',
-    summary:
-      'sua principal função é manter o controle sobre os documentos na Câmara, permitindo a padronização dos textos, busca rápida de documentos, controle de sua tramitação pela casa e outras facilidades de edição, além de auxiliar também na gestão dos documentos administrativos',
-    highlights: [
-      'Siscam 9 - Versão mais nova formato website',
-      'Siscam 8 - Versão Desktop',
-    ],
-    position: { x: 667, y: 282 },
-    line: { x1: 717, y1: 492, x2: 742, y2: 345 },
+    id: 'siscam',
+    nome: 'Sino.Siscam',
+    titulo: 'Sistema de Apoio ao Processo Legislativo',
+    resumo:
+      'Sua principal função é manter o controle sobre os documentos na Câmara, permitindo a padronização dos textos, busca rápida de documentos, controle de sua tramitação pela casa e outras facilidades de edição, além de auxiliar também na gestão dos documentos administrativos.',
+    destaques: ['Siscam 9 - Versão mais nova formato website', 'Siscam 8 - Versão Desktop'],
+    area: { x: 108, y: 88, w: 178, h: 176 },
   },
   {
     id: 'websites',
-    label: 'Websites',
-    title: 'Websites institucionais',
-    summary:
+    nome: 'Websites',
+    titulo: 'Websites Institucionais',
+    resumo:
       'Portais rápidos, acessíveis e fáceis de atualizar, feitos para aproximar a instituição do cidadão.',
-    highlights: [
+    destaques: [
       'Website de Câmaras',
       'Website de Prefeituras',
       'Gabinete Web',
       'Sino Recepção',
       'Controle de Viagens',
     ],
-    position: { x: 854, y: 331 },
-    line: { x1: 765, y1: 522, x2: 855, y2: 418 },
+    area: { x: 108, y: 296, w: 178, h: 182 },
   },
   {
     id: 'cartorios',
-    label: 'Cartórios',
-    title: 'Gestão para cartórios',
-    summary:
+    nome: 'Cartórios',
+    titulo: 'Gestão para Cartórios',
+    resumo:
       'Controle de atos, selos e atendimento, com segurança e agilidade no dia a dia do cartório.',
-    highlights: [
+    destaques: [
       'Sistema de Firmas',
       'Sistema de Escrituras',
       'Sistema de NFE',
@@ -46,51 +48,54 @@ export const SYSTEMS = [
       'Sino Digitalizador',
       'Sino Biometria',
     ],
-    position: { x: 941, y: 413 },
-    line: { x1: 815, y1: 558, x2: 935, y2: 470 },
+    area: { x: 108, y: 518, w: 178, h: 162 },
   },
   {
-    id: 'painel-votacao',
-    label: 'Painel de Votação',
-    title: 'Painel eletrônico de votação',
-    summary:
+    id: 'plenarium',
+    nome: 'PlenariUM',
+    titulo: 'Painel Eletrônico de Votação',
+    resumo:
       'Registra presença e votos em tempo real, deixando as sessões plenárias mais transparentes.',
-    highlights: [
-      'Sino Plenarium',
-    ],
-    position: { x: 983, y: 508 },
-    line: { x1: 835, y1: 610, x2: 958, y2: 560 },
+    destaques: ['Sino Plenarium'],
+    area: { x: 108, y: 742, w: 178, h: 152 },
   },
   {
     id: 'consultas',
-    label: 'Consultas e Outros',
-    title: 'Consultas e outros serviços',
-    summary:
+    nome: 'Consultas',
+    titulo: 'Consultas e Outros Serviços',
+    resumo:
       'Ferramentas sob medida para consultas, integrações e rotinas específicas de cada cliente.',
-    highlights: [
+    destaques: [
       'Site de Consulta pública de normas e proposições',
       'Site Legislativo - Legislação Digital',
       'Site de Protocolo - Siave',
       'Site de Tramitações - Workflow',
     ],
-    position: { x: 997, y: 603 },
-    line: { x1: 830, y1: 662, x2: 970, y2: 638 },
+    area: { x: 316, y: 306, w: 178, h: 172 },
   },
   {
     id: 'mobile',
-    label: 'Mobile',
-    title: 'Aplicativos mobile',
-    summary:
-      'Os principais serviços na palma da mão, em aplicativos leves para Android e iOS.',
-    highlights: [
-      'Acompanhamento de sessões e matérias',
+    nome: 'Sino.Mobile',
+    titulo: 'Aplicativos Mobile',
+    resumo: 'Os principais serviços na palma da mão, em aplicativos leves para Android e iOS.',
+    destaques: [
+      'Acompanhamento de Sessões e Matérias',
       'Notificações em tempo real',
       'Experiência pensada para o celular',
     ],
-    position: { x: 998, y: 701 },
-    line: { x1: 822, y1: 707, x2: 970, y2: 723 },
+    area: { x: 312, y: 530, w: 186, h: 150 },
   },
 ];
 
-// Tracejado das linhas, em px de tela: [traço, intervalo].
-export const LINE_DASH = [14, 12];
+// Os slides: a área de trabalho primeiro, depois um por aplicativo.
+export const SLIDES = [{ id: null, nome: 'Desktop' }, ...APPS.map(({ id, nome }) => ({ id, nome }))];
+
+export const appPorId = (id) => APPS.find((app) => app.id === id) ?? null;
+
+// Retângulo da área em % da tela (left/top/width/height).
+export const areaEmPorcentagem = ({ x, y, w, h }) => ({
+  left: (x / WALLPAPER.largura) * 100,
+  top: (y / WALLPAPER.altura) * 100,
+  width: (w / WALLPAPER.largura) * 100,
+  height: (h / WALLPAPER.altura) * 100,
+});

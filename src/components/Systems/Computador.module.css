@@ -1,0 +1,207 @@
+/*
+ * iMac, teclado e mouse em CSS. Medidas em px da arte (Figma 1440×1024)
+ * multiplicadas por `--px` (definido em Systems.module.css): o conjunto inteiro
+ * escala junto. Caixa total: 795 × 712 (monitor 795 × 542).
+ */
+.computador {
+  --prata-claro: #f4f4f5;
+  --prata: #e4e4e6;
+  --prata-escuro: #c9c9cc;
+  --aluminio: #b4b4b8;
+
+  position: relative;
+  width: calc(795 * var(--px));
+  height: calc(712 * var(--px));
+}
+
+/* Sombra no "chão", embaixo do pé. */
+.sombra {
+  position: absolute;
+  top: calc(640 * var(--px));
+  left: 50%;
+  width: calc(940 * var(--px));
+  height: calc(46 * var(--px));
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--color-olive-dark) 75%, transparent),
+    transparent
+  );
+  filter: blur(calc(10 * var(--px)));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* Pé do iMac: alumínio com a sombra do queixo no topo. */
+.pe {
+  position: absolute;
+  top: calc(530 * var(--px));
+  left: calc(303 * var(--px));
+  width: calc(190 * var(--px));
+  height: calc(139 * var(--px));
+  border-radius: 0 0 calc(4 * var(--px)) calc(4 * var(--px));
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, #000 22%, transparent),
+      transparent 22%,
+      transparent 88%,
+      color-mix(in srgb, #fff 70%, transparent) 92%,
+      var(--prata-escuro)
+    ),
+    linear-gradient(
+      to right,
+      var(--aluminio),
+      var(--prata) 18%,
+      var(--prata-claro) 50%,
+      var(--prata) 82%,
+      var(--aluminio)
+    );
+}
+
+.monitor {
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(542 * var(--px));
+  border-radius: calc(14 * var(--px));
+  background: linear-gradient(to bottom, #f7f7f8, var(--prata) 82%, var(--prata-escuro));
+  box-shadow:
+    0 calc(18 * var(--px)) calc(40 * var(--px))
+      color-mix(in srgb, var(--color-olive-dark) 38%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #fff 70%, transparent);
+}
+
+.camera {
+  position: absolute;
+  top: calc(6 * var(--px));
+  left: 50%;
+  width: max(3px, calc(5 * var(--px)));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1d1d1f;
+  box-shadow: calc(12 * var(--px)) 0 0 -1px color-mix(in srgb, #1d1d1f 55%, transparent);
+  transform: translateX(-50%);
+}
+
+/* Tela 16:9, a mesma proporção do wallpaper (as áreas dos ícones são em %). */
+.tela {
+  position: absolute;
+  top: calc(17 * var(--px));
+  left: calc(18 * var(--px));
+  width: calc(759 * var(--px));
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: calc(3 * var(--px));
+  background: #1d1d1f;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #000 12%, transparent);
+  container: tela / size;
+  cursor: default;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fundo {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.wallpaper {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.icones {
+  position: absolute;
+  inset: 0;
+}
+
+/* Área clicável sobre o ícone desenhado no wallpaper; destaque como o do macOS. */
+.icone {
+  position: absolute;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: clamp(4px, 1cqw, 10px);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.icone:hover {
+  border-color: color-mix(in srgb, #fff 28%, transparent);
+  background: color-mix(in srgb, #fff 14%, transparent);
+}
+
+.icone:active {
+  background: color-mix(in srgb, #000 16%, transparent);
+}
+
+.icone:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+/* Queixo do iMac, abaixo da tela. */
+.queixo {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(81 * var(--px));
+  border-radius: 0 0 calc(14 * var(--px)) calc(14 * var(--px));
+  background: linear-gradient(to bottom, var(--prata) 0%, #dadadc 40%, var(--prata-escuro));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #000 6%, transparent);
+}
+
+/* Teclado visto um pouco de cima: teclas em grade e a borda da espessura. */
+.teclado {
+  position: absolute;
+  top: calc(684 * var(--px));
+  left: calc(50 * var(--px));
+  width: calc(490 * var(--px));
+  height: calc(28 * var(--px));
+  border-radius: calc(5 * var(--px));
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0 calc(2 * var(--px)),
+      color-mix(in srgb, #000 9%, transparent) calc(2 * var(--px)) calc(3 * var(--px)),
+      transparent calc(3 * var(--px)) calc(17 * var(--px))
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(3 * var(--px)),
+      color-mix(in srgb, #000 8%, transparent) calc(3 * var(--px)) calc(4 * var(--px)),
+      transparent calc(4 * var(--px)) calc(6 * var(--px))
+    ),
+    linear-gradient(to bottom, #fafafa, var(--prata));
+  box-shadow:
+    0 calc(3 * var(--px)) 0 var(--prata-escuro),
+    0 calc(8 * var(--px)) calc(10 * var(--px))
+      color-mix(in srgb, var(--color-olive-dark) 45%, transparent);
+  transform: perspective(calc(300 * var(--px))) rotateX(28deg);
+  transform-origin: 50% 100%;
+}
+
+.mouse {
+  position: absolute;
+  top: calc(671 * var(--px));
+  left: calc(608 * var(--px));
+  width: calc(130 * var(--px));
+  height: calc(41 * var(--px));
+  border-radius: 50% 50% 46% 46% / 62% 62% 38% 38%;
+  background:
+    radial-gradient(
+      ellipse 60% 55% at 50% 22%,
+      #fff,
+      transparent 70%
+    ),
+    linear-gradient(to bottom, #fbfbfb, var(--prata) 70%, var(--aluminio));
+  box-shadow:
+    0 calc(6 * var(--px)) calc(10 * var(--px))
+      color-mix(in srgb, var(--color-olive-dark) 50%, transparent),
+    inset 0 calc(-3 * var(--px)) calc(4 * var(--px)) color-mix(in srgb, #000 10%, transparent);
+}

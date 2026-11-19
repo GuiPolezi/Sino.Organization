@@ -13,18 +13,6 @@ const AT = {
   shape: 0.7,
 };
 
-// Scroll vertical gasto por pixel de deslocamento horizontal: abaixo de 1,
-// a troca de seção pede menos rolagem.
-const SCROLL_RATIO = 0.5;
-// Atraso (s) com que o track alcança o scroll.
-const SCROLL_SMOOTHING = 0.6;
-
-// Parallax durante o scroll horizontal, em fração da largura da viewport.
-// O anel anda o bastante para revelar, no painel seguinte, a metade escondida.
-const PARALLAX = {
-  shape: 0.045,
-};
-
 const addHeader = (tl, q) =>
   tl
     .from(
@@ -87,40 +75,4 @@ export function playIntro(scope) {
 
 export function playReducedIntro(scope) {
   gsap.from(scope, { autoAlpha: 0, duration: 0.4, ease: 'none' });
-}
-
-export function setupHorizontalScroll({ viewport, track, panel }) {
-  // O anel decorativo se repete nos painéis seguintes: a busca é no track.
-  const q = gsap.utils.selector(track);
-  const distance = () => track.scrollWidth - viewport.clientWidth;
-
-  const scrollTween = gsap.to(track, {
-    x: () => -distance(),
-    ease: 'none',
-    scrollTrigger: {
-      trigger: viewport,
-      pin: true,
-      scrub: SCROLL_SMOOTHING,
-      start: 'top top',
-      end: () => `+=${distance() * SCROLL_RATIO}`,
-      invalidateOnRefresh: true,
-    },
-  });
-
-  Object.entries(PARALLAX).forEach(([name, factor]) => {
-    gsap.to(q(`[data-parallax="${name}"]`), {
-      x: () => viewport.clientWidth * factor,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: panel,
-        containerAnimation: scrollTween,
-        start: 'left left',
-        end: 'right left',
-        scrub: true,
-        invalidateOnRefresh: true,
-      },
-    });
-  });
-
-  return scrollTween;
 }

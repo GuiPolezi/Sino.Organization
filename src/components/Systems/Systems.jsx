@@ -1,115 +1,99 @@
-import { useContext, useRef, useState } from 'react';
+import { Fragment, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { MEDIA } from '../../utils/media.js';
-import DecorShape from '../Hero/DecorShape.jsx';
-import { TrackContext } from '../Hero/TrackContext.js';
-import Notebook from './Notebook.jsx';
-import SystemModal from './SystemModal.jsx';
-import { LINE_DASH, SYSTEMS } from './systems.js';
-import { playAmbient, playEntrance, setupTilt } from './systemsAnimations.js';
+import { MEDIA, matches } from '../../utils/media.js';
+import WaterRipple from '../Hero/ripple/WaterRipple.jsx';
+import { entradaDaSecao } from './animacoes.js';
+import Computador from './Computador.jsx';
+import SlideNav from './SlideNav.jsx';
+import { SLIDES } from './systems.js';
 import styles from './Systems.module.css';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const TITLE_ID = 'systems-title';
-const ART_SIZE = { width: 1440, height: 1024 };
+const TITULO_ID = 'sistemas-titulo';
+const SUBTITULO =
+  'Selecione o ícone no computador ou avance o slide para visualizar a descrição do sistema';
 
+/*
+ * Seção Sistemas: a água (WaterRipple) refrata o título, o subtítulo e o
+ * rótulo "SLIDE" (data-ripple); o balão, a pílula de slides e o computador
+ * ficam por cima, fora do efeito. O slide 0 é a área de trabalho; os outros
+ * abrem a janela do aplicativo correspondente.
+ */
 export default function Systems() {
-  const root = useRef(null);
-  const scrollTween = useContext(TrackContext);
-  const [activeSystem, setActiveSystem] = useState(null);
+  const painel = useRef(null);
+  const balao = useRef(null);
+  const larguraDoBalao = useRef(null);
+  const [indice, setIndice] = useState(0);
+  const slide = SLIDES[indice];
 
   useGSAP(
     () => {
-      const mm = gsap.matchMedia();
-
-      // No track horizontal a entrada depende do tween do Hero; empilhado, do scroll normal.
-      mm.add(MEDIA.horizontalScroll, () => {
-        if (!scrollTween) return;
-        playEntrance(root.current, {
-          containerAnimation: scrollTween,
-          start: 'left 55%',
-        });
-      });
-      mm.add(MEDIA.verticalMotion, () => {
-        playEntrance(root.current, { start: 'top 65%' });
-      });
-      mm.add(MEDIA.motion, () => playAmbient(root.current));
-      mm.add(`${MEDIA.hover} and ${MEDIA.motion}`, () => setupTilt(root.current));
+      gsap.matchMedia().add(MEDIA.motion, () => entradaDaSecao(painel.current));
     },
-    { scope: root, dependencies: [scrollTween], revertOnUpdate: true },
+    { scope: painel },
   );
 
-  return (
-    <section ref={root} className={styles.panel} aria-labelledby={TITLE_ID}>
-      <DecorShape variant="systems" />
+  // O balão troca de nome com o slide: a largura acompanha e o texto sobe.
+  useLayoutEffect(() => {
+    const el = balao.current;
+    // Troca no meio da animação anterior: parte da largura que está na tela.
+    const anterior = gsap.isTweening(el) ? el.offsetWidth : larguraDoBalao.current;
+    gsap.killTweensOf([el, el.firstChild]);
+    gsap.set(el, { clearProps: 'width' });
+    gsap.set(el.firstChild, { clearProps: 'transform,opacity,visibility' });
+    const largura = el.offsetWidth;
+    larguraDoBalao.current = largura;
+    if (anterior === null || matches(MEDIA.reducedMotion)) return;
+    gsap.fromTo(el, { width: anterior }, { width: largura, duration: 0.45, ease: 'power3.out', clearProps: 'width' });
+    gsap.from(el.firstChild, { yPercent: 70, autoAlpha: 0, duration: 0.4, ease: 'power3.out' });
+  }, [indice]);
 
-      <div className={styles.stage}>
-        <header className={styles.header}>
-          <h2 id={TITLE_ID} className={styles.title}>
-            <span className={styles.titleLine}>
-              <span className={styles.titleLineInner} data-sys="title-line">
+  const irPara = (i) => setIndice(Math.min(Math.max(i, 0), SLIDES.length - 1));
+  const abrir = (id) => irPara(SLIDES.findIndex((s) => s.id === id));
+
+  return (
+    <section ref={painel} className={styles.painel} aria-labelledby={TITULO_ID}>
+      <WaterRipple painel={painel} />
+
+      <div className={styles.palco}>
+        <header className={styles.cabecalho}>
+          <h2 id={TITULO_ID} className={styles.titulo}>
+            <span className={styles.mascara}>
+              <span className={styles.tituloTexto} data-sys="titulo" data-ripple="texto">
                 Sistemas
               </span>
             </span>
           </h2>
-          <p className={styles.subtitle} data-sys="subtitle">
-            Clique para visualizar uma explicação sucinta sobre o sistema
+          <p className={styles.subtitulo} data-sys="subtitulo">
+            {/* Uma palavra por span: a água redesenha cada uma e a frase quebra linha à vontade.
+                O espaço fica fora do span, para a caixa de cada palavra ser só a palavra. */}
+            {SUBTITULO.split(' ').map((palavra, i) => (
+              <Fragment key={`${palavra}-${i}`}>
+                {i > 0 && ' '}
+                <span data-ripple="texto">{palavra}</span>
+              </Fragment>
+            ))}
           </p>
         </header>
 
-        <div className={styles.hub} data-sys="hub" aria-hidden="true">
-          <div className={styles.hubPulse} data-sys="hub-pulse" />
+        <div className={styles.barra} data-sys="barra">
+          <p ref={balao} className={styles.balao} aria-live="polite">
+            <span>{slide.nome}</span>
+          </p>
+
+          <div className={styles.navegacao}>
+            <span className={styles.rotulo} data-ripple="texto" aria-hidden="true">
+              Slide
+            </span>
+            <SlideNav slides={SLIDES} indice={indice} onIr={irPara} />
+          </div>
         </div>
 
-        <svg
-          className={styles.lines}
-          viewBox={`0 0 ${ART_SIZE.width} ${ART_SIZE.height}`}
-          aria-hidden="true"
-          focusable="false"
-        >
-          {SYSTEMS.map(({ id, line }) => (
-            <line
-              key={id}
-              data-sys="line"
-              strokeDasharray={LINE_DASH.join(' ')}
-              {...line}
-            />
-          ))}
-        </svg>
-
-        <div className={styles.notebook}>
-          <Notebook />
-        </div>
-
-        <ul className={styles.balloons}>
-          {SYSTEMS.map((system) => (
-            <li
-              key={system.id}
-              className={styles.item}
-              data-sys="balloon"
-              style={{ '--x': system.position.x, '--y': system.position.y }}
-            >
-              <div data-sys="balloon-float">
-                <button
-                  type="button"
-                  className={styles.balloon}
-                  aria-haspopup="dialog"
-                  onClick={() => setActiveSystem(system)}
-                >
-                  {system.label}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <Computador appAtivo={slide.id} onAbrir={abrir} onFechar={() => irPara(0)} />
       </div>
-
-      {activeSystem && (
-        <SystemModal system={activeSystem} onClose={() => setActiveSystem(null)} />
-      )}
     </section>
   );
 }

@@ -1,0 +1,203 @@
+/*
+ * Janela macOS dentro da tela do computador (container "tela"). `--sp` é um
+ * px da tela na arte (759px de largura): a janela escala junto com o monitor,
+ * com mínimos legíveis no celular.
+ */
+.janela {
+  --sp: calc(100cqw / 759);
+  --zoom: 1;
+  --barra: max(22px, calc(33 * var(--sp)));
+  --luz: max(9px, calc(12 * var(--sp)));
+  --borda: color-mix(in srgb, #000 14%, transparent);
+
+  position: absolute;
+  /* -1px: cobre a fresta de subpixel na borda da tela (o wallpaper vazava). */
+  inset: -1px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  color: #111;
+  font-family: var(--font-sans);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* Recebe o foco ao abrir (para o Esc funcionar), sem contorno. */
+.janela:focus {
+  outline: none;
+}
+
+/* Amarelo: janela solta sobre a área de trabalho, arrastável pela barra. */
+.janela[data-modo='janela'] {
+  inset: 9% 13% auto;
+  height: 80%;
+  border-radius: max(6px, calc(10 * var(--sp)));
+  box-shadow:
+    0 0 0 1px var(--borda),
+    0 calc(22 * var(--sp)) calc(50 * var(--sp)) color-mix(in srgb, #000 38%, transparent);
+}
+
+/* Verde: a barra se recolhe e o conteúdo cresce um pouco. */
+.janela[data-modo='tela-cheia'] {
+  --zoom: 1.08;
+}
+
+.barra {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: var(--barra);
+  padding-inline: max(8px, calc(14 * var(--sp)));
+  border-bottom: 1px solid color-mix(in srgb, #000 12%, transparent);
+  background: #fff;
+  transition:
+    transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 0.35s ease;
+}
+
+.janela[data-modo='janela'] .barra {
+  background: #f6f6f6;
+}
+
+.janela[data-modo='tela-cheia'] .barra {
+  position: absolute;
+  inset: 0 0 auto;
+  background: color-mix(in srgb, #f6f6f6 88%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transform: translateY(-101%);
+}
+
+/* Faixa invisível no topo que, na tela cheia, traz a barra de volta. */
+.revelar {
+  display: none;
+}
+
+.janela[data-modo='tela-cheia'] .revelar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  display: block;
+  height: max(14px, calc(var(--barra) * 0.6));
+}
+
+.janela[data-modo='tela-cheia'] .revelar:hover ~ .barra,
+.janela[data-modo='tela-cheia'] .barra:hover,
+.janela[data-modo='tela-cheia'] .barra:focus-within {
+  transform: none;
+}
+
+.semaforo {
+  display: flex;
+  gap: max(5px, calc(8 * var(--sp)));
+}
+
+.luz {
+  display: grid;
+  place-items: center;
+  width: var(--luz);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cor);
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, #000 22%, transparent);
+  cursor: default;
+}
+
+.vermelho {
+  --cor: #ff5f57;
+}
+
+.amarelo {
+  --cor: #febc2e;
+}
+
+.verde {
+  --cor: #28c840;
+}
+
+/* Os símbolos aparecem ao passar o mouse no grupo, como no macOS. */
+.luz svg {
+  width: 70%;
+  height: 70%;
+  fill: none;
+  stroke: color-mix(in srgb, #000 55%, transparent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.semaforo:hover .luz svg,
+.luz:focus-visible svg {
+  opacity: 1;
+}
+
+.luz:focus-visible {
+  outline: 2px solid color-mix(in srgb, #0a84ff 80%, transparent);
+  outline-offset: 2px;
+}
+
+.conteudo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(52 * var(--sp) * var(--zoom)) calc(69 * var(--sp) * var(--zoom))
+    calc(40 * var(--sp));
+  scrollbar-width: thin;
+  transition: padding 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.janela[data-modo='janela'] .conteudo {
+  padding-inline: calc(44 * var(--sp));
+}
+
+.titulo {
+  margin: 0;
+  font-size: max(16px, calc(36 * var(--sp) * var(--zoom)));
+  font-weight: var(--weight-black);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-olive-ink);
+  transition: font-size 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.resumo,
+.destaques {
+  max-width: calc(600 * var(--sp) * var(--zoom));
+  font-size: max(11px, calc(17.5 * var(--sp) * var(--zoom)));
+  line-height: 1.7;
+  transition: font-size 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.resumo {
+  margin-top: calc(14 * var(--sp));
+}
+
+.destaques {
+  margin-top: calc(26 * var(--sp));
+  padding-left: calc(71 * var(--sp));
+  list-style: disc;
+  line-height: 2;
+}
+
+.destaques li::marker {
+  font-size: 0.8em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra,
+  .conteudo,
+  .titulo,
+  .resumo,
+  .destaques {
+    transition: none;
+  }
+}
