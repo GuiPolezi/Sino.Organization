@@ -134,9 +134,10 @@ export default function Computador({ appAtivo, onAbrir, onFechar }) {
   return (
     <div className={styles.computador}>
       <div className={styles.sombra} data-sys="periferico" aria-hidden="true" />
-      <div className={styles.pe} data-sys="monitor" aria-hidden="true" />
+      {/* data-ripple-bloqueio: mouse e clique sobre as peças do computador não fazem ondas na água. */}
+      <div className={styles.pe} data-sys="monitor" data-ripple-bloqueio aria-hidden="true" />
 
-      <div className={styles.monitor} data-sys="monitor">
+      <div className={styles.monitor} data-sys="monitor" data-ripple-bloqueio>
         <span className={styles.camera} aria-hidden="true" />
 
         <div
@@ -192,8 +193,8 @@ export default function Computador({ appAtivo, onAbrir, onFechar }) {
         <div className={styles.queixo} aria-hidden="true" />
       </div>
 
-      <div className={styles.teclado} data-sys="periferico" aria-hidden="true" />
-      <div className={styles.mouse} data-sys="periferico" aria-hidden="true" />
+      <div className={styles.teclado} data-sys="periferico" data-ripple-bloqueio aria-hidden="true" />
+      <div className={styles.mouse} data-sys="periferico" data-ripple-bloqueio aria-hidden="true" />
     </div>
   );
 }

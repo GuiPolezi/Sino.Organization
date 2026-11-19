@@ -30,6 +30,10 @@ const PADRAO = { raio: 20, perturbacao: 0.01, gotasOciosas: true };
 const LARGURA_DA_PERTURBACAO = 1024;
 // Resolução inicial, antes de conhecer o limite da GPU (corrigida no 1º quadro).
 const LIMITE_INICIAL = 2048;
+// Elementos (e o que há dentro deles) onde o ponteiro não faz ondas, como o computador de Sistemas.
+const SEM_AGUA = '[data-ripple-bloqueio]';
+const semAgua = (alvo) => alvo instanceof Element && alvo.closest(SEM_AGUA) !== null;
+
 // Força das gotas do plugin: rastro do ponteiro e clique (raio 1,5×).
 const PONTEIRO = { forca: 0.01 };
 const CLIQUE = { raio: 1.5, forca: 0.14 };
@@ -207,12 +211,15 @@ export function criarMotor({ painel, camada, opcoes }) {
     }
   }
 
+  // O ponteiro conta como atividade (sem gotas ociosas) mesmo sobre áreas sem água.
   const aoMover = (e) => {
     estado.ultimoPonteiro = performance.now();
+    if (semAgua(e.target)) return;
     enfileirar({ cliente: true, x: e.clientX, y: e.clientY, raio: config.raio, forca: PONTEIRO.forca });
   };
   const aoPressionar = (e) => {
     estado.ultimoPonteiro = performance.now();
+    if (semAgua(e.target)) return;
     enfileirar({ cliente: true, x: e.clientX, y: e.clientY, raio: config.raio * CLIQUE.raio, forca: CLIQUE.forca });
   };
   const aoPerderContexto = (e) => {
