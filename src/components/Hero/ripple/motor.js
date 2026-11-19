@@ -1,14 +1,16 @@
 import gsap from 'gsap';
 import { criarFundo } from './fundo.js';
 import {
-  assinatura,
   centroDaGota,
   dentroDoPainel,
   escalaDoDispositivo,
   escalaQueCabe,
+  faixaVisivel,
   passosFixos,
+  proporcao,
   raioDaGota,
-  razaoDoPainel,
+  resolucaoDaAgua,
+  texelDaAgua,
 } from './geometria.js';
 import { criarSimulacao } from './simulacao.js';
 
@@ -23,7 +25,11 @@ import { criarSimulacao } from './simulacao.js';
  */
 
 // Valores do site de referência: $('#ripple').ripples({ resolution: 512, dropRadius: 20, perturbance: 0.01 }).
-const PADRAO = { resolucao: null, raio: 20, perturbacao: 0.01, gotasOciosas: true };
+const PADRAO = { raio: 20, perturbacao: 0.01, gotasOciosas: true };
+// A perturbação do plugin é fração da largura; aqui vira px (no celular, como num painel de 1024).
+const LARGURA_DA_PERTURBACAO = 1024;
+// Resolução inicial, antes de conhecer o limite da GPU (corrigida no 1º quadro).
+const LIMITE_INICIAL = 2048;
 // Força das gotas do plugin: rastro do ponteiro e clique (raio 1,5×).
 const PONTEIRO = { forca: 0.01 };
 const CLIQUE = { raio: 1.5, forca: 0.14 };
@@ -38,16 +44,15 @@ const INTENSIDADE = { duration: 1.4, ease: 'power2.out' };
 const semIndefinidos = (obj) =>
   Object.fromEntries(Object.entries(obj ?? {}).filter(([, v]) => v !== undefined));
 
-// Painéis largos (desktop) pedem mais resolução, como no site de referência.
-const resolucaoPara = (painel) => (Math.max(painel.clientWidth, painel.clientHeight) >= 1024 ? 512 : 256);
+const resolucaoInicial = (painel) =>
+  resolucaoDaAgua(painel.clientWidth, painel.clientHeight, texelDaAgua(painel.clientWidth), LIMITE_INICIAL);
 
 export function criarMotor({ painel, camada, opcoes }) {
   const config = { ...PADRAO, ...semIndefinidos(opcoes) };
-  const resolucao = config.resolucao ?? resolucaoPara(painel);
   const canvas = document.createElement('canvas');
   camada.append(canvas);
 
-  let sim = criarSimulacao(canvas, { resolucao });
+  let sim = criarSimulacao(canvas, { resolucao: resolucaoInicial(painel) });
   if (!sim) {
     canvas.remove();
     return null;
@@ -65,9 +70,7 @@ export function criarMotor({ painel, camada, opcoes }) {
     largura: 0,
     altura: 0,
     escala: 1,
-    razao: [1, 1],
     acumulado: 0,
-    assinatura: null,
     ultimoPonteiro: -Infinity,
   };
   const fila = [];
@@ -119,21 +122,37 @@ export function criarMotor({ painel, camada, opcoes }) {
     fila.length = 0;
   }
 
+  // Painel mudou de tamanho: canvas e simulação acompanham (texels quadrados).
   function dimensionar(largura, altura, escala) {
     if (largura === estado.largura && altura === estado.altura && escala === estado.escala) return;
-    Object.assign(estado, { largura, altura, escala, razao: razaoDoPainel(largura, altura) });
+    Object.assign(estado, { largura, altura, escala });
     canvas.width = Math.max(1, Math.round(largura * escala));
     canvas.height = Math.max(1, Math.round(altura * escala));
+    sim.redimensionar(resolucaoDaAgua(largura, altura, texelDaAgua(largura), sim.maximo));
   }
 
-  // Redesenha e reenvia o fundo só se algum elemento marcado mudou.
+  // Redesenha e reenvia só o que mudou no fundo (tudo, uma região ou nada).
   function atualizarFundo(base) {
     const medidas = fundo.medir(base);
-    const atual = assinatura(medidas, estado.largura, estado.altura, estado.escala);
-    if (atual === estado.assinatura && !fundo.sujo) return;
-    fundo.desenhar(medidas, estado.largura, estado.altura, estado.escala);
-    sim.enviarFundo(fundo.canvas);
-    estado.assinatura = atual;
+    const mudanca = fundo.atualizar(medidas, estado.largura, estado.altura, estado.escala);
+    if (mudanca === 'tudo') sim.enviarFundo(fundo.canvas);
+    else if (mudanca) sim.enviarRegiao(fundo.pedacoDe(mudanca), mudanca.x, mudanca.y, fundo.canvas.height);
+  }
+
+  // Desvio da refração em px, convertido para uv em cada eixo.
+  function perturbacaoEmUv() {
+    const px = config.perturbacao * Math.max(estado.largura, LARGURA_DA_PERTURBACAO);
+    return [px / Math.max(estado.largura, 1), px / Math.max(estado.altura, 1)];
+  }
+
+  // Faixa visível (com margem) em px do canvas; null com o painel fora da tela.
+  function faixaNoCanvas(base) {
+    const faixa = faixaVisivel(base.top, estado.altura, window.innerHeight);
+    if (!faixa) return null;
+    return {
+      inicio: Math.max(0, Math.floor(faixa.inicio * estado.escala)),
+      fim: Math.min(canvas.height, Math.ceil(faixa.fim * estado.escala)),
+    };
   }
 
   function aplicarGotas(base) {
@@ -144,8 +163,9 @@ export function criarMotor({ painel, camada, opcoes }) {
       if (!dentroDoPainel(x, y, estado.largura, estado.altura)) continue;
       sim.gota(
         centroDaGota(x, y, estado.largura, estado.altura),
-        raioDaGota(gota.raio, estado.largura, estado.altura),
+        raioDaGota(gota.raio, estado.altura),
         gota.forca,
+        proporcao(estado.largura, estado.altura),
       );
     }
     fila.length = 0;
@@ -176,7 +196,8 @@ export function criarMotor({ painel, camada, opcoes }) {
       } else {
         fila.length = 0;
       }
-      sim.desenhar({ razao: estado.razao, perturbacao: config.perturbacao, intensidade: estado.intensidade });
+      const faixa = faixaNoCanvas(base);
+      if (faixa) sim.desenhar({ perturbacao: perturbacaoEmUv(), intensidade: estado.intensidade, faixa });
     } catch {
       // Fundo que não sobe (canvas "sujo", erro do WebGL) ou svg que não
       // rasterizou: desliga a água e fica o DOM puro.
@@ -200,9 +221,10 @@ export function criarMotor({ painel, camada, opcoes }) {
     sim = null;
   };
   const aoRestaurarContexto = () => {
-    sim = criarSimulacao(canvas, { resolucao });
+    sim = criarSimulacao(canvas, { resolucao: resolucaoInicial(painel) });
     if (!sim) return;
-    Object.assign(estado, { fase: 'esperando', assinatura: null, acumulado: 0, largura: 0 });
+    fundo.invalidar();
+    Object.assign(estado, { fase: 'esperando', acumulado: 0, largura: 0 });
   };
   const aoCarregarFontes = () => fundo.invalidar();
   const observador = new IntersectionObserver(([entrada]) => {

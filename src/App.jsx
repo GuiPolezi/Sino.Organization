@@ -1,8 +1,10 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useRef } from 'react';
 import Clients from './components/Clients/Clients.jsx';
 import Hero from './components/Hero/Hero.jsx';
+import WaterRipple from './components/Hero/ripple/WaterRipple.jsx';
 import Systems from './components/Systems/Systems.jsx';
 import { useLenis } from './hooks/useLenis.js';
+import styles from './App.module.css';
 
 /*
  * Rotas além da home. Cada página é um chunk à parte (o three.js só baixa em
@@ -33,11 +35,18 @@ const HOME_PATHS = ['', '/index.html'];
 // "/suporte/" e "/Suporte" valem como "/suporte"; "/" vira "".
 const currentPath = () => window.location.pathname.replace(/\/+$/, '').toLowerCase();
 
+/*
+ * Home como uma landing page contínua: um só fundo e uma só água (WaterRipple)
+ * por baixo de todas as seções, que não têm fundo próprio. As ondas passam de
+ * uma seção para a outra sem emenda.
+ */
 function Home() {
+  const pagina = useRef(null);
   useLenis();
 
   return (
-    <main>
+    <main ref={pagina} className={styles.home}>
+      <WaterRipple painel={pagina} />
       <Hero />
       <Systems />
       <Clients />

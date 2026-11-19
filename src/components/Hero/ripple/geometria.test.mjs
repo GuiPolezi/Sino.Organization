@@ -1,21 +1,28 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  assinatura,
+  AREA_MAXIMA,
+  caixaDoDesenho,
   centroDaGota,
+  chaveDoItem,
   dentroDoPainel,
+  emPixels,
   escalaDoDispositivo,
   escalaQueCabe,
+  faixaVisivel,
   fonteDoCanvas,
   inicioDoTexto,
   intersecao,
   linhaDeBase,
   passosFixos,
   pixels,
+  proporcao,
   raioDaGota,
-  razaoDoPainel,
   recorteDe,
+  resolucaoDaAgua,
+  texelDaAgua,
   textoVisivel,
+  uniao,
 } from './geometria.js';
 
 const perto = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≠ ${b}`);
@@ -47,42 +54,69 @@ test('escalaQueCabe: respeita o limite da GPU no lado maior', () => {
   assert.equal(escalaQueCabe(390, 3000, 1.5, undefined), 1.5);
 });
 
-test('razaoDoPainel: o lado maior usa o quadrado inteiro', () => {
-  assert.deepEqual(razaoDoPainel(1440, 1024), [1, 1024 / 1440]);
-  assert.deepEqual(razaoDoPainel(400, 800), [0.5, 1]);
-  assert.deepEqual(razaoDoPainel(0, 0), [0, 0]);
+test('escalaQueCabe: respeita o teto de área do canvas (página inteira)', () => {
+  // Home de 1440 × 3000 a 1,5×: 2160 × 4500 ≈ 9,7 Mpx, abaixo do teto.
+  assert.equal(escalaQueCabe(1440, 3000, 1.5, 16384), 1.5);
+  // Tela 4K com página longa: a escala desce até caber na área.
+  const e = escalaQueCabe(2560, 6000, 1.5, 16384);
+  assert.ok(e < 1.5);
+  assert.ok(Math.round(2560 * e) * Math.round(6000 * e) <= AREA_MAXIMA * 1.001);
+  // Vale também sem limite de textura conhecido.
+  assert.ok(escalaQueCabe(2560, 6000, 1.5, 0) < 1.5);
 });
 
-test('centroDaGota: cantos e centro do painel no espaço da simulação', () => {
-  const [w, h] = [1440, 1024];
-  const [rx, ry] = razaoDoPainel(w, h);
+test('texelDaAgua: 512 texels na largura do desktop, tamanho fixo no celular', () => {
+  assert.equal(texelDaAgua(1440), 1440 / 512);
+  assert.equal(texelDaAgua(1920), 1920 / 512);
+  assert.equal(texelDaAgua(390), 3.5);
+});
+
+test('resolucaoDaAgua: texels quadrados cobrindo o painel, dentro do limite da GPU', () => {
+  assert.deepEqual(resolucaoDaAgua(1440, 2880, 1440 / 512, 4096), [512, 1024]);
+  // Arredonda para cima: o painel fica todo coberto.
+  assert.deepEqual(resolucaoDaAgua(100, 10, 3, 4096), [34, 4]);
+  // Acima do limite: reduz os dois eixos na mesma proporção.
+  const [w, h] = resolucaoDaAgua(400, 20000, 2, 4096);
+  assert.equal(h, 4096);
+  assert.ok(Math.abs(w / h - 200 / 10000) < 0.01);
+  assert.deepEqual(resolucaoDaAgua(0, 0, 3, 4096), [1, 1]);
+});
+
+test('centroDaGota: cantos e centro do painel em [-1, 1] (y sobe)', () => {
+  const [w, h] = [1440, 3000];
   assert.deepEqual(centroDaGota(w / 2, h / 2, w, h), [0, 0]);
-  // Canto superior esquerdo: x = -razão, y = +razão (y da simulação sobe).
-  const [cx, cy] = centroDaGota(0, 0, w, h);
-  perto(cx, -rx);
-  perto(cy, ry);
-  const [bx, by] = centroDaGota(w, h, w, h);
-  perto(bx, rx);
-  perto(by, -ry);
+  assert.deepEqual(centroDaGota(0, 0, w, h), [-1, 1]);
+  assert.deepEqual(centroDaGota(w, h, w, h), [1, -1]);
 });
 
 test('centroDaGota coincide com a coordenada que o shader de render usa', () => {
-  // Render: uvOndas = vértice * razão * 0.5 + 0.5, vértice = (2x/w - 1, 1 - 2y/h).
-  // Gota: centro * 0.5 + 0.5. Os dois têm de cair no mesmo texel.
+  // Render: uv = vértice * 0.5 + 0.5, com vértice = (2x/w - 1, 1 - 2y/h). Gota: centro * 0.5 + 0.5.
   const [w, h] = [900, 1600];
-  const razao = razaoDoPainel(w, h);
   for (const [x, y] of [[0, 0], [123, 456], [900, 1600], [450, 10]]) {
-    const vertice = [(2 * x) / w - 1, 1 - (2 * y) / h];
-    const render = vertice.map((v, i) => v * razao[i] * 0.5 + 0.5);
+    const uv = [x / w, 1 - y / h];
     const gota = centroDaGota(x, y, w, h).map((c) => c * 0.5 + 0.5);
-    perto(render[0], gota[0]);
-    perto(render[1], gota[1]);
+    perto(uv[0], gota[0]);
+    perto(uv[1], gota[1]);
   }
 });
 
-test('raioDaGota: fração do lado maior', () => {
-  assert.equal(raioDaGota(20, 1440, 1024), 20 / 1440);
-  assert.equal(raioDaGota(20, 0, 0), 20);
+test('raioDaGota e proporcao: raio em fração da altura, x corrigido pela proporção', () => {
+  assert.equal(raioDaGota(20, 2000), 0.01);
+  assert.equal(raioDaGota(20, 0), 20);
+  assert.equal(proporcao(1440, 2880), 0.5);
+  // No shader: distância em x (uv) vezes a proporção = distância em fração da altura.
+  perto((20 / 1440) * proporcao(1440, 2880), raioDaGota(20, 2880));
+});
+
+test('faixaVisivel: parte na janela mais uma tela de margem, dentro do painel', () => {
+  assert.deepEqual(faixaVisivel(0, 3000, 1000), { inicio: 0, fim: 2000 });
+  // Rolado 1500 px: de 500 a 3000 (corta no fim do painel).
+  assert.deepEqual(faixaVisivel(-1500, 3000, 1000), { inicio: 500, fim: 3000 });
+  // Painel ainda abaixo da janela, mas dentro da margem.
+  assert.deepEqual(faixaVisivel(1500, 3000, 1000), { inicio: 0, fim: 500 });
+  // Fora da margem: nada a desenhar.
+  assert.equal(faixaVisivel(2500, 3000, 1000), null);
+  assert.equal(faixaVisivel(-5000, 3000, 1000), null);
 });
 
 test('dentroDoPainel: bordas contam como dentro', () => {
@@ -152,17 +186,29 @@ test('inicioDoTexto: alinhamentos e direção', () => {
   assert.equal(inicioDoTexto('-webkit-auto', 'ltr', 10, 100, 40), 10);
 });
 
-test('assinatura: ignora ruído abaixo de 1/4 px e muda com movimento real', () => {
+test('chaveDoItem: ignora ruído abaixo de 1/4 px e muda com movimento real', () => {
   const base = { tipo: 'texto', visivel: true, x: 10, y: 20, w: 300, h: 80, alpha: 1, recorte: null, texto: 'SINO' };
-  const a = assinatura([base], 1440, 1024, 1.5);
-  assert.equal(assinatura([{ ...base, x: 10.05 }], 1440, 1024, 1.5), a);
-  assert.notEqual(assinatura([{ ...base, y: 21 }], 1440, 1024, 1.5), a);
-  assert.notEqual(assinatura([{ ...base, alpha: 0.5 }], 1440, 1024, 1.5), a);
-  assert.notEqual(assinatura([{ ...base, texto: 'INFORMÁTICA' }], 1440, 1024, 1.5), a);
-  assert.notEqual(assinatura([{ ...base, visivel: false }], 1440, 1024, 1.5), a);
-  assert.notEqual(assinatura([{ ...base, recorte: { x: 0, y: 0, w: 10, h: 10 } }], 1440, 1024, 1.5), a);
-  assert.notEqual(assinatura([base], 1440, 1000, 1.5), a);
-  assert.notEqual(assinatura([base], 1440, 1024, 1), a);
+  const a = chaveDoItem(base);
+  assert.equal(chaveDoItem({ ...base, x: 10.05 }), a);
+  assert.notEqual(chaveDoItem({ ...base, y: 21 }), a);
+  assert.notEqual(chaveDoItem({ ...base, alpha: 0.5 }), a);
+  assert.notEqual(chaveDoItem({ ...base, texto: 'INFORMÁTICA' }), a);
+  assert.notEqual(chaveDoItem({ ...base, visivel: false }), a);
+  assert.notEqual(chaveDoItem({ ...base, recorte: { x: 0, y: 0, w: 10, h: 10 } }), a);
+});
+
+test('caixaDoDesenho e uniao: folga em volta e o retângulo que cobre os dois', () => {
+  const c = caixaDoDesenho({ x: 100, y: 100, w: 50, h: 20 });
+  assert.ok(c.x < 100 && c.y < 100 && c.x + c.w > 150 && c.y + c.h > 120);
+  assert.deepEqual(uniao({ x: 0, y: 0, w: 10, h: 10 }, { x: 20, y: 5, w: 10, h: 10 }), { x: 0, y: 0, w: 30, h: 15 });
+  assert.deepEqual(uniao(null, { x: 1, y: 2, w: 3, h: 4 }), { x: 1, y: 2, w: 3, h: 4 });
+  assert.equal(uniao(null, null), null);
+});
+
+test('emPixels: escala, alinha para fora e corta nos limites do canvas', () => {
+  assert.deepEqual(emPixels({ x: 10.2, y: 5.5, w: 10, h: 10 }, 1.5, 1000, 1000), { x: 15, y: 8, w: 16, h: 16 });
+  assert.deepEqual(emPixels({ x: -10, y: -10, w: 20, h: 20 }, 1, 100, 100), { x: 0, y: 0, w: 10, h: 10 });
+  assert.equal(emPixels({ x: 200, y: 0, w: 10, h: 10 }, 1, 100, 100), null);
 });
 
 test('passosFixos: 60 Hz independente da taxa da tela', () => {

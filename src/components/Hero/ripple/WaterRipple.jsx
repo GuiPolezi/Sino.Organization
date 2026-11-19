@@ -19,9 +19,9 @@ gsap.registerPlugin(useGSAP);
  * `painel` (ref) é opcional: sem ele, usa o elemento pai. As opções são lidas
  * só na montagem.
  */
-export default function WaterRipple({ painel, resolucao, raio, perturbacao, gotasOciosas }) {
+export default function WaterRipple({ painel, raio, perturbacao, gotasOciosas }) {
   const camada = useRef(null);
-  const opcoes = useRef({ resolucao, raio, perturbacao, gotasOciosas });
+  const opcoes = useRef({ raio, perturbacao, gotasOciosas });
 
   useGSAP(() => {
     const mm = gsap.matchMedia();

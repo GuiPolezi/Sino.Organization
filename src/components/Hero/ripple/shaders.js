@@ -29,17 +29,22 @@ void main() {
 }
 `;
 
-// Gota: soma um "sino" de cosseno na altura, com raio e força dados.
+/*
+ * Gota: soma um "sino" de cosseno na altura, com raio e força dados. O raio
+ * é fração da altura; `proporcao` (largura / altura) deixa a gota redonda.
+ */
 export const FRAGMENTO_GOTA = `${PRECISAO}
 const float PI = 3.141592653589793;
 uniform sampler2D textura;
 uniform vec2 centro;
 uniform float raio;
 uniform float forca;
+uniform float proporcao;
 varying vec2 coord;
 void main() {
   vec4 info = texture2D(textura, coord);
-  float gota = max(0.0, 1.0 - length(centro * 0.5 + 0.5 - coord) / raio);
+  vec2 distancia = (centro * 0.5 + 0.5 - coord) * vec2(proporcao, 1.0);
+  float gota = max(0.0, 1.0 - length(distancia) / raio);
   gota = 0.5 - cos(gota * PI) * 0.5;
   info.r += gota * forca;
   gl_FragColor = info;
@@ -68,18 +73,12 @@ void main() {
 }
 `;
 
-/*
- * Render. O fundo cobre o painel inteiro (uvFundo); a simulação é um
- * quadrado do lado maior do painel, então `razao` recorta a parte usada.
- */
+// Render: o fundo e a simulação cobrem o painel inteiro, então o uv é o mesmo.
 export const VERTICE_RENDER = `
 attribute vec2 vertice;
-uniform vec2 razao;
-varying vec2 uvFundo;
-varying vec2 uvOndas;
+varying vec2 uv;
 void main() {
-  uvFundo = vertice * 0.5 + 0.5;
-  uvOndas = vertice * razao * 0.5 + 0.5;
+  uv = vertice * 0.5 + 0.5;
   gl_Position = vec4(vertice, 0.0, 1.0);
 }
 `;
@@ -88,25 +87,29 @@ void main() {
  * `intensidade` (0 → 1, animada pelo GSAP) liga a refração e o brilho aos
  * poucos. Aqui o eixo y da simulação sobe; no plugin ele desce. Inverter o y
  * da inclinação reproduz exatamente a direção da luz e da refração de lá.
+ * `delta` é um texel em cada eixo (para ler os vizinhos); `passo` é o
+ * tamanho do texel na conta da inclinação, igual nos dois eixos (texels
+ * quadrados) e fixo, para a refração ter a força de sempre. `perturbacao`
+ * vem por eixo (em uv), para o desvio ter os mesmos px na horizontal e na vertical.
  */
 export const FRAGMENTO_RENDER = `${PRECISAO}
 uniform sampler2D fundo;
 uniform sampler2D ondas;
 uniform vec2 delta;
-uniform float perturbacao;
+uniform float passo;
+uniform vec2 perturbacao;
 uniform float intensidade;
-varying vec2 uvFundo;
-varying vec2 uvOndas;
+varying vec2 uv;
 void main() {
-  float altura = texture2D(ondas, uvOndas).r;
-  float alturaX = texture2D(ondas, vec2(uvOndas.x + delta.x, uvOndas.y)).r;
-  float alturaY = texture2D(ondas, vec2(uvOndas.x, uvOndas.y + delta.y)).r;
-  vec3 dx = vec3(delta.x, alturaX - altura, 0.0);
-  vec3 dy = vec3(0.0, alturaY - altura, delta.y);
+  float altura = texture2D(ondas, uv).r;
+  float alturaX = texture2D(ondas, vec2(uv.x + delta.x, uv.y)).r;
+  float alturaY = texture2D(ondas, vec2(uv.x, uv.y + delta.y)).r;
+  vec3 dx = vec3(passo, alturaX - altura, 0.0);
+  vec3 dy = vec3(0.0, alturaY - altura, passo);
   vec2 desvio = -normalize(cross(dy, dx)).xz;
   desvio.y = -desvio.y;
   float especular = pow(max(0.0, dot(desvio, normalize(vec2(-0.6, 1.0)))), 4.0);
-  vec4 cor = texture2D(fundo, uvFundo + desvio * perturbacao * intensidade);
+  vec4 cor = texture2D(fundo, uv + desvio * perturbacao * intensidade);
   gl_FragColor = cor + vec4(especular * intensidade);
 }
 `;

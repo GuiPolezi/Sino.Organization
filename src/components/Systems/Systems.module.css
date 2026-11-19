@@ -18,9 +18,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100svh;
-  overflow: hidden;
   padding: 4rem var(--gutter-mobile) 4.5rem;
-  background: var(--color-olive);
   color: var(--color-cream);
 }
 

@@ -4,7 +4,6 @@ import { useGSAP } from '@gsap/react';
 import { MEDIA } from '../../utils/media.js';
 import DecorShape from './DecorShape.jsx';
 import MenuCards from './MenuCards.jsx';
-import WaterRipple from './ripple/WaterRipple.jsx';
 import { playIntro, playReducedIntro } from './heroAnimations.js';
 import styles from './Hero.module.css';
 
@@ -28,8 +27,7 @@ export default function Hero() {
 
   return (
     <section ref={panel} className={styles.panel} aria-labelledby={TITLE_ID}>
-      {/* Água sobre o fundo: refrata o título, o divisor e o anel (data-ripple); os cards ficam por cima. */}
-      <WaterRipple painel={panel} />
+      {/* A água (WaterRipple, em App.jsx) refrata o título, o divisor e o anel (data-ripple); os cards ficam por cima. */}
       <DecorShape />
 
       <div className={styles.content}>

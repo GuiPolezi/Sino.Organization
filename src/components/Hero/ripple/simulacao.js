@@ -11,6 +11,8 @@ import {
  * Simulação da água em "ping-pong": duas texturas float, uma lida e outra
  * escrita, que trocam de papel a cada gota ou passo. O fundo (o painel
  * redesenhado num canvas 2D) é uma textura comum, refratada no render.
+ * A simulação é um retângulo de texels quadrados do tamanho do painel
+ * (`resolucao` = [largura, altura]) e muda de tamanho junto com ele.
  *
  * Devolve null quando o navegador não tem WebGL com textura float
  * renderizável, ou quando algo falha na montagem.
@@ -29,6 +31,13 @@ export function criarSimulacao(canvas, { resolucao }) {
   }
 }
 
+// `null` zera a textura: água parada.
+const alocarAgua = (gl, formato, [largura, altura]) =>
+  gl.texImage2D(gl.TEXTURE_2D, 0, formato.interno, largura, altura, 0, gl.RGBA, formato.tipo, null);
+
+// Um texel na conta da inclinação (512 texels na largura, como no plugin).
+const PASSO = 1 / 512;
+
 function texturaDaAgua(gl, formato, resolucao) {
   const textura = gl.createTexture();
   const filtro = formato.linear ? gl.LINEAR : gl.NEAREST;
@@ -37,8 +46,7 @@ function texturaDaAgua(gl, formato, resolucao) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filtro);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  // `null` zera a textura: água parada.
-  gl.texImage2D(gl.TEXTURE_2D, 0, formato.interno, resolucao, resolucao, 0, gl.RGBA, formato.tipo, null);
+  alocarAgua(gl, formato, resolucao);
   return textura;
 }
 
@@ -53,8 +61,8 @@ function texturaDoFundo(gl) {
   return textura;
 }
 
-function montar(gl, formato, resolucao, recursos) {
-  const delta = new Float32Array([1 / resolucao, 1 / resolucao]);
+function montar(gl, formato, resolucaoInicial, recursos) {
+  let resolucao = resolucaoInicial;
 
   for (let i = 0; i < 2; i++) {
     const textura = texturaDaAgua(gl, formato, resolucao);
@@ -74,10 +82,15 @@ function montar(gl, formato, resolucao, recursos) {
   const render = criarPrograma(gl, VERTICE_RENDER, FRAGMENTO_RENDER);
   recursos.programas.push(gota, onda, render);
 
-  gl.useProgram(onda.programa);
-  gl.uniform2fv(onda.uniforms.delta, delta);
-  gl.useProgram(render.programa);
-  gl.uniform2fv(render.uniforms.delta, delta);
+  const definirDelta = () => {
+    const delta = new Float32Array([1 / resolucao[0], 1 / resolucao[1]]);
+    gl.useProgram(onda.programa);
+    gl.uniform2fv(onda.uniforms.delta, delta);
+    gl.useProgram(render.programa);
+    gl.uniform2fv(render.uniforms.delta, delta);
+  };
+  definirDelta();
+  gl.uniform1f(render.uniforms.passo, PASSO);
   gl.uniform1i(render.uniforms.fundo, 0);
   gl.uniform1i(render.uniforms.ondas, 1);
 
@@ -94,7 +107,7 @@ function montar(gl, formato, resolucao, recursos) {
 
   // Lê a textura atual, escreve na outra e troca.
   const passarPelaAgua = ({ programa }) => {
-    gl.viewport(0, 0, resolucao, resolucao);
+    gl.viewport(0, 0, resolucao[0], resolucao[1]);
     gl.bindFramebuffer(gl.FRAMEBUFFER, recursos.quadros[1 - leitura]);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, recursos.texturas[leitura]);
@@ -107,13 +120,25 @@ function montar(gl, formato, resolucao, recursos) {
     // Maior lado que o fundo pode ter (textura e canvas de desenho).
     maximo: Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)),
 
-    // `centro` em [-1, 1] e `raio` em fração do lado (ver geometria.js).
-    gota(centro, raio, forca) {
+    // Novo tamanho do painel: realoca as duas texturas (a água recomeça parada).
+    redimensionar(nova) {
+      if (nova[0] === resolucao[0] && nova[1] === resolucao[1]) return;
+      resolucao = nova;
+      for (const textura of recursos.texturas.slice(0, 2)) {
+        gl.bindTexture(gl.TEXTURE_2D, textura);
+        alocarAgua(gl, formato, resolucao);
+      }
+      definirDelta();
+    },
+
+    // `centro` em [-1, 1], `raio` em fração da altura e `proporcao` = largura / altura (geometria.js).
+    gota(centro, raio, forca, proporcao) {
       gl.useProgram(gota.programa);
       gl.uniform1i(gota.uniforms.textura, 0);
       gl.uniform2f(gota.uniforms.centro, centro[0], centro[1]);
       gl.uniform1f(gota.uniforms.raio, raio);
       gl.uniform1f(gota.uniforms.forca, forca);
+      gl.uniform1f(gota.uniforms.proporcao, proporcao);
       passarPelaAgua(gota);
     },
 
@@ -129,33 +154,38 @@ function montar(gl, formato, resolucao, recursos) {
      * sem fundo, o título ficaria em branco com os originais escondidos.
      */
     enviarFundo(origem) {
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, fundo);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-      try {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, origem);
-      } finally {
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-      }
-      const erro = gl.getError();
-      if (erro !== gl.NO_ERROR) throw new Error(`Fundo da água não subiu (WebGL ${erro})`);
+      enviar(() => gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, origem));
     },
 
-    desenhar({ razao, perturbacao, intensidade }) {
+    /*
+     * Sobe só um pedaço do fundo (`origem` é esse pedaço; `x`/`y` em px do
+     * canvas inteiro, com o y de cima para baixo). Com o FLIP_Y a linha 0 da
+     * textura é a de baixo, daí o y invertido.
+     */
+    enviarRegiao(origem, x, y, alturaTotal) {
+      const yTextura = alturaTotal - y - origem.height;
+      enviar(() => gl.texSubImage2D(gl.TEXTURE_2D, 0, x, yTextura, gl.RGBA, gl.UNSIGNED_BYTE, origem));
+    },
+
+    /*
+     * Desenha só a faixa [inicio, fim) do canvas (px, de cima para baixo):
+     * o resto da página não gasta GPU. Fora da faixa o canvas fica vazio.
+     */
+    desenhar({ perturbacao, intensidade, faixa }) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(0, gl.drawingBufferHeight - faixa.fim, gl.drawingBufferWidth, faixa.fim - faixa.inicio);
       gl.useProgram(render.programa);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, fundo);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, recursos.texturas[leitura]);
       gl.activeTexture(gl.TEXTURE0);
-      gl.uniform2f(render.uniforms.razao, razao[0], razao[1]);
-      gl.uniform1f(render.uniforms.perturbacao, perturbacao);
+      gl.uniform2f(render.uniforms.perturbacao, perturbacao[0], perturbacao[1]);
       gl.uniform1f(render.uniforms.intensidade, intensidade);
       desenharQuad();
+      gl.disable(gl.SCISSOR_TEST);
     },
 
     // Apaga os recursos e devolve o contexto ao navegador (o limite é ~16 por página).
@@ -164,6 +194,22 @@ function montar(gl, formato, resolucao, recursos) {
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     },
   };
+
+  // Sobe para a textura do fundo com o y invertido e alfa pré-multiplicado.
+  function enviar(subir) {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fundo);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    try {
+      subir();
+    } finally {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    }
+    const erro = gl.getError();
+    if (erro !== gl.NO_ERROR) throw new Error(`Fundo da água não subiu (WebGL ${erro})`);
+  }
 }
 
 function liberar(gl, recursos) {

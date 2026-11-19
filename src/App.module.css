@@ -1,0 +1,9 @@
+/*
+ * Fundo único da home: as seções são transparentes e a água (WaterRipple)
+ * cobre todas. O clip corta o anel decorativo do Hero na borda da página.
+ */
+.home {
+  position: relative;
+  overflow: clip;
+  background: var(--color-olive);
+}

@@ -10,7 +10,6 @@
   position: relative;
   overflow: hidden;
   padding: 4rem var(--gutter-mobile) 5rem;
-  background: var(--color-olive);
   color: var(--color-cream);
 }
 

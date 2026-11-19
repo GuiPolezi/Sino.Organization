@@ -3,7 +3,6 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { MEDIA, matches } from '../../utils/media.js';
-import WaterRipple from '../Hero/ripple/WaterRipple.jsx';
 import { entradaDaSecao } from './animacoes.js';
 import Computador from './Computador.jsx';
 import SlideNav from './SlideNav.jsx';
@@ -17,7 +16,7 @@ const SUBTITULO =
   'Selecione o ícone no computador ou avance o slide para visualizar a descrição do sistema';
 
 /*
- * Seção Sistemas: a água (WaterRipple) refrata o título, o subtítulo e o
+ * Seção Sistemas: a água (WaterRipple, única para a home, em App.jsx) refrata o título, o subtítulo e o
  * rótulo "SLIDE" (data-ripple); o balão, a pílula de slides e o computador
  * ficam por cima, fora do efeito. O slide 0 é a área de trabalho; os outros
  * abrem a janela do aplicativo correspondente.
@@ -56,8 +55,6 @@ export default function Systems() {
 
   return (
     <section ref={painel} className={styles.painel} aria-labelledby={TITULO_ID}>
-      <WaterRipple painel={painel} />
-
       <div className={styles.palco}>
         <header className={styles.cabecalho}>
           <h2 id={TITULO_ID} className={styles.titulo}>
