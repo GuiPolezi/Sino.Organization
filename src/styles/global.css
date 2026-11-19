@@ -50,3 +50,60 @@ svg {
   white-space: nowrap;
   border: 0;
 }
+
+/*
+ * Cursor customizado (src/components/Cursor): enquanto ativo, esconde o cursor
+ * nativo em tudo, vencendo o `cursor` dos componentes. Fora disso ficam as zonas
+ * nativas, iguais a `zonaNativa()` de zonas.js: lá esta regra nem se aplica, então
+ * o `cursor` declarado pelos próprios componentes (default, pointer...) vale.
+ */
+html.cursor-customizado,
+html.cursor-customizado
+  *:not(
+    [data-cursor='nativo'],
+    [data-cursor='nativo'] *,
+    dialog:modal,
+    dialog:modal *,
+    input:not(
+        [type='button'],
+        [type='submit'],
+        [type='reset'],
+        [type='checkbox'],
+        [type='radio'],
+        [type='range'],
+        [type='color'],
+        [type='file'],
+        [type='image']
+      ),
+    textarea,
+    [contenteditable]:not([contenteditable='false']),
+    [contenteditable]:not([contenteditable='false']) *
+  ) {
+  cursor: none !important;
+}
+
+/* A raiz de uma zona nativa sem `cursor` próprio herdaria o `none` do pai
+   (o <dialog> e os campos de texto, por exemplo): volta ao padrão. Especificidade
+   zero, para o `cursor` declarado pelo componente sempre vencer. */
+:where(
+    html.cursor-customizado
+      :is(
+        [data-cursor='nativo'],
+        dialog:modal,
+        input:not(
+            [type='button'],
+            [type='submit'],
+            [type='reset'],
+            [type='checkbox'],
+            [type='radio'],
+            [type='range'],
+            [type='color'],
+            [type='file'],
+            [type='image']
+          ),
+        textarea,
+        [contenteditable]:not([contenteditable='false'])
+      )
+  ) {
+  cursor: auto;
+}
